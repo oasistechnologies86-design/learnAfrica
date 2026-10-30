@@ -554,6 +554,11 @@ def create_app() -> Flask:
     _raw = os.environ.get('ALLOWED_ORIGINS',
         'http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173')
     _origins = [o.strip() for o in _raw.split(',') if o.strip()]
+    # Always allow the currently deployed Learn Africa frontend. This prevents
+    # a stale ALLOWED_ORIGINS value on Render from blocking the new Vercel app.
+    _production_frontend_origin = 'https://learn-africa-five.vercel.app'
+    if _production_frontend_origin not in _origins:
+        _origins.append(_production_frontend_origin)
     CORS(app, origins=_origins, supports_credentials=True)
 
     # ── Global error handlers — ALWAYS return JSON, never HTML ───────────────
