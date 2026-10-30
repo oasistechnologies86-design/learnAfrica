@@ -4,7 +4,7 @@ import { useToast } from '../components/common/Toast';
 
 const AuthContext = createContext();
 export { AuthContext };
-// In production: VITE_API_URL = 'https://your-backend.up.railway.app'
+// In production: VITE_API_URL must be set to the current Render backend URL in Vercel
 // In development: empty string (Vite proxy forwards /api → localhost:5000)
 const API_BASE = import.meta.env.VITE_API_URL || '';
 

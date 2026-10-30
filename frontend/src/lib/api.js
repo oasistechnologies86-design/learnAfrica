@@ -2,7 +2,7 @@
  * api.js — Central API utility
  *
  * ALL fetch calls must use this so they go to the correct backend URL.
- * In production: VITE_API_URL = https://learnafrica-backend.onrender.com
+ * In production: VITE_API_URL = the current Render backend URL (set in Vercel environment variables)
  * In development: empty string (Vite proxy sends /api/* to localhost:5000)
  */
 
