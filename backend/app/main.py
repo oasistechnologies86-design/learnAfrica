@@ -551,14 +551,28 @@ def create_app() -> Flask:
             app.logger.warning(f'audit log write failed: {e}')
 
     # ── CORS ──────────────────────────────────────────────────────────────────
-    _raw = os.environ.get('ALLOWED_ORIGINS',
-        'http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173')
-    _origins = [o.strip() for o in _raw.split(',') if o.strip()]
-    # Always allow the currently deployed Learn Africa frontend. This prevents
-    # a stale ALLOWED_ORIGINS value on Render from blocking the new Vercel app.
-    _production_frontend_origin = 'https://learn-africa-five.vercel.app'
-    if _production_frontend_origin not in _origins:
-        _origins.append(_production_frontend_origin)
+    # Configure production frontend origins in the hosting environment, not in
+    # source code. ALLOWED_ORIGINS accepts a comma-separated list; FRONTEND_URL
+    # is an optional convenience for one primary frontend origin.
+    # Never use "*" here because this API supports credentialed requests.
+    _default_origins = [
+        'http://localhost:5173',
+        'http://localhost:5174',
+        'http://127.0.0.1:5173',
+    ]
+    _raw_origins = os.environ.get('ALLOWED_ORIGINS', '').strip()
+    _origins = [
+        origin.strip().rstrip('/')
+        for origin in _raw_origins.split(',')
+        if origin.strip()
+    ]
+    _frontend_url = os.environ.get('FRONTEND_URL', '').strip().rstrip('/')
+    if _frontend_url and _frontend_url not in _origins:
+        _origins.append(_frontend_url)
+    # If deployment configuration is missing, fail closed to local development
+    # origins instead of silently allowing every website.
+    if not _origins:
+        _origins = _default_origins
     CORS(app, origins=_origins, supports_credentials=True)
 
     # ── Global error handlers — ALWAYS return JSON, never HTML ───────────────

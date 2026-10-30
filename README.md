@@ -427,7 +427,8 @@ delete the admin row.
 | `JWT_SECRET` | optional | = `SECRET_KEY` | Override if you want a different token signing key. |
 | `JWT_EXPIRATION_HOURS` | optional | `24` | Login token lifetime in hours. |
 | `FLASK_ENV` | ✅ prod | unset | Set to `production` on Render. Enables the startup secret/payment checks. |
-| `ALLOWED_ORIGINS` | ✅ prod | localhost list | Comma-separated frontend origins allowed by CORS (your Vercel URL). |
+| `ALLOWED_ORIGINS` | ✅ prod | localhost list | Comma-separated exact frontend origins allowed by CORS; set this on Render. |
+| `FRONTEND_URL` | optional | unset | Optional single primary frontend origin; added to the CORS allowlist if set. |
 | `ADMIN_EMAIL` | ✅ prod | `admin@learnafrica.com` | Admin account email. On every boot this account is forced to superadmin/active. |
 | `ADMIN_PASSWORD` | ✅ prod | `Admin@LearnAfrica2024!` | When set, the admin password is re-asserted from this value on every boot. |
 | `DATABASE_URL` | ✅ prod | unset → SQLite | Supabase Postgres connection string. |
@@ -475,7 +476,8 @@ third-party purchase to start.
 | `SECRET_KEY` | **You generate it.** Run `python3 -c "import secrets; print(secrets.token_urlsafe(32))"`. Any long random string works. |
 | `JWT_SECRET` | **You generate it** the same way (a *different* value from `SECRET_KEY`). |
 | `JWT_EXPIRATION_HOURS` | **You choose** — e.g. `24`. No external source. |
-| `ALLOWED_ORIGINS` | **Your frontend URL** — after Vercel deploys, use e.g. `https://your-app.vercel.app`. Local: `http://localhost:5173`. |
+| `ALLOWED_ORIGINS` | **Your frontend URL(s)** — exact Vercel origin(s), comma-separated if there is more than one. Do not include a path or use `*`. |
+| `FRONTEND_URL` | Optional alternative/addition: one primary frontend origin, e.g. `https://your-app.vercel.app`. |
 | `ADMIN_EMAIL` | **You choose** your admin login email. |
 | `ADMIN_PASSWORD` | **You choose** a strong password. |
 | `DATABASE_URL` | **Supabase** → your project → **Connect** (top bar) or **Settings → Database** → copy the *Connection pooling* URI. See [part 1 §1.2](#12-get-the-database-connection-string). |
