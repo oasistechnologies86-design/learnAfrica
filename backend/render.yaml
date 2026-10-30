@@ -19,7 +19,8 @@ services:
       #   PAYSTACK_SECRET_KEY  — REQUIRED. Without it the app refuses to start
       #                          rather than silently running free "mock" payments.
       #   JWT_SECRET           — optional override for SECRET_KEY
-      #   ALLOWED_ORIGINS      — comma-separated frontend origins
+      #   ALLOWED_ORIGINS      — comma-separated exact frontend origins (required in production)
+      #   FRONTEND_URL         — optional single primary frontend origin (alternative/addition)
       #
       #   SENDPULSE_CLIENT_ID      — SendPulse API key (ID). Required for email OTP.
       #   SENDPULSE_CLIENT_SECRET  — SendPulse API key (secret). Required for email OTP.
