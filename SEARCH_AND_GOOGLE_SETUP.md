@@ -76,7 +76,7 @@ Have these open or written down. This is everything; nothing else is required.
 |---|---|
 | A Google account | `ksm.institute1@gmail.com` (sign in with this) |
 | Business name (exactly as it should appear) | **LearnAfrica** |
-| Website address | `https://learnafrica-lite-weld.vercel.app` (or your custom domain) |
+| Website address | `https://learn-africa-five.vercel.app` (or your custom domain) |
 | A phone number | Your business phone, e.g. the number students already call |
 | Category | **Online education** (or **Educational institution** / **Training centre** if you have a physical place) |
 | Address (case A only) | The full street address, including town and region |
@@ -122,7 +122,7 @@ Do this on a computer (it is easier than on a phone).
    - **Phone number:** type your business phone.
    - **Website:** type your website address:
      ```
-     https://learnafrica-lite-weld.vercel.app
+     https://learn-africa-five.vercel.app
      ```
      (or your custom domain). It is completely fine that the website address is
      different from the business name. They are separate things.
@@ -263,7 +263,7 @@ The dynamic sitemap needs to know your frontend address so its links are complet
 2. Click **Environment** (left menu).
 3. Click **Add Environment Variable** and enter:
    - Key: `SITE_URL`
-   - Value: `https://learnafrica-lite-weld.vercel.app` (no trailing slash; use
+   - Value: `https://learn-africa-five.vercel.app` (no trailing slash; use
      your custom domain if you have one)
 4. Click **Save changes**. Render will redeploy automatically (wait for it to say
    **Live**).
@@ -271,7 +271,7 @@ The dynamic sitemap needs to know your frontend address so its links are complet
    ```
    https://<your-backend>.onrender.com/api/sitemap.xml
    ```
-   You should see lines beginning `<loc>https://learnafrica-lite-weld.vercel.app/`
+   You should see lines beginning `<loc>https://learn-africa-five.vercel.app/`
    — proof the addresses are complete.
 
 ## 2.3 Create the Search Console property
@@ -282,7 +282,7 @@ The dynamic sitemap needs to know your frontend address so its links are complet
 4. Two options appear. Choose **URL prefix** (not "Domain").
 5. In the box, type your full website address **including `https://`**:
    ```
-   https://learnafrica-lite-weld.vercel.app
+   https://learn-africa-five.vercel.app
    ```
 6. Click **Continue**.
 
@@ -327,7 +327,7 @@ is simpler for now.
    ```
 3. Click **Submit**.
 4. Status should change to **Success**. If it says **Couldn't fetch**, open
-   `https://learnafrica-lite-weld.vercel.app/sitemap.xml` in a browser — it must
+   `https://learn-africa-five.vercel.app/sitemap.xml` in a browser — it must
    show XML (text with `<url>` tags), not a normal web page. If it shows a web
    page, the `frontend/public/sitemap.xml` file did not deploy — redeploy the
    frontend.
@@ -340,10 +340,10 @@ Indexing is not instant. To speed it up:
 2. Paste your home page URL and press Enter.
 3. Click **Request indexing**.
 4. Repeat for:
-   - `https://learnafrica-lite-weld.vercel.app/`
-   - `https://learnafrica-lite-weld.vercel.app/courses`
-   - `https://learnafrica-lite-weld.vercel.app/instructors`
-   - `https://learnafrica-lite-weld.vercel.app/blog`
+   - `https://learn-africa-five.vercel.app/`
+   - `https://learn-africa-five.vercel.app/courses`
+   - `https://learn-africa-five.vercel.app/instructors`
+   - `https://learn-africa-five.vercel.app/blog`
 
 You can only request a handful per day; that is normal.
 
@@ -478,3 +478,10 @@ being found on Google. Buy it later if you want the polish, not for SEO.
 | **Service-area business** | A business that goes to customers → no Maps pin. |
 | **`SITE_URL`** | An environment variable on Render that tells the backend your public website address. |
 | **Canonical URL** | The one "official" address of a page, so Google does not treat duplicates as separate. |
+
+
+## Production hostname and administrator credentials
+
+The repository's configured production frontend hostname is `https://learn-africa-five.vercel.app`. Keep `frontend/public/sitemap.xml`, `frontend/public/robots.txt`, the frontend `VITE_SITE_URL` default and Render's backend `SITE_URL` value aligned with the actual Vercel production domain. If your active domain is a custom domain or a different Vercel deployment, replace the hostname consistently in all four places before submitting the sitemap to Google.
+
+The backend does not ship a default administrator password. Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in the Render dashboard; use the real owner email and a newly generated unique password of at least 32 characters. Do not commit credentials to Git. Redeploy and verify administrator login after setting both variables.
