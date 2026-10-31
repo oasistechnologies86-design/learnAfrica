@@ -125,7 +125,7 @@ export function CertificateDocument({ data, displayName, id = 'certificate-conte
           <div className="font-mono text-3xs uppercase tracking-[0.2em] text-slate-600">
             <p className="font-bold text-slate-500">Certificate ID</p>
             <p className="mt-0.5 text-2xs font-semibold text-slate-900">{data.certificateId}</p>
-            <p className="mt-1 normal-case tracking-normal text-slate-500">Verify at {siteHost()}/#verify-section</p>
+            <p className="mt-1 normal-case tracking-normal text-slate-500">Verify at {siteHost()}/verify-credential</p>
           </div>
           <div className="flex shrink-0 flex-col items-center">
             {data.certificateId && (
