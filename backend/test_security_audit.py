@@ -197,6 +197,14 @@ check('production refuses to boot without SECRET_KEY',
       'must be set in production' in src or 'refusing to start' in src)
 check('Paystack mock mode refused in production',
       'PAYSTACK_SECRET_KEY' in src and 'mock' in src.lower())
+check('Paystack webhook checks stored amount and currency',
+      'received_minor != expected_minor' in src and
+      'received_currency != expected_currency' in src)
+_crud_src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app', 'crud.py'),
+                 encoding='utf-8').read()
+check('admin seeding requires explicit environment credentials',
+      'set ADMIN_EMAIL and ADMIN_PASSWORD in the environment' in _crud_src and
+      'Admin@LearnAfrica2024!' not in _crud_src)
 
 # ── 11. Error detail redaction ───────────────────────────────────────────────
 check('_err_detail redacts outside debug', 'An internal error occurred' in src)
