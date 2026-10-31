@@ -65,10 +65,10 @@ function RouteLoadingScreen() {
 }
 
 // ── Route Guards ──────────────────────────────────────────────────────────────
-function ProtectedRoute({ children, allowedRoles }) {
+function ProtectedRoute({ children, allowedRoles, returnUrl }) {
   const { isAuthenticated, isLoading, user } = useAuth();
   if (isLoading) return <RouteLoadingScreen />;
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isAuthenticated) return <Navigate to={returnUrl ? `/login?returnUrl=${encodeURIComponent(returnUrl)}` : '/login'} replace />;
   if (allowedRoles && !allowedRoles.includes(user?.role)) {
     // Instructors go to instructor dashboard, not student dashboard
     if (user?.role === 'instructor') return <Navigate to="/instructor" replace />;
@@ -136,7 +136,7 @@ function AppRoutes() {
         <Route path="blog/:slug" element={<BlogPostPage />} />
         <Route path="verify-credential" element={<VerifyCredentialPage />} />
         <Route path="verify" element={<Navigate to="/verify-credential" replace />} />
-        <Route path="community" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
+        <Route path="community" element={<ProtectedRoute returnUrl="/community"><CommunityPage /></ProtectedRoute>} />
       </Route>
 
       {/* ── Auth ── */}
