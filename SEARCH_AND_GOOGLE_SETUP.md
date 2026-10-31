@@ -76,7 +76,7 @@ Have these open or written down. This is everything; nothing else is required.
 |---|---|
 | A Google account | `ksm.institute1@gmail.com` (sign in with this) |
 | Business name (exactly as it should appear) | **LearnAfrica** |
-| Website address | `https://learnafrica-lite-weld.vercel.app` (or your custom domain) |
+| Website address | `https://learn-africa-five.vercel.app` (or your custom domain) |
 | A phone number | Your business phone, e.g. the number students already call |
 | Category | **Online education** (or **Educational institution** / **Training centre** if you have a physical place) |
 | Address (case A only) | The full street address, including town and region |
@@ -122,7 +122,7 @@ Do this on a computer (it is easier than on a phone).
    - **Phone number:** type your business phone.
    - **Website:** type your website address:
      ```
-     https://learnafrica-lite-weld.vercel.app
+     https://learn-africa-five.vercel.app
      ```
      (or your custom domain). It is completely fine that the website address is
      different from the business name. They are separate things.
@@ -245,8 +245,11 @@ normal Google search results.
 The project already ships the things search engines look for:
 
 - `frontend/public/robots.txt` — tells crawlers what to read and where the sitemap is.
-- `frontend/public/sitemap.xml` — a same-host list of your main public pages
-  (`/`, `/courses`, `/instructors`, `/blog`).
+- `frontend/public/sitemap.xml` — a sitemap index pointing to the dynamic,
+  same-host `/api/sitemap.xml` endpoint.
+- `frontend/api/sitemap.xml.js` — a Vercel serverless proxy that keeps published
+  content URLs on the frontend hostname and falls back to core public pages if
+  the backend is temporarily unavailable.
 - `frontend/src/lib/seo.js` — sets each page's title, description, canonical link
   and rich-result data automatically.
 - Backend `GET /api/sitemap.xml` — a **dynamic** sitemap that also lists every
@@ -263,15 +266,26 @@ The dynamic sitemap needs to know your frontend address so its links are complet
 2. Click **Environment** (left menu).
 3. Click **Add Environment Variable** and enter:
    - Key: `SITE_URL`
-   - Value: `https://learnafrica-lite-weld.vercel.app` (no trailing slash; use
+   - Value: `https://learn-africa-five.vercel.app` (no trailing slash; use
      your custom domain if you have one)
 4. Click **Save changes**. Render will redeploy automatically (wait for it to say
    **Live**).
+Before testing, configure the frontend's Vercel sitemap endpoint:
+
+1. Open **Vercel → LearnAfrica project → Settings → Environment Variables**.
+2. Add `BACKEND_URL` with the backend root URL, for example:
+   ```
+   https://learnafrica-backend-fdhb.onrender.com
+   ```
+   Do not add `/api` at the end. Select **Production**, save, and redeploy the frontend.
+3. If using a custom domain, also set Vercel's `SITE_URL` to that exact public origin.
+   Keep the Render `SITE_URL` identical.
+
 5. Test it: open your backend URL with `/api/sitemap.xml` on the end, for example
    ```
    https://<your-backend>.onrender.com/api/sitemap.xml
    ```
-   You should see lines beginning `<loc>https://learnafrica-lite-weld.vercel.app/`
+   You should see lines beginning `<loc>https://learn-africa-five.vercel.app/`
    — proof the addresses are complete.
 
 ## 2.3 Create the Search Console property
@@ -282,7 +296,7 @@ The dynamic sitemap needs to know your frontend address so its links are complet
 4. Two options appear. Choose **URL prefix** (not "Domain").
 5. In the box, type your full website address **including `https://`**:
    ```
-   https://learnafrica-lite-weld.vercel.app
+   https://learn-africa-five.vercel.app
    ```
 6. Click **Continue**.
 
@@ -327,10 +341,12 @@ is simpler for now.
    ```
 3. Click **Submit**.
 4. Status should change to **Success**. If it says **Couldn't fetch**, open
-   `https://learnafrica-lite-weld.vercel.app/sitemap.xml` in a browser — it must
-   show XML (text with `<url>` tags), not a normal web page. If it shows a web
-   page, the `frontend/public/sitemap.xml` file did not deploy — redeploy the
-   frontend.
+   `https://learn-africa-five.vercel.app/sitemap.xml`. It must show a `<sitemapindex>` that points to
+   `https://learn-africa-five.vercel.app/api/sitemap.xml`.
+5. Open `https://learn-africa-five.vercel.app/api/sitemap.xml` directly. It should show a `<urlset>` of public
+   pages, including every published course, approved instructor and published blog
+   post. If it contains only the four core pages, the backend is temporarily
+   unavailable and the endpoint is serving its safe fallback; check Render and retry.
 
 ## 2.6 Ask Google to index your important pages
 
@@ -340,10 +356,15 @@ Indexing is not instant. To speed it up:
 2. Paste your home page URL and press Enter.
 3. Click **Request indexing**.
 4. Repeat for:
-   - `https://learnafrica-lite-weld.vercel.app/`
-   - `https://learnafrica-lite-weld.vercel.app/courses`
-   - `https://learnafrica-lite-weld.vercel.app/instructors`
-   - `https://learnafrica-lite-weld.vercel.app/blog`
+   - `https://learn-africa-five.vercel.app/`
+   - `https://learn-africa-five.vercel.app/courses`
+   - `https://learn-africa-five.vercel.app/instructors`
+   - `https://learn-africa-five.vercel.app/blog`
+
+Use the sitemap to discover course detail pages, approved instructor profiles and
+published blog posts; you do not need to manually request every URL. Google decides
+which pages meet its quality and indexing requirements, so submission does not
+guarantee inclusion.
 
 You can only request a handful per day; that is normal.
 
@@ -446,8 +467,10 @@ they do. Skip it if you do not want it.
 1. Add the domain in **Vercel → your project → Settings → Domains** and follow the
    DNS instructions.
 2. Update `SITE_URL` on **Render** to the new domain.
-3. Edit the host inside **`frontend/public/sitemap.xml`** and the `Sitemap:` line
-   in **`frontend/public/robots.txt`** to the new domain.
+3. Edit the host inside **`frontend/public/sitemap.xml`**, the `Sitemap:` line
+   in **`frontend/public/robots.txt`**, and the canonical-site fallback in
+   **`frontend/api/sitemap.xml.js`**. Set the same domain in Render's `SITE_URL`
+   and Vercel's `SITE_URL`.
 4. In Search Console, add the new domain as a **new property** and verify it, then
    submit the sitemap there too.
 5. In your **Business Profile**, update the **Website** field to the new domain.

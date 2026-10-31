@@ -8,7 +8,7 @@
  * default so existing deployments are unaffected.
  */
 export const SITE_URL = (
-  import.meta.env.VITE_SITE_URL || 'https://learnafrica-lite-weld.vercel.app'
+  import.meta.env.VITE_SITE_URL || 'https://learn-africa-five.vercel.app'
 ).replace(/\/+$/, '');
 
 /** Public verification URL, optionally pre-filling a credential id. */
