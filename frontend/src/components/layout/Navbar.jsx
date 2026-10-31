@@ -39,19 +39,9 @@ function useScrollTo() {
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [showJoinModal, setShowJoinModal] = useState(false);
   const { isAuthenticated, user, isLoading } = useAuth();
   const location = useLocation();
   const scrollTo = useScrollTo();
-
-  // Handle scroll button click - guests trying to access community see signup modal
-  const handleScrollTo = (sectionId) => {
-    if (sectionId === 'comments-section' && !isAuthenticated) {
-      setShowJoinModal(true);
-      return;
-    }
-    scrollTo(sectionId);
-  };
 
   const isStudent    = isAuthenticated && user?.role === 'student';
   const isAdmin      = isAuthenticated && ['admin','superadmin'].includes(user?.role);
@@ -91,12 +81,12 @@ export default function Navbar() {
     { href: '/blog',        label: 'Blog',        icon: FileText },
   ];
 
-  // Scroll buttons — visible to all roles
-  const scrollButtons = [
-    { id: 'verify-section',   label: 'Verify',   icon: ShieldCheck },
-    { id: 'comments-section', label: 'Community',icon: MessageSquare },
-    { id: 'about-section',    label: 'About',    icon: Info },
+  // Dedicated pages are direct links; only About remains an in-page jump.
+  const pageLinks = [
+    { href: '/verify-credential', label: 'Verify Certificate', icon: ShieldCheck },
+    { href: '/community', label: 'Community', icon: MessageSquare },
   ];
+  const scrollButtons = [{ id: 'about-section', label: 'About', icon: Info }];
 
   // Lock body scroll when mobile menu open
   useEffect(() => {
@@ -146,13 +136,17 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
-            {/* Scroll buttons — only on landing-accessible pages */}
+            {pageLinks.map(link => (
+              <Link key={link.href} to={link.href}
+                className={cn('text-sm font-semibold transition-colors hover:text-primary',
+                  location.pathname.startsWith(link.href) ? 'text-primary' : 'text-muted-foreground')}>
+                {link.label}
+              </Link>
+            ))}
             {scrollButtons.map(btn => (
-              <button key={btn.id}
-                onClick={() => handleScrollTo(btn.id)}
+              <button key={btn.id} onClick={() => scrollTo(btn.id)}
                 className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5">
-                <btn.icon className="h-3.5 w-3.5" />
-                {btn.label}
+                <btn.icon className="h-3.5 w-3.5" /> {btn.label}
               </button>
             ))}
           </nav>
@@ -240,9 +234,16 @@ export default function Navbar() {
               {scrollButtons.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-3xs font-black uppercase tracking-[0.25em] text-muted-foreground/60 px-3">Quick Links</p>
+                  {pageLinks.map(link => (
+                    <Link key={link.href} to={link.href} onClick={closeMenu}
+                      className="w-full flex items-center gap-4 rounded-xl px-4 py-3.5 text-foreground/80 hover:bg-muted border border-transparent transition-all">
+                      <link.icon className="h-5 w-5 shrink-0 text-muted-foreground" />
+                      <span className="text-sm font-semibold">{link.label}</span>
+                      <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground/40" />
+                    </Link>
+                  ))}
                   {scrollButtons.map(btn => (
-                    <button key={btn.id}
-                      onClick={() => { handleScrollTo(btn.id); closeMenu(); }}
+                    <button key={btn.id} onClick={() => { scrollTo(btn.id); closeMenu(); }}
                       className="w-full flex items-center gap-4 rounded-xl px-4 py-3.5 text-foreground/80 hover:bg-muted border border-transparent transition-all">
                       <btn.icon className="h-5 w-5 shrink-0 text-muted-foreground" />
                       <span className="text-sm font-semibold">{btn.label}</span>
@@ -278,53 +279,7 @@ export default function Navbar() {
           </div>
         </div>
       )}
-      {/* ── Join Community Modal (guests only) ── */}
-      {showJoinModal && (
-        <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
-          onClick={() => setShowJoinModal(false)}
-        >
-          <div
-            className="relative w-full max-w-sm rounded-2xl bg-background border border-border shadow-2xl p-6 animate-in zoom-in-95 duration-200"
-            onClick={e => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setShowJoinModal(false)}
-              className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-muted hover:bg-muted/80 text-muted-foreground"
-              aria-label="Close"
-            >
-              <X className="h-4 w-4" />
-            </button>
 
-            <div className="flex flex-col items-center text-center pt-2">
-              <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                <MessageSquare className="h-7 w-7 text-primary" />
-              </div>
-              <h2 className="text-xl font-bold mb-2">Join the Community</h2>
-              <p className="text-sm text-muted-foreground mb-6">
-                Sign up or sign in to join the discussion, share your thoughts, and connect with other African learners.
-              </p>
-
-              <div className="flex flex-col w-full gap-3">
-                <Link
-                  to="/signup"
-                  onClick={() => setShowJoinModal(false)}
-                  className="w-full h-11 inline-flex items-center justify-center rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors"
-                >
-                  Sign Up
-                </Link>
-                <Link
-                  to="/login"
-                  onClick={() => setShowJoinModal(false)}
-                  className="w-full h-11 inline-flex items-center justify-center rounded-lg border border-border bg-background text-foreground font-semibold hover:bg-muted transition-colors"
-                >
-                  Sign In
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
     </>
   );
