@@ -8,4 +8,4 @@ Disallow: /payment
 
 # Same-host sitemap (served from public/sitemap.xml). The backend also exposes a
 # dynamic sitemap at /api/sitemap.xml listing every course, instructor and post.
-Sitemap: https://learnafrica-lite-weld.vercel.app/sitemap.xml
+Sitemap: https://learn-africa-five.vercel.app/sitemap.xml
