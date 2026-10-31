@@ -469,14 +469,20 @@ def create_app() -> Flask:
     if not app.config['USE_POSTGRES']:
         os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-    # Refuse to run in production with the built-in dev secret. Without a real
-    # SECRET_KEY/JWT_SECRET every login token can be forged.
-    _is_prod = (os.environ.get('FLASK_ENV') == 'production')
-    if _is_prod and not os.environ.get('JWT_SECRET') and not os.environ.get('SECRET_KEY'):
-        raise RuntimeError(
-            'SECRET_KEY (or JWT_SECRET) must be set in production — refusing to start '
-            'with the default development secret.'
-        )
+    # Production must never use an empty, short, or known development signing key.
+    # JWT_SECRET intentionally defaults to SECRET_KEY for backward compatibility
+    # with Render's generated SECRET_KEY, but both effective values are validated.
+    _is_prod = (os.environ.get('FLASK_ENV') or '').lower() == 'production'
+    _unsafe_secret_markers = ('dev-secret', 'change-in-production', 'changeme', 'change-me', 'your-secret')
+    if _is_prod:
+        for _secret_name in ('SECRET_KEY', 'JWT_SECRET'):
+            _secret_value = str(app.config.get(_secret_name) or '')
+            if (len(_secret_value) < 32 or
+                    any(_marker in _secret_value.lower() for _marker in _unsafe_secret_markers)):
+                raise RuntimeError(
+                    f'{_secret_name} must be a unique secret of at least 32 characters in production; '
+                    'refusing to start with a weak or development signing key.'
+                )
 
     # ── Simple in-process rate limiter ────────────────────────────────────────
     # Best-effort protection against password guessing and OTP/email spam.
@@ -2777,7 +2783,7 @@ def create_app() -> Flask:
         try:
             db = get_db()
             base = (request.args.get('base') or os.environ.get('SITE_URL')
-                    or 'https://learnafrica-lite-weld.vercel.app').rstrip('/')
+                    or 'https://learn-africa-five.vercel.app').rstrip('/')
             urls = [f'{base}/', f'{base}/courses', f'{base}/instructors', f'{base}/blog']
             for r in db.execute("SELECT id FROM courses WHERE is_published=1").fetchall():
                 urls.append(f'{base}/courses/{r["id"]}')
@@ -8190,11 +8196,35 @@ def create_app() -> Flask:
             if event == 'charge.success' and ref:
                 pstatus = data.get('status')
                 if pstatus == 'success':
-                    # Update the transaction to success and enroll the student
+                    # Never grant an enrollment from a signed event alone: also bind it
+                    # to the exact pending Paystack transaction and its expected amount/currency.
                     tx = db.execute(
-                        "SELECT id, user_id, course_id, status, type FROM transactions WHERE id=? OR provider_ref=?",
+                        "SELECT id, user_id, course_id, status, type, amount, currency, provider "
+                        "FROM transactions WHERE id=? OR provider_ref=?",
                         (ref, ref)
                     ).fetchone()
+                    if tx:
+                        from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+                        try:
+                            expected_minor = int(
+                                (Decimal(str(tx['amount'])) * Decimal('100'))
+                                .quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+                            )
+                            received_minor = int(data.get('amount'))
+                        except (InvalidOperation, TypeError, ValueError, OverflowError):
+                            app.logger.warning('Paystack webhook rejected: invalid transaction amount')
+                            return jsonify({'error': 'Invalid payment amount'}), 400
+                        expected_currency = str(tx['currency'] or '').strip().upper()
+                        received_currency = str(data.get('currency') or '').strip().upper()
+                        expected_provider = str(tx['provider'] or '').strip().lower()
+                        if (expected_provider != 'paystack' or expected_minor <= 0 or
+                                received_minor != expected_minor or
+                                not expected_currency or received_currency != expected_currency):
+                            app.logger.warning(
+                                'Paystack webhook rejected for transaction %s: amount/currency/provider mismatch',
+                                tx['id']
+                            )
+                            return jsonify({'error': 'Payment details do not match the transaction'}), 400
                     if tx and tx['status'] != 'success':
                         db.execute(
                             "UPDATE transactions SET status='success', updated_at=CURRENT_TIMESTAMP WHERE id=?",
@@ -8244,7 +8274,7 @@ def create_app() -> Flask:
 
             return jsonify({'ok': True})
         except Exception as e:
-            app.logger.error(f'paystack_webhook error: {e}')
+            app.logger.error('Paystack webhook processing failed (%s)', type(e).__name__)
             # Always return 200 to Paystack so they don't retry endlessly on our bugs
             return jsonify({'ok': False, 'error': 'Webhook processing failed'})
 
