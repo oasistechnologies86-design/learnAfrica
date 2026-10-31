@@ -186,8 +186,15 @@ def seed_admin(app, db):
     use_pg = app.config.get('USE_POSTGRES')
     ph     = '%s' if use_pg else '?'
 
-    admin_email = os.environ.get('ADMIN_EMAIL', 'admin@learnafrica.com')
-    admin_pass  = os.environ.get('ADMIN_PASSWORD', 'Admin@LearnAfrica2024!')
+    # Bootstrap/reconcile the owner account only when both credentials are
+    # explicitly supplied by the deployment environment. Never ship or fall back
+    # to a shared password, and never promote a default email account implicitly.
+    configured_email = (os.environ.get('ADMIN_EMAIL') or '').strip()
+    admin_pass = os.environ.get('ADMIN_PASSWORD') or ''
+    if not configured_email or not admin_pass:
+        print('⚠ admin seed skipped: set ADMIN_EMAIL and ADMIN_PASSWORD in the environment')
+        return
+    admin_email = configured_email.lower()
 
     existing = db.execute(
         'SELECT id FROM users WHERE email=' + ph, (admin_email,)
@@ -202,7 +209,7 @@ def seed_admin(app, db):
         'accessible to learners across Africa.'
     )
     DEFAULT_LOCATION     = 'Accra, Ghana'
-    DEFAULT_WEBSITE      = 'https://learnafrica-lite-weld.vercel.app'
+    DEFAULT_WEBSITE      = 'https://learn-africa-five.vercel.app'
     # Specialisation: stored primarily in instructor_field.
     # instructor_title is kept identical for backward compatibility.
     DEFAULT_SPECIALISATION = 'Web Development & Online Education'
@@ -251,9 +258,9 @@ def seed_admin(app, db):
             updates.append('role=' + ph);              params.append('superadmin')
             updates.append('is_active=' + ph);         params.append(1)
             updates.append('instructor_status=' + ph); params.append('approved')
-            # Password is reset only when ADMIN_PASSWORD is explicitly set, so
-            # the built-in dev default never clobbers a real password.
-            if os.environ.get('ADMIN_PASSWORD') and row:
+                # Both credentials are explicitly configured above; the deployment
+            # environment remains authoritative for this configured owner account.
+            if admin_pass and row:
                 try:
                     from werkzeug.security import check_password_hash
                     if not check_password_hash(row['password_hash'] or '', admin_pass):
