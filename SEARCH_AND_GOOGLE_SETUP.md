@@ -270,6 +270,17 @@ The dynamic sitemap needs to know your frontend address so its links are complet
      your custom domain if you have one)
 4. Click **Save changes**. Render will redeploy automatically (wait for it to say
    **Live**).
+Before testing, configure the frontend's Vercel sitemap endpoint:
+
+1. Open **Vercel → LearnAfrica project → Settings → Environment Variables**.
+2. Add `BACKEND_URL` with the backend root URL, for example:
+   ```
+   https://learnafrica-backend-fdhb.onrender.com
+   ```
+   Do not add `/api` at the end. Select **Production**, save, and redeploy the frontend.
+3. If using a custom domain, also set Vercel's `SITE_URL` to that exact public origin.
+   Keep the Render `SITE_URL` identical.
+
 5. Test it: open your backend URL with `/api/sitemap.xml` on the end, for example
    ```
    https://<your-backend>.onrender.com/api/sitemap.xml
