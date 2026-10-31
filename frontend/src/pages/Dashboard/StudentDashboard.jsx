@@ -129,7 +129,7 @@ export function BadgeDocument({ badge, displayName, badgeId, issuedDate, id = 'b
             <p className="text-left font-mono text-3xs leading-tight tracking-[0.14em] text-emerald-50/60">
               ID: {badgeId}
               <br />
-              Verify at {siteHost()}/#verify-section
+              Verify at {siteHost()}/verify-credential
             </p>
           </div>
         )}
