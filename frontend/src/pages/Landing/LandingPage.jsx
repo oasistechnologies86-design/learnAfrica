@@ -652,9 +652,9 @@ export function LandingPage() {
                 </div>
                 <div className="relative mx-auto w-full max-w-[195px] rotate-2 rounded-xl border border-primary/20 bg-gradient-to-br from-muted via-card to-background p-2 shadow-2xl shadow-black/30 transition-transform duration-500 group-hover:rotate-0">
                   <div className="rounded-lg border border-primary/15 px-3 py-4 text-center">
-                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-200/10 text-primary"><Award className="h-6 w-6" /></div>
+                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Award className="h-6 w-6" /></div>
                     <p className="mt-3 text-[8px] font-black uppercase tracking-[0.25em] text-muted-foreground">LearnAfrica</p>
-                    <p className="mt-2 font-serif text-lg leading-tight text-white">Certificate of <span className="italic text-primary">achievement</span></p>
+                    <p className="mt-2 font-serif text-lg leading-tight text-foreground">Certificate of <span className="italic text-primary">achievement</span></p>
                     <div className="mx-auto my-3 h-px w-14 bg-gradient-to-r from-transparent via-primary/70 to-transparent" />
                     <div className="flex items-center justify-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-2 py-1.5 text-[8px] font-bold text-primary"><ShieldCheck className="h-3 w-3" /> PUBLIC VERIFICATION</div>
                     <p className="mt-3 font-mono text-[8px] tracking-widest text-muted-foreground/70">LEARN · BUILD · GROW</p>
