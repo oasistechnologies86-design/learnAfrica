@@ -4670,6 +4670,7 @@ def create_app() -> Flask:
             return jsonify({'enabled': False})
 
     @app.route('/api/homepage/comments', methods=['GET'])
+    @token_required
     def get_homepage_comments():
         ensure_comments_table()
         db = get_db()

@@ -46,6 +46,8 @@ import InstructorsPage          from './pages/Directory/InstructorsPage';
 import InstructorProfilePage    from './pages/Directory/InstructorProfilePage';
 import BlogPage                 from './pages/Blog/BlogPage';
 import BlogPostPage             from './pages/Blog/BlogPostPage';
+import VerifyCredentialPage     from './pages/VerifyCredential/VerifyCredentialPage';
+import CommunityPage             from './pages/Community/CommunityPage';
 
 // Shared full-screen loading state, used consistently by every route guard
 // below instead of each one inventing its own behavior (previously
@@ -63,10 +65,10 @@ function RouteLoadingScreen() {
 }
 
 // ── Route Guards ──────────────────────────────────────────────────────────────
-function ProtectedRoute({ children, allowedRoles }) {
+function ProtectedRoute({ children, allowedRoles, returnUrl }) {
   const { isAuthenticated, isLoading, user } = useAuth();
   if (isLoading) return <RouteLoadingScreen />;
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isAuthenticated) return <Navigate to={returnUrl ? `/login?returnUrl=${encodeURIComponent(returnUrl)}` : '/login'} replace />;
   if (allowedRoles && !allowedRoles.includes(user?.role)) {
     // Instructors go to instructor dashboard, not student dashboard
     if (user?.role === 'instructor') return <Navigate to="/instructor" replace />;
@@ -132,6 +134,9 @@ function AppRoutes() {
         <Route path="instructors/:instructorId" element={<InstructorProfilePage />} />
         <Route path="blog" element={<BlogPage />} />
         <Route path="blog/:slug" element={<BlogPostPage />} />
+        <Route path="verify-credential" element={<VerifyCredentialPage />} />
+        <Route path="verify" element={<Navigate to="/verify-credential" replace />} />
+        <Route path="community" element={<ProtectedRoute returnUrl="/community"><CommunityPage /></ProtectedRoute>} />
       </Route>
 
       {/* ── Auth ── */}
