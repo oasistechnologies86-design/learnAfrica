@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Static, same-host sitemap for search engines.
-  It must live on the same host as robots.txt, which is why it is here in
-  public/ (Vercel serves this file directly). The backend also exposes a
-  DYNAMIC sitemap at /api/sitemap.xml that additionally lists every published
-  course, approved instructor and blog post; see SEARCH_AND_GOOGLE_SETUP.md.
-  Replace the host below if you move to a custom domain.
+  Sitemap index served by Vercel at /sitemap.xml.
+  The child sitemap is generated dynamically from published LearnAfrica content
+  by frontend/api/sitemap.xml.js and the backend /api/sitemap.xml endpoint.
+  This keeps public course, approved instructor and published blog URLs current.
+  Update the hostname if the production domain changes.
 -->
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://learn-africa-five.vercel.app/</loc></url>
-  <url><loc>https://learn-africa-five.vercel.app/courses</loc></url>
-  <url><loc>https://learn-africa-five.vercel.app/instructors</loc></url>
-  <url><loc>https://learn-africa-five.vercel.app/blog</loc></url>
-</urlset>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>https://learn-africa-five.vercel.app/api/sitemap.xml</loc>
+  </sitemap>
+</sitemapindex>
