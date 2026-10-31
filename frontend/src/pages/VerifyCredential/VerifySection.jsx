@@ -84,7 +84,8 @@ export function VerifySection() {
           </p>
         </div>
 
-        <div className="rounded-[1.75rem] border border-border/80 bg-card/90 p-4 shadow-xl shadow-primary/5 backdrop-blur sm:p-7">\n        <form onSubmit={handleVerify} className="mb-0 flex flex-col gap-3 sm:flex-row">
+        <div className="rounded-[1.75rem] border border-border/80 bg-card/90 p-4 shadow-xl shadow-primary/5 backdrop-blur sm:p-7">
+        <form onSubmit={handleVerify} className="mb-0 flex flex-col gap-3 sm:flex-row">
           <input type="text" value={credId}
             onChange={e => { setCredId(e.target.value); setSearched(false); setResult(null); }}
             placeholder="e.g. LA-CERT-ABCD-1A2B3C"
