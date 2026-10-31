@@ -15,6 +15,14 @@ services:
       # to start in production without SECRET_KEY/JWT_SECRET.
       - key: SECRET_KEY
         generateValue: true
+      # Configure the owner account explicitly in the Render dashboard.
+      # Use the real owner email and a newly generated unique password (32+ chars).
+      # Never put actual credentials in this file or commit them to Git.
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+
       # Set these in the Render dashboard (sync: false keeps them out of git):
       #   PAYSTACK_SECRET_KEY  — REQUIRED. Without it the app refuses to start
       #                          rather than silently running free "mock" payments.
