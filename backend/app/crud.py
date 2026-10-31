@@ -202,7 +202,7 @@ def seed_admin(app, db):
         'accessible to learners across Africa.'
     )
     DEFAULT_LOCATION     = 'Accra, Ghana'
-    DEFAULT_WEBSITE      = 'https://learnafrica-lite-weld.vercel.app'
+    DEFAULT_WEBSITE      = 'https://learn-africa-five.vercel.app'
     # Specialisation: stored primarily in instructor_field.
     # instructor_title is kept identical for backward compatibility.
     DEFAULT_SPECIALISATION = 'Web Development & Online Education'
