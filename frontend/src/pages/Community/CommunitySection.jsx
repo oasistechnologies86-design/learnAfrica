@@ -238,7 +238,7 @@ export function CommentsSection({ user, isAuthenticated }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await fetch(`${API_BASE}/api/homepage/comments`);
+      const r = await fetch(`${API_BASE}/api/homepage/comments`, { headers: headers(false) });
       const d = await r.json();
       setComments(d.comments||[]);
     } catch {}
