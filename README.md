@@ -401,19 +401,19 @@ cd frontend && npm run build      # outputs frontend/dist/
 
 | Environment | Email | Password | How it is set |
 |---|---|---|---|
-| Local | `admin@learnafrica.com` | `Admin@LearnAfrica2024!` | Built-in dev defaults |
-| Production | you choose | you choose | `ADMIN_EMAIL` / `ADMIN_PASSWORD` env vars |
+| Local | You configure it | You configure it | Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` before startup |
+| Production | You configure it | You configure it | Set both variables in the Render dashboard |
 
-The admin account is created on first startup if it does not exist. After that,
-**the environment is authoritative**: on every boot the account named by
-`ADMIN_EMAIL` is forced back to `superadmin`, active and approved. When
-`ADMIN_PASSWORD` is set, its password is reset to match that value. Your Render
-credentials therefore supersede anything in the database — a demotion, a manual
-edit, or a restored backup cannot lock you out of the top account.
+There is **no built-in administrator password**. The owner account is created or
+reconciled only when both `ADMIN_EMAIL` and `ADMIN_PASSWORD` are explicitly set
+in the environment. On startup, the configured email is granted the
+`superadmin` role and activated; if the account already exists, its password is
+updated to the configured value. If either variable is missing, automatic admin
+seeding is skipped and no default email is promoted.
 
-**Reset a lost admin password:** set `ADMIN_PASSWORD` in the environment and
-restart the service. The next boot resets the password; there is no need to
-delete the admin row.
+**Reset a lost admin password:** set a new, unique `ADMIN_PASSWORD` for the
+configured `ADMIN_EMAIL` in the Render dashboard, then redeploy. Use a generated
+password of at least 32 characters. Never put the password in Git or documentation.
 
 ---
 
@@ -423,14 +423,14 @@ delete the admin row.
 
 | Variable | Required | Local default | Description |
 |---|---|---|---|
-| `SECRET_KEY` | ✅ prod | dev fallback | Flask + JWT signing secret. In production the app **refuses to start** without it. |
-| `JWT_SECRET` | optional | = `SECRET_KEY` | Override if you want a different token signing key. |
+| `SECRET_KEY` | ✅ prod | dev-only fallback | Strong Flask signing secret (32+ characters); production refuses weak/default values. |
+| `JWT_SECRET` | optional | = `SECRET_KEY` | Optional JWT signing override; effective value must also be strong in production. |
 | `JWT_EXPIRATION_HOURS` | optional | `24` | Login token lifetime in hours. |
 | `FLASK_ENV` | ✅ prod | unset | Set to `production` on Render. Enables the startup secret/payment checks. |
 | `ALLOWED_ORIGINS` | ✅ prod | localhost list | Comma-separated exact frontend origins allowed by CORS; set this on Render. |
 | `FRONTEND_URL` | optional | unset | Optional single primary frontend origin; added to the CORS allowlist if set. |
-| `ADMIN_EMAIL` | ✅ prod | `admin@learnafrica.com` | Admin account email. On every boot this account is forced to superadmin/active. |
-| `ADMIN_PASSWORD` | ✅ prod | `Admin@LearnAfrica2024!` | When set, the admin password is re-asserted from this value on every boot. |
+| `ADMIN_EMAIL` | required for bootstrap | none | Owner email to create/reconcile; no default account is promoted. |
+| `ADMIN_PASSWORD` | required for bootstrap | none | Unique password set in the host dashboard only; use 32+ characters. |
 | `DATABASE_URL` | ✅ prod | unset → SQLite | Supabase Postgres connection string. |
 | `DATABASE_PATH` | optional | `backend/instance/learnafrica.db` | SQLite file location (dev). |
 | `PASS_MIN_LENGTH` | optional | `8` | Minimum signup password length. |
@@ -498,7 +498,7 @@ third-party purchase to start.
 | `FORCE_SEED_GUIDE` | Optional — set to `1` to re-seed the instructor guide. |
 | `RESET_LINK_HOURS`, `RESET_RESEND_COOLDOWN_SECONDS` | Optional — **you choose** (defaults `1` hour, `60` seconds). |
 | `OTP_EXPIRY_MINUTES`, `OTP_RESEND_COOLDOWN_SECONDS` | Optional — **you choose** (defaults `15` minutes, `60` seconds). |
-| `SITE_URL` | **Your frontend URL** — e.g. `https://learnafrica-lite-weld.vercel.app`. Used by `/api/sitemap.xml` so search-engine entries are absolute. See [SEARCH_AND_GOOGLE_SETUP.md](SEARCH_AND_GOOGLE_SETUP.md). |
+| `SITE_URL` | **Your frontend URL** — e.g. `https://learn-africa-five.vercel.app`. Used by `/api/sitemap.xml` so search-engine entries are absolute. See [SEARCH_AND_GOOGLE_SETUP.md](SEARCH_AND_GOOGLE_SETUP.md). |
 | `PORT` | **Set automatically** by Render. Do not set it yourself in production. |
 | `VITE_API_URL` (frontend) | **Your backend URL** — after Render deploys, e.g. `https://learnafrica-backend-xxxx.onrender.com`. |
 
@@ -1471,3 +1471,8 @@ and troubleshooting — all updated to your current code and your **Supabase** s
 ---
 
 Built for African learners. 🌍
+
+
+### Production security settings
+
+Paystack webhook processing now checks the signed event against the stored transaction's provider, amount and currency before marking it paid or enrolling the learner. Payment initialization logs no longer include the request body or learner contact details. Database/schema initialization failure stops the backend from serving requests. Production signing keys must be at least 32 characters and must not be development placeholders.
