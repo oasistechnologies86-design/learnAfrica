@@ -158,6 +158,7 @@ export function VerifySection() {
             )}
           </div>
         )}
+        </div>
       </div>
     </section>
   );
