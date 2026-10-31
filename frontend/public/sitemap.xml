@@ -8,8 +8,8 @@
   Replace the host below if you move to a custom domain.
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://learnafrica-lite-weld.vercel.app/</loc></url>
-  <url><loc>https://learnafrica-lite-weld.vercel.app/courses</loc></url>
-  <url><loc>https://learnafrica-lite-weld.vercel.app/instructors</loc></url>
-  <url><loc>https://learnafrica-lite-weld.vercel.app/blog</loc></url>
+  <url><loc>https://learn-africa-five.vercel.app/</loc></url>
+  <url><loc>https://learn-africa-five.vercel.app/courses</loc></url>
+  <url><loc>https://learn-africa-five.vercel.app/instructors</loc></url>
+  <url><loc>https://learn-africa-five.vercel.app/blog</loc></url>
 </urlset>
