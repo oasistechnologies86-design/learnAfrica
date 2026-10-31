@@ -71,20 +71,20 @@ export function VerifySection() {
   return (
     <section id="verify-section" ref={sectionRef} className="scroll-mt-24 py-3 sm:py-5">
       <div className={cn(
-        "container mx-auto max-w-3xl transition-all duration-700",
+        "container mx-auto max-w-2xl transition-all duration-700",
         sectionVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
       )}>
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-primary/10 mb-4">
-            <ShieldCheck className="h-7 w-7 text-primary" />
+        <div className="text-center mb-5">
+          <div className="inline-flex items-center justify-center h-11 w-11 rounded-xl bg-primary/10 mb-3">
+            <ShieldCheck className="h-5 w-5 text-primary" />
           </div>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Enter your credential ID</h2>
-          <p className="text-muted-foreground mt-2 text-sm sm:text-base">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Enter your credential ID</h2>
+          <p className="text-muted-foreground mt-2 text-sm">
             Enter a certificate or badge ID to verify its authenticity.
           </p>
         </div>
 
-        <div className="rounded-[1.75rem] border border-border/80 bg-card/90 p-4 shadow-xl shadow-primary/5 backdrop-blur sm:p-7">
+        <div className="rounded-2xl border border-border/80 bg-card/90 p-4 shadow-lg shadow-primary/5 backdrop-blur sm:p-5">
         <form onSubmit={handleVerify} className="mb-0 flex flex-col gap-3 sm:flex-row">
           <input type="text" value={credId}
             onChange={e => { setCredId(e.target.value); setSearched(false); setResult(null); }}
@@ -98,7 +98,7 @@ export function VerifySection() {
 
         {searched && result && (
           <div className={cn(
-            'rounded-2xl border p-6 animate-in fade-in slide-in-from-bottom-2',
+            'rounded-2xl border p-4 animate-in fade-in slide-in-from-bottom-2',
             result.valid ? 'bg-success/5 border-success/30' : 'bg-destructive/5 border-destructive/30'
           )}>
             {result.valid ? (
