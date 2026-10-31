@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  BookOpen, Users, Award, Play, ArrowRight, Star,
+  BookOpen, Users, Award, Play, ArrowRight, Star, Sparkles,
   Zap, Target, MessageSquare,
   ShieldCheck, Search, Quote, ChevronLeft, ChevronRight,
   LayoutDashboard, PlusCircle, BarChart2, Receipt, Trophy, Wallet, Ticket, Settings, GraduationCap
@@ -628,27 +628,57 @@ export function LandingPage() {
       {/* ── Testimonials Carousel ── */}
       <TestimonialsSection />
 
-      {/* Dedicated public credential verification page */ }
-      <section className="border-t border-border bg-gradient-to-br from-primary/5 via-background to-muted/30 py-12 sm:py-16">
-        <div className="container mx-auto flex flex-col items-center gap-4 px-4 text-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary"><ShieldCheck className="h-6 w-6" /></span>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Have a LearnAfrica certificate?</h2>
-          <p className="max-w-xl text-sm sm:text-base text-muted-foreground">Employers and institutions can confirm certificates and achievement badges on our dedicated verification page.</p>
-          <Link to="/verify-credential" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90">
-            Verify a certificate <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-      </section>
-
-      {/* The Community has its own dedicated page; participation requires login. */}
-      <section className="border-t border-border py-12 sm:py-16">
-        <div className="container mx-auto flex max-w-3xl flex-col items-center px-4 text-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary"><MessageSquare className="h-6 w-6" /></span>
-          <h2 className="mt-4 text-2xl sm:text-3xl font-bold tracking-tight">Better learning happens together.</h2>
-          <p className="mt-3 max-w-xl text-sm sm:text-base text-muted-foreground">Ask questions, share progress, and connect with learners across Africa in the LearnAfrica Community.</p>
-          <Link to="/community" className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-5 text-sm font-semibold text-primary transition hover:bg-primary/10">
-            {isAuthenticated ? 'Open Community' : 'Sign in to join the Community'} <ArrowRight className="h-4 w-4" />
-          </Link>
+      {/* Futuristic credential trust + community feature cards */}
+      <section className="relative isolate overflow-hidden border-y border-border/70 bg-[#06171d] py-14 text-white sm:py-20">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-50" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(110,231,183,.16) 1px, transparent 0)', backgroundSize: '26px 26px' }} />
+        <div aria-hidden="true" className="pointer-events-none absolute -left-32 top-0 h-80 w-80 rounded-full bg-emerald-400/10 blur-3xl" />
+        <div aria-hidden="true" className="pointer-events-none absolute -right-24 bottom-0 h-80 w-80 rounded-full bg-cyan-400/10 blur-3xl" />
+        <div className="container relative mx-auto px-4">
+          <div className="mx-auto mb-10 max-w-2xl text-center sm:mb-12">
+            <p className="text-[11px] font-black uppercase tracking-[0.28em] text-emerald-300">Beyond the classroom</p>
+            <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Skills deserve to be seen. <span className="text-emerald-300">People deserve to connect.</span></h2>
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-white/60 sm:text-base">Verify a learning milestone with confidence, then find your people and keep growing together.</p>
+          </div>
+          <div className="grid gap-5 lg:grid-cols-2">
+            <article className="group relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-5 transition duration-500 hover:-translate-y-1 hover:border-emerald-200/30 hover:bg-white/[0.07] sm:p-7">
+              <div aria-hidden="true" className="pointer-events-none absolute -right-12 -top-14 h-48 w-48 rounded-full border border-emerald-200/10 transition-transform duration-700 group-hover:scale-125" />
+              <div className="relative grid items-center gap-6 sm:grid-cols-[1fr_0.85fr]">
+                <div>
+                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-emerald-200/20 bg-emerald-300/10 text-emerald-200"><ShieldCheck className="h-5 w-5" /></span>
+                  <p className="mt-5 text-[10px] font-black uppercase tracking-[0.24em] text-emerald-200/70">Credential trust portal</p>
+                  <h3 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">A certificate that speaks for itself.</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-white/60">Let employers and institutions check the authenticity of LearnAfrica certificates and badges. No account needed.</p>
+                  <Link to="/verify-credential" className="mt-6 inline-flex h-11 items-center gap-2 rounded-xl bg-emerald-300 px-4 text-sm font-bold text-[#05211c] transition hover:bg-emerald-200">Verify a certificate <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></Link>
+                </div>
+                <div className="relative mx-auto w-full max-w-[230px] rotate-2 rounded-xl border border-emerald-100/20 bg-gradient-to-br from-[#123a3c] via-[#0c2b35] to-[#15233a] p-2 shadow-2xl shadow-black/30 transition-transform duration-500 group-hover:rotate-0">
+                  <div className="rounded-lg border border-emerald-100/15 px-3 py-5 text-center">
+                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-200/10 text-emerald-200"><Award className="h-6 w-6" /></div>
+                    <p className="mt-3 text-[8px] font-black uppercase tracking-[0.25em] text-emerald-100/60">LearnAfrica</p>
+                    <p className="mt-2 font-serif text-lg leading-tight text-white">Certificate of <span className="italic text-emerald-200">achievement</span></p>
+                    <div className="mx-auto my-3 h-px w-14 bg-gradient-to-r from-transparent via-emerald-200/70 to-transparent" />
+                    <div className="flex items-center justify-center gap-1.5 rounded-full border border-emerald-200/20 bg-emerald-200/10 px-2 py-1.5 text-[8px] font-bold text-emerald-100"><ShieldCheck className="h-3 w-3" /> PUBLIC VERIFICATION</div>
+                    <p className="mt-3 font-mono text-[8px] tracking-widest text-white/35">LEARN · BUILD · GROW</p>
+                  </div>
+                </div>
+              </div>
+            </article>
+            <article className="group relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-5 transition duration-500 hover:-translate-y-1 hover:border-cyan-200/30 sm:p-7">
+              <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-12 h-48 w-48 rounded-full bg-cyan-300/[0.06] blur-2xl transition-transform duration-700 group-hover:scale-125" />
+              <div className="relative">
+                <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-cyan-200/20 bg-cyan-300/10 text-cyan-200"><Users className="h-5 w-5" /></span>
+                <p className="mt-5 text-[10px] font-black uppercase tracking-[0.24em] text-cyan-200/70">The LearnAfrica network</p>
+                <h3 className="mt-2 max-w-lg text-2xl font-bold tracking-tight sm:text-3xl">Your next breakthrough could start with a conversation.</h3>
+                <p className="mt-3 max-w-lg text-sm leading-relaxed text-white/60">Ask questions, share progress, and connect with learners across Africa in a dedicated member community.</p>
+                <div className="mt-6 grid gap-2 sm:grid-cols-3">
+                  <span className="rounded-xl border border-white/10 bg-white/[0.04] p-3 text-xs text-white/70"><MessageSquare className="mb-2 h-4 w-4 text-cyan-200" /> Ask & share</span>
+                  <span className="rounded-xl border border-white/10 bg-white/[0.04] p-3 text-xs text-white/70"><Users className="mb-2 h-4 w-4 text-cyan-200" /> Learn together</span>
+                  <span className="rounded-xl border border-white/10 bg-white/[0.04] p-3 text-xs text-white/70"><Sparkles className="mb-2 h-4 w-4 text-cyan-200" /> Grow skills</span>
+                </div>
+                <Link to="/community" className="mt-6 inline-flex h-11 items-center gap-2 rounded-xl border border-cyan-200/25 bg-cyan-200/10 px-4 text-sm font-bold text-cyan-100 transition hover:bg-cyan-200/15">{isAuthenticated ? 'Open the Community' : 'Sign in to join the Community'} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></Link>
+                <p className="mt-3 text-[11px] text-white/40">Community participation requires an account.</p>
+              </div>
+            </article>
+          </div>
         </div>
       </section>
 

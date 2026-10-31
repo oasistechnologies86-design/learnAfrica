@@ -69,27 +69,28 @@ export function VerifySection() {
   };
 
   return (
-    <section id="verify-section" ref={sectionRef} className="py-16 sm:py-20 bg-gradient-to-b from-background to-muted/20 border-t border-border">
+    <section id="verify-section" ref={sectionRef} className="scroll-mt-24 py-3 sm:py-5">
       <div className={cn(
-        "container mx-auto px-4 max-w-2xl transition-all duration-700",
+        "container mx-auto max-w-3xl transition-all duration-700",
         sectionVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
       )}>
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-primary/10 mb-4">
             <ShieldCheck className="h-7 w-7 text-primary" />
           </div>
-          <h2 className="text-2xl sm:text-3xl font-bold">Verify a Credential</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Enter your credential ID</h2>
           <p className="text-muted-foreground mt-2 text-sm sm:text-base">
             Enter a certificate or badge ID to verify its authenticity.
           </p>
         </div>
 
-        <form onSubmit={handleVerify} className="flex gap-2 mb-6">
+        <div className="rounded-[1.75rem] border border-border/80 bg-card/90 p-4 shadow-xl shadow-primary/5 backdrop-blur sm:p-7">
+        <form onSubmit={handleVerify} className="mb-0 flex flex-col gap-3 sm:flex-row">
           <input type="text" value={credId}
             onChange={e => { setCredId(e.target.value); setSearched(false); setResult(null); }}
             placeholder="e.g. LA-CERT-ABCD-1A2B3C"
-            className="flex-1 h-12 rounded-xl border border-input bg-background px-4 text-sm focus:ring-2 focus:ring-primary outline-none min-w-0" />
-          <Button type="submit" disabled={loading || !credId.trim()} className="h-12 px-6 shrink-0 gap-2">
+            className="h-13 min-w-0 flex-1 rounded-xl border border-input bg-background/80 px-4 text-sm shadow-inner outline-none transition placeholder:text-muted-foreground/60 focus:border-primary/60 focus:ring-4 focus:ring-primary/10" />
+          <Button type="submit" disabled={loading || !credId.trim()} className="h-13 shrink-0 gap-2 rounded-xl px-6 shadow-lg shadow-primary/15">
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
             <span className="hidden sm:inline">Verify</span>
           </Button>
@@ -158,6 +159,7 @@ export function VerifySection() {
             )}
           </div>
         )}
+        </div>
       </div>
     </section>
   );
