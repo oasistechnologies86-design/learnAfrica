@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  BookOpen, Users, Award, Play, CheckCircle, ArrowRight, Star,
-  Zap, Target, TrendingUp, MessageSquare, Loader2,
+  BookOpen, Users, Award, Play, ArrowRight, Star,
+  Zap, Target, MessageSquare,
   ShieldCheck, Search, Quote, ChevronLeft, ChevronRight,
   LayoutDashboard, PlusCircle, BarChart2, Receipt, Trophy, Wallet, Ticket, Settings, GraduationCap
 } from 'lucide-react';
