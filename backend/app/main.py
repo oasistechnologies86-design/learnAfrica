@@ -48,6 +48,7 @@ from .models    import (get_course_sections, score_quiz, get_or_issue_certificat
 from .quiz_service import (build_served_questions, public_questions, grade_served,
                            session_expiry, is_expired, new_session_id)
 from . import email_service
+from .extra_attempts import init_extra_attempts, extra_attempt_count, settle_extra_attempt
 
 # ── Globals (set inside create_app) ──────────────────────────────────────────
 socketio = None
@@ -446,6 +447,7 @@ def create_app() -> Flask:
     global socketio
 
     app = Flask(__name__)
+    init_extra_attempts(app)
 
     # ── Configuration ─────────────────────────────────────────────────────────
     app.config['SECRET_KEY']           = os.environ.get('SECRET_KEY', 'dev-secret-CHANGE-IN-PRODUCTION')
@@ -2427,7 +2429,8 @@ def create_app() -> Flask:
                     'SELECT COUNT(*) AS cnt FROM quiz_attempts WHERE user_id=? AND quiz_id=?',
                     (uid, qid)).fetchone()
                 used = int(row['cnt'] or 0) if row else 0
-                if used >= max_attempts:
+                paid_credits = extra_attempt_count(db, uid, qid)
+                if used >= max_attempts + paid_credits:
                     return jsonify({
                         'error': 'attempt_limit',
                         'message': f'You have used all {max_attempts} attempts for this quiz.',
@@ -2539,7 +2542,8 @@ def create_app() -> Flask:
                     (g.current_user['user_id'], qid)
                 ).fetchone()
                 prior_attempts = int(row['cnt'] or 0) if row else 0
-                if prior_attempts >= max_attempts:
+                paid_credits = extra_attempt_count(db, g.current_user['user_id'], qid)
+                if prior_attempts >= max_attempts + paid_credits:
                     return jsonify({
                         'error': 'attempt_limit',
                         'message': f'You have used all {max_attempts} attempts for this quiz.',
@@ -8201,14 +8205,25 @@ def create_app() -> Flask:
                 if pstatus == 'success':
                     # Update the transaction to success and enroll the student
                     tx = db.execute(
-                        "SELECT id, user_id, course_id, status, type FROM transactions WHERE id=? OR provider_ref=?",
+                        "SELECT id, user_id, course_id, status, type, amount, currency, provider FROM transactions WHERE id=? OR provider_ref=?",
                         (ref, ref)
                     ).fetchone()
+                    # Verify the reference and exact amount with Paystack itself.
+                    if tx and tx['provider'] == 'paystack':
+                        from .payments import verify_payment
+                        verified = verify_payment(ref, 'paystack')
+                        if (verified.get('status') != 'success' or not verified.get('verified')
+                                or round(float(verified.get('amount') or 0), 2) != round(float(tx['amount'] or 0), 2)
+                                or str(verified.get('currency') or '').upper() != str(tx['currency'] or 'GHS').upper()):
+                            app.logger.warning('Paystack webhook verification mismatch for %s', ref)
+                            return jsonify({'error': 'Payment verification mismatch'}), 400
                     if tx and tx['status'] != 'success':
                         db.execute(
                             "UPDATE transactions SET status='success', updated_at=CURRENT_TIMESTAMP WHERE id=?",
                             (tx['id'],)
                         )
+                        if tx['type'] == 'quiz_extra_attempt':
+                            settle_extra_attempt(db, tx['id'])
                         # Instructor registration fee: mark the application paid.
                         if tx['type'] == 'instructor_registration' and tx['user_id']:
                             _mark_registration_paid(db, tx['user_id'], tx['id'])
@@ -8611,11 +8626,18 @@ def create_app() -> Flask:
             # Ask provider for real status
             result = verify_payment(tx['provider_ref'] or tx['id'], tx['provider'] or 'mock')
             new_status = result.get('status', 'pending')
+            if new_status == 'success' and tx['provider'] == 'paystack':
+                if (not result.get('verified')
+                        or round(float(result.get('amount') or 0), 2) != round(float(tx['amount'] or 0), 2)
+                        or str(result.get('currency') or '').upper() != str(tx['currency'] or 'GHS').upper()):
+                    return jsonify({'error': 'Payment verification mismatch'}), 400
 
             if new_status == 'success':
                 db.execute("UPDATE transactions SET status='success', updated_at=CURRENT_TIMESTAMP WHERE id=?", (tx['id'],))
-                # Enroll if needed
-                if tx['user_id'] and tx['course_id']:
+                if tx['type'] == 'quiz_extra_attempt':
+                    settle_extra_attempt(db, tx['id'])
+                # Extra-attempt payments never alter course enrolment.
+                if tx['type'] != 'quiz_extra_attempt' and tx['user_id'] and tx['course_id']:
                     already = db.execute(
                         'SELECT 1 FROM user_enrollments WHERE user_id=? AND course_id=?',
                         (tx['user_id'], tx['course_id'])
