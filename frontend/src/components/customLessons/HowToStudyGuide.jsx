@@ -1,12 +1,12 @@
 /**
- * HowToStudyGuide — sample custom lesson component.
+ * HowToStudyGuide, sample custom lesson component.
  *
  * A long-form reading page: headings, paragraphs, hyperlinks, callouts.
  * Full width, scrollable, matches the existing LearnAfrica theme (Tailwind).
  *
  * Every custom lesson component in the registry receives the same two props:
- *   - student: { id, name, email, avatar, role, ... } — the logged-in user
- *   - lesson:  { id, title, order, is_final, ... }   — the lesson metadata
+ *   - student: { id, name, email, avatar, role, ... }, the logged-in user
+ *   - lesson:  { id, title, order, is_final, ... }, the lesson metadata
  *
  * These let the component personalize content (e.g. address student by name).
  */
@@ -26,7 +26,7 @@ export default function HowToStudyGuide({ student, lesson }) {
           How to Get the Most Out of This Course
         </h1>
         <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-          Hi <span className="font-semibold text-foreground">{firstName}</span> — welcome. Before you dive
+          Hi <span className="font-semibold text-foreground">{firstName}</span>, welcome. Before you dive
           into the lessons ahead, take a few minutes to read through this guide. The
           students who finish courses and actually apply what they learn all share a
           few habits in common. This page walks you through them.
@@ -40,14 +40,14 @@ export default function HowToStudyGuide({ student, lesson }) {
         </h2>
         <p className="leading-relaxed text-foreground/90">
           Enrolling in a course is the easy part. Finishing it, understanding the
-          material, and being able to use it in your own work — that's the hard part.
+          material, and being able to use it in your own work, that's the hard part.
           Research on how adults learn consistently shows that the difference between
           students who succeed and those who drop off is not intelligence or talent.
           It's method.
         </p>
         <p className="leading-relaxed text-foreground/90">
-          Passive learning — watching videos while doing something else, skipping
-          ahead, treating a course like Netflix — feels productive but produces almost
+          Passive learning, watching videos while doing something else, skipping
+          ahead, treating a course like Netflix, feels productive but produces almost
           no lasting knowledge. Active learning takes more effort in the moment but
           means the material actually sticks. The sections below explain how to make
           your learning active.
@@ -82,7 +82,7 @@ export default function HowToStudyGuide({ student, lesson }) {
         <p className="leading-relaxed text-foreground/90">
           Consistency beats intensity every time. A student who studies for 30 minutes
           daily will outperform one who does five-hour marathons on weekends. Your
-          brain consolidates information during rest — spacing your sessions out gives
+          brain consolidates information during rest, spacing your sessions out gives
           it time to do that work.
         </p>
         <p className="leading-relaxed text-foreground/90">
@@ -105,7 +105,7 @@ export default function HowToStudyGuide({ student, lesson }) {
             </li>
             <li className="flex gap-2">
               <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
-              <span>Aim for 3–5 sessions per week — not necessarily daily</span>
+              <span>Aim for 3-5 sessions per week, not necessarily daily</span>
             </li>
             <li className="flex gap-2">
               <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
@@ -138,17 +138,17 @@ export default function HowToStudyGuide({ student, lesson }) {
         </h2>
         <p className="leading-relaxed text-foreground/90">
           The single biggest predictor of whether you'll retain what you learn is how
-          actively you engage with it. Video lessons and readings are inputs — they
+          actively you engage with it. Video lessons and readings are inputs, they
           only turn into skill when you do something with them.
         </p>
         <p className="leading-relaxed text-foreground/90">
           After each lesson, ask yourself three questions: <em>What did I just learn?</em>
           {' '}<em>Where would I use this?</em> <em>What am I still confused about?</em>{' '}
-          Write your answers down — even one sentence each. This habit alone will
+          Write your answers down, even one sentence each. This habit alone will
           double your retention.
         </p>
         <p className="leading-relaxed text-foreground/90">
-          For coding or technical courses, do not just watch — type the examples
+          For coding or technical courses, do not just watch, type the examples
           yourself, break them on purpose, and then fix them. For business or theory
           courses, take one concept per lesson and try to explain it out loud to
           someone else (or a rubber duck). If you cannot explain it, you do not yet
@@ -182,9 +182,8 @@ export default function HowToStudyGuide({ student, lesson }) {
           <Users className="h-5 w-5 text-primary" /> Learn With Others
         </h2>
         <p className="leading-relaxed text-foreground/90">
-          The lonely learner is the one most likely to quit. Even a small connection —
-          a WhatsApp group of two or three classmates, a friend you check in with once
-          a week — dramatically raises your odds of finishing. Learning is social.
+          The lonely learner is the one most likely to quit. Even a small connection, a WhatsApp group of two or three classmates, a friend you check in with once
+          a week, dramatically raises your odds of finishing. Learning is social.
           Isolation is where motivation goes to die.
         </p>
         <p className="leading-relaxed text-foreground/90">
@@ -194,8 +193,8 @@ export default function HowToStudyGuide({ student, lesson }) {
           pride you'll spend admitting confusion.
         </p>
         <p className="leading-relaxed text-foreground/90">
-          Reversing the flow works too. Explaining something to someone else — even
-          badly — is one of the most effective ways to lock in knowledge. If you
+          Reversing the flow works too. Explaining something to someone else, even
+          badly, is one of the most effective ways to lock in knowledge. If you
           understand a concept, find someone who doesn't and teach it to them. You'll
           be shocked how many gaps in your own understanding surface when you have to
           put it into words.
@@ -211,20 +210,20 @@ export default function HowToStudyGuide({ student, lesson }) {
           This course is structured to move you from foundational concepts to real
           practical application. Early lessons build the vocabulary and mental models
           you need. Later lessons ask you to use those models to solve problems. The
-          quiz at the end is not a hurdle — it is a chance to confirm that the
+          quiz at the end is not a hurdle, it is a chance to confirm that the
           material has landed, and to earn the certificate you can share with
           employers and peers.
         </p>
         <p className="leading-relaxed text-foreground/90">
           Some lessons will feel easy. Some will feel like a wall. Both are normal.
-          The wall lessons are usually the ones where the most learning happens — the
+          The wall lessons are usually the ones where the most learning happens, the
           discomfort is your brain wiring new connections. Push through them, and if
           you get stuck for more than 20 minutes, come back the next day. Sleep does
           real work on hard problems.
         </p>
         <p className="leading-relaxed text-foreground/90">
           Reach out to the instructor when you need to. That's what they're here for.
-          The community discussion is another great place to ask questions — often a
+          The community discussion is another great place to ask questions, often a
           peer has hit the same wall you're hitting, and someone else has already
           answered.
         </p>
