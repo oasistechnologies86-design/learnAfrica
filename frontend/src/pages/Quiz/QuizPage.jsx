@@ -79,6 +79,18 @@ export function QuizPage() {
         if (!quizRes.ok) throw new Error((await parseErr(quizRes, 'Failed to load quiz')) || 'Quiz not found');
         const quizData = await quizRes.json();
         let q = quizData.quiz;
+        // Check the effective limit (base attempts plus verified paid credits)
+        // before starting any quiz, including plain untimed quizzes.
+        const effectiveLimit = Number(q.effective_max_attempts ?? q.max_attempts ?? 0);
+        const attemptsRemaining = q.attempts_remaining == null
+          ? (effectiveLimit > 0 ? Math.max(0, effectiveLimit - Number(q.attempts_used || 0)) : null)
+          : Number(q.attempts_remaining);
+        if (effectiveLimit > 0 && attemptsRemaining <= 0) {
+          setAttemptLimit(true);
+          setError('You have used all attempts for this quiz.');
+          setQuiz(q);
+          return;
+        }
         // Randomised and/or timed quizzes run through /start, which serves the
         // student's specific question set and starts the authoritative server
         // timer. Plain quizzes keep their original behaviour.
@@ -283,9 +295,9 @@ export function QuizPage() {
             <p className="text-sm font-bold">{isFinalQuiz ? 'Final Exam' : 'Test'}</p>
             <p className="text-xs text-muted-foreground">{quiz.title}</p>
             {course && <p className="text-xs text-muted-foreground">{course.title}</p>}
-            {quiz.max_attempts > 0 && (
+            {(quiz.effective_max_attempts ?? quiz.max_attempts) > 0 && (
               <p className="text-2xs text-muted-foreground">
-                {Math.max(0, quiz.max_attempts - (quiz.attempts_used || 0))} of {quiz.max_attempts} attempt{quiz.max_attempts > 1 ? 's' : ''} remaining
+                {Math.max(0, quiz.attempts_remaining ?? ((quiz.effective_max_attempts ?? quiz.max_attempts) - (quiz.attempts_used || 0)))} of {quiz.effective_max_attempts ?? quiz.max_attempts} attempt{(quiz.effective_max_attempts ?? quiz.max_attempts) > 1 ? 's' : ''} remaining
               </p>
             )}
           </div>
