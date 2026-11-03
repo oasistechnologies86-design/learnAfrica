@@ -8757,9 +8757,15 @@ def create_app() -> Flask:
             result = verify_payment(tx['provider_ref'] or tx['id'], tx['provider'] or 'mock')
             new_status = result.get('status', 'pending')
             if new_status == 'success' and tx['provider'] == 'paystack':
-                if (not result.get('verified')
-                        or round(float(result.get('amount') or 0), 2) != round(float(tx['amount'] or 0), 2)
-                        or str(result.get('currency') or '').upper() != str(tx['currency'] or 'GHS').upper()):
+                from decimal import Decimal, InvalidOperation
+                try:
+                    verified_amount = Decimal(str(result.get('amount') or 0)).quantize(Decimal('0.01'))
+                    expected_amount = Decimal(str(tx['amount'] or 0)).quantize(Decimal('0.01'))
+                except (InvalidOperation, TypeError, ValueError):
+                    return jsonify({'error': 'Invalid verified payment amount'}), 400
+                if (not result.get('verified') or verified_amount != expected_amount
+                        or str(result.get('currency') or '').strip().upper()
+                           != str(tx['currency'] or 'GHS').strip().upper()):
                     return jsonify({'error': 'Payment verification mismatch'}), 400
 
             if new_status == 'success':
