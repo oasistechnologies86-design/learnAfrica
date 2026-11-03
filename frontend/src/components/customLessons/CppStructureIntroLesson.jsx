@@ -1,7 +1,7 @@
 /**
- * CppStructureIntroLesson — a real teaching lesson (not just a welcome page).
+ * CppStructureIntroLesson, a real teaching lesson (not just a welcome page).
  *
- * Topic: Anatomy of a C++ Program — the first proper lesson of the
+ * Topic: Anatomy of a C++ Program, the first proper lesson of the
  * "C++ Programming for Beginners" course. Explains #include, main(),
  * statements, braces, and comments using a real worked example, then
  * gives the student a small hands-on challenge.
@@ -15,7 +15,7 @@ import {
   ChevronRight, Sparkles, HelpCircle, Target,
 } from 'lucide-react';
 
-// Small reusable code-block component — monospace, dark, line numbers optional
+// Small reusable code-block component, monospace, dark, line numbers optional
 function CodeBlock({ code, highlightLines = [] }) {
   const lines = code.trim().split('\n');
   return (
@@ -95,10 +95,10 @@ int main() {
           Anatomy of a C++ Program
         </h1>
         <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-          Hi <span className="font-semibold text-foreground">{firstName}</span> — every C++ program,
+          Hi <span className="font-semibold text-foreground">{firstName}</span>, every C++ program,
           no matter how big, is built from the same handful of moving parts. Once you can read
           the five lines below and know exactly what each one is doing, you're no longer
-          intimidated by C++ code — you're reading it.
+          intimidated by C++ code, you're reading it.
         </p>
       </header>
 
@@ -110,7 +110,7 @@ int main() {
         <p className="leading-relaxed text-foreground/90">
           C++ is a <strong>compiled</strong> language. That means before your program can run,
           a separate program called a <em>compiler</em> reads your source code and translates
-          it into machine code — instructions the processor can execute directly. This is
+          it into machine code, instructions the processor can execute directly. This is
           different from languages like Python or JavaScript, which are read and run line by
           line by an interpreter.
         </p>
@@ -118,7 +118,7 @@ int main() {
           Practically, this means there are two steps between "code you wrote" and "program
           that runs": compiling (translating your code) and executing (running the translated
           result). If your code has a typo or breaks a grammar rule of C++, the compiler stops
-          you right there with an error — before the program ever runs.
+          you right there with an error, before the program ever runs.
         </p>
       </section>
 
@@ -149,7 +149,7 @@ int main() {
             <div className="space-y-1">
               <p className="font-bold font-mono text-sm">#include &lt;iostream&gt;</p>
               <p className="text-sm text-foreground/80 leading-relaxed">
-                This line doesn't do anything when your program runs — it happens before
+                This line doesn't do anything when your program runs, it happens before
                 compiling even starts. It tells the compiler "pull in the tools for handling
                 input and output," because printing text to the screen isn't built into the
                 core language itself. It's part of the C++ <em>standard library</em>, and you
@@ -163,10 +163,9 @@ int main() {
             <div className="space-y-1">
               <p className="font-bold font-mono text-sm">int main() {'{'}</p>
               <p className="text-sm text-foreground/80 leading-relaxed">
-                Every C++ program needs exactly one function named <code className="px-1 rounded bg-muted font-mono text-xs">main</code> —
-                it's the entry point. When your program starts, this is the first code that
+                Every C++ program needs exactly one function named <code className="px-1 rounded bg-muted font-mono text-xs">main</code>, it's the entry point. When your program starts, this is the first code that
                 runs. The <code className="px-1 rounded bg-muted font-mono text-xs">int</code> before it
-                means this function will hand back a whole number when it finishes — you'll see
+                means this function will hand back a whole number when it finishes, you'll see
                 why in a moment. The opening curly brace <code className="px-1 rounded bg-muted font-mono text-xs">{'{'}</code> marks
                 "everything inside main starts here."
               </p>
@@ -178,7 +177,7 @@ int main() {
             <div className="space-y-1">
               <p className="font-bold font-mono text-sm">std::cout &lt;&lt; "Hello, world!";</p>
               <p className="text-sm text-foreground/80 leading-relaxed">
-                This is a <em>statement</em> — a single complete instruction, always ending in
+                This is a <em>statement</em>, a single complete instruction, always ending in
                 a semicolon. <code className="px-1 rounded bg-muted font-mono text-xs">std::cout</code> represents
                 "the standard output" (your screen). The <code className="px-1 rounded bg-muted font-mono text-xs">{'<<'}</code> operator
                 sends whatever's on its right into that output stream. So this line means:
@@ -193,11 +192,10 @@ int main() {
               <p className="font-bold font-mono text-sm">return 0;</p>
               <p className="text-sm text-foreground/80 leading-relaxed">
                 Remember that <code className="px-1 rounded bg-muted font-mono text-xs">int</code> from
-                line 3? This is where main hands that number back — to the operating system,
+                line 3? This is where main hands that number back, to the operating system,
                 not to your screen. By convention, <code className="px-1 rounded bg-muted font-mono text-xs">0</code> means
                 "everything went fine." Any other number is normally used to signal that
-                something went wrong. You won't see this number when you run the program —
-                it's read by whatever launched your program, not printed to the console.
+                something went wrong. You won't see this number when you run the program, it's read by whatever launched your program, not printed to the console.
               </p>
             </div>
           </div>
@@ -207,7 +205,7 @@ int main() {
           <p>
             The opening <code className="px-1 rounded bg-muted font-mono text-xs">{'{'}</code> and
             closing <code className="px-1 rounded bg-muted font-mono text-xs">{'}'}</code> define
-            a <em>block</em> — everything main is responsible for. Forget the closing brace, and
+            a <em>block</em>, everything main is responsible for. Forget the closing brace, and
             the compiler won't know where main ends; that's one of the most common beginner
             errors, and the error message it gives you can look scarier than the mistake
             actually is.
@@ -222,13 +220,13 @@ int main() {
         </h2>
         <p className="leading-relaxed text-foreground/90">
           Anything after <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">//</code> on
-          a line is a <em>comment</em> — the compiler ignores it completely. Comments exist
+          a line is a <em>comment</em>, the compiler ignores it completely. Comments exist
           purely for humans reading the code later (including future-you).
         </p>
         <CodeBlock code={withComments} highlightLines={[2]} />
         <p className="leading-relaxed text-foreground/90">
           Notice this version also uses <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">std::endl</code> after
-          the text — that inserts a line break, similar to pressing Enter, so anything printed
+          the text, that inserts a line break, similar to pressing Enter, so anything printed
           after it starts on a fresh line.
         </p>
       </section>
@@ -246,7 +244,7 @@ int main() {
         </ol>
         <p className="pt-1">
           If it compiles and prints both lines, you've just written and understood your first
-          real C++ program from the ground up — not copied blindly, but actually understood.
+          real C++ program from the ground up, not copied blindly, but actually understood.
         </p>
       </Callout>
 
@@ -257,8 +255,8 @@ int main() {
         </h2>
         <ul className="space-y-2">
           {[
-            'Forgetting the semicolon at the end of a statement — this is the single most common beginner error.',
-            'Mismatched curly braces — every { needs exactly one matching }.',
+            'Forgetting the semicolon at the end of a statement, this is the single most common beginner error.',
+            'Mismatched curly braces, every { needs exactly one matching }.',
             'Forgetting #include <iostream> and then wondering why std::cout doesn\'t work.',
             'Writing cout instead of std::cout without a "using namespace std;" line above it.',
           ].map((text, i) => (
@@ -280,8 +278,7 @@ int main() {
           <li>What does the semicolon at the end of a statement actually do?</li>
         </ul>
         <p className="pt-1">
-          If any of these feel shaky, re-read the matching section above before continuing —
-          this lesson is the foundation everything else in the course builds on.
+          If any of these feel shaky, re-read the matching section above before continuing, this lesson is the foundation everything else in the course builds on.
         </p>
       </Callout>
 
@@ -290,7 +287,7 @@ int main() {
         <h3 className="text-xl font-bold">Nice work, {firstName}.</h3>
         <p className="text-sm text-muted-foreground max-w-prose mx-auto leading-relaxed">
           You now understand the skeleton every C++ program shares. The next lessons build on
-          this directly — variables, which live inside main(), are next.
+          this directly, variables, which live inside main(), are next.
         </p>
       </section>
     </article>
