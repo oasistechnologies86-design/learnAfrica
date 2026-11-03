@@ -3216,9 +3216,9 @@ def create_app() -> Flask:
         ensure_column(db, 'lessons', 'text_content', 'TEXT')
         ensure_column(db, 'quizzes', 'duration_seconds', 'INTEGER DEFAULT 0')
         ensure_column(db, 'quizzes', 'max_attempts', 'INTEGER DEFAULT 0')
-            ensure_column(db, 'quizzes', 'questions_per_attempt', 'INTEGER DEFAULT 0')
-            ensure_column(db, 'quizzes', 'shuffle_questions', 'INTEGER DEFAULT 0')
-            ensure_column(db, 'quizzes', 'shuffle_options', 'INTEGER DEFAULT 0')
+        ensure_column(db, 'quizzes', 'questions_per_attempt', 'INTEGER DEFAULT 0')
+        ensure_column(db, 'quizzes', 'shuffle_questions', 'INTEGER DEFAULT 0')
+        ensure_column(db, 'quizzes', 'shuffle_options', 'INTEGER DEFAULT 0')
         course = db.execute('SELECT * FROM courses WHERE id=? AND instructor_id=?',
                             (cid, g.current_user['user_id'])).fetchone()
         if not course:
