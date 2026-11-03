@@ -153,16 +153,11 @@ export function QuizPage() {
       setTimeLeft(Math.max(0, remaining));
       return;
     }
-    // Prefer the explicit duration_seconds field (modern); fall back to parsing the text duration.
+    // The dedicated duration_seconds field is authoritative. The legacy
+    // `duration` column also held lesson estimates (e.g. "30 min"), so parsing
+    // it here incorrectly imposed a timer when the instructor had disabled it.
     const explicit = Number(quiz.duration_seconds || quiz.durationSeconds || 0);
-    if (explicit > 0) {
-      setTimeLeft(explicit);
-      return;
-    }
-    if (quiz.duration && quiz.duration !== 'No limit') {
-      const mins = parseInt(quiz.duration);
-      if (!isNaN(mins) && mins > 0) setTimeLeft(mins * 60);
-    }
+    setTimeLeft(explicit > 0 ? explicit : null);
   }, [quiz]);
 
   // Countdown
@@ -271,10 +266,16 @@ export function QuizPage() {
         <p className="text-destructive font-medium">{error || 'Quiz not available'}</p>
         {attemptLimit && (
           <div className="mt-4 space-y-2">
-            <p className="text-sm text-muted-foreground">Purchase one additional attempt for GHS 10. Payment is credited only after it is verified.</p>
-            <Button className="w-full" onClick={purchaseExtraAttempt} disabled={buyingAttempt}>
-              {buyingAttempt ? 'Starting secure payment…' : 'Buy One More Attempt · GHS 10'}
-            </Button>
+            {Number(quiz?.extra_attempt_price || 0) > 0 ? (
+              <>
+                <p className="text-sm text-muted-foreground">Purchase one additional attempt for GHS {Number(quiz.extra_attempt_price).toFixed(2)}. Payment is credited only after it is verified.</p>
+                <Button className="w-full" onClick={purchaseExtraAttempt} disabled={buyingAttempt}>
+                  {buyingAttempt ? 'Starting secure payment…' : `Buy One More Attempt · GHS ${Number(quiz.extra_attempt_price).toFixed(2)}`}
+                </Button>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">Additional paid attempts are not configured for this quiz. Please contact the instructor.</p>
+            )}
           </div>
         )}
         <Link to={`/learn/course/${courseId}/lesson/${lessonId}`}><Button className="mt-4">Back to Lesson</Button></Link>
