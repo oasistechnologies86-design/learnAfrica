@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Clock, CheckCircle2, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, CheckCircle2, Loader2, Sparkles, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
 import { QuizQuestion } from '@/components/quiz/QuizQuestion';
