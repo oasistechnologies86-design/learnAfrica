@@ -3468,7 +3468,10 @@ def create_app() -> Flask:
                 for sid in old_sids:
                     db.execute('DELETE FROM section_lessons WHERE section_id=?', (sid,))
                 db.execute('DELETE FROM curriculum_sections WHERE course_id=?', (cid,))
-                db.execute('DELETE FROM quizzes WHERE course_id=?',(cid,))
+                # Keep quiz IDs stable when a course is edited. Quiz attempts,
+                # timed sessions, and paid attempt credits all reference this ID.
+                # Removing/recreating every quiz here would silently reset attempt
+                # history and orphan credits after an ordinary course edit.
                 # Find which lessons the instructor kept (by ID)
                 incoming_ids = set()
                 for sec in d['curriculum']:
@@ -3514,19 +3517,38 @@ def create_app() -> Flask:
                                 db.execute('INSERT INTO lesson_resources (id,lesson_id,title,url,type) VALUES(?,?,?,?,?)',
                                            (str(uuid.uuid4()), leid, res['title'], res['url'],
                                             res.get('file_type') or res.get('type') or 'file'))
-                        if les.get('type') == 'quiz' and les.get('questions'):
-                            qzid = str(uuid.uuid4())
+                        if les.get('type') == 'quiz':
                             q_dur_sec = int(les.get('duration_seconds') or les.get('quiz_duration_seconds') or 0)
                             q_dur_text = les.get('duration') or ('No limit' if q_dur_sec == 0 else f'{q_dur_sec // 60} min')
                             q_max_att = max(0, int(les.get('max_attempts') or (10 if les.get('is_final') else 0)))
                             q_per_att = max(0, int(les.get('questions_per_attempt') or 0))
                             q_shuf_q  = 1 if les.get('shuffle_questions') else 0
                             q_shuf_o  = 1 if les.get('shuffle_options') else 0
-                            db.execute('INSERT INTO quizzes (id,course_id,lesson_id,title,duration,duration_seconds,max_attempts,'
-                                       'questions_per_attempt,shuffle_questions,shuffle_options) VALUES(?,?,?,?,?,?,?,?,?,?)',
-                                       (qzid, cid, leid, les.get('title','Quiz'), q_dur_text, q_dur_sec, q_max_att,
-                                        q_per_att, q_shuf_q, q_shuf_o))
-                            for qi, q in enumerate(les['questions']):
+                            existing_quiz = db.execute(
+                                'SELECT id FROM quizzes WHERE course_id=? AND lesson_id=? ORDER BY rowid LIMIT 1',
+                                (cid, leid)
+                            ).fetchone()
+                            if existing_quiz:
+                                qzid = existing_quiz['id']
+                                db.execute(
+                                    'UPDATE quizzes SET title=?,duration=?,duration_seconds=?,max_attempts=?,'
+                                    'questions_per_attempt=?,shuffle_questions=?,shuffle_options=? WHERE id=?',
+                                    (les.get('title','Quiz'), q_dur_text, q_dur_sec, q_max_att,
+                                     q_per_att, q_shuf_q, q_shuf_o, qzid)
+                                )
+                            else:
+                                qzid = str(uuid.uuid4())
+                                db.execute(
+                                    'INSERT INTO quizzes (id,course_id,lesson_id,title,duration,duration_seconds,max_attempts,'
+                                    'questions_per_attempt,shuffle_questions,shuffle_options) VALUES(?,?,?,?,?,?,?,?,?,?)',
+                                    (qzid, cid, leid, les.get('title','Quiz'), q_dur_text, q_dur_sec, q_max_att,
+                                     q_per_att, q_shuf_q, q_shuf_o)
+                                )
+                            # Replace the question bank, not the quiz itself. This
+                            # preserves historical attempts, active session IDs,
+                            # and payment credits while applying the instructor's edits.
+                            db.execute('DELETE FROM quiz_questions WHERE quiz_id=?', (qzid,))
+                            for qi, q in enumerate(les.get('questions') or []):
                                 db.execute('''INSERT INTO quiz_questions (id,quiz_id,question_text,options,correct_answer,question_type,"order")
                                               VALUES(?,?,?,?,?,?,?)''',
                                            (str(uuid.uuid4()), qzid, q.get('text',''),
