@@ -3083,7 +3083,7 @@ def create_app() -> Flask:
                         # Accept duration_seconds (preferred) or fall back to text duration
                         q_dur_sec = int(les.get('duration_seconds') or les.get('quiz_duration_seconds') or 0)
                         q_dur_text = les.get('duration') or ('No limit' if q_dur_sec == 0 else f'{q_dur_sec // 60} min')
-                        q_max_att = max(0, int(les.get('max_attempts') or 0))
+                        q_max_att = max(0, int(les.get('max_attempts') or (10 if les.get('is_final') else 0)))
                         q_per_att = max(0, int(les.get('questions_per_attempt') or 0))
                         q_shuf_q  = 1 if les.get('shuffle_questions') else 0
                         q_shuf_o  = 1 if les.get('shuffle_options') else 0
@@ -3494,7 +3494,7 @@ def create_app() -> Flask:
                             qzid = str(uuid.uuid4())
                             q_dur_sec = int(les.get('duration_seconds') or les.get('quiz_duration_seconds') or 0)
                             q_dur_text = les.get('duration') or ('No limit' if q_dur_sec == 0 else f'{q_dur_sec // 60} min')
-                            q_max_att = max(0, int(les.get('max_attempts') or 0))
+                            q_max_att = max(0, int(les.get('max_attempts') or (10 if les.get('is_final') else 0)))
                             q_per_att = max(0, int(les.get('questions_per_attempt') or 0))
                             q_shuf_q  = 1 if les.get('shuffle_questions') else 0
                             q_shuf_o  = 1 if les.get('shuffle_options') else 0
