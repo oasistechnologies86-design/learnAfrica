@@ -137,6 +137,8 @@ export function CreateCoursePage() {
             duration:  l.duration || '30 min',
             text_content: l.text_content || l.textContent || '',
             duration_seconds: Number(l.duration_seconds || 0),
+            quiz_duration_seconds: Number(l.quiz_duration_seconds || 0),
+            quiz_timer_enabled: !!l.quiz_timer_enabled,
             order:     li,
             is_final:  !!l.is_final,
             attempts_enabled: !!l.attempts_enabled,
