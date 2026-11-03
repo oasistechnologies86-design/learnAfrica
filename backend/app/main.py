@@ -3579,7 +3579,7 @@ def create_app() -> Flask:
                             else:
                                 qzid = str(uuid.uuid4())
                                 db.execute(
-                                    'INSERT INTO quizzes (id,course_id,lesson_id,title,duration,duration_seconds,max_attempts,'
+                                    'INSERT INTO quizzes (id,course_id,lesson_id,title,duration,duration_seconds,timer_enabled,max_attempts,'
                                     'questions_per_attempt,shuffle_questions,shuffle_options,attempts_enabled,extra_attempt_price) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)',
                                     (qzid, cid, leid, les.get('title','Quiz'), q_dur_text, q_dur_sec, q_timer_enabled, q_max_att,
                                      q_per_att, q_shuf_q, q_shuf_o, q_attempts_enabled, q_extra_price)
