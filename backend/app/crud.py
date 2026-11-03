@@ -186,8 +186,12 @@ def seed_admin(app, db):
     use_pg = app.config.get('USE_POSTGRES')
     ph     = '%s' if use_pg else '?'
 
-    admin_email = os.environ.get('ADMIN_EMAIL', 'admin@learnafrica.com')
-    admin_pass  = os.environ.get('ADMIN_PASSWORD', 'Admin@LearnAfrica2024!')
+    # Never create or promote an account from a source-code default credential.
+    admin_email = (os.environ.get('ADMIN_EMAIL') or '').strip().lower()
+    admin_pass = os.environ.get('ADMIN_PASSWORD') or ''
+    if not admin_email or not admin_pass:
+        print('⚠ admin seed skipped: configure ADMIN_EMAIL and ADMIN_PASSWORD in the deployment environment')
+        return
 
     existing = db.execute(
         'SELECT id FROM users WHERE email=' + ph, (admin_email,)
@@ -202,7 +206,7 @@ def seed_admin(app, db):
         'accessible to learners across Africa.'
     )
     DEFAULT_LOCATION     = 'Accra, Ghana'
-    DEFAULT_WEBSITE      = 'https://learnafrica-lite-weld.vercel.app'
+    DEFAULT_WEBSITE      = (os.environ.get('SITE_URL') or os.environ.get('FRONTEND_URL') or '').rstrip('/')
     # Specialisation: stored primarily in instructor_field.
     # instructor_title is kept identical for backward compatibility.
     DEFAULT_SPECIALISATION = 'Web Development & Online Education'
