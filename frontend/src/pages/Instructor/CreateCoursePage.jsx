@@ -388,6 +388,28 @@ export function CreateCoursePage() {
           <p className="text-2xs text-muted-foreground -mt-3">
             "Weeks required" is shown to students as the course length. "Hours required" auto-sums every lesson's time picker.
           </p>
+          <div className="p-4 rounded-xl border border-border bg-muted/20 space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-bold">Enforce minimum learning time</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Optional. When ON, students must spend the specified time in this course before taking its final exam. When OFF, no course-time gate or tracking is applied.
+                </p>
+              </div>
+              <Switch checked={enforceMinTime} onChange={enabled => {
+                setEnforceMinTime(enabled);
+                if (enabled && minTimeSeconds <= 0) setMinTimeSeconds(1800);
+              }} />
+            </div>
+            {enforceMinTime && (
+              <div className="flex flex-col items-center sm:items-start gap-2 border-t border-border pt-3">
+                <TimePicker value={minTimeSeconds} onChange={setMinTimeSeconds} />
+                <p className="text-xs text-muted-foreground">
+                  Students must spend at least <strong>{formatDuration(minTimeSeconds)}</strong> on this course before the final exam unlocks.
+                </p>
+              </div>
+            )}
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Initial Rating (0–5 ★)">
