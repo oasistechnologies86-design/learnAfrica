@@ -471,14 +471,19 @@ def create_app() -> Flask:
     if not app.config['USE_POSTGRES']:
         os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-    # Refuse to run in production with the built-in dev secret. Without a real
-    # SECRET_KEY/JWT_SECRET every login token can be forged.
-    _is_prod = (os.environ.get('FLASK_ENV') == 'production')
-    if _is_prod and not os.environ.get('JWT_SECRET') and not os.environ.get('SECRET_KEY'):
-        raise RuntimeError(
-            'SECRET_KEY (or JWT_SECRET) must be set in production — refusing to start '
-            'with the default development secret.'
-        )
+    # Validate the effective Flask and JWT signing secrets, not just whether
+    # an environment variable happens to exist.
+    _is_prod = (os.environ.get('FLASK_ENV') or '').lower() == 'production'
+    _weak_secret_markers = ('dev-secret', 'change-in-production', 'changeme', 'change-me', 'your-secret')
+    if _is_prod:
+        for _secret_name in ('SECRET_KEY', 'JWT_SECRET'):
+            _secret_value = str(app.config.get(_secret_name) or '')
+            if len(_secret_value) < 32 or any(
+                marker in _secret_value.lower() for marker in _weak_secret_markers
+            ):
+                raise RuntimeError(
+                    f'{_secret_name} must be a unique secret of at least 32 characters in production.'
+                )
 
     # ── Simple in-process rate limiter ────────────────────────────────────────
     # Best-effort protection against password guessing and OTP/email spam.
@@ -8292,14 +8297,24 @@ def create_app() -> Flask:
                         "SELECT id, user_id, course_id, status, type, amount, currency, provider FROM transactions WHERE id=? OR provider_ref=?",
                         (ref, ref)
                     ).fetchone()
-                    # Verify the reference and exact amount with Paystack itself.
-                    if tx and tx['provider'] == 'paystack':
+                    # Only a Paystack transaction may be settled by this event.
+                    if tx:
+                        from decimal import Decimal, InvalidOperation
                         from .payments import verify_payment
+                        if str(tx['provider'] or '').lower() != 'paystack':
+                            app.logger.warning('Paystack webhook provider mismatch for transaction %s', tx['id'])
+                            return jsonify({'error': 'Payment provider mismatch'}), 400
                         verified = verify_payment(ref, 'paystack')
+                        try:
+                            expected_amount = Decimal(str(tx['amount'] or 0)).quantize(Decimal('0.01'))
+                            verified_amount = Decimal(str(verified.get('amount') or 0)).quantize(Decimal('0.01'))
+                        except (InvalidOperation, TypeError, ValueError):
+                            return jsonify({'error': 'Invalid verified payment amount'}), 400
                         if (verified.get('status') != 'success' or not verified.get('verified')
-                                or round(float(verified.get('amount') or 0), 2) != round(float(tx['amount'] or 0), 2)
-                                or str(verified.get('currency') or '').upper() != str(tx['currency'] or 'GHS').upper()):
-                            app.logger.warning('Paystack webhook verification mismatch for %s', ref)
+                                or verified_amount != expected_amount
+                                or str(verified.get('currency') or '').strip().upper()
+                                   != str(tx['currency'] or 'GHS').strip().upper()):
+                            app.logger.warning('Paystack webhook verification mismatch for transaction %s', tx['id'])
                             return jsonify({'error': 'Payment verification mismatch'}), 400
                     if tx and tx['status'] != 'success':
                         db.execute(
