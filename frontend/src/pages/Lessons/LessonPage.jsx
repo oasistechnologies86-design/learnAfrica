@@ -560,7 +560,7 @@ export function LessonPage() {
               </div>
               <p className="text-sm font-semibold text-foreground">You’ve reached the end of this lesson</p>
               <p className="mt-1 text-sm text-muted-foreground">Scroll down to complete this lesson and continue.</p>
-              {!currentLessonFinished ? (
+              {lesson.type !== 'custom' && !currentLessonFinished ? (
                 <Button onClick={handleMarkComplete} disabled={isSaving} className="mt-5 min-w-48">
                   <CheckCircle className="mr-2 h-4 w-4" /> {isSaving ? 'Saving...' : 'Mark lesson complete'}
                 </Button>
@@ -789,9 +789,9 @@ export function LessonPage() {
                   )}
                 </div>
 
-                {/* Centre: Mark Complete or status (hidden for custom pages — auto-complete) */}
+                {/* Custom lessons have their single completion action at the end of the content. */}
                 <div className="flex-1 flex justify-center">
-                  {lesson.type !== 'custom' && !currentLessonFinished ? (
+                  {lesson.type === 'custom' ? null : !currentLessonFinished ? (
                     <Button onClick={handleMarkComplete} disabled={isSaving}
                       className="w-full max-w-[180px] h-11 font-bold uppercase tracking-widest text-2xs sm:text-xs shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
                       <CheckCircle className="h-4 w-4 shrink-0" />
