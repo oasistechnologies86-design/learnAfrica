@@ -132,8 +132,12 @@ export function EditCoursePage() {
               duration: les.duration || '',
               text_content: les.text_content || les.textContent || '',
               duration_seconds: Number(les.duration_seconds || 0),
+              quiz_duration_seconds: Number(les.quiz_duration_seconds || 0),
+              quiz_timer_enabled: !!les.quiz_timer_enabled,
               is_final: les.is_final || false,
               max_attempts: Number(les.max_attempts || 0),
+              attempts_enabled: les.attempts_enabled !== undefined ? !!les.attempts_enabled : Number(les.max_attempts || 0) > 0,
+              extra_attempt_price: Number(les.extra_attempt_price || 0),
               questions_per_attempt: Number(les.questions_per_attempt || 0),
               shuffle_questions: !!les.shuffle_questions,
               shuffle_options: !!les.shuffle_options,
@@ -169,6 +173,8 @@ export function EditCoursePage() {
   };
 
   const handleSave = async () => {
+    const invalidAttemptQuiz = sections.flatMap(s => s.lessons || []).find(l => l.type === 'quiz' && l.attempts_enabled && (!(Number(l.max_attempts) >= 1 && Number(l.max_attempts) <= 50) || !(Number(l.extra_attempt_price) > 0)));
+    if (invalidAttemptQuiz) { setError('For every quiz with attempt limits enabled, set 1–50 included attempts and a price greater than GHS 0.'); setTab('curriculum'); return; }
     if (!form.title || !form.description || !form.category || !form.difficulty) {
       setError('Please fill in all required fields.');
       setTab('basics');
@@ -202,11 +208,15 @@ export function EditCoursePage() {
             type: l.type || 'video',
             content: l.content || '',
             videoUrl: l.videoUrl || '',
-            duration: l.duration || '30 min',
+            duration: l.type === 'quiz' ? (l.quiz_timer_enabled ? formatDuration(l.quiz_duration_seconds) : 'No limit') : (l.duration || '30 min'),
             text_content: l.text_content || l.textContent || '',
             duration_seconds: Number(l.duration_seconds || 0),
+            quiz_duration_seconds: Number(l.quiz_duration_seconds || 0),
+            quiz_timer_enabled: !!l.quiz_timer_enabled,
             is_final: l.is_final || false,
-            max_attempts: Math.max(0, Number(l.max_attempts) || 0),
+            attempts_enabled: !!l.attempts_enabled,
+            max_attempts: Math.max(0, Math.min(50, Number(l.max_attempts) || 0)),
+            extra_attempt_price: Math.max(0, Number(l.extra_attempt_price || 0)),
             questions_per_attempt: Math.max(0, Number(l.questions_per_attempt) || 0),
             shuffle_questions: !!l.shuffle_questions,
             shuffle_options: !!l.shuffle_options,

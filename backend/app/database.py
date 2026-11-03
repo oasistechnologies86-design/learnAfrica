@@ -906,6 +906,7 @@ MIGRATIONS = [
     "ALTER TABLE courses ADD COLUMN IF NOT EXISTS course_code TEXT",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified INTEGER DEFAULT 1",
     "ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS duration_seconds INTEGER DEFAULT 0",
+    "ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS timer_enabled INTEGER DEFAULT 0",
     "ALTER TABLE lessons ADD COLUMN IF NOT EXISTS text_content TEXT",
     "ALTER TABLE lessons ADD COLUMN IF NOT EXISTS duration_seconds INTEGER DEFAULT 0",
     "ALTER TABLE lessons ADD COLUMN IF NOT EXISTS component_key TEXT",
@@ -991,6 +992,8 @@ MIGRATIONS = [
     "ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS questions_per_attempt INTEGER DEFAULT 0",
     "ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS shuffle_questions INTEGER DEFAULT 0",
     "ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS shuffle_options INTEGER DEFAULT 0",
+    "ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS attempts_enabled INTEGER",
+    "ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS extra_attempt_price REAL DEFAULT 0",
     # is_bank marks a question as part of the pool that randomisation draws from.
     "ALTER TABLE quiz_questions ADD COLUMN IF NOT EXISTS is_bank INTEGER DEFAULT 1",
     # Credential revocation — a revoked certificate/badge still exists but the

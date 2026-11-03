@@ -93,6 +93,8 @@ export function CreateCoursePage() {
 
   const handleSubmit = async () => {
     if (!validateBasics()) { setTab('basics'); return; }
+    const invalidAttemptQuiz = sections.flatMap(s => s.lessons || []).find(l => l.type === 'quiz' && l.attempts_enabled && (!(Number(l.max_attempts) >= 1 && Number(l.max_attempts) <= 50) || !(Number(l.extra_attempt_price) > 0)));
+    if (invalidAttemptQuiz) { setSubmitError('For every quiz with attempt limits enabled, set 1–50 included attempts and a price greater than GHS 0.'); setTab('curriculum'); return; }
     setIsSubmitting(true);
     setSubmitError('');
     try {
@@ -132,12 +134,16 @@ export function CreateCoursePage() {
             type:      l.type   || 'video',
             content:   l.content  || '',
             videoUrl:  l.videoUrl || '',
-            duration:  l.duration || '30 min',
+            duration: l.type === 'quiz' ? (l.quiz_timer_enabled ? formatDuration(l.quiz_duration_seconds) : 'No limit') : (l.duration || '30 min'),
             text_content: l.text_content || l.textContent || '',
             duration_seconds: Number(l.duration_seconds || 0),
+            quiz_duration_seconds: Number(l.quiz_duration_seconds || 0),
+            quiz_timer_enabled: !!l.quiz_timer_enabled,
             order:     li,
             is_final:  !!l.is_final,
-            max_attempts: Math.max(0, Number(l.max_attempts) || 0),
+            attempts_enabled: !!l.attempts_enabled,
+            max_attempts: Math.max(0, Math.min(50, Number(l.max_attempts) || 0)),
+            extra_attempt_price: Math.max(0, Number(l.extra_attempt_price || 0)),
             questions_per_attempt: Math.max(0, Number(l.questions_per_attempt) || 0),
             shuffle_questions: !!l.shuffle_questions,
             shuffle_options: !!l.shuffle_options,
@@ -382,6 +388,28 @@ export function CreateCoursePage() {
           <p className="text-2xs text-muted-foreground -mt-3">
             "Weeks required" is shown to students as the course length. "Hours required" auto-sums every lesson's time picker.
           </p>
+          <div className="p-4 rounded-xl border border-border bg-muted/20 space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-bold">Enforce minimum learning time</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Optional. When ON, students must spend the specified time in this course before taking its final exam. When OFF, no course-time gate or tracking is applied.
+                </p>
+              </div>
+              <Switch checked={enforceMinTime} onChange={enabled => {
+                setEnforceMinTime(enabled);
+                if (enabled && minTimeSeconds <= 0) setMinTimeSeconds(1800);
+              }} />
+            </div>
+            {enforceMinTime && (
+              <div className="flex flex-col items-center sm:items-start gap-2 border-t border-border pt-3">
+                <TimePicker value={minTimeSeconds} onChange={setMinTimeSeconds} />
+                <p className="text-xs text-muted-foreground">
+                  Students must spend at least <strong>{formatDuration(minTimeSeconds)}</strong> on this course before the final exam unlocks.
+                </p>
+              </div>
+            )}
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Initial Rating (0–5 ★)">

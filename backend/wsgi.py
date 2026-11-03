@@ -13,13 +13,8 @@ from app.crud import seed_admin, seed_demo_courses, seed_instructor_guide
 # Create the Flask app
 flask_app = create_app()
 
-# Initialise database (idempotent — creates tables IF NOT EXISTS, runs
-# ADD COLUMN IF NOT EXISTS migrations) then seed baseline data.
-#
-# CRITICAL: each step is wrapped in try/except so a single failure (e.g.
-# a bad column, a migration hitting an unexpected state) doesn't crash
-# gunicorn on startup. Any errors are printed to the Render logs but the
-# app still boots — so users can still hit endpoints while we investigate.
+# Required schema initialization is fatal: do not serve requests against a
+# missing or partially migrated database. Optional seed steps remain non-fatal.
 def _safe_step(label, fn):
     try:
         fn()
@@ -29,7 +24,8 @@ def _safe_step(label, fn):
         traceback.print_exc(file=sys.stdout)
 
 with flask_app.app_context():
-    _safe_step('init_db',              lambda: init_db(flask_app))
+    init_db(flask_app)
+    print('✅ startup: init_db')
     _safe_step('seed_admin',           lambda: seed_admin(flask_app, get_db()))
     _safe_step('seed_demo_courses',    lambda: seed_demo_courses(flask_app, get_db()))
     _safe_step('seed_instructor_guide',lambda: seed_instructor_guide(flask_app, get_db()))

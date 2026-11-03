@@ -680,73 +680,74 @@ function CurriculumItemEditor({ item, index, onUpdate, onRemove, hasResources = 
                   </div>
                 </div>
                 <Switch checked={!!item.is_final}
-                  onChange={val => onUpdate({
-                    is_final: val,
-                    ...(val && !(Number(item.max_attempts) > 0) ? { max_attempts: 10 } : {}),
-                  })} />
+                  onChange={val => onUpdate({ is_final: val })} />
               </div>
 
-              {/* Quiz time limit — watch-style picker */}
+              {/* Quiz countdown is separate from estimated lesson/course duration. */}
               <div className="p-3 rounded-xl border border-border bg-background space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs font-bold">Quiz time limit</p>
                     <p className="text-2xs text-muted-foreground">
-                      {(item.duration_seconds || 0) > 0
-                        ? `Students must finish within ${formatDuration(item.duration_seconds)}.`
-                        : 'No time limit — students can take as long as they need.'}
+                      {item.quiz_timer_enabled && Number(item.quiz_duration_seconds) > 0
+                        ? `Students must finish within ${formatDuration(item.quiz_duration_seconds)}.`
+                        : 'Off — students can take as long as they need. Lesson duration does not start a quiz countdown.'}
                     </p>
                   </div>
-                  <Switch
-                    checked={(item.duration_seconds || 0) > 0}
-                    onChange={(val) => onUpdate({
-                      duration_seconds: val ? (item.duration_seconds || 600) : 0,
-                      duration: val ? formatDuration(item.duration_seconds || 600) : 'No limit',
-                    })}
-                  />
+                  <Switch checked={!!item.quiz_timer_enabled}
+                    onChange={enabled => onUpdate({
+                      quiz_timer_enabled: enabled,
+                      quiz_duration_seconds: enabled ? (Number(item.quiz_duration_seconds) || 600) : 0,
+                    })} />
                 </div>
-                {(item.duration_seconds || 0) > 0 && (
+                {item.quiz_timer_enabled && (
                   <div className="flex justify-center">
-                    <TimePicker
-                      value={item.duration_seconds || 0}
-                      onChange={(secs) => onUpdate({
-                        duration_seconds: secs,
-                        duration: formatDuration(secs),
-                      })}
-                    />
+                    <TimePicker value={Number(item.quiz_duration_seconds) || 600}
+                      onChange={secs => onUpdate({ quiz_duration_seconds: secs })} />
                   </div>
                 )}
               </div>
 
-              {/* Attempts allowed — decided here by the instructor */}
-              <div className="p-3 rounded-xl border border-border bg-background space-y-2">
+              {/* Optional attempt cap and instructor-defined paid retry price */}
+              <div className="p-3 rounded-xl border border-border bg-background space-y-3">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-bold">{item.is_final ? 'Final exam attempts' : 'Test attempts allowed'}</p>
+                    <p className="text-xs font-bold">Limit quiz attempts</p>
                     <p className="text-2xs text-muted-foreground">
-                      {item.is_final
-                        ? `Students get ${item.max_attempts || 10} attempts by default. You can adjust this limit.`
-                        : (item.max_attempts || 0) > 0
-                          ? `Students get ${item.max_attempts} attempts to pass this test.`
-                          : 'Unlimited — students can retake as many times as they need.'}
+                      {item.attempts_enabled
+                        ? 'Students have a fixed number of included attempts. You choose the fee for each extra attempt.'
+                        : 'Off — students can retake this quiz without an attempt cap or extra-attempt fee.'}
                     </p>
                   </div>
-                  <input
-                    type="number" min={item.is_final ? 1 : 0} max="50" inputMode="numeric"
-                    value={item.is_final ? (item.max_attempts || 10) : (item.max_attempts ?? 0)}
-                    onChange={e => {
-                      const n = Math.max(item.is_final ? 1 : 0, Math.min(50, parseInt(e.target.value, 10) || 0));
-                      onUpdate({ max_attempts: n });
-                    }}
-                    className="w-20 h-10 px-3 rounded-lg border border-input bg-background text-sm text-center focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
+                  <Switch checked={!!item.attempts_enabled}
+                    onChange={enabled => onUpdate({
+                      attempts_enabled: enabled,
+                      max_attempts: enabled ? (Number(item.max_attempts) || (item.is_final ? 10 : 3)) : item.max_attempts,
+                      extra_attempt_price: item.extra_attempt_price ?? '',
+                    })} />
                 </div>
-                <p className="text-2xs text-muted-foreground">
-                  {item.is_final ? 'Choose 1 to 50 attempts for this final exam. The default is 10.' : 'Enter a number of attempts, or 0 for unlimited. Attempts are counted per student.'}
-                </p>
-                {(Number(item.max_attempts ?? 0) > 0 || item.is_final) && (
-                  <p className="text-2xs text-muted-foreground border-t border-border pt-2">
-                    When a student uses all included attempts, they can purchase one additional attempt for GHS 10. It is unlocked only after payment is verified.
+                {item.attempts_enabled && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-border pt-3">
+                    <label className="space-y-1">
+                      <span className="text-xs font-semibold">Included attempts</span>
+                      <input type="number" min="1" max="50" step="1" inputMode="numeric"
+                        value={item.max_attempts || (item.is_final ? 10 : 3)}
+                        onChange={e => onUpdate({ max_attempts: Math.max(1, Math.min(50, parseInt(e.target.value, 10) || 1)) })}
+                        className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+                    </label>
+                    <label className="space-y-1">
+                      <span className="text-xs font-semibold">Price per extra attempt (GHS)</span>
+                      <input type="number" min="0.01" max="100000" step="0.01" inputMode="decimal"
+                        value={item.extra_attempt_price ?? ''}
+                        onChange={e => onUpdate({ extra_attempt_price: e.target.value })}
+                        placeholder="Enter your price"
+                        className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+                    </label>
+                  </div>
+                )}
+                {item.attempts_enabled && (
+                  <p className="text-2xs text-muted-foreground">
+                    After the included attempts are used, students can pay the price you set here for one additional attempt. The attempt is credited only after payment is verified.
                   </p>
                 )}
               </div>

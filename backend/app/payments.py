@@ -231,16 +231,13 @@ def _paystack_initialize(user, course, amount, currency, txn_id,
         )
         rj = r.json()
         if not r.ok or not rj.get('status'):
-            # Log the full Paystack error so it's visible in Render logs.
+            # Provider response/request payloads can contain personal and payment data.
             import logging
-            logging.error(
-                f'[PAYSTACK INIT FAILED] status={r.status_code} '
-                f'response={rj} body_sent={body}'
-            )
+            logging.error('[PAYSTACK INIT FAILED] HTTP status=%s', r.status_code)
             return {
                 'authorization_url': '',
                 'reference': txn_id,
-                'error': rj.get('message') or f'Paystack initialize failed (HTTP {r.status_code}).',
+                'error': 'Payment could not be initialized. Please try again or contact support.',
             }
         data = rj.get('data') or {}
         return {
@@ -248,9 +245,13 @@ def _paystack_initialize(user, course, amount, currency, txn_id,
             'reference':         data.get('reference') or txn_id,
         }
     except Exception as e:
-        import logging, traceback
-        logging.error(f'[PAYSTACK INIT EXCEPTION] {e}\n{traceback.format_exc()}')
-        return {'authorization_url': '', 'reference': txn_id, 'error': f'Paystack error: {e}'}
+        import logging
+        logging.error('[PAYSTACK INIT EXCEPTION] %s', type(e).__name__)
+        return {
+            'authorization_url': '',
+            'reference': txn_id,
+            'error': 'Payment could not be initialized. Please try again or contact support.',
+        }
 
 
 def _paystack_verify(reference):

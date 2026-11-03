@@ -471,14 +471,19 @@ def create_app() -> Flask:
     if not app.config['USE_POSTGRES']:
         os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-    # Refuse to run in production with the built-in dev secret. Without a real
-    # SECRET_KEY/JWT_SECRET every login token can be forged.
-    _is_prod = (os.environ.get('FLASK_ENV') == 'production')
-    if _is_prod and not os.environ.get('JWT_SECRET') and not os.environ.get('SECRET_KEY'):
-        raise RuntimeError(
-            'SECRET_KEY (or JWT_SECRET) must be set in production — refusing to start '
-            'with the default development secret.'
-        )
+    # Validate the effective Flask and JWT signing secrets, not just whether
+    # an environment variable happens to exist.
+    _is_prod = (os.environ.get('FLASK_ENV') or '').lower() == 'production'
+    _weak_secret_markers = ('dev-secret', 'change-in-production', 'changeme', 'change-me', 'your-secret')
+    if _is_prod:
+        for _secret_name in ('SECRET_KEY', 'JWT_SECRET'):
+            _secret_value = str(app.config.get(_secret_name) or '')
+            if len(_secret_value) < 32 or any(
+                marker in _secret_value.lower() for marker in _weak_secret_markers
+            ):
+                raise RuntimeError(
+                    f'{_secret_name} must be a unique secret of at least 32 characters in production.'
+                )
 
     # ── Simple in-process rate limiter ────────────────────────────────────────
     # Best-effort protection against password guessing and OTP/email spam.
@@ -2343,6 +2348,9 @@ def create_app() -> Flask:
     @token_required
     def get_quiz(cid, lid):
         db = get_db()
+        ensure_column(db, 'quizzes', 'attempts_enabled', 'INTEGER')
+        ensure_column(db, 'quizzes', 'extra_attempt_price', 'REAL DEFAULT 0')
+        ensure_column(db, 'quizzes', 'timer_enabled', 'INTEGER DEFAULT 0')
         q = db.execute('SELECT * FROM quizzes WHERE course_id=? AND lesson_id=?',(cid,lid)).fetchone()
         if not q: return jsonify({'error': 'Quiz not found for this lesson'}), 404
         qd = dict(q)
@@ -2365,10 +2373,15 @@ def create_app() -> Flask:
             r.pop('correct_answer', None)
             questions.append(r)
         qd['questions'] = questions
+        qd['timer_enabled'] = bool(qd.get('timer_enabled'))
+        if not qd['timer_enabled']:
+            qd['duration_seconds'] = 0
         qd['duration'] = str(qd['duration']) if qd.get('duration') else 'No limit'
         final_row = db.execute('SELECT is_final FROM lessons WHERE id=? AND course_id=?', (lid, cid)).fetchone()
         qd['is_final'] = bool(final_row['is_final']) if final_row else False
-        qd['max_attempts'] = int(qd.get('max_attempts') or (10 if qd['is_final'] else 0))
+        qd['max_attempts'] = int(qd.get('max_attempts') or 0)
+        qd['attempts_enabled'] = bool(qd.get('attempts_enabled')) if qd.get('attempts_enabled') is not None else qd['max_attempts'] > 0
+        qd['extra_attempt_price'] = float(qd.get('extra_attempt_price') or 0)
         # Anti-cheat flags. When any of these are on, the student flow calls
         # POST /api/quizzes/<id>/start instead of relying on this response.
         qd['duration_seconds']     = int(qd.get('duration_seconds') or 0)
@@ -2393,7 +2406,7 @@ def create_app() -> Flask:
         # adds exactly one credit for this user and quiz.
         qd['extra_attempts'] = extra_attempt_count(db, g.current_user['user_id'], qd['id'])
         qd['effective_max_attempts'] = (
-            qd['max_attempts'] + qd['extra_attempts'] if qd['max_attempts'] > 0 else 0
+            qd['max_attempts'] + qd['extra_attempts'] if qd['attempts_enabled'] and qd['max_attempts'] > 0 else 0
         )
         qd['attempts_remaining'] = (
             max(0, qd['effective_max_attempts'] - qd['attempts_used'])
@@ -2413,6 +2426,7 @@ def create_app() -> Flask:
         """
         try:
             db = get_db()
+            ensure_column(db, 'quizzes', 'timer_enabled', 'INTEGER DEFAULT 0')
             quiz_row = db.execute('SELECT * FROM quizzes WHERE id=?', (qid,)).fetchone()
             if not quiz_row:
                 return jsonify({'error': 'Quiz not found'}), 404
@@ -2434,8 +2448,9 @@ def create_app() -> Flask:
 
             final_row = db.execute('SELECT is_final FROM lessons WHERE id=? AND course_id=?', (lid, cid)).fetchone() if cid and lid else None
             is_final_quiz = bool(final_row['is_final']) if final_row else False
-            max_attempts = int(quiz.get('max_attempts') or (10 if is_final_quiz else 0))
-            if not is_admin_user and max_attempts > 0:
+            max_attempts = int(quiz.get('max_attempts') or 0)
+            attempts_enabled = bool(quiz.get('attempts_enabled')) if quiz.get('attempts_enabled') is not None else max_attempts > 0
+            if not is_admin_user and attempts_enabled and max_attempts > 0:
                 row = db.execute(
                     'SELECT COUNT(*) AS cnt FROM quiz_attempts WHERE user_id=? AND quiz_id=?',
                     (uid, qid)).fetchone()
@@ -2477,7 +2492,7 @@ def create_app() -> Flask:
                 return jsonify({'error': 'This quiz has no questions yet.'}), 400
 
             served = build_served_questions(quiz, question_rows)
-            expires_at = session_expiry(quiz.get('duration_seconds'))
+            expires_at = session_expiry(quiz.get('duration_seconds') if quiz.get('timer_enabled') else 0)
             session_id = new_session_id()
             db.execute(
                 '''INSERT INTO quiz_attempt_sessions
@@ -2493,7 +2508,8 @@ def create_app() -> Flask:
                 'attempt_id': session_id,
                 'quiz_id': qid,
                 'title': quiz.get('title'),
-                'duration_seconds': int(quiz.get('duration_seconds') or 0),
+                'duration_seconds': int(quiz.get('duration_seconds') or 0) if quiz.get('timer_enabled') else 0,
+                'timer_enabled': bool(quiz.get('timer_enabled')),
                 'expires_at': expires_at.isoformat() if expires_at else None,
                 'max_attempts': max_attempts,
                 'randomized': bool(quiz.get('shuffle_questions') or quiz.get('shuffle_options')
@@ -2546,8 +2562,9 @@ def create_app() -> Flask:
             prior_attempts = 0
             final_row = db.execute('SELECT is_final FROM lessons WHERE id=? AND course_id=?', (lid, cid)).fetchone() if cid and lid else None
             is_final_quiz = bool(final_row['is_final']) if final_row else False
-            max_attempts = int(quiz_row['max_attempts'] or (10 if is_final_quiz else 0))
-            if not is_admin_user and max_attempts > 0:
+            max_attempts = int(quiz_row['max_attempts'] or 0)
+            attempts_enabled = bool(quiz_row['attempts_enabled']) if quiz_row['attempts_enabled'] is not None else max_attempts > 0
+            if not is_admin_user and attempts_enabled and max_attempts > 0:
                 row = db.execute(
                     'SELECT COUNT(*) AS cnt FROM quiz_attempts WHERE user_id=? AND quiz_id=?',
                     (g.current_user['user_id'], qid)
@@ -2996,10 +3013,13 @@ def create_app() -> Flask:
             ensure_column(db, 'courses', 'enforce_min_time', 'INTEGER DEFAULT 0')
             ensure_column(db, 'lessons', 'text_content', 'TEXT')
             ensure_column(db, 'quizzes', 'duration_seconds', 'INTEGER DEFAULT 0')
+            ensure_column(db, 'quizzes', 'timer_enabled', 'INTEGER DEFAULT 0')
             ensure_column(db, 'quizzes', 'max_attempts', 'INTEGER DEFAULT 0')
             ensure_column(db, 'quizzes', 'questions_per_attempt', 'INTEGER DEFAULT 0')
             ensure_column(db, 'quizzes', 'shuffle_questions', 'INTEGER DEFAULT 0')
             ensure_column(db, 'quizzes', 'shuffle_options', 'INTEGER DEFAULT 0')
+            ensure_column(db, 'quizzes', 'attempts_enabled', 'INTEGER')
+            ensure_column(db, 'quizzes', 'extra_attempt_price', 'REAL DEFAULT 0')
             ins = db.execute('SELECT name,avatar FROM users WHERE id=?',(g.current_user['user_id'],)).fetchone()
             cid = str(uuid.uuid4())
             price = float(d.get('price', 0))
@@ -3096,19 +3116,24 @@ def create_app() -> Flask:
                             db.execute('INSERT INTO lesson_resources (id,lesson_id,title,url,type) VALUES(?,?,?,?,?)',
                                        (str(uuid.uuid4()), leid, res['title'], res['url'], res.get('file_type','file')))
                     db.execute('INSERT INTO section_lessons (section_id,lesson_id,"order") VALUES(?,?,?)',(sid,leid,li))
-                    if les.get('type') == 'quiz' and les.get('questions'):
+                    if les.get('type') == 'quiz':
                         qzid = str(uuid.uuid4())
                         # Accept duration_seconds (preferred) or fall back to text duration
-                        q_dur_sec = int(les.get('duration_seconds') or les.get('quiz_duration_seconds') or 0)
-                        q_dur_text = les.get('duration') or ('No limit' if q_dur_sec == 0 else f'{q_dur_sec // 60} min')
-                        q_max_att = max(0, int(les.get('max_attempts') or (10 if les.get('is_final') else 0)))
+                        q_dur_sec = int(les.get('quiz_duration_seconds') or 0) if les.get('quiz_timer_enabled') else 0
+                        q_timer_enabled = 1 if q_dur_sec > 0 else 0
+                        q_dur_text = 'No limit' if q_dur_sec <= 0 else f'{max(1, q_dur_sec // 60)} min'
+                        q_attempts_enabled = 1 if les.get('attempts_enabled') else 0
+                        q_max_att = max(0, int(les.get('max_attempts') or 0))
+                        q_extra_price = round(float(les.get('extra_attempt_price') or 0), 2)
+                        if q_max_att > 50 or q_extra_price < 0 or q_extra_price > 100000 or (q_attempts_enabled and (q_max_att < 1 or q_extra_price <= 0)):
+                            return jsonify({'error': 'When attempt limits are enabled, set 1–50 attempts and a valid additional-attempt price greater than zero.'}), 400
                         q_per_att = max(0, int(les.get('questions_per_attempt') or 0))
                         q_shuf_q  = 1 if les.get('shuffle_questions') else 0
                         q_shuf_o  = 1 if les.get('shuffle_options') else 0
-                        db.execute('INSERT INTO quizzes (id,course_id,lesson_id,title,duration,duration_seconds,max_attempts,'
-                                   'questions_per_attempt,shuffle_questions,shuffle_options) VALUES(?,?,?,?,?,?,?,?,?,?)',
-                                   (qzid, cid, leid, les.get('title','Quiz'), q_dur_text, q_dur_sec, q_max_att,
-                                    q_per_att, q_shuf_q, q_shuf_o))
+                        db.execute('INSERT INTO quizzes (id,course_id,lesson_id,title,duration,duration_seconds,timer_enabled,max_attempts,'
+                                   'questions_per_attempt,shuffle_questions,shuffle_options,attempts_enabled,extra_attempt_price) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                                   (qzid, cid, leid, les.get('title','Quiz'), q_dur_text, q_dur_sec, q_timer_enabled, q_max_att,
+                                    q_per_att, q_shuf_q, q_shuf_o, q_attempts_enabled, q_extra_price))
                         for qi, q in enumerate(les['questions']):
                             db.execute('''INSERT INTO quiz_questions (id,quiz_id,question_text,options,correct_answer,question_type,"order")
                                           VALUES(?,?,?,?,?,?,?)''',
@@ -3215,10 +3240,13 @@ def create_app() -> Flask:
         ensure_column(db, 'courses', 'enforce_min_time', 'INTEGER DEFAULT 0')
         ensure_column(db, 'lessons', 'text_content', 'TEXT')
         ensure_column(db, 'quizzes', 'duration_seconds', 'INTEGER DEFAULT 0')
+        ensure_column(db, 'quizzes', 'timer_enabled', 'INTEGER DEFAULT 0')
         ensure_column(db, 'quizzes', 'max_attempts', 'INTEGER DEFAULT 0')
         ensure_column(db, 'quizzes', 'questions_per_attempt', 'INTEGER DEFAULT 0')
         ensure_column(db, 'quizzes', 'shuffle_questions', 'INTEGER DEFAULT 0')
         ensure_column(db, 'quizzes', 'shuffle_options', 'INTEGER DEFAULT 0')
+        ensure_column(db, 'quizzes', 'attempts_enabled', 'INTEGER')
+        ensure_column(db, 'quizzes', 'extra_attempt_price', 'REAL DEFAULT 0')
         course = db.execute('SELECT * FROM courses WHERE id=? AND instructor_id=?',
                             (cid, g.current_user['user_id'])).fetchone()
         if not course:
@@ -3254,11 +3282,15 @@ def create_app() -> Flask:
                     quiz = db.execute('SELECT * FROM quizzes WHERE lesson_id=?', (ld['id'],)).fetchone()
                     if quiz:
                         try:
-                            ld['duration_seconds'] = int(quiz['duration_seconds'] or 0)
+                            ld['quiz_duration_seconds'] = int(quiz['duration_seconds'] or 0)
+                            ld['quiz_timer_enabled'] = bool(quiz['timer_enabled'])
                         except Exception:
-                            ld['duration_seconds'] = 0
+                            ld['quiz_duration_seconds'] = 0
+                            ld['quiz_timer_enabled'] = False
                         try:
                             ld['max_attempts'] = int(quiz['max_attempts'] or 0)
+                            ld['attempts_enabled'] = bool(quiz['attempts_enabled']) if quiz['attempts_enabled'] is not None else ld['max_attempts'] > 0
+                            ld['extra_attempt_price'] = float(quiz['extra_attempt_price'] or 0)
                         except Exception:
                             ld['max_attempts'] = 0
                         # Anti-cheat settings, so the instructor editor can show
@@ -3347,10 +3379,13 @@ def create_app() -> Flask:
             ensure_column(db, 'lessons', 'text_content', 'TEXT')
             ensure_column(db, 'lessons', 'duration_seconds', 'INTEGER DEFAULT 0')
             ensure_column(db, 'quizzes', 'duration_seconds', 'INTEGER DEFAULT 0')
+            ensure_column(db, 'quizzes', 'timer_enabled', 'INTEGER DEFAULT 0')
             ensure_column(db, 'quizzes', 'max_attempts', 'INTEGER DEFAULT 0')
             ensure_column(db, 'quizzes', 'questions_per_attempt', 'INTEGER DEFAULT 0')
             ensure_column(db, 'quizzes', 'shuffle_questions', 'INTEGER DEFAULT 0')
             ensure_column(db, 'quizzes', 'shuffle_options', 'INTEGER DEFAULT 0')
+            ensure_column(db, 'quizzes', 'attempts_enabled', 'INTEGER')
+            ensure_column(db, 'quizzes', 'extra_attempt_price', 'REAL DEFAULT 0')
 
             row = db.execute('SELECT instructor_id FROM courses WHERE id=?',(cid,)).fetchone()
             if not row: return jsonify({'error': 'Course not found'}), 404
@@ -3518,9 +3553,14 @@ def create_app() -> Flask:
                                            (str(uuid.uuid4()), leid, res['title'], res['url'],
                                             res.get('file_type') or res.get('type') or 'file'))
                         if les.get('type') == 'quiz':
-                            q_dur_sec = int(les.get('duration_seconds') or les.get('quiz_duration_seconds') or 0)
-                            q_dur_text = les.get('duration') or ('No limit' if q_dur_sec == 0 else f'{q_dur_sec // 60} min')
-                            q_max_att = max(0, int(les.get('max_attempts') or (10 if les.get('is_final') else 0)))
+                            q_dur_sec = int(les.get('quiz_duration_seconds') or 0) if les.get('quiz_timer_enabled') else 0
+                            q_timer_enabled = 1 if q_dur_sec > 0 else 0
+                            q_dur_text = 'No limit' if q_dur_sec <= 0 else f'{max(1, q_dur_sec // 60)} min'
+                            q_attempts_enabled = 1 if les.get('attempts_enabled') else 0
+                            q_max_att = max(0, int(les.get('max_attempts') or 0))
+                            q_extra_price = round(float(les.get('extra_attempt_price') or 0), 2)
+                            if q_max_att > 50 or q_extra_price < 0 or q_extra_price > 100000 or (q_attempts_enabled and (q_max_att < 1 or q_extra_price <= 0)):
+                                return jsonify({'error': 'When attempt limits are enabled, set 1–50 attempts and a valid additional-attempt price greater than zero.'}), 400
                             q_per_att = max(0, int(les.get('questions_per_attempt') or 0))
                             q_shuf_q  = 1 if les.get('shuffle_questions') else 0
                             q_shuf_o  = 1 if les.get('shuffle_options') else 0
@@ -3531,18 +3571,18 @@ def create_app() -> Flask:
                             if existing_quiz:
                                 qzid = existing_quiz['id']
                                 db.execute(
-                                    'UPDATE quizzes SET title=?,duration=?,duration_seconds=?,max_attempts=?,'
-                                    'questions_per_attempt=?,shuffle_questions=?,shuffle_options=? WHERE id=?',
-                                    (les.get('title','Quiz'), q_dur_text, q_dur_sec, q_max_att,
-                                     q_per_att, q_shuf_q, q_shuf_o, qzid)
+                                    'UPDATE quizzes SET title=?,duration=?,duration_seconds=?,timer_enabled=?,max_attempts=?,'
+                                    'questions_per_attempt=?,shuffle_questions=?,shuffle_options=?,attempts_enabled=?,extra_attempt_price=? WHERE id=?',
+                                    (les.get('title','Quiz'), q_dur_text, q_dur_sec, q_timer_enabled, q_max_att,
+                                     q_per_att, q_shuf_q, q_shuf_o, q_attempts_enabled, q_extra_price, qzid)
                                 )
                             else:
                                 qzid = str(uuid.uuid4())
                                 db.execute(
-                                    'INSERT INTO quizzes (id,course_id,lesson_id,title,duration,duration_seconds,max_attempts,'
-                                    'questions_per_attempt,shuffle_questions,shuffle_options) VALUES(?,?,?,?,?,?,?,?,?,?)',
-                                    (qzid, cid, leid, les.get('title','Quiz'), q_dur_text, q_dur_sec, q_max_att,
-                                     q_per_att, q_shuf_q, q_shuf_o)
+                                    'INSERT INTO quizzes (id,course_id,lesson_id,title,duration,duration_seconds,timer_enabled,max_attempts,'
+                                    'questions_per_attempt,shuffle_questions,shuffle_options,attempts_enabled,extra_attempt_price) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                                    (qzid, cid, leid, les.get('title','Quiz'), q_dur_text, q_dur_sec, q_timer_enabled, q_max_att,
+                                     q_per_att, q_shuf_q, q_shuf_o, q_attempts_enabled, q_extra_price)
                                 )
                             # Replace the question bank, not the quiz itself. This
                             # preserves historical attempts, active session IDs,
@@ -6968,8 +7008,15 @@ def create_app() -> Flask:
 
             db = get_db()
             ensure_transactions_table(db)
-            if not db.execute('SELECT id FROM courses WHERE id=?', (cid,)).fetchone():
+            course_policy = db.execute(
+                'SELECT min_time_seconds, enforce_min_time FROM courses WHERE id=?', (cid,)
+            ).fetchone()
+            if not course_policy:
                 return jsonify({'error': 'Course not found'}), 404
+            # Time tracking exists only to enforce an instructor-configured
+            # minimum course duration. Do not collect or increment it when off.
+            if not bool(course_policy['enforce_min_time']) or int(course_policy['min_time_seconds'] or 0) <= 0:
+                return jsonify({'message': 'Course minimum-time tracking is disabled', 'added': 0})
 
             uid = g.current_user['user_id']
             existing = db.execute(
@@ -8250,14 +8297,24 @@ def create_app() -> Flask:
                         "SELECT id, user_id, course_id, status, type, amount, currency, provider FROM transactions WHERE id=? OR provider_ref=?",
                         (ref, ref)
                     ).fetchone()
-                    # Verify the reference and exact amount with Paystack itself.
-                    if tx and tx['provider'] == 'paystack':
+                    # Only a Paystack transaction may be settled by this event.
+                    if tx:
+                        from decimal import Decimal, InvalidOperation
                         from .payments import verify_payment
+                        if str(tx['provider'] or '').lower() != 'paystack':
+                            app.logger.warning('Paystack webhook provider mismatch for transaction %s', tx['id'])
+                            return jsonify({'error': 'Payment provider mismatch'}), 400
                         verified = verify_payment(ref, 'paystack')
+                        try:
+                            expected_amount = Decimal(str(tx['amount'] or 0)).quantize(Decimal('0.01'))
+                            verified_amount = Decimal(str(verified.get('amount') or 0)).quantize(Decimal('0.01'))
+                        except (InvalidOperation, TypeError, ValueError):
+                            return jsonify({'error': 'Invalid verified payment amount'}), 400
                         if (verified.get('status') != 'success' or not verified.get('verified')
-                                or round(float(verified.get('amount') or 0), 2) != round(float(tx['amount'] or 0), 2)
-                                or str(verified.get('currency') or '').upper() != str(tx['currency'] or 'GHS').upper()):
-                            app.logger.warning('Paystack webhook verification mismatch for %s', ref)
+                                or verified_amount != expected_amount
+                                or str(verified.get('currency') or '').strip().upper()
+                                   != str(tx['currency'] or 'GHS').strip().upper()):
+                            app.logger.warning('Paystack webhook verification mismatch for transaction %s', tx['id'])
                             return jsonify({'error': 'Payment verification mismatch'}), 400
                     if tx and tx['status'] != 'success':
                         db.execute(
@@ -8700,9 +8757,15 @@ def create_app() -> Flask:
             result = verify_payment(tx['provider_ref'] or tx['id'], tx['provider'] or 'mock')
             new_status = result.get('status', 'pending')
             if new_status == 'success' and tx['provider'] == 'paystack':
-                if (not result.get('verified')
-                        or round(float(result.get('amount') or 0), 2) != round(float(tx['amount'] or 0), 2)
-                        or str(result.get('currency') or '').upper() != str(tx['currency'] or 'GHS').upper()):
+                from decimal import Decimal, InvalidOperation
+                try:
+                    verified_amount = Decimal(str(result.get('amount') or 0)).quantize(Decimal('0.01'))
+                    expected_amount = Decimal(str(tx['amount'] or 0)).quantize(Decimal('0.01'))
+                except (InvalidOperation, TypeError, ValueError):
+                    return jsonify({'error': 'Invalid verified payment amount'}), 400
+                if (not result.get('verified') or verified_amount != expected_amount
+                        or str(result.get('currency') or '').strip().upper()
+                           != str(tx['currency'] or 'GHS').strip().upper()):
                     return jsonify({'error': 'Payment verification mismatch'}), 400
 
             if new_status == 'success':

@@ -23,6 +23,7 @@ export function useCourseTimeTracking(courseId, { ready = true } = {}) {
   const [timeSpent, setTimeSpent]       = useState(0);
   const [timeRequired, setTimeRequired] = useState(0);
   const [timeEnforce, setTimeEnforce]   = useState(false);
+  const [trackingEnabled, setTrackingEnabled] = useState(false);
   const [showCheckin, setShowCheckin]   = useState(false);
 
   const timeTickRef      = useRef(0);
@@ -43,6 +44,14 @@ export function useCourseTimeTracking(courseId, { ready = true } = {}) {
   useEffect(() => {
     if (!courseId) return;
     let cancelled = false;
+    // Clear the previous course's display immediately while the next policy loads.
+    setTrackingEnabled(false);
+    setTimeSpent(0);
+    setTimeRequired(0);
+    setTimeEnforce(false);
+    setShowCheckin(false);
+    timeTickRef.current = 0;
+    sinceCheckinRef.current = 0;
     authedFetch(`/api/courses/${courseId}/time`)
       .then(r => r.ok ? r.json() : null)
       .then(d => {
@@ -50,6 +59,7 @@ export function useCourseTimeTracking(courseId, { ready = true } = {}) {
         setTimeSpent(Number(d.spent_seconds || 0));
         setTimeRequired(Number(d.required_seconds || 0));
         setTimeEnforce(Boolean(d.enforce));
+        setTrackingEnabled(Boolean(d.enforce) && Number(d.required_seconds || 0) > 0);
       })
       .catch(() => {});
     return () => { cancelled = true; };
@@ -63,7 +73,7 @@ export function useCourseTimeTracking(courseId, { ready = true } = {}) {
   }, []);
 
   const sendHeartbeat = useCallback((delta) => {
-    if (delta <= 0 || !courseId) return;
+    if (delta <= 0 || !courseId || !trackingEnabled) return;
     authedFetch(`/api/courses/${courseId}/time`, { method: 'POST', body: JSON.stringify({ seconds: delta }) })
       .then(r => r.ok ? r.json() : null)
       .then(d => {
@@ -72,13 +82,13 @@ export function useCourseTimeTracking(courseId, { ready = true } = {}) {
         if (d && typeof d.total_seconds === 'number') setTimeSpent(d.total_seconds);
       })
       .catch(() => { /* will retry on next heartbeat */ });
-  }, [courseId, authedFetch]);
+  }, [courseId, authedFetch, trackingEnabled]);
 
   // Local ticker: increments the displayed time every second while visible,
   // sends a heartbeat every 30s, and pauses for an engagement check-in every
   // 30 real minutes of continuously active time.
   useEffect(() => {
-    if (!courseId || !ready) return;
+    if (!courseId || !ready || !trackingEnabled) return;
     const id = setInterval(() => {
       if (!pageVisibleRef.current || showCheckinRef.current) return;
       timeTickRef.current += 1;
@@ -100,13 +110,13 @@ export function useCourseTimeTracking(courseId, { ready = true } = {}) {
       }
     }, 1000);
     return () => clearInterval(id);
-  }, [courseId, ready, sendHeartbeat]);
+  }, [courseId, ready, trackingEnabled, sendHeartbeat]);
 
   // Flush any accumulated time when leaving the page
   useEffect(() => {
     return () => {
       const delta = timeTickRef.current;
-      if (!courseId || delta <= 0) return;
+      if (!courseId || delta <= 0 || !trackingEnabled) return;
       try {
         const token = sessionStorage.getItem('auth_token');
         const url = `${API_BASE}/api/courses/${courseId}/time`;
@@ -118,7 +128,7 @@ export function useCourseTimeTracking(courseId, { ready = true } = {}) {
         }
       } catch (_) {}
     };
-  }, [courseId]);
+  }, [courseId, trackingEnabled]);
 
   const confirmContinue = useCallback(() => setShowCheckin(false), []);
 

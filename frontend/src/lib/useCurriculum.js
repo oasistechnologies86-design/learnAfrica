@@ -33,6 +33,8 @@ export function useCurriculum(initialData = []) {
       duration: '',
       text_content: type === 'text' ? '' : undefined,
       duration_seconds: 0,
+      quiz_duration_seconds: 0,
+      quiz_timer_enabled: false,
       component_key: type === 'custom' ? '' : undefined,
       componentKey:  type === 'custom' ? '' : undefined,
       questions: type === 'quiz' ? [] : undefined,

@@ -1,6 +1,6 @@
 """Paid one-at-a-time quiz attempt purchases.
 
-Each verified GHS 10 payment creates exactly one additional attempt credit for
+Each verified instructor-priced payment creates exactly one additional attempt credit for
 the quiz. Credits are keyed to the payment transaction, so webhook retries
 cannot issue duplicate attempts. The existing course enrolment is never changed.
 """
@@ -88,7 +88,7 @@ def purchase_extra_attempt(quiz_id):
         ensure_extra_attempts_table(db)
         uid = g.current_user["user_id"]
         quiz = db.execute(
-            "SELECT id,course_id,lesson_id,title FROM quizzes WHERE id=?",
+            "SELECT id,course_id,lesson_id,title,max_attempts,attempts_enabled,extra_attempt_price FROM quizzes WHERE id=?",
             (quiz_id,)
         ).fetchone()
         if not quiz:
@@ -103,12 +103,13 @@ def purchase_extra_attempt(quiz_id):
             "SELECT is_final FROM lessons WHERE id=? AND course_id=?",
             (quiz["lesson_id"], quiz["course_id"])
         ).fetchone() if quiz["lesson_id"] else None
-        quiz_limits = db.execute(
-            "SELECT max_attempts FROM quizzes WHERE id=?", (quiz_id,)
-        ).fetchone()
-        max_attempts = int((quiz_limits["max_attempts"] if quiz_limits else 0) or (10 if lesson and lesson["is_final"] else 0))
-        if max_attempts <= 0:
-            return jsonify({"error": "This quiz has unlimited attempts; no purchase is required."}), 400
+        max_attempts = int(quiz["max_attempts"] or 0)
+        attempts_enabled = bool(quiz["attempts_enabled"]) if quiz["attempts_enabled"] is not None else max_attempts > 0
+        if not attempts_enabled or max_attempts <= 0:
+            return jsonify({"error": "Additional attempts are not enabled for this quiz."}), 400
+        amount = round(float(quiz["extra_attempt_price"] or 0), 2)
+        if not (0 < amount <= 100000):
+            return jsonify({"error": "The instructor has not configured a valid additional-attempt price. Please contact the instructor."}), 409
         used = db.execute(
             "SELECT COUNT(*) AS cnt FROM quiz_attempts WHERE user_id=? AND quiz_id=?",
             (uid, quiz_id)
@@ -134,11 +135,11 @@ def purchase_extra_attempt(quiz_id):
         details = {
             "quiz_id": quiz_id,
             "quiz_title": quiz["title"],
+            "extra_attempt_price": amount,
             "name": str(details.get("name") or user["name"] or "")[:120],
             "phone": str(details.get("phone") or "")[:40],
             "city": str(details.get("city") or "")[:80],
         }
-        amount = 10.00
         pay = initiate_payment(
             user={"id": uid, "name": user["name"], "email": user["email"]},
             course={"id": course["id"], "title": "Additional quiz attempt: " + str(quiz["title"])},
