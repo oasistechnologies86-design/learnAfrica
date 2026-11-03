@@ -236,7 +236,8 @@ export function QuizPage() {
             <ChevronLeft className="h-4 w-4" /> Exit
           </Link>
           <div className="text-center">
-            <p className="text-sm font-bold">{quiz.title}</p>
+            <p className="text-sm font-bold">{isFinalQuiz ? 'Final Exam' : 'Test'}</p>
+            <p className="text-xs text-muted-foreground">{quiz.title}</p>
             {course && <p className="text-xs text-muted-foreground">{course.title}</p>}
             {quiz.max_attempts > 0 && (
               <p className="text-2xs text-muted-foreground">
@@ -262,9 +263,9 @@ export function QuizPage() {
               <Sparkles className="h-6 w-6" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Quiz in progress</p>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">{isFinalQuiz ? 'Final exam in progress' : 'Test in progress'}</p>
               <h1 className="mt-1 text-2xl font-black tracking-tight text-foreground sm:text-3xl">{quiz.title}</h1>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Read each question carefully and choose your answer. Your answers stay on this page until you submit.</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Read each question carefully and choose your answer. Your answers stay on this page until you submit your {isFinalQuiz ? 'final exam' : 'test'}.</p>
             </div>
           </div>
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -319,7 +320,7 @@ export function QuizPage() {
             <span className="text-xs text-muted-foreground self-center">{currentQuestion + 1} / {questions.length}</span>
             {currentQuestion === questions.length - 1 ? (
               <Button onClick={handleSubmit} disabled={!canSubmit || isSubmitting} className="rounded-xl px-5 font-bold shadow-lg shadow-primary/20 transition-transform hover:-translate-y-0.5">
-                {isSubmitting ? 'Submitting...' : 'Submit Quiz'}
+                {isSubmitting ? 'Submitting...' : (isFinalQuiz ? 'Submit Final Exam' : 'Submit Test')}
               </Button>
             ) : (
               <Button onClick={handleNext} className="rounded-xl px-5 font-bold shadow-md transition-transform hover:-translate-y-0.5">Next <ChevronRight className="h-4 w-4" /></Button>
