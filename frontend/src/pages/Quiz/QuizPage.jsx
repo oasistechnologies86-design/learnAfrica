@@ -168,7 +168,7 @@ export function QuizPage() {
         return;
       }
       if (!response.ok) throw new Error(result.error || 'Submission failed');
-      await updateProgress(courseId, lessonId, result.score);
+      // The quiz submission endpoint records the graded score and completion atomically.
       navigate(`/learn/course/${courseId}/quiz/${lessonId}/results`, {
         state: {
           answers,
