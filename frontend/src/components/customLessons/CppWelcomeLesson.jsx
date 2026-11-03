@@ -90,7 +90,7 @@ export default function CppProgramOverviewLesson({ student, lesson }) {
   // Detail view, opened after clicking a topic card
   if (active) {
     return (
-      <article className="max-w-4xl mx-auto py-6 px-4 sm:px-6">
+      <article className="w-full max-w-none mx-0 py-6 px-0">
         <div className="rounded-2xl bg-primary text-primary-foreground p-6 sm:p-8 mb-6">
           <Breadcrumb activeLabel={active.title} />
           <button
@@ -137,7 +137,7 @@ export default function CppProgramOverviewLesson({ student, lesson }) {
   // breaking out of the lesson page's max-w-4xl centered container.
   return (
     <div className="relative left-1/2 right-1/2 -mx-[50vw] w-screen bg-primary text-primary-foreground">
-      <div className="max-w-5xl mx-auto px-6 sm:px-10 lg:px-16 py-10 sm:py-14">
+      <div className="w-full max-w-none mx-0 px-0 py-8 sm:py-10">
         <Breadcrumb activeLabel="Getting started" />
 
         <p className="max-w-xl leading-relaxed text-primary-foreground/90 mb-2">
