@@ -991,6 +991,8 @@ MIGRATIONS = [
     "ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS questions_per_attempt INTEGER DEFAULT 0",
     "ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS shuffle_questions INTEGER DEFAULT 0",
     "ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS shuffle_options INTEGER DEFAULT 0",
+    "ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS attempts_enabled INTEGER",
+    "ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS extra_attempt_price REAL DEFAULT 0",
     # is_bank marks a question as part of the pool that randomisation draws from.
     "ALTER TABLE quiz_questions ADD COLUMN IF NOT EXISTS is_bank INTEGER DEFAULT 1",
     # Credential revocation — a revoked certificate/badge still exists but the
