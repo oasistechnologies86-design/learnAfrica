@@ -130,7 +130,7 @@ function PreviewSidebar({ sections, allLessons, activeLessonId, courseId, onSele
                       <p className="truncate font-bold tracking-tight leading-tight">{l.title}</p>
                       <p className={cn('text-2xs mt-0.5 font-medium opacity-70',
                         isCurrent ? 'text-primary-foreground' : 'text-muted-foreground')}>
-                        {isQuiz ? 'Quiz' : l.duration || ''}
+                        {isQuiz ? (l.is_final ? 'Final Exam' : 'Test') : l.duration || ''}
                       </p>
                     </div>
                   </button>
@@ -147,7 +147,7 @@ function PreviewSidebar({ sections, allLessons, activeLessonId, courseId, onSele
 
 // ── Preview Quiz ─────────────────────────────────────────────────────────────
 // Instructors can take the quiz in preview, but nothing is saved
-function PreviewQuiz({ courseId, lessonId }) {
+function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
   const [quiz,     setQuiz]     = useState(null);
   const [answers,  setAnswers]  = useState({});
   const [submitted,setSubmitted]= useState(false);
@@ -185,7 +185,7 @@ function PreviewQuiz({ courseId, lessonId }) {
   if (!quiz?.questions?.length) return (
     <div className="p-6 rounded-xl border border-border bg-muted/20 text-center">
       <HelpCircle className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
-      <p className="text-sm text-muted-foreground">No questions for this quiz yet.</p>
+      <p className="text-sm text-muted-foreground">No questions have been added to this {isFinal ? 'final exam' : 'test'} yet.</p>
     </div>
   );
 
@@ -197,7 +197,7 @@ function PreviewQuiz({ courseId, lessonId }) {
       <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30">
         <Eye className="h-4 w-4 text-amber-600 shrink-0" />
         <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
-          Preview Mode — Your answers are not saved or graded in the system.
+          Preview Mode — This {isFinal ? 'final exam' : 'test'} is for instructor review only. Answers are not saved and no student progress is changed.
         </p>
       </div>
 
@@ -205,7 +205,7 @@ function PreviewQuiz({ courseId, lessonId }) {
         <div className="space-y-4">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>Question {current + 1} of {quiz.questions.length}</span>
-            <span>{quiz.title}</span>
+            <span>{isFinal ? 'Final Exam' : 'Test'}</span>
           </div>
           <div className="h-1.5 rounded-full bg-muted overflow-hidden">
             <div className="h-full bg-primary rounded-full transition-all"
@@ -245,7 +245,7 @@ function PreviewQuiz({ courseId, lessonId }) {
             ) : (
               <Button onClick={submitPreview} className="flex-1 bg-primary"
                 disabled={Object.keys(answers).length < quiz.questions.length}>
-                Submit Preview
+                Submit {isFinal ? 'Final Exam' : 'Test'} Preview
               </Button>
             )}
           </div>
@@ -258,14 +258,14 @@ function PreviewQuiz({ courseId, lessonId }) {
           )}>
             <span className="text-2xl font-bold">{score}%</span>
           </div>
-          <p className="font-bold text-lg">{score >= 70 ? '✅ Would Pass!' : '❌ Would Fail'}</p>
+          <p className="font-bold text-lg">{score >= 70 ? (isFinal ? 'Final exam would be passed' : 'Test would be passed') : (isFinal ? 'Final exam would not be passed' : 'Test would not be passed')}</p>
           <p className="text-sm text-muted-foreground">
             {score >= 70
-              ? 'Students who score ≥70% on this final exam will earn their certificate.'
-              : 'Students need 70% to pass. Consider reviewing the question difficulty.'}
+              ? 'A student scoring at least 70% would pass this {isFinal ? 'final exam' : 'test'}. {isFinal ? 'Passing the final exam is required for certificate eligibility.' : 'Passing this test completes its lesson.'}'
+              : 'A student needs at least 70% to pass. Consider reviewing the question difficulty.'}
           </p>
           <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-400">
-            Preview only — no score was recorded, no certificate issued.
+            Preview only — no score or progress was saved{isFinal ? ', and no certificate was issued' : ''}.
           </div>
           <Button variant="outline" onClick={() => { setSubmitted(false); setAnswers({}); setCurrent(0); setScore(null); }}>
             Retake Preview
@@ -510,7 +510,7 @@ export function PreviewCoursePage() {
                   )}
                   {activeLesson.type === 'quiz' && (
                     <span className="flex items-center gap-1.5 text-primary">
-                      <HelpCircle className="h-3.5 w-3.5" /> Quiz
+                      <HelpCircle className="h-3.5 w-3.5" /> {activeLesson.is_final ? 'Final Exam' : 'Test'}
                     </span>
                   )}
                 </div>
@@ -557,7 +557,7 @@ export function PreviewCoursePage() {
                       <p className="text-muted-foreground italic text-sm">No written content for this lesson.</p>
                     )}
                     {activeLesson.type === 'quiz' && (
-                      <PreviewQuiz courseId={courseId} lessonId={activeLesson.id} />
+                      <PreviewQuiz courseId={courseId} lessonId={activeLesson.id} isFinal={!!activeLesson.is_final} />
                     )}
                   </div>
                 )}
