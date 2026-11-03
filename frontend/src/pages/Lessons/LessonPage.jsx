@@ -301,16 +301,7 @@ export function LessonPage() {
     setIsSaving(false);
   };
 
-  // Auto-complete for custom pages: as soon as the student opens the lesson,
-  // mark it done. Custom pages have no "Mark as Complete" button.
-  useEffect(() => {
-    if (!lesson) return;
-    if (lesson.type !== 'custom') return;
-    if (currentLessonFinished) return;
-    // Fire and forget; errors are already handled inside handleMarkComplete
-    handleMarkComplete();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lesson?.id, lesson?.type, currentLessonFinished]);
+  // Custom lessons are completed deliberately by the learner at the end of the page.
 
   const handleSaveNotes = async () => {
     if (!user?.id) return;
@@ -472,36 +463,9 @@ export function LessonPage() {
           {lesson.type === 'custom' ? (() => {
             const registryEntry = getCustomLesson(lesson.component_key || lesson.componentKey);
             return (
-              <div className="max-w-4xl mx-auto w-full">
-                {/* Header shown ABOVE the custom content */}
-                <div className="mb-8 pb-6 border-b border-border">
-                  <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
-                    {lesson.duration && (
-                      <div className="flex items-center gap-1.5">
-                        <Clock className="h-3.5 w-3.5" />
-                        <span>{lesson.duration}</span>
-                      </div>
-                    )}
-                    <span className="flex items-center gap-1.5 text-purple-500">
-                      <Sparkles className="h-3.5 w-3.5" /> Reading
-                    </span>
-                    {currentLessonFinished && (
-                      <span className="flex items-center gap-1.5 text-success">
-                        <CheckCircle className="h-3.5 w-3.5" /> Completed
-                      </span>
-                    )}
-                  </div>
-                  <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">{lesson.title}</h1>
-                  {lesson.description && (
-                    <p className="text-muted-foreground text-base sm:text-lg leading-relaxed max-w-3xl mt-3">
-                      {lesson.description}
-                    </p>
-                  )}
-                </div>
-
-                {/* The custom component */}
+              <div className="custom-lesson-content w-full min-w-0 max-w-none">
                 {registryEntry?.component ? (
-                  <div className="w-full">
+                  <div className="w-full min-w-0">
                     {(() => {
                       const Component = registryEntry.component;
                       return <Component student={user} lesson={lesson} />;
@@ -584,7 +548,26 @@ export function LessonPage() {
             </Card>
           )}
 
-          <div className="max-w-4xl mx-auto py-8">
+          {lesson.type === 'custom' && (
+            <section className="custom-lesson-finish mt-10 border-t border-border pt-8 text-center">
+              <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <ChevronRight className="h-5 w-5 rotate-90" />
+              </div>
+              <p className="text-sm font-semibold text-foreground">You’ve reached the end of this lesson</p>
+              <p className="mt-1 text-sm text-muted-foreground">Scroll down to complete this lesson and continue.</p>
+              {!currentLessonFinished ? (
+                <Button onClick={handleMarkComplete} disabled={isSaving} className="mt-5 min-w-48">
+                  <CheckCircle className="mr-2 h-4 w-4" /> {isSaving ? 'Saving...' : 'Mark lesson complete'}
+                </Button>
+              ) : (
+                <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-success/20 bg-success/10 px-4 py-2 text-sm font-semibold text-success">
+                  <CheckCircle className="h-4 w-4" /> Lesson completed
+                </div>
+              )}
+            </section>
+          )}
+
+          <div className={lesson.type === 'custom' ? 'w-full max-w-none py-8' : 'max-w-4xl mx-auto py-8'}>
 
             {/* Lesson meta — hidden for custom lessons because they show it at the top */}
             {lesson.type !== 'custom' && (
@@ -803,12 +786,7 @@ export function LessonPage() {
 
                 {/* Centre: Mark Complete or status (hidden for custom pages — auto-complete) */}
                 <div className="flex-1 flex justify-center">
-                  {lesson.type === 'custom' ? (
-                    <div className="px-4 py-2 rounded-full bg-success/10 border border-success/20 flex items-center gap-2">
-                      <CheckCircle className="h-3.5 w-3.5 text-success" />
-                      <span className="text-3xs font-black uppercase tracking-tighter text-success">Auto-completed</span>
-                    </div>
-                  ) : !currentLessonFinished ? (
+                  {!currentLessonFinished ? (
                     <Button onClick={handleMarkComplete} disabled={isSaving}
                       className="w-full max-w-[180px] h-11 font-bold uppercase tracking-widest text-2xs sm:text-xs shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
                       <CheckCircle className="h-4 w-4 shrink-0" />
@@ -857,6 +835,19 @@ export function LessonPage() {
               </Button>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="mb-5 flex items-center gap-3 rounded-xl border border-border bg-background/70 p-3">
+                <div className="relative h-14 w-14 shrink-0">
+                  <svg viewBox="0 0 48 48" className="h-14 w-14 -rotate-90" aria-label={`Course progress ${allLessons.length ? Math.round(allLessons.filter(l => l.is_completed || l.isCompleted).length / allLessons.length * 100) : 0}%`}>
+                    <circle cx="24" cy="24" r="19" fill="none" stroke="currentColor" strokeWidth="4" className="text-muted/80" />
+                    <circle cx="24" cy="24" r="19" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" className="text-primary transition-all duration-500" strokeDasharray={`${(allLessons.length ? allLessons.filter(l => l.is_completed || l.isCompleted).length / allLessons.length : 0) * 119.38} 119.38`} />
+                  </svg>
+                  <span className="absolute inset-0 flex items-center justify-center text-xs font-black tabular-nums">{allLessons.length ? Math.round(allLessons.filter(l => l.is_completed || l.isCompleted).length / allLessons.length * 100) : 0}%</span>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold">Course progress</p>
+                  <p className="text-xs text-muted-foreground">{allLessons.filter(l => l.is_completed || l.isCompleted).length} of {allLessons.length} lessons completed</p>
+                </div>
+              </div>
               <h3 className="font-black text-3xs uppercase tracking-[0.2em] px-2 hidden lg:block text-muted-foreground">
                 Lessons Plan
               </h3>
