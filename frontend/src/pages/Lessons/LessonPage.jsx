@@ -19,6 +19,7 @@ import { API_BASE, parseErr } from '@/lib/api';
 import { RichTextViewer } from '@/components/common/RichTextEditor';
 import { formatHMS, formatDuration } from '@/components/common/TimePicker';
 import { getCustomLesson } from '@/components/customLessons/registry';
+import CustomLessonFrame from '@/components/customLessons/CustomLessonFrame';
 
 // ── helpers ───────────────────────────────────────────────────────────────
 const getEmbedUrl = (url) => {
@@ -468,7 +469,11 @@ export function LessonPage() {
                   <div className="w-full min-w-0">
                     {(() => {
                       const Component = registryEntry.component;
-                      return <Component student={user} lesson={lesson} />;
+                      return (
+                        <CustomLessonFrame lesson={lesson} mode="student">
+                          <Component student={user} lesson={lesson} />
+                        </CustomLessonFrame>
+                      );
                     })()}
                   </div>
                 ) : (
@@ -786,7 +791,7 @@ export function LessonPage() {
 
                 {/* Centre: Mark Complete or status (hidden for custom pages — auto-complete) */}
                 <div className="flex-1 flex justify-center">
-                  {!currentLessonFinished ? (
+                  {lesson.type !== 'custom' && !currentLessonFinished ? (
                     <Button onClick={handleMarkComplete} disabled={isSaving}
                       className="w-full max-w-[180px] h-11 font-bold uppercase tracking-widest text-2xs sm:text-xs shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
                       <CheckCircle className="h-4 w-4 shrink-0" />
