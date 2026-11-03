@@ -359,9 +359,9 @@ button:disabled,
 .custom-lesson-system {
   width: min(100%, 780px);
   padding: clamp(1.25rem, 3.2vw, 2.8rem) clamp(1.15rem, 4.5vw, 3.35rem);
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
+  border: 1px solid color-mix(in oklab, var(--primary) 58%, var(--border));
+  border-radius: .85rem;
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--primary) 12%, transparent), 0 0 18px color-mix(in oklab, var(--primary) 18%, transparent), 0 8px 26px rgba(15,23,42,.045);
   background: var(--card);
   font-family: Georgia, 'Times New Roman', serif;
   font-size: 1.075rem;
@@ -464,3 +464,8 @@ button:disabled,
 .custom-lesson-system section > div[class*="grid"] { gap: 1rem; }
 .custom-lesson-system .bg-slate-950,
 .custom-lesson-system .bg-slate-900 { background: #111827 !important; }
+
+.custom-lesson-system p,
+.custom-lesson-system li { text-align: justify; text-justify: inter-word; hyphens: auto; }
+.custom-lesson-system h1,.custom-lesson-system h2,.custom-lesson-system h3,.custom-lesson-system h4,.custom-lesson-system th,.custom-lesson-system td,.custom-lesson-system pre { text-align: initial; }
+@media (max-width: 480px) { .custom-lesson-system { border-radius: .65rem; } }
