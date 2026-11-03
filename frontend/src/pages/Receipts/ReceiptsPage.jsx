@@ -213,7 +213,8 @@ export default function ReceiptsPage() {
               onChange={e => setFilters(f => ({ ...f, type: e.target.value }))}
               className="w-full h-9 rounded-lg border border-input bg-background px-2 text-xs outline-none">
               <option value="">All</option>
-              <option value="purchase">Purchase</option>
+              <option value="purchase">Course purchase</option>
+              <option value="quiz_extra_attempt">Extra quiz attempt</option>
               <option value="payout">Payout</option>
             </select>
           </div>
