@@ -147,7 +147,7 @@ function PreviewSidebar({ sections, allLessons, activeLessonId, courseId, onSele
 
 // ── Preview Quiz ─────────────────────────────────────────────────────────────
 // Instructors can take the quiz in preview, but nothing is saved
-function PreviewQuiz({ courseId, lessonId, isFinal = false, maxAttempts = 0 }) {
+function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
   const [quiz,     setQuiz]     = useState(null);
   const [answers,  setAnswers]  = useState({});
   const [submitted,setSubmitted]= useState(false);
@@ -557,7 +557,7 @@ export function PreviewCoursePage() {
                       <p className="text-muted-foreground italic text-sm">No written content for this lesson.</p>
                     )}
                     {activeLesson.type === 'quiz' && (
-                      <PreviewQuiz courseId={courseId} lessonId={activeLesson.id} isFinal={!!activeLesson.is_final} maxAttempts={activeLesson.max_attempts || 0} />
+                      <PreviewQuiz courseId={courseId} lessonId={activeLesson.id} isFinal={!!activeLesson.is_final} />
                     )}
                   </div>
                 )}
