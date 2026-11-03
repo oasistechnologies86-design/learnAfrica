@@ -2997,6 +2997,9 @@ def create_app() -> Flask:
             ensure_column(db, 'lessons', 'text_content', 'TEXT')
             ensure_column(db, 'quizzes', 'duration_seconds', 'INTEGER DEFAULT 0')
             ensure_column(db, 'quizzes', 'max_attempts', 'INTEGER DEFAULT 0')
+            ensure_column(db, 'quizzes', 'questions_per_attempt', 'INTEGER DEFAULT 0')
+            ensure_column(db, 'quizzes', 'shuffle_questions', 'INTEGER DEFAULT 0')
+            ensure_column(db, 'quizzes', 'shuffle_options', 'INTEGER DEFAULT 0')
             ins = db.execute('SELECT name,avatar FROM users WHERE id=?',(g.current_user['user_id'],)).fetchone()
             cid = str(uuid.uuid4())
             price = float(d.get('price', 0))
@@ -3213,6 +3216,9 @@ def create_app() -> Flask:
         ensure_column(db, 'lessons', 'text_content', 'TEXT')
         ensure_column(db, 'quizzes', 'duration_seconds', 'INTEGER DEFAULT 0')
         ensure_column(db, 'quizzes', 'max_attempts', 'INTEGER DEFAULT 0')
+            ensure_column(db, 'quizzes', 'questions_per_attempt', 'INTEGER DEFAULT 0')
+            ensure_column(db, 'quizzes', 'shuffle_questions', 'INTEGER DEFAULT 0')
+            ensure_column(db, 'quizzes', 'shuffle_options', 'INTEGER DEFAULT 0')
         course = db.execute('SELECT * FROM courses WHERE id=? AND instructor_id=?',
                             (cid, g.current_user['user_id'])).fetchone()
         if not course:
@@ -3342,6 +3348,9 @@ def create_app() -> Flask:
             ensure_column(db, 'lessons', 'duration_seconds', 'INTEGER DEFAULT 0')
             ensure_column(db, 'quizzes', 'duration_seconds', 'INTEGER DEFAULT 0')
             ensure_column(db, 'quizzes', 'max_attempts', 'INTEGER DEFAULT 0')
+            ensure_column(db, 'quizzes', 'questions_per_attempt', 'INTEGER DEFAULT 0')
+            ensure_column(db, 'quizzes', 'shuffle_questions', 'INTEGER DEFAULT 0')
+            ensure_column(db, 'quizzes', 'shuffle_options', 'INTEGER DEFAULT 0')
 
             row = db.execute('SELECT instructor_id FROM courses WHERE id=?',(cid,)).fetchone()
             if not row: return jsonify({'error': 'Course not found'}), 404
