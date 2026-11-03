@@ -3384,8 +3384,8 @@ def create_app() -> Flask:
             ensure_column(db, 'quizzes', 'questions_per_attempt', 'INTEGER DEFAULT 0')
             ensure_column(db, 'quizzes', 'shuffle_questions', 'INTEGER DEFAULT 0')
             ensure_column(db, 'quizzes', 'shuffle_options', 'INTEGER DEFAULT 0')
-        ensure_column(db, 'quizzes', 'attempts_enabled', 'INTEGER')
-        ensure_column(db, 'quizzes', 'extra_attempt_price', 'REAL DEFAULT 0')
+            ensure_column(db, 'quizzes', 'attempts_enabled', 'INTEGER')
+            ensure_column(db, 'quizzes', 'extra_attempt_price', 'REAL DEFAULT 0')
 
             row = db.execute('SELECT instructor_id FROM courses WHERE id=?',(cid,)).fetchone()
             if not row: return jsonify({'error': 'Course not found'}), 404
