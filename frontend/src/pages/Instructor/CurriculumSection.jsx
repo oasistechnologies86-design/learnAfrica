@@ -722,8 +722,8 @@ function CurriculumItemEditor({ item, index, onUpdate, onRemove, hasResources = 
                   <Switch checked={!!item.attempts_enabled}
                     onChange={enabled => onUpdate({
                       attempts_enabled: enabled,
-                      max_attempts: enabled ? (Number(item.max_attempts) || (item.is_final ? 10 : 3)) : 0,
-                      extra_attempt_price: enabled ? (item.extra_attempt_price ?? '') : 0,
+                      max_attempts: enabled ? (Number(item.max_attempts) || (item.is_final ? 10 : 3)) : item.max_attempts,
+                      extra_attempt_price: item.extra_attempt_price ?? '',
                     })} />
                 </div>
                 {item.attempts_enabled && (
