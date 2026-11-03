@@ -35,7 +35,36 @@ export function QuizPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFinalQuiz,  setIsFinalQuiz]  = useState(false);
   const [timeGate, setTimeGate] = useState(null); // {required_seconds, spent_seconds, message}
+  const [attemptLimit, setAttemptLimit] = useState(false);
+  const [buyingAttempt, setBuyingAttempt] = useState(false);
   const submittedRef = useRef(false);
+
+  const purchaseExtraAttempt = async () => {
+    if (buyingAttempt) return;
+    setBuyingAttempt(true);
+    try {
+      const token = sessionStorage.getItem('auth_token');
+      const response = await fetch(`${API_BASE}/api/quizzes/${quiz?.id}/extra-attempt/purchase`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token && { Authorization: 'Bearer ' + token }) },
+        body: JSON.stringify({ payment_method: 'any', payment_details: {} }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || 'Could not start payment');
+      if (result.checkout_url) {
+        window.location.assign(result.checkout_url);
+        return;
+      }
+      if (result.status === 'success') {
+        window.location.reload();
+        return;
+      }
+      throw new Error('Payment is pending. Return after completing payment to verify your receipt.');
+    } catch (err) {
+      setError(err.message);
+      setBuyingAttempt(false);
+    }
+  };
 
   useEffect(() => {
     const fetchQuiz = async () => {
@@ -60,6 +89,12 @@ export function QuizPage() {
           });
           const startData = await startRes.json().catch(() => ({}));
           if (!startRes.ok) {
+            if (startData.error === 'attempt_limit') {
+              setAttemptLimit(true);
+              setError(startData.message || 'You have used all attempts for this quiz.');
+              setQuiz(q);
+              return;
+            }
             if (startData.error === 'time_gate') {
               setTimeGate({
                 required_seconds: startData.required_seconds || 0,
@@ -161,7 +196,8 @@ export function QuizPage() {
         return;
       }
       if (response.status === 429 && result.error === 'attempt_limit') {
-        // Out of attempts — surface the server's message, don't retry.
+        // Out of attempts — offer the secure paid extra-attempt flow.
+        setAttemptLimit(true);
         setError(result.message || 'You have used all attempts for this quiz.');
         submittedRef.current = false;
         setIsSubmitting(false);
@@ -221,6 +257,14 @@ export function QuizPage() {
     <div className="min-h-screen flex items-center justify-center">
       <Card className="p-8 text-center max-w-sm">
         <p className="text-destructive font-medium">{error || 'Quiz not available'}</p>
+        {attemptLimit && (
+          <div className="mt-4 space-y-2">
+            <p className="text-sm text-muted-foreground">Purchase one additional attempt for GHS 10. Payment is credited only after it is verified.</p>
+            <Button className="w-full" onClick={purchaseExtraAttempt} disabled={buyingAttempt}>
+              {buyingAttempt ? 'Starting secure payment…' : 'Buy One More Attempt · GHS 10'}
+            </Button>
+          </div>
+        )}
         <Link to={`/learn/course/${courseId}/lesson/${lessonId}`}><Button className="mt-4">Back to Lesson</Button></Link>
       </Card>
     </div>
