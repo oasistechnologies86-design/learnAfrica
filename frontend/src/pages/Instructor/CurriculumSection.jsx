@@ -683,34 +683,27 @@ function CurriculumItemEditor({ item, index, onUpdate, onRemove, hasResources = 
                   onChange={val => onUpdate({ is_final: val })} />
               </div>
 
-              {/* Quiz time limit — watch-style picker */}
+              {/* Quiz countdown is separate from estimated lesson/course duration. */}
               <div className="p-3 rounded-xl border border-border bg-background space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs font-bold">Quiz time limit</p>
                     <p className="text-2xs text-muted-foreground">
-                      {(item.duration_seconds || 0) > 0
-                        ? `Students must finish within ${formatDuration(item.duration_seconds)}.`
-                        : 'No time limit — students can take as long as they need.'}
+                      {item.quiz_timer_enabled && Number(item.quiz_duration_seconds) > 0
+                        ? `Students must finish within ${formatDuration(item.quiz_duration_seconds)}.`
+                        : 'Off — students can take as long as they need. Lesson duration does not start a quiz countdown.'}
                     </p>
                   </div>
-                  <Switch
-                    checked={(item.duration_seconds || 0) > 0}
-                    onChange={(val) => onUpdate({
-                      duration_seconds: val ? (item.duration_seconds || 600) : 0,
-                      duration: val ? formatDuration(item.duration_seconds || 600) : 'No limit',
-                    })}
-                  />
+                  <Switch checked={!!item.quiz_timer_enabled}
+                    onChange={enabled => onUpdate({
+                      quiz_timer_enabled: enabled,
+                      quiz_duration_seconds: enabled ? (Number(item.quiz_duration_seconds) || 600) : 0,
+                    })} />
                 </div>
-                {(item.duration_seconds || 0) > 0 && (
+                {item.quiz_timer_enabled && (
                   <div className="flex justify-center">
-                    <TimePicker
-                      value={item.duration_seconds || 0}
-                      onChange={(secs) => onUpdate({
-                        duration_seconds: secs,
-                        duration: formatDuration(secs),
-                      })}
-                    />
+                    <TimePicker value={Number(item.quiz_duration_seconds) || 600}
+                      onChange={secs => onUpdate({ quiz_duration_seconds: secs })} />
                   </div>
                 )}
               </div>
