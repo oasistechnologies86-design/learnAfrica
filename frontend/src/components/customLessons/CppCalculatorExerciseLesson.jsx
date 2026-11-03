@@ -1,5 +1,5 @@
 /**
- * CppCalculatorExerciseLesson — guided practice combining variables + operators + I/O.
+ * CppCalculatorExerciseLesson, guided practice combining variables + operators + I/O.
  * component_key suggestion: cpp-calculator-exercise
  */
 import { Wrench, Target, CheckCircle2, Eye } from 'lucide-react';
@@ -67,7 +67,7 @@ int main() {
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight">Build a Calculator</h1>
         <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-          {firstName}, this is the first lesson with no new concepts — just you, combining
+          {firstName}, this is the first lesson with no new concepts, just you, combining
           everything from the last three lessons into one working program. That's exactly how
           real programming feels: less "learn a new thing," more "connect things you already know."
         </p>
@@ -91,13 +91,13 @@ int main() {
           <li className="flex gap-3"><span className="shrink-0 h-6 w-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">2</span>Prompt for and read the first number with cout/cin.</li>
           <li className="flex gap-3"><span className="shrink-0 h-6 w-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">3</span>Prompt for and read the operator character.</li>
           <li className="flex gap-3"><span className="shrink-0 h-6 w-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">4</span>Prompt for and read the second number.</li>
-          <li className="flex gap-3"><span className="shrink-0 h-6 w-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">5</span>Use if / else if to check which operator was entered, and compute the result. (You'll cover if/else properly in the next lesson — for this exercise, a chain of if/else if statements comparing the char is enough; the solution shows exactly how.)</li>
+          <li className="flex gap-3"><span className="shrink-0 h-6 w-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">5</span>Use if / else if to check which operator was entered, and compute the result. (You'll cover if/else properly in the next lesson, for this exercise, a chain of if/else if statements comparing the char is enough; the solution shows exactly how.)</li>
           <li className="flex gap-3"><span className="shrink-0 h-6 w-6 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">6</span>Print the full equation and result.</li>
         </ol>
       </section>
 
       <p className="text-sm text-muted-foreground italic">
-        Go try this now before looking at the solution below — even a half-working attempt
+        Go try this now before looking at the solution below, even a half-working attempt
         teaches you more than reading the answer first.
       </p>
 
@@ -112,7 +112,7 @@ int main() {
         <section className="space-y-4">
           <h2 className="text-2xl font-bold flex items-center gap-2"><CheckCircle2 className="h-5 w-5 text-success" /> One Working Solution</h2>
           <p className="text-sm text-muted-foreground">
-            There's more than one correct way to write this — if yours works differently but
+            There's more than one correct way to write this, if yours works differently but
             gives the right output, that's just as valid.
           </p>
           <CodeBlock code={solution} highlightLines={[18, 19, 20, 21]} />
@@ -122,7 +122,7 @@ int main() {
       <section className="rounded-xl border border-border bg-muted/30 p-6 sm:p-8 text-center space-y-3">
         <h3 className="text-xl font-bold">Nicely done, {firstName}.</h3>
         <p className="text-sm text-muted-foreground max-w-prose mx-auto leading-relaxed">
-          The next lesson teaches if/else properly — you already used it above by feel; now
+          The next lesson teaches if/else properly, you already used it above by feel; now
           you'll understand exactly why it works.
         </p>
       </section>
