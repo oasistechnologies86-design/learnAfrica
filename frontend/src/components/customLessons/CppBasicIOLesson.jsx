@@ -1,5 +1,5 @@
 /**
- * CppBasicIOLesson — teaching lesson: Basic Input & Output.
+ * CppBasicIOLesson, teaching lesson: Basic Input & Output.
  * component_key suggestion: cpp-basic-io
  */
 import { Keyboard, Lightbulb, AlertTriangle, Target } from 'lucide-react';
@@ -65,7 +65,7 @@ int main() {
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight">Basic Input & Output</h1>
         <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-          {firstName}, so far your programs have only talked to you — now let's make them
+          {firstName}, so far your programs have only talked to you, now let's make them
           listen. This is the point where your programs stop being static and start reacting
           to whatever the user types.
         </p>
@@ -85,7 +85,7 @@ int main() {
         <h2 className="text-2xl font-bold">Reading Input With cin</h2>
         <p className="leading-relaxed text-foreground/90">
           <code className="px-1 rounded bg-muted font-mono text-xs">std::cin</code> is the mirror image
-          of <code className="px-1 rounded bg-muted font-mono text-xs">std::cout</code> — instead of{' '}
+          of <code className="px-1 rounded bg-muted font-mono text-xs">std::cout</code>, instead of{' '}
           <code className="px-1 rounded bg-muted font-mono text-xs">{'<<'}</code> sending data out, you use{' '}
           <code className="px-1 rounded bg-muted font-mono text-xs">{'>>'}</code> to pull data in, straight into
           a variable:
@@ -102,9 +102,8 @@ int main() {
           <code className="px-1 rounded bg-muted/60 font-mono text-xs">std::cin {'>>'} name</code> reads
           only up to the first space or Enter. Type "Kwame Mensah" and{' '}
           <code className="px-1 rounded bg-muted/60 font-mono text-xs">name</code> will only capture
-          "Kwame" — the rest gets left behind for the next read. You'll learn a fix for reading
-          full lines (<code className="px-1 rounded bg-muted/60 font-mono text-xs">std::getline</code>) later
-          — for now, just know single words are safe with{' '}
+          "Kwame", the rest gets left behind for the next read. You'll learn a fix for reading
+          full lines (<code className="px-1 rounded bg-muted/60 font-mono text-xs">std::getline</code>) later, for now, just know single words are safe with{' '}
           <code className="px-1 rounded bg-muted/60 font-mono text-xs">cin</code>.
         </p>
       </Callout>
@@ -113,7 +112,7 @@ int main() {
         <p>
           Always print a message with <code className="px-1 rounded bg-muted/60 font-mono text-xs">std::cout</code> right
           before a <code className="px-1 rounded bg-muted/60 font-mono text-xs">std::cin</code> line. Without a prompt,
-          the user has no idea the program is waiting for them — it just looks frozen.
+          the user has no idea the program is waiting for them, it just looks frozen.
         </p>
       </Callout>
 
@@ -128,7 +127,7 @@ int main() {
       <section className="rounded-xl border border-border bg-muted/30 p-6 sm:p-8 text-center space-y-3">
         <h3 className="text-xl font-bold">You're ready, {firstName}.</h3>
         <p className="text-sm text-muted-foreground max-w-prose mx-auto leading-relaxed">
-          You now have every ingredient for a real interactive program — variables, types,
+          You now have every ingredient for a real interactive program, variables, types,
           operators, and I/O. Next lesson: put them all together in a guided calculator exercise.
         </p>
       </section>
