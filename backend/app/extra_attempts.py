@@ -117,11 +117,14 @@ def purchase_extra_attempt(quiz_id):
         if int(used["cnt"] or 0) < max_attempts + credits:
             return jsonify({"error": "You still have an available attempt."}), 409
         course = db.execute(
-            "SELECT id,title,instructor_id FROM courses WHERE id=?",
+            """SELECT c.id,c.title,c.instructor_id,u.role AS instructor_role
+               FROM courses c LEFT JOIN users u ON u.id=c.instructor_id
+               WHERE c.id=?""",
             (quiz["course_id"],)
         ).fetchone()
         if not course or not course["instructor_id"]:
             return jsonify({"error": "The course instructor could not be identified."}), 409
+        payout_status = "n/a" if course["instructor_role"] in ("admin", "superadmin") else "pending"
         user = db.execute("SELECT id,name,email FROM users WHERE id=?", (uid,)).fetchone()
         if not user:
             return jsonify({"error": "Student account not found."}), 404
@@ -156,7 +159,7 @@ def purchase_extra_attempt(quiz_id):
              user["email"], course["id"], "Additional quiz attempt: " + str(quiz["title"]),
              course["instructor_id"], amount, "GHS", amount, 0.0, pay["status"],
              pay["provider"], pay["provider_ref"], method, json.dumps(tx_details),
-             "pending", "One additional attempt for quiz " + quiz_id)
+             payout_status, "One additional attempt for quiz " + quiz_id)
         )
         db.commit()
         if pay["status"] == "success":
