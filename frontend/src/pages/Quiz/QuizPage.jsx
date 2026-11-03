@@ -94,7 +94,7 @@ export function QuizPage() {
         // Randomised and/or timed quizzes run through /start, which serves the
         // student's specific question set and starts the authoritative server
         // timer. Plain quizzes keep their original behaviour.
-        if (q.randomized || Number(q.duration_seconds) > 0) {
+        if (q.randomized || (q.timer_enabled && Number(q.duration_seconds) > 0)) {
           const startRes = await fetch(`${API_BASE}/api/quizzes/${q.id}/start`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...headers },
@@ -156,7 +156,7 @@ export function QuizPage() {
     // The dedicated duration_seconds field is authoritative. The legacy
     // `duration` column also held lesson estimates (e.g. "30 min"), so parsing
     // it here incorrectly imposed a timer when the instructor had disabled it.
-    const explicit = Number(quiz.duration_seconds || quiz.durationSeconds || 0);
+    const explicit = quiz.timer_enabled ? Number(quiz.duration_seconds || 0) : 0;
     setTimeLeft(explicit > 0 ? explicit : null);
   }, [quiz]);
 
