@@ -1,5 +1,5 @@
 /**
- * CppConditionalsLesson — teaching lesson: Control Structures I (Conditionals).
+ * CppConditionalsLesson, teaching lesson: Control Structures I (Conditionals).
  * component_key suggestion: cpp-conditionals
  */
 import { GitBranch, Lightbulb, Target } from 'lucide-react';
@@ -72,7 +72,7 @@ switch (day) {
         <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight">Making Decisions in Code</h1>
         <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
           {firstName}, every interesting program needs to react differently depending on the
-          situation. You already used this by feel in the calculator exercise — now let's make
+          situation. You already used this by feel in the calculator exercise, now let's make
           it official.
         </p>
       </header>
@@ -87,7 +87,7 @@ switch (day) {
         <Callout icon={Lightbulb} title="Order matters">
           <p>
             If you swapped the order and checked <code className="px-1 rounded bg-muted/60 font-mono text-xs">score {'>='} 50</code> first,
-            a score of 90 would still print "Needs improvement" — because that condition is also
+            a score of 90 would still print "Needs improvement", because that condition is also
             technically true, and it's checked first. Always order conditions from most specific
             to least specific.
           </p>
@@ -102,12 +102,12 @@ switch (day) {
         <CodeBlock code={ternaryCode} highlightLines={[2]} />
         <p className="leading-relaxed text-foreground/90">
           Read it as: "condition ? value if true : value if false." Use it for short, simple
-          choices — for anything with real logic inside, a full if/else is more readable.
+          choices, for anything with real logic inside, a full if/else is more readable.
         </p>
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-2xl font-bold">switch — Many Exact Matches</h2>
+        <h2 className="text-2xl font-bold">switch, Many Exact Matches</h2>
         <p className="leading-relaxed text-foreground/90">
           When you're comparing one variable against several exact values, switch is often
           cleaner than a long if/else if chain:
@@ -116,7 +116,7 @@ switch (day) {
         <Callout icon={Lightbulb} tone="warning" title="Don't forget break">
           <p>
             Without <code className="px-1 rounded bg-muted/60 font-mono text-xs">break;</code>, execution
-            "falls through" into the next case instead of stopping — a classic switch bug. The{' '}
+            "falls through" into the next case instead of stopping, a classic switch bug. The{' '}
             <code className="px-1 rounded bg-muted/60 font-mono text-xs">default</code> case runs
             when nothing else matched.
           </p>
@@ -134,7 +134,7 @@ switch (day) {
       <section className="rounded-xl border border-border bg-muted/30 p-6 sm:p-8 text-center space-y-3">
         <h3 className="text-xl font-bold">Solid, {firstName}.</h3>
         <p className="text-sm text-muted-foreground max-w-prose mx-auto leading-relaxed">
-          Next up (as a short video): loops — how to repeat code without copy-pasting it.
+          Next up (as a short video): loops, how to repeat code without copy-pasting it.
         </p>
       </section>
     </article>
