@@ -40,6 +40,7 @@ import CertificatePage          from './pages/Certificate/CertificatePage';
 import LeaderboardPage          from './pages/Leaderboard/LeaderboardPage';
 import NotFoundPage             from './pages/NotFound/NotFoundPage';
 import AdminPage                from './pages/Admin/AdminPage';
+import AdminLayout              from './layouts/AdminLayout';
 import ReceiptsPage             from './pages/Receipts/ReceiptsPage';
 import ReceiptStatementPage    from './pages/Receipts/ReceiptStatementPage';
 import InstructorsPage          from './pages/Directory/InstructorsPage';
@@ -225,7 +226,7 @@ function AppRoutes() {
       {/* ── Admin ── */}
       <Route path="admin"
         element={<ProtectedRoute allowedRoles={['admin','superadmin']}>
-          <DashboardLayout />
+          <AdminLayout />
         </ProtectedRoute>}>
         <Route index element={<AdminPage />} />
       </Route>
