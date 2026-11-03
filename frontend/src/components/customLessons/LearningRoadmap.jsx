@@ -1,5 +1,5 @@
 /**
- * LearningRoadmap — a preview of what students will learn across the course.
+ * LearningRoadmap, a preview of what students will learn across the course.
  *
  * Good for placement near the start of a course, right after Welcome, to help
  * students see the big picture before they dive into individual lessons.
@@ -15,21 +15,21 @@ export default function LearningRoadmap({ student, lesson }) {
 
   const milestones = [
     {
-      phase: 'Weeks 1–2',
+      phase: 'Weeks 1-2',
       title: 'The Fundamentals',
       description:
-        "You'll start with the core concepts — the vocabulary and mental models everything else in this course is built on. Expect short lessons that focus on clarity over depth. If you already have some background, feel free to skim, but don't skip: the language used later assumes you've been through these.",
+        "You'll start with the core concepts, the vocabulary and mental models everything else in this course is built on. Expect short lessons that focus on clarity over depth. If you already have some background, feel free to skim, but don't skip: the language used later assumes you've been through these.",
       icon: Zap,
     },
     {
-      phase: 'Weeks 3–4',
+      phase: 'Weeks 3-4',
       title: 'Practical Applications',
       description:
-        "Once the vocabulary is in place, we shift to using it. You'll start building small examples, breaking them, and fixing them. This is usually where students say 'oh, that's what that meant' — the concepts start clicking because you're applying them.",
+        "Once the vocabulary is in place, we shift to using it. You'll start building small examples, breaking them, and fixing them. This is usually where students say 'oh, that's what that meant', the concepts start clicking because you're applying them.",
       icon: Target,
     },
     {
-      phase: 'Weeks 5–6',
+      phase: 'Weeks 5-6',
       title: 'Deeper Techniques',
       description:
         "This is where we go from 'can do it' to 'understands it'. The lessons in this phase introduce more advanced patterns and edge cases. You'll be surprised how much the earlier material makes sense in retrospect once these ideas land.",
@@ -39,7 +39,7 @@ export default function LearningRoadmap({ student, lesson }) {
       phase: 'Final Week',
       title: 'Real-World Practice + Assessment',
       description:
-        "You'll work through a capstone-style challenge that puts together everything you've learned, followed by the final quiz. Passing the quiz earns you your certificate — proof of the skills you've built.",
+        "You'll work through a capstone-style challenge that puts together everything you've learned, followed by the final quiz. Passing the quiz earns you your certificate, proof of the skills you've built.",
       icon: GraduationCap,
     },
   ];
@@ -58,7 +58,7 @@ export default function LearningRoadmap({ student, lesson }) {
           Before you dive into the individual lessons, it helps to see the shape of
           the whole journey. This page lays out the four phases of the course, what
           you'll build in each, and what to expect emotionally along the way. Bookmark
-          this — a lot of students come back to it mid-course when they need a reminder
+          this, a lot of students come back to it mid-course when they need a reminder
           of where they're headed.
         </p>
       </header>
@@ -92,7 +92,7 @@ export default function LearningRoadmap({ student, lesson }) {
         <p className="leading-relaxed text-foreground/90">
           By the end of this course, you won't just have watched some videos. You'll
           have built things you can point at. You'll have a vocabulary for talking
-          about the topic with confidence — in interviews, in meetings, in your own
+          about the topic with confidence, in interviews, in meetings, in your own
           projects. And you'll have a certificate that says you finished, which is
           worth more than most people realise.
         </p>
@@ -123,7 +123,7 @@ export default function LearningRoadmap({ student, lesson }) {
         <h3 className="text-xl font-bold">One more thing before you start.</h3>
         <p className="text-sm text-muted-foreground max-w-prose mx-auto leading-relaxed">
           Progress isn't always linear. Some weeks you'll feel unstoppable. Others
-          you'll feel like nothing's clicking. That's normal — it's what learning
+          you'll feel like nothing's clicking. That's normal, it's what learning
           actually looks like when you're honest about it. Keep going. The valleys
           are where the growth happens.
         </p>
