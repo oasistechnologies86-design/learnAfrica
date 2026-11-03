@@ -591,7 +591,7 @@ export function LessonPage() {
                     <Flag className="h-3.5 w-3.5" /> Final Exam
                   </span>
                 )}
-                {currentLessonFinished && (
+                {currentLessonFinished && !isQuizLesson && (
                   <span className="flex items-center gap-1.5 text-success">
                     <CheckCircle className="h-3.5 w-3.5" /> Completed
                   </span>
@@ -746,30 +746,26 @@ export function LessonPage() {
                 <div className="h-16 w-16 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-5">
                   <HelpCircle className="h-8 w-8 text-primary" />
                 </div>
-                <h2 className="text-xl font-bold mb-2">{lesson.title}</h2>
+                <h2 className="text-xl font-bold mb-2">{lesson.is_final ? 'Final Exam' : 'Test'}</h2>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-                  Read each question carefully before answering. Once you submit the quiz, you'll see your score right away.
-                  {lesson.is_final && ' This is the final exam for this course.'}
+                  {lesson.is_final
+                    ? 'Answer each question carefully. You must pass this final exam to complete it and qualify for the course certificate.'
+                    : 'Answer each question carefully. Your test is marked complete automatically when you pass.'}
                 </p>
                 {currentLessonFinished ? (
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-success/10 border border-success/20">
-                      <CheckCircle className="h-4 w-4 text-success" />
-                      <span className="text-sm font-semibold text-success">Completed</span>
-                    </div>
-                    <Link to={`/learn/course/${courseId}/quiz/${lessonId}`}>
-                      <Button variant="outline" size="sm" className="gap-2">
-                        <HelpCircle className="h-4 w-4" /> Retake Quiz
-                      </Button>
-                    </Link>
-                  </div>
-                ) : (
-                  <Link to={`/learn/course/${courseId}/quiz/${lessonId}`}>
-                    <Button size="lg" className="w-full sm:w-auto gap-2 px-8">
-                      <HelpCircle className="h-5 w-5" /> Start Quiz
-                    </Button>
-                  </Link>
-                )}
+                  <p className="text-sm text-success font-medium mb-4">You have passed this {lesson.is_final ? 'final exam' : 'test'}.</p>
+                ) : lesson.quizScore !== null && lesson.quizScore !== undefined ? (
+                  <p className="text-sm text-muted-foreground mb-4">Your last score was {lesson.quizScore}%. You have not passed yet. Review the lesson and try again.</p>
+                ) : null}
+                <Link to={`/learn/course/${courseId}/quiz/${lessonId}`}>
+                  <Button size="lg" className="w-full sm:w-auto gap-2 px-8">
+                    <HelpCircle className="h-5 w-5" />
+                    {lesson.quizScore !== null && lesson.quizScore !== undefined && !currentLessonFinished
+                      ? 'Try Again'
+                      : currentLessonFinished ? (lesson.is_final ? 'Retake Final Exam' : 'Retake Test')
+                      : (lesson.is_final ? 'Take Final Exam' : 'Take Test')}
+                  </Button>
+                </Link>
               </div>
             )}
 
