@@ -6990,8 +6990,15 @@ def create_app() -> Flask:
 
             db = get_db()
             ensure_transactions_table(db)
-            if not db.execute('SELECT id FROM courses WHERE id=?', (cid,)).fetchone():
+            course_policy = db.execute(
+                'SELECT min_time_seconds, enforce_min_time FROM courses WHERE id=?', (cid,)
+            ).fetchone()
+            if not course_policy:
                 return jsonify({'error': 'Course not found'}), 404
+            # Time tracking exists only to enforce an instructor-configured
+            # minimum course duration. Do not collect or increment it when off.
+            if not bool(course_policy['enforce_min_time']) or int(course_policy['min_time_seconds'] or 0) <= 0:
+                return jsonify({'message': 'Course minimum-time tracking is disabled', 'added': 0})
 
             uid = g.current_user['user_id']
             existing = db.execute(
