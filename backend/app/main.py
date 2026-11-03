@@ -8222,13 +8222,11 @@ def create_app() -> Flask:
                             "UPDATE transactions SET status='success', updated_at=CURRENT_TIMESTAMP WHERE id=?",
                             (tx['id'],)
                         )
-                        if tx['type'] == 'quiz_extra_attempt':
-                            settle_extra_attempt(db, tx['id'])
                         # Instructor registration fee: mark the application paid.
                         if tx['type'] == 'instructor_registration' and tx['user_id']:
                             _mark_registration_paid(db, tx['user_id'], tx['id'])
                         # Enroll if not already
-                        if tx['user_id'] and tx['course_id']:
+                        if tx['type'] != 'quiz_extra_attempt' and tx['user_id'] and tx['course_id']:
                             already = db.execute(
                                 'SELECT 1 FROM user_enrollments WHERE user_id=? AND course_id=?',
                                 (tx['user_id'], tx['course_id'])
@@ -8242,6 +8240,11 @@ def create_app() -> Flask:
                                 except Exception as e:
                                     app.logger.warning(f'webhook enroll failed: {e}')
                         db.commit()
+                    # Credit is granted idempotently even if a previous webhook
+                    # marked the transaction successful before the credit write.
+                    if tx and tx['type'] == 'quiz_extra_attempt':
+                        settle_extra_attempt(db, tx['id'])
+                    if tx:
                         app.logger.info(f'Paystack charge.success processed for {ref}')
 
             # transfer.success / transfer.failed — a payout to an instructor completed
