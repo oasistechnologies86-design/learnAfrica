@@ -555,12 +555,14 @@ export function LessonPage() {
 
           {lesson.type === 'custom' && (
             <section className="custom-lesson-finish mt-10 border-t border-border pt-8 text-center">
-              <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <ChevronRight className="h-5 w-5 rotate-90" />
+              <div className="mb-4 flex justify-center">
+                <div className="custom-lesson-down-cue" aria-hidden="true">
+                  <ChevronRight className="h-7 w-7 rotate-90" />
+                </div>
               </div>
-              <p className="text-sm font-semibold text-foreground">You’ve reached the end of this lesson</p>
-              <p className="mt-1 text-sm text-muted-foreground">Scroll down to complete this lesson and continue.</p>
-              {lesson.type !== 'custom' && !currentLessonFinished ? (
+              <p className="text-base font-bold text-foreground">You’ve reached the end of this lesson</p>
+              <p className="mt-1 text-sm text-muted-foreground">Continue below to mark this lesson complete.</p>
+              {!currentLessonFinished ? (
                 <Button onClick={handleMarkComplete} disabled={isSaving} className="mt-5 min-w-48">
                   <CheckCircle className="mr-2 h-4 w-4" /> {isSaving ? 'Saving...' : 'Mark lesson complete'}
                 </Button>
