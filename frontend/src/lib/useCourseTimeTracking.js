@@ -44,7 +44,14 @@ export function useCourseTimeTracking(courseId, { ready = true } = {}) {
   useEffect(() => {
     if (!courseId) return;
     let cancelled = false;
+    // Clear the previous course's display immediately while the next policy loads.
     setTrackingEnabled(false);
+    setTimeSpent(0);
+    setTimeRequired(0);
+    setTimeEnforce(false);
+    setShowCheckin(false);
+    timeTickRef.current = 0;
+    sinceCheckinRef.current = 0;
     authedFetch(`/api/courses/${courseId}/time`)
       .then(r => r.ok ? r.json() : null)
       .then(d => {
