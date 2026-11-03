@@ -227,12 +227,12 @@ export function QuizPage() {
   );
 
   return (
-    <div className="min-h-screen bg-muted/30 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-background to-primary/10 flex flex-col">
       <CourseTimeBar timeSpent={timeSpent} timeRequired={timeRequired} timeEnforce={timeEnforce} />
       <EngagementCheckinModal show={showCheckin} onContinue={confirmContinue} />
-      <header className="sticky top-0 z-30 border-b border-border bg-background">
-        <div className="flex h-14 items-center justify-between px-4">
-          <Link to={`/learn/course/${courseId}/lesson/${lessonId}`} className="flex items-center gap-1 text-sm font-medium text-muted-foreground">
+      <header className="sticky top-0 z-30 border-b border-border/70 bg-background/90 backdrop-blur-xl shadow-sm">
+        <div className="flex min-h-16 items-center justify-between gap-3 px-4 sm:px-6">
+          <Link to={`/learn/course/${courseId}/lesson/${lessonId}`} className="flex items-center gap-1 rounded-full px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
             <ChevronLeft className="h-4 w-4" /> Exit
           </Link>
           <div className="text-center">
@@ -255,9 +255,41 @@ export function QuizPage() {
         </div>
       </header>
 
-      <div className="container max-w-3xl mx-auto px-4 py-6">
-        {/* Question nav dots */}
-        <div className="mb-8 flex flex-wrap justify-center gap-2">
+      <div className="container max-w-4xl mx-auto px-4 py-7 sm:py-10">
+        <section className="mb-7 overflow-hidden rounded-3xl border border-primary/15 bg-card/90 p-5 shadow-lg shadow-primary/5 sm:p-7">
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <Sparkles className="h-6 w-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Quiz in progress</p>
+              <h1 className="mt-1 text-2xl font-black tracking-tight text-foreground sm:text-3xl">{quiz.title}</h1>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Read each question carefully and choose your answer. Your answers stay on this page until you submit.</p>
+            </div>
+          </div>
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl bg-muted/70 p-3">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground"><ClipboardList className="h-4 w-4" /> Questions</div>
+              <p className="mt-1 text-xl font-extrabold tabular-nums">{questions.length}</p>
+            </div>
+            <div className="rounded-2xl bg-muted/70 p-3">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground"><CheckCircle2 className="h-4 w-4" /> Answered</div>
+              <p className="mt-1 text-xl font-extrabold tabular-nums">{answeredCount}<span className="ml-1 text-sm font-medium text-muted-foreground">/ {questions.length}</span></p>
+            </div>
+            <div className="col-span-2 rounded-2xl bg-primary/5 p-3 sm:col-span-1">
+              <div className="text-xs text-muted-foreground">Completion</div>
+              <p className="mt-1 text-xl font-extrabold tabular-nums">{questions.length ? Math.round(answeredCount / questions.length * 100) : 0}%</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Question navigator */}
+        <div className="mb-5 rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <p className="text-sm font-bold">Your questions</p>
+            <p className="text-xs text-muted-foreground">{answeredCount} of {questions.length} answered</p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-2">
           {questions.map((_, idx) => (
             <button key={idx} onClick={() => setCurrentQuestion(idx)}
               className={cn('relative flex h-10 w-10 items-center justify-center rounded-xl text-xs font-bold transition-all',
@@ -269,9 +301,10 @@ export function QuizPage() {
                 <CheckCircle2 className="absolute -top-1 -right-1 h-3 w-3 bg-background rounded-full fill-success text-white" />}
             </button>
           ))}
+          </div>
         </div>
 
-        <Card className="p-6 sm:p-10">
+        <Card className="overflow-hidden rounded-3xl border border-border/70 bg-card p-5 shadow-xl shadow-slate-900/5 sm:p-9">
           <QuizQuestion
             question={questions[currentQuestion]}
             questionNumber={currentQuestion + 1}
@@ -279,17 +312,17 @@ export function QuizPage() {
             selectedAnswer={answers[currentQuestion]}
             onSelectAnswer={handleSelectAnswer}
           />
-          <div className="flex justify-between mt-8 pt-6 border-t">
+          <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border/70 pt-6">
             <Button variant="ghost" onClick={handlePrev} disabled={currentQuestion === 0}>
               <ChevronLeft className="h-4 w-4" /> Previous
             </Button>
             <span className="text-xs text-muted-foreground self-center">{currentQuestion + 1} / {questions.length}</span>
             {currentQuestion === questions.length - 1 ? (
-              <Button onClick={handleSubmit} disabled={!canSubmit || isSubmitting} className="bg-primary">
+              <Button onClick={handleSubmit} disabled={!canSubmit || isSubmitting} className="rounded-xl px-5 font-bold shadow-lg shadow-primary/20 transition-transform hover:-translate-y-0.5">
                 {isSubmitting ? 'Submitting...' : 'Submit Quiz'}
               </Button>
             ) : (
-              <Button onClick={handleNext}>Next <ChevronRight className="h-4 w-4" /></Button>
+              <Button onClick={handleNext} className="rounded-xl px-5 font-bold shadow-md transition-transform hover:-translate-y-0.5">Next <ChevronRight className="h-4 w-4" /></Button>
             )}
           </div>
         </Card>
