@@ -1,5 +1,5 @@
 /**
- * CppFinalProjectLesson — capstone: Number Guessing Game.
+ * CppFinalProjectLesson, capstone: Number Guessing Game.
  * component_key suggestion: cpp-final-project-guessing-game
  */
 import { Gamepad2, ListChecks, Lightbulb, Trophy } from 'lucide-react';
@@ -44,7 +44,7 @@ export default function CppFinalProjectLesson({ student, lesson }) {
 
 int main() {
     std::srand(std::time(0));           // seed randomness
-    int secret = std::rand() % 100 + 1; // random number 1–100
+    int secret = std::rand() % 100 + 1; // random number 1-100
     int guess;
     int attempts = 0;
 
@@ -68,7 +68,7 @@ int main() {
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight">Number Guessing Game</h1>
         <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-          {firstName}, this is it — the project that pulls together everything from this course:
+          {firstName}, this is it, the project that pulls together everything from this course:
           variables, I/O, conditionals, and loops. When you finish this, you'll have written a
           real, playable game entirely on your own.
         </p>
@@ -88,7 +88,7 @@ int main() {
         <h2 className="text-2xl font-bold">Starter Code</h2>
         <p className="leading-relaxed text-foreground/90">
           You haven't formally covered <code className="px-1 rounded bg-muted font-mono text-xs">while</code> loops
-          in a reading lesson yet — that's intentional, it was in the video lesson right before this
+          in a reading lesson yet, that's intentional, it was in the video lesson right before this
           one. Here's the shape you're filling in; the loop logic is your job:
         </p>
         <CodeBlock code={starterCode} highlightLines={[16, 17, 18, 19, 20]} />
@@ -111,7 +111,7 @@ int main() {
         <ul className="list-disc list-inside space-y-1 mt-2">
           <li>A maximum of 7 attempts, after which the game reveals the number and ends</li>
           <li>A "play again?" prompt that restarts the game with a new random number</li>
-          <li>Input validation — what happens if the user types a letter instead of a number?</li>
+          <li>Input validation, what happens if the user types a letter instead of a number?</li>
         </ul>
       </Callout>
 
@@ -119,7 +119,7 @@ int main() {
         <h3 className="text-xl font-bold">You built this yourself, {firstName}.</h3>
         <p className="text-sm text-muted-foreground max-w-prose mx-auto leading-relaxed">
           Once your game runs correctly, head to the Final Exam. Passing it earns your Beginner
-          certificate — and the Intermediate track picks up right where this one leaves off.
+          certificate, and the Intermediate track picks up right where this one leaves off.
         </p>
       </section>
     </article>
