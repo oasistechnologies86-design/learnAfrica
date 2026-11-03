@@ -17,6 +17,7 @@ import { useAuth } from '@/context/AuthContext';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import { RichTextViewer } from '@/components/common/RichTextEditor';
 import { getCustomLesson } from '@/components/customLessons/registry';
+import CustomLessonFrame from '@/components/customLessons/CustomLessonFrame';
 import { cn } from '@/lib/utils';
 import { API_BASE, parseErr } from '@/lib/api';
 import { formatPrice } from '@/lib/money';
@@ -429,7 +430,7 @@ export function PreviewCoursePage() {
                     <span className="font-bold">Preview mode:</span>
                     <span>Custom page rendered with sample student data. Real students see their own name and email.</span>
                   </div>
-                  <Component student={mockStudent} lesson={activeLesson} />
+                  <CustomLessonFrame lesson={activeLesson} mode="preview"><Component student={mockStudent} lesson={activeLesson} /></CustomLessonFrame>
                 </div>
               );
             }
@@ -488,7 +489,7 @@ export function PreviewCoursePage() {
             <div className="flex justify-center py-20">
               <Loader2 className="h-6 w-6 animate-spin text-primary/50" />
             </div>
-          ) : activeLesson ? (
+          ) : activeLesson && activeLesson.type !== 'custom' ? (
             <div className="max-w-4xl mx-auto py-8">
 
               {/* Lesson meta */}
