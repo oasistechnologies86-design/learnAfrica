@@ -1,5 +1,5 @@
 /**
- * CourseWelcome — a warm welcome page for the start of any course.
+ * CourseWelcome, a warm welcome page for the start of any course.
  *
  * Personalized greeting, expectations, and encouragement. Good candidate for
  * the very first lesson of any course. Long enough to feel like real content
@@ -22,7 +22,7 @@ export default function CourseWelcome({ student, lesson }) {
         </h1>
         <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
           You've just taken the first step in something new. Whether this course is a
-          career move, a side interest, or something in between — you've shown up, and
+          career move, a side interest, or something in between, you've shown up, and
           that already puts you ahead of most people who thought about doing this and
           didn't. This page walks you through what to expect and how to get the most
           out of what's ahead.
@@ -35,13 +35,13 @@ export default function CourseWelcome({ student, lesson }) {
           <Compass className="h-5 w-5 text-primary" /> What This Course Is
         </h2>
         <p className="leading-relaxed text-foreground/90">
-          This is a self-paced learning experience. That means you set the tempo — but
+          This is a self-paced learning experience. That means you set the tempo, but
           the material is structured so that following it in order will get you to a
           real, usable skill by the end. Every lesson builds on the one before it.
         </p>
         <p className="leading-relaxed text-foreground/90">
           Some lessons are videos, some are readings, some are quizzes to check your
-          understanding. All of them matter. Don't skip the quizzes — they exist
+          understanding. All of them matter. Don't skip the quizzes, they exist
           because writing something down or picking an answer is the moment your brain
           decides whether a concept was actually understood or just watched.
         </p>
@@ -53,18 +53,18 @@ export default function CourseWelcome({ student, lesson }) {
           <Target className="h-5 w-5 text-primary" /> What We Expect From You
         </h2>
         <p className="leading-relaxed text-foreground/90">
-          Show up regularly. Even 20 minutes three times a week is enough — but
+          Show up regularly. Even 20 minutes three times a week is enough, but
           spaced-out attention beats an occasional five-hour session every time.
           Consistency is what turns "I watched a course" into "I know this."
         </p>
         <p className="leading-relaxed text-foreground/90">
           Come with questions. If something doesn't make sense, that's a signal, not a
-          failure. The instructor and the community are here to help — asking is what
+          failure. The instructor and the community are here to help, asking is what
           moves you forward. Silence is what keeps you stuck.
         </p>
         <p className="leading-relaxed text-foreground/90">
           Bring what you learn out of the browser. Practice by hand. Explain a concept
-          to someone else — the moments you fumble are the exact places you need to
+          to someone else, the moments you fumble are the exact places you need to
           revisit. Learning is not a spectator sport.
         </p>
       </section>
@@ -77,7 +77,7 @@ export default function CourseWelcome({ student, lesson }) {
         <p className="leading-relaxed text-foreground/90">
           Every lesson has a discussion thread underneath it. If you're stuck for more
           than 20 minutes on a single problem, that's your cue to post there. Chances
-          are someone else has hit the same wall — and if not, an instructor or peer
+          are someone else has hit the same wall, and if not, an instructor or peer
           will help you through it.
         </p>
         <p className="leading-relaxed text-foreground/90">
@@ -91,7 +91,7 @@ export default function CourseWelcome({ student, lesson }) {
             <p className="font-bold text-primary">Quick tip</p>
           </div>
           <p className="text-sm text-foreground/90">
-            When something works — a demo runs, a concept clicks — pause for 30 seconds
+            When something works, a demo runs, a concept clicks, pause for 30 seconds
             and write down what you just did. Future-you will thank present-you when
             you need to remember how something works two weeks from now.
           </p>
@@ -105,7 +105,7 @@ export default function CourseWelcome({ student, lesson }) {
         </h2>
         <p className="leading-relaxed text-foreground/90">
           The rest of this course walks you through the material step by step. Take
-          notes. Do the exercises. When you finish, there's a final quiz — pass it,
+          notes. Do the exercises. When you finish, there's a final quiz, pass it,
           and you earn a certificate you can share on{' '}
           <a
             href="https://www.linkedin.com/"
@@ -118,7 +118,7 @@ export default function CourseWelcome({ student, lesson }) {
           or add to your CV.
         </p>
         <p className="leading-relaxed text-foreground/90">
-          But honestly — the certificate is not the point. The skill is the point.
+          But honestly, the certificate is not the point. The skill is the point.
           If a piece of knowledge from this course helps you get a job, build
           something you're proud of, or teach someone else, that's the real prize.
           The paper is just a bonus.
