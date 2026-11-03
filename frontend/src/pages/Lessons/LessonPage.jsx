@@ -291,7 +291,7 @@ export function LessonPage() {
   const isLastLesson = currentIndex === allLessons.length - 1 && allLessons.length > 0;
 
   const handleMarkComplete = async () => {
-    if (currentLessonFinished) return;
+    if (currentLessonFinished || isQuizLesson) return;
     setIsSaving(true);
     try {
       await updateProgress(courseId, lessonId);
@@ -793,7 +793,7 @@ export function LessonPage() {
 
                 {/* Custom lessons have their single completion action at the end of the content. */}
                 <div className="flex-1 flex justify-center">
-                  {lesson.type === 'custom' ? null : !currentLessonFinished ? (
+                  {lesson.type === 'custom' || isQuizLesson ? null : !currentLessonFinished ? (
                     <Button onClick={handleMarkComplete} disabled={isSaving}
                       className="w-full max-w-[180px] h-11 font-bold uppercase tracking-widest text-2xs sm:text-xs shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
                       <CheckCircle className="h-4 w-4 shrink-0" />
