@@ -134,6 +134,8 @@ export function EditCoursePage() {
               duration_seconds: Number(les.duration_seconds || 0),
               is_final: les.is_final || false,
               max_attempts: Number(les.max_attempts || 0),
+              attempts_enabled: les.attempts_enabled !== undefined ? !!les.attempts_enabled : Number(les.max_attempts || 0) > 0,
+              extra_attempt_price: Number(les.extra_attempt_price || 0),
               questions_per_attempt: Number(les.questions_per_attempt || 0),
               shuffle_questions: !!les.shuffle_questions,
               shuffle_options: !!les.shuffle_options,
@@ -169,6 +171,8 @@ export function EditCoursePage() {
   };
 
   const handleSave = async () => {
+    const invalidAttemptQuiz = sections.flatMap(s => s.lessons || []).find(l => l.type === 'quiz' && l.attempts_enabled && (!(Number(l.max_attempts) >= 1 && Number(l.max_attempts) <= 50) || !(Number(l.extra_attempt_price) > 0)));
+    if (invalidAttemptQuiz) { setError('For every quiz with attempt limits enabled, set 1–50 included attempts and a price greater than GHS 0.'); setTab('curriculum'); return; }
     if (!form.title || !form.description || !form.category || !form.difficulty) {
       setError('Please fill in all required fields.');
       setTab('basics');
@@ -206,7 +210,9 @@ export function EditCoursePage() {
             text_content: l.text_content || l.textContent || '',
             duration_seconds: Number(l.duration_seconds || 0),
             is_final: l.is_final || false,
-            max_attempts: Math.max(0, Number(l.max_attempts) || 0),
+            attempts_enabled: !!l.attempts_enabled,
+            max_attempts: l.attempts_enabled ? Math.max(1, Math.min(50, Number(l.max_attempts) || 1)) : 0,
+            extra_attempt_price: l.attempts_enabled ? Number(l.extra_attempt_price || 0) : 0,
             questions_per_attempt: Math.max(0, Number(l.questions_per_attempt) || 0),
             shuffle_questions: !!l.shuffle_questions,
             shuffle_options: !!l.shuffle_options,
