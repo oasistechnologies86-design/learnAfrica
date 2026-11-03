@@ -1,5 +1,5 @@
 /**
- * CppDataTypesLesson — teaching lesson: Fundamental Data Types.
+ * CppDataTypesLesson, teaching lesson: Fundamental Data Types.
  * component_key suggestion: cpp-data-types
  */
 import { Layers, Lightbulb, Target } from 'lucide-react';
@@ -62,7 +62,7 @@ int main() {
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight">Fundamental Data Types</h1>
         <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-          {firstName}, every variable needs a <em>type</em> — it tells the compiler what kind of
+          {firstName}, every variable needs a <em>type</em>, it tells the compiler what kind of
           data to expect and how much memory to set aside. Picking the right type isn't just a
           formality; it prevents whole categories of bugs.
         </p>
@@ -93,10 +93,10 @@ int main() {
         </p>
       </section>
 
-      <Callout icon={Lightbulb} title="float vs. double — which one?">
+      <Callout icon={Lightbulb} title="float vs. double, which one?">
         <p>
           Both store decimal numbers. <code className="px-1 rounded bg-muted/60 font-mono text-xs">double</code> is
-          more precise and is the default choice in almost all modern C++ code — reach for{' '}
+          more precise and is the default choice in almost all modern C++ code, reach for{' '}
           <code className="px-1 rounded bg-muted/60 font-mono text-xs">float</code> only when you have a specific
           reason to save memory (e.g. huge arrays of numbers, like in graphics programming).
         </p>
@@ -104,8 +104,8 @@ int main() {
 
       <Callout icon={Target} tone="success" title="Try It Yourself">
         <p>
-          Declare one variable of each type shown above — int, float, double, char, bool,
-          std::string — give each a value that makes sense for its type, then print all six on
+          Declare one variable of each type shown above, int, float, double, char, bool,
+          std::string, give each a value that makes sense for its type, then print all six on
           separate lines using std::cout.
         </p>
       </Callout>
@@ -113,7 +113,7 @@ int main() {
       <section className="rounded-xl border border-border bg-muted/30 p-6 sm:p-8 text-center space-y-3">
         <h3 className="text-xl font-bold">Nice, {firstName}.</h3>
         <p className="text-sm text-muted-foreground max-w-prose mx-auto leading-relaxed">
-          Next: constants — values that, once set, are never allowed to change.
+          Next: constants, values that, once set, are never allowed to change.
         </p>
       </section>
     </article>
