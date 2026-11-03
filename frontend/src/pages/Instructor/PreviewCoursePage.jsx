@@ -430,7 +430,14 @@ export function PreviewCoursePage() {
                     <span className="font-bold">Preview mode:</span>
                     <span>Custom page rendered with sample student data. Real students see their own name and email.</span>
                   </div>
-                  <CustomLessonFrame lesson={activeLesson} mode="preview"><Component student={mockStudent} lesson={activeLesson} /></CustomLessonFrame>
+                  <CustomLessonFrame lesson={activeLesson} mode="preview">
+                    <Component student={mockStudent} lesson={activeLesson} />
+                    <section className="custom-lesson-finish mt-10 border-t border-border pt-8 text-center">
+                      <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary"><ChevronRight className="h-5 w-5 rotate-90" /></div>
+                      <p className="text-sm font-semibold text-foreground">You’ve reached the end of this lesson</p>
+                      <p className="mt-1 text-sm text-muted-foreground">This is where students can mark the lesson complete and continue.</p>
+                    </section>
+                  </CustomLessonFrame>
                 </div>
               );
             }
@@ -624,7 +631,7 @@ export function PreviewCoursePage() {
               </div>
 
             </div>
-          ) : (
+          ) : activeLesson ? null : (
             <div className="flex flex-col items-center justify-center py-24 text-center px-6">
               <BookOpen className="h-12 w-12 text-muted-foreground/20 mb-4" />
               <p className="font-semibold text-muted-foreground">No lessons in this course yet.</p>
