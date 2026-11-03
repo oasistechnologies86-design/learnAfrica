@@ -2210,21 +2210,18 @@ def create_app() -> Flask:
             if not lesson_row:
                 return jsonify({'error': 'Lesson not found'}), 404
 
-            # A score supplied by the client is NEVER trusted for a quiz lesson —
-            # quiz scores must come from /api/quizzes/submit, which grades the
-            # answers server-side. This closes the "send score 100, get a
-            # certificate" hole.
+            # Quiz lessons can ONLY be completed by the server-side quiz
+            # submission flow. Never let the generic lesson-complete endpoint
+            # mark a quiz complete, even when an older quiz_score exists.
+            # This prevents the generic completion button or a direct API call
+            # from bypassing the actual quiz attempt.
             is_quiz = (lesson_row['type'] or '') == 'quiz'
             if is_quiz:
-                graded = db.execute(
-                    'SELECT quiz_score FROM user_progress WHERE user_id=? AND course_id=? AND lesson_id=?',
-                    (uid, cid, lid)
-                ).fetchone()
-                if not graded or graded['quiz_score'] is None:
-                    return jsonify({
-                        'message': 'Quiz scores are recorded when the quiz is submitted',
-                        'lesson_completed': False,
-                    }), 200
+                return jsonify({
+                    'error': 'quiz_submission_required',
+                    'message': 'Take and submit this quiz before it can be marked complete.',
+                    'lesson_completed': False,
+                }), 403
             # The client-supplied quiz_score is ignored for every lesson type —
             # scores are only ever written by /api/quizzes/submit.
             score = None
