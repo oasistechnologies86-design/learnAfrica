@@ -13,7 +13,7 @@ export function QuizQuestion({
   const options = question.options || [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7 animate-in fade-in duration-300">
       {/* Progress bar */}
       <div className="space-y-1.5">
         <div className="flex justify-between text-sm text-muted-foreground">
@@ -38,7 +38,7 @@ export function QuizQuestion({
            qType === 'true_false' ? 'True or False'   :
                                     'Fill in the Blank'}
         </span>
-        <h2 className="text-lg sm:text-xl font-semibold leading-snug">{question.question}</h2>
+        <h2 className="mt-3 text-xl font-bold leading-relaxed tracking-tight text-foreground sm:text-2xl">{question.question}</h2>
       </div>
 
       {/* ── MCQ ── */}
@@ -52,7 +52,7 @@ export function QuizQuestion({
                 onClick={() => !showResult && onSelectAnswer(index)}
                 disabled={showResult}
                 className={cn(
-                  'w-full rounded-xl border-2 p-4 text-left transition-all',
+                  'group w-full rounded-2xl border-2 p-4 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md sm:p-5',
                   showResult
                     ? isCorrect   ? 'border-success bg-success/10'
                     : isSelected  ? 'border-destructive bg-destructive/10'
@@ -93,7 +93,7 @@ export function QuizQuestion({
                 onClick={() => !showResult && onSelectAnswer(index)}
                 disabled={showResult}
                 className={cn(
-                  'rounded-2xl border-2 p-6 text-center font-bold text-lg transition-all',
+                  'rounded-2xl border-2 bg-card p-6 text-center text-lg font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md',
                   showResult
                     ? isCorrect   ? 'border-success bg-success/10 text-success'
                     : isSelected  ? 'border-destructive bg-destructive/10 text-destructive'
@@ -119,7 +119,7 @@ export function QuizQuestion({
             disabled={showResult}
             placeholder="Type your answer here…"
             className={cn(
-              'w-full rounded-xl border-2 px-4 py-3 text-base outline-none transition-all',
+              'w-full rounded-2xl border-2 bg-background px-5 py-4 text-base outline-none transition-all focus:ring-4 focus:ring-primary/10',
               showResult
                 ? typeof selectedAnswer === 'string' &&
                   selectedAnswer.trim().toLowerCase() === (options[correctAnswer] || '').toString().trim().toLowerCase()
