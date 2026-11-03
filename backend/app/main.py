@@ -6231,7 +6231,7 @@ def create_app() -> Flask:
                    COALESCE(SUM(t.instructor_share), 0) as instr
             FROM users u
             LEFT JOIN transactions t
-              ON t.instructor_id=u.id AND t.type='purchase' AND t.status='success'
+              ON t.instructor_id=u.id AND t.type IN ('purchase','quiz_extra_attempt') AND t.status='success'
             WHERE EXISTS (SELECT 1 FROM courses c WHERE c.instructor_id=u.id AND c.is_free=0)
             GROUP BY u.id, u.name, u.email, u.avatar, u.role
             ORDER BY gross DESC
@@ -7223,7 +7223,7 @@ def create_app() -> Flask:
             uid = g.current_user['user_id']
             pending = db.execute(
                 """SELECT COALESCE(SUM(instructor_share), 0) as total FROM transactions
-                   WHERE instructor_id=? AND type='purchase'
+                   WHERE instructor_id=? AND type IN ('purchase','quiz_extra_attempt')
                      AND status='success' AND payout_status='pending'""", (uid,)
             ).fetchone()
             lifetime = db.execute(
@@ -7259,7 +7259,7 @@ def create_app() -> Flask:
             rows = db.execute(
                 """SELECT instructor_id, COALESCE(SUM(instructor_share), 0) as pending
                    FROM transactions
-                   WHERE type='purchase' AND status='success'
+                   WHERE type IN ('purchase','quiz_extra_attempt') AND status='success'
                      AND payout_status='pending' AND instructor_id IS NOT NULL
                    GROUP BY instructor_id
                    HAVING SUM(instructor_share) > 0
@@ -7318,7 +7318,7 @@ def create_app() -> Flask:
         from .payments import process_payout
         pending_rows = db.execute(
             """SELECT id, instructor_share FROM transactions
-               WHERE instructor_id=? AND type='purchase'
+               WHERE instructor_id=? AND type IN ('purchase','quiz_extra_attempt')
                  AND status='success' AND payout_status='pending'""",
             (instructor_id,)
         ).fetchall()
@@ -7404,7 +7404,7 @@ def create_app() -> Flask:
         closes any open payout request. Returns (ok, amount, error)."""
         pending_rows = db.execute(
             """SELECT id, instructor_share FROM transactions
-               WHERE instructor_id=? AND type='purchase'
+               WHERE instructor_id=? AND type IN ('purchase','quiz_extra_attempt')
                  AND status='success' AND payout_status='pending'""",
             (instructor_id,)).fetchall()
         amount = round(sum(float(r['instructor_share'] or 0) for r in pending_rows), 2)
@@ -7492,7 +7492,7 @@ def create_app() -> Flask:
             ensure_transactions_table(db)
             rows = db.execute(
                 """SELECT instructor_id FROM transactions
-                   WHERE type='purchase' AND status='success'
+                   WHERE type IN ('purchase','quiz_extra_attempt') AND status='success'
                      AND payout_status='pending' AND instructor_id IS NOT NULL
                    GROUP BY instructor_id
                    HAVING SUM(instructor_share) > 0"""
@@ -7530,7 +7530,7 @@ def create_app() -> Flask:
             ensure_transactions_table(db)
             rows = db.execute(
                 """SELECT instructor_id FROM transactions
-                   WHERE type='purchase' AND status='success'
+                   WHERE type IN ('purchase','quiz_extra_attempt') AND status='success'
                      AND payout_status='pending' AND instructor_id IS NOT NULL
                    GROUP BY instructor_id
                    HAVING SUM(instructor_share) > 0"""
@@ -7579,13 +7579,13 @@ def create_app() -> Flask:
         """
         earned_row = db.execute(
             "SELECT COALESCE(SUM(instructor_share), 0) as t FROM transactions"
-            " WHERE instructor_id=? AND type='purchase' AND status='success'"
+            " WHERE instructor_id=? AND type IN ('purchase','quiz_extra_attempt') AND status='success'"
             " AND (payout_status IS NULL OR payout_status != 'n/a')",
             (instructor_id,)).fetchone()
         total_earned = round(float(earned_row['t'] or 0), 2) if earned_row else 0.0
         paid_row = db.execute(
             "SELECT COALESCE(SUM(instructor_share), 0) as t FROM transactions"
-            " WHERE instructor_id=? AND type='purchase' AND status='success'"
+            " WHERE instructor_id=? AND type IN ('purchase','quiz_extra_attempt') AND status='success'"
             " AND payout_status='paid'", (instructor_id,)).fetchone()
         total_paid = round(float(paid_row['t'] or 0), 2) if paid_row else 0.0
         req_row = db.execute(
@@ -7778,7 +7778,7 @@ def create_app() -> Flask:
             # path did, minus the provider call.
             pending_rows = db.execute(
                 """SELECT id, instructor_share FROM transactions
-                   WHERE instructor_id=? AND type='purchase'
+                   WHERE instructor_id=? AND type IN ('purchase','quiz_extra_attempt')
                      AND status='success' AND payout_status='pending'""",
                 (iid,)).fetchall()
             amount = round(sum(float(r['instructor_share'] or 0) for r in pending_rows), 2)
