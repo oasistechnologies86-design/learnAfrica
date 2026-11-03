@@ -3123,9 +3123,9 @@ def create_app() -> Flask:
                         q_timer_enabled = 1 if q_dur_sec > 0 else 0
                         q_dur_text = 'No limit' if q_dur_sec <= 0 else f'{max(1, q_dur_sec // 60)} min'
                         q_attempts_enabled = 1 if les.get('attempts_enabled') else 0
-                        q_max_att = max(0, int(les.get('max_attempts') or 0)) if q_attempts_enabled else 0
-                        q_extra_price = round(float(les.get('extra_attempt_price') or 0), 2) if q_attempts_enabled else 0.0
-                        if q_attempts_enabled and (q_max_att < 1 or q_max_att > 50 or not (0 < q_extra_price <= 100000)):
+                        q_max_att = max(0, int(les.get('max_attempts') or 0))
+                        q_extra_price = round(float(les.get('extra_attempt_price') or 0), 2)
+                        if q_max_att > 50 or q_extra_price < 0 or q_extra_price > 100000 or (q_attempts_enabled and (q_max_att < 1 or q_extra_price <= 0)):
                             return jsonify({'error': 'When attempt limits are enabled, set 1–50 attempts and a valid additional-attempt price greater than zero.'}), 400
                         q_per_att = max(0, int(les.get('questions_per_attempt') or 0))
                         q_shuf_q  = 1 if les.get('shuffle_questions') else 0
@@ -3557,9 +3557,9 @@ def create_app() -> Flask:
                             q_timer_enabled = 1 if q_dur_sec > 0 else 0
                             q_dur_text = 'No limit' if q_dur_sec <= 0 else f'{max(1, q_dur_sec // 60)} min'
                             q_attempts_enabled = 1 if les.get('attempts_enabled') else 0
-                            q_max_att = max(0, int(les.get('max_attempts') or 0)) if q_attempts_enabled else 0
-                            q_extra_price = round(float(les.get('extra_attempt_price') or 0), 2) if q_attempts_enabled else 0.0
-                            if q_attempts_enabled and (q_max_att < 1 or q_max_att > 50 or not (0 < q_extra_price <= 100000)):
+                            q_max_att = max(0, int(les.get('max_attempts') or 0))
+                            q_extra_price = round(float(les.get('extra_attempt_price') or 0), 2)
+                            if q_max_att > 50 or q_extra_price < 0 or q_extra_price > 100000 or (q_attempts_enabled and (q_max_att < 1 or q_extra_price <= 0)):
                                 return jsonify({'error': 'When attempt limits are enabled, set 1–50 attempts and a valid additional-attempt price greater than zero.'}), 400
                             q_per_att = max(0, int(les.get('questions_per_attempt') or 0))
                             q_shuf_q  = 1 if les.get('shuffle_questions') else 0
