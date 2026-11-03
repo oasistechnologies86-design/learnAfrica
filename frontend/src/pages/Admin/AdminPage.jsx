@@ -371,7 +371,7 @@ export default function AdminPage() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-7 space-y-6 text-[#33251d]">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
@@ -411,7 +411,7 @@ export default function AdminPage() {
         {TABS.map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={cn('px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex items-center gap-1.5',
-              tab === t ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground')}>
+              tab === t ? 'bg-[#68432f] text-white shadow-sm' : 'text-[#705b4e] hover:bg-[#eee5dc] hover:text-[#3c2b20]')}>
             {t === 'Overview' && <BarChart2 className="h-3.5 w-3.5" />}
             {t === 'Students' && <Users className="h-3.5 w-3.5" />}
             {t === 'Instructors' && <GraduationCap className="h-3.5 w-3.5" />}
