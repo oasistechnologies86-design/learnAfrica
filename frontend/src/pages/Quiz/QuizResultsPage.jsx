@@ -178,7 +178,9 @@ export function QuizResultsPage() {
               {passed ? '🎉 Passed!' : 'Keep Learning!'}
             </p>
             <p className="text-sm text-muted-foreground mt-1">
-              {passed ? 'You have successfully passed the quiz!' : 'You need 70% to pass. Review and try again.'}
+              {passed
+                ? `You have successfully passed this ${isFinalQuiz ? 'final exam' : 'test'}.`
+                : `You need 70% to pass this ${isFinalQuiz ? 'final exam' : 'test'}. Review the lesson and try again.`}
             </p>
           </div>
 
@@ -211,6 +213,7 @@ export function QuizResultsPage() {
           </div>
 
           {quizTitle && <p className="text-xs text-muted-foreground font-medium">{quizTitle}</p>}
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{isFinalQuiz ? 'Final exam result' : 'Test result'}</p>
 
           {/* ── Certificate section (final quiz only) ── */}
           {showCertSection && passed && (
@@ -272,7 +275,7 @@ export function QuizResultsPage() {
 
             {/* Try Again */}
             <Button onClick={() => navigate(-1)} variant="outline" className="flex-1 gap-2">
-              <RotateCcw className="h-4 w-4" /> Try Again
+              <RotateCcw className="h-4 w-4" /> {passed ? (isFinalQuiz ? 'Retake Final Exam' : 'Retake Test') : 'Try Again'}
             </Button>
           </div>
         </Card>
@@ -282,7 +285,7 @@ export function QuizResultsPage() {
 
         {!answerKeyAvailable && (
           <Card className="p-5 text-sm text-muted-foreground">
-            You scored {score}%. The correct answers are shown once you pass — use “Try Again” to retake the quiz.
+            You scored {score}%. The correct answers are shown once you pass. Review the material before your next {isFinalQuiz ? 'final exam' : 'test'} attempt.
           </Card>
         )}
 

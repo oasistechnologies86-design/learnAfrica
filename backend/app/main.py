@@ -2364,7 +2364,9 @@ def create_app() -> Flask:
             questions.append(r)
         qd['questions'] = questions
         qd['duration'] = str(qd['duration']) if qd.get('duration') else 'No limit'
-        qd['max_attempts'] = int(qd.get('max_attempts') or 0)
+        final_row = db.execute('SELECT is_final FROM lessons WHERE id=? AND course_id=?', (lid, cid)).fetchone()
+        qd['is_final'] = bool(final_row['is_final']) if final_row else False
+        qd['max_attempts'] = int(qd.get('max_attempts') or (10 if qd['is_final'] else 0))
         # Anti-cheat flags. When any of these are on, the student flow calls
         # POST /api/quizzes/<id>/start instead of relying on this response.
         qd['duration_seconds']     = int(qd.get('duration_seconds') or 0)
@@ -2417,7 +2419,9 @@ def create_app() -> Flask:
             if not _rate_limit(f'quizstart:{uid}', 30, 300):
                 return jsonify({'error': 'Too many quiz starts. Please slow down.'}), 429
 
-            max_attempts = int(quiz.get('max_attempts') or 0)
+            final_row = db.execute('SELECT is_final FROM lessons WHERE id=? AND course_id=?', (lid, cid)).fetchone() if cid and lid else None
+            is_final_quiz = bool(final_row['is_final']) if final_row else False
+            max_attempts = int(quiz.get('max_attempts') or (10 if is_final_quiz else 0))
             if not is_admin_user and max_attempts > 0:
                 row = db.execute(
                     'SELECT COUNT(*) AS cnt FROM quiz_attempts WHERE user_id=? AND quiz_id=?',
@@ -2526,7 +2530,9 @@ def create_app() -> Flask:
             # (support/diagnostic use).
             is_admin_user = g.current_user['role'] in ('admin', 'superadmin')
             prior_attempts = 0
-            max_attempts = int(quiz_row['max_attempts'] or 0)
+            final_row = db.execute('SELECT is_final FROM lessons WHERE id=? AND course_id=?', (lid, cid)).fetchone() if cid and lid else None
+            is_final_quiz = bool(final_row['is_final']) if final_row else False
+            max_attempts = int(quiz_row['max_attempts'] or (10 if is_final_quiz else 0))
             if not is_admin_user and max_attempts > 0:
                 row = db.execute(
                     'SELECT COUNT(*) AS cnt FROM quiz_attempts WHERE user_id=? AND quiz_id=?',
@@ -2641,11 +2647,16 @@ def create_app() -> Flask:
                     'UPDATE quiz_attempt_sessions SET submitted=1, score=?, submitted_at=CURRENT_TIMESTAMP WHERE id=?',
                     (score, attempt_id))
             if cid and lid:
-                db.execute('''INSERT INTO user_progress (user_id,course_id,lesson_id,is_completed,quiz_score,completed_at)
-                              VALUES(?,?,?,1,?,CURRENT_TIMESTAMP)
+                # A quiz is complete only after a passing score. A failed retake
+                # updates the latest score but never removes an earlier pass.
+                db.execute('''INSERT INTO user_progress
+                              (user_id,course_id,lesson_id,is_completed,quiz_score,completed_at)
+                              VALUES(?,?,?,?,?,CASE WHEN ?=1 THEN CURRENT_TIMESTAMP ELSE NULL END)
                               ON CONFLICT(user_id,course_id,lesson_id) DO UPDATE SET
-                                is_completed=1,quiz_score=?,completed_at=CURRENT_TIMESTAMP''',
-                           (g.current_user['user_id'], cid, lid, score, score))
+                                is_completed=CASE WHEN excluded.is_completed=1 THEN 1 ELSE user_progress.is_completed END,
+                                quiz_score=excluded.quiz_score,
+                                completed_at=CASE WHEN excluded.is_completed=1 THEN CURRENT_TIMESTAMP ELSE user_progress.completed_at END''',
+                           (g.current_user['user_id'], cid, lid, 1 if passed else 0, score, 1 if passed else 0))
             db.commit()
             if score == 100:
                 db.execute('UPDATE user_stats SET perfect_quizzes=perfect_quizzes+1 WHERE user_id=?',
@@ -3072,7 +3083,7 @@ def create_app() -> Flask:
                         # Accept duration_seconds (preferred) or fall back to text duration
                         q_dur_sec = int(les.get('duration_seconds') or les.get('quiz_duration_seconds') or 0)
                         q_dur_text = les.get('duration') or ('No limit' if q_dur_sec == 0 else f'{q_dur_sec // 60} min')
-                        q_max_att = max(0, int(les.get('max_attempts') or 0))
+                        q_max_att = max(0, int(les.get('max_attempts') or (10 if les.get('is_final') else 0)))
                         q_per_att = max(0, int(les.get('questions_per_attempt') or 0))
                         q_shuf_q  = 1 if les.get('shuffle_questions') else 0
                         q_shuf_o  = 1 if les.get('shuffle_options') else 0
@@ -3483,7 +3494,7 @@ def create_app() -> Flask:
                             qzid = str(uuid.uuid4())
                             q_dur_sec = int(les.get('duration_seconds') or les.get('quiz_duration_seconds') or 0)
                             q_dur_text = les.get('duration') or ('No limit' if q_dur_sec == 0 else f'{q_dur_sec // 60} min')
-                            q_max_att = max(0, int(les.get('max_attempts') or 0))
+                            q_max_att = max(0, int(les.get('max_attempts') or (10 if les.get('is_final') else 0)))
                             q_per_att = max(0, int(les.get('questions_per_attempt') or 0))
                             q_shuf_q  = 1 if les.get('shuffle_questions') else 0
                             q_shuf_o  = 1 if les.get('shuffle_options') else 0

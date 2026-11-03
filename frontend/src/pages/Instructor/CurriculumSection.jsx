@@ -680,7 +680,10 @@ function CurriculumItemEditor({ item, index, onUpdate, onRemove, hasResources = 
                   </div>
                 </div>
                 <Switch checked={!!item.is_final}
-                  onChange={val => onUpdate({ is_final: val })} />
+                  onChange={val => onUpdate({
+                    is_final: val,
+                    ...(val && !(Number(item.max_attempts) > 0) ? { max_attempts: 10 } : {}),
+                  })} />
               </div>
 
               {/* Quiz time limit — watch-style picker */}
@@ -719,25 +722,27 @@ function CurriculumItemEditor({ item, index, onUpdate, onRemove, hasResources = 
               <div className="p-3 rounded-xl border border-border bg-background space-y-2">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-bold">Attempts allowed</p>
+                    <p className="text-xs font-bold">{item.is_final ? 'Final exam attempts' : 'Test attempts allowed'}</p>
                     <p className="text-2xs text-muted-foreground">
-                      {(item.max_attempts || 0) > 0
-                        ? `Students get ${item.max_attempts} attempt${item.max_attempts > 1 ? 's' : ''} to pass this quiz.`
-                        : 'Unlimited — students can retake as many times as they need.'}
+                      {item.is_final
+                        ? `Students get ${item.max_attempts || 10} attempts by default. You can adjust this limit.`
+                        : (item.max_attempts || 0) > 0
+                          ? `Students get ${item.max_attempts} attempts to pass this test.`
+                          : 'Unlimited — students can retake as many times as they need.'}
                     </p>
                   </div>
                   <input
-                    type="number" min="0" max="50" inputMode="numeric"
-                    value={item.max_attempts ?? 0}
+                    type="number" min={item.is_final ? 1 : 0} max="50" inputMode="numeric"
+                    value={item.is_final ? (item.max_attempts || 10) : (item.max_attempts ?? 0)}
                     onChange={e => {
-                      const n = Math.max(0, Math.min(50, parseInt(e.target.value, 10) || 0));
+                      const n = Math.max(item.is_final ? 1 : 0, Math.min(50, parseInt(e.target.value, 10) || 0));
                       onUpdate({ max_attempts: n });
                     }}
                     className="w-20 h-10 px-3 rounded-lg border border-input bg-background text-sm text-center focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
                 <p className="text-2xs text-muted-foreground">
-                  Enter a number of attempts, or 0 for unlimited. Attempts are counted per student.
+                  {item.is_final ? 'Choose 1 to 50 attempts for this final exam. The default is 10.' : 'Enter a number of attempts, or 0 for unlimited. Attempts are counted per student.'}
                 </p>
               </div>
 
