@@ -437,3 +437,30 @@ button:disabled,
   .custom-lesson-scroll-hint { bottom: max(.7rem, env(safe-area-inset-bottom)); max-width: calc(100vw - 2rem); white-space: nowrap; }
 }
 @media (prefers-reduced-motion: reduce) { .custom-lesson-scroll-hint { animation: none; } }
+
+
+/* Keep lesson explanations reading-first: remove decorative icon badges and nested card grids. */
+.custom-lesson-system svg { display: none; }
+.custom-lesson-system aside {
+  margin: 1.5rem 0; padding: .2rem 0 .2rem 1rem !important;
+  border: 0 !important; border-left: 3px solid var(--border) !important;
+  border-radius: 0 !important; background: transparent !important;
+}
+.custom-lesson-system div[class*="bg-primary/"],
+.custom-lesson-system div[class*="bg-muted/"],
+.custom-lesson-system div[class*="bg-secondary/"] {
+  background: transparent !important;
+}
+.custom-lesson-system div[class*="border-primary/"],
+.custom-lesson-system div[class*="border-muted/"] {
+  border-color: var(--border) !important;
+}
+.custom-lesson-system [class*="rounded-full"][class*="bg-primary"] {
+  border-radius: 0 !important; padding: 0 !important; background: transparent !important;
+  color: var(--muted-foreground) !important; font-size: .75rem !important;
+}
+.custom-lesson-system header { margin-bottom: 2rem; }
+.custom-lesson-system header > div:first-child { margin-bottom: .75rem; }
+.custom-lesson-system section > div[class*="grid"] { gap: 1rem; }
+.custom-lesson-system .bg-slate-950,
+.custom-lesson-system .bg-slate-900 { background: #111827 !important; }
