@@ -1,6 +1,6 @@
 """Paid one-at-a-time quiz attempt purchases.
 
-Each verified GHS 10 payment creates exactly one additional attempt credit for
+Each verified instructor-priced payment creates exactly one additional attempt credit for
 the quiz. Credits are keyed to the payment transaction, so webhook retries
 cannot issue duplicate attempts. The existing course enrolment is never changed.
 """
