@@ -2644,7 +2644,7 @@ def create_app() -> Flask:
                 db.execute('''INSERT INTO user_progress (user_id,course_id,lesson_id,is_completed,quiz_score,completed_at)
                               VALUES(?,?,?,1,?,CURRENT_TIMESTAMP)
                               ON CONFLICT(user_id,course_id,lesson_id) DO UPDATE SET
-                                quiz_score=?,completed_at=CURRENT_TIMESTAMP''',
+                                is_completed=1,quiz_score=?,completed_at=CURRENT_TIMESTAMP''',
                            (g.current_user['user_id'], cid, lid, score, score))
             db.commit()
             if score == 100:
