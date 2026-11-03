@@ -3240,7 +3240,7 @@ def create_app() -> Flask:
         ensure_column(db, 'courses', 'enforce_min_time', 'INTEGER DEFAULT 0')
         ensure_column(db, 'lessons', 'text_content', 'TEXT')
         ensure_column(db, 'quizzes', 'duration_seconds', 'INTEGER DEFAULT 0')
-            ensure_column(db, 'quizzes', 'timer_enabled', 'INTEGER DEFAULT 0')
+        ensure_column(db, 'quizzes', 'timer_enabled', 'INTEGER DEFAULT 0')
         ensure_column(db, 'quizzes', 'max_attempts', 'INTEGER DEFAULT 0')
         ensure_column(db, 'quizzes', 'questions_per_attempt', 'INTEGER DEFAULT 0')
         ensure_column(db, 'quizzes', 'shuffle_questions', 'INTEGER DEFAULT 0')
