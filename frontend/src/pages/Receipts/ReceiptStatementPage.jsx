@@ -142,16 +142,21 @@ export default function ReceiptStatementPage() {
 
   const cur = tx.currency || 'GHS';
   const money = (n) => formatMoney(n, cur);
+  const isExtraAttempt = tx.type === 'quiz_extra_attempt';
   const items = Array.isArray(tx.line_items) && tx.line_items.length
     ? tx.line_items
-    : [{ title: tx.course_title || 'Course purchase', amount: tx.original_amount ?? tx.amount ?? 0 }];
+    : [{ title: tx.course_title || (isExtraAttempt ? 'Additional quiz attempt' : 'Course purchase'), amount: tx.original_amount ?? tx.amount ?? 0 }];
   const discount = Number(tx.discount_applied || 0);
   const status = String(tx.status || '').toLowerCase();
 
   const confirmation = status === 'success'
-    ? 'Payment confirmed. Thank you — this transaction is complete and the course(s) above are on your account.'
+    ? (isExtraAttempt
+        ? 'Payment confirmed. One additional attempt has been credited to the quiz on your account.'
+        : 'Payment confirmed. Thank you — this transaction is complete and the course(s) above are on your account.')
     : status === 'pending'
-      ? 'This payment is still pending and has not been confirmed as successful. No course access is granted until it succeeds.'
+      ? (isExtraAttempt
+          ? 'This payment is pending. The additional quiz attempt will be credited only after payment is verified.'
+          : 'This payment is still pending and has not been confirmed as successful. No course access is granted until it succeeds.')
       : status === 'failed'
         ? 'This payment did not complete. You were not charged for a successful purchase.'
         : status === 'refunded'
@@ -207,13 +212,13 @@ export default function ReceiptStatementPage() {
           {/* Items */}
           <div>
             <div className="flex items-center gap-2 text-3xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
-              <FileText className="h-3.5 w-3.5" /> Courses
+              <FileText className="h-3.5 w-3.5" /> {isExtraAttempt ? 'Quiz attempt' : 'Courses'}
             </div>
             <div className="rounded-lg border border-border overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-muted/40">
                   <tr>
-                    <th className="px-4 py-2 text-left text-3xs font-bold uppercase text-muted-foreground">Course</th>
+                    <th className="px-4 py-2 text-left text-3xs font-bold uppercase text-muted-foreground">{isExtraAttempt ? 'Quiz attempt' : 'Course'}</th>
                     <th className="px-4 py-2 text-right text-3xs font-bold uppercase text-muted-foreground">Amount</th>
                   </tr>
                 </thead>
