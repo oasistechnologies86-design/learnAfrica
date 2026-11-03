@@ -136,8 +136,6 @@ def purchase_extra_attempt(quiz_id):
             "city": str(details.get("city") or "")[:80],
         }
         amount = 10.00
-        from .payments import generate_receipt_id
-        from .payments import _provider_name
         pay = initiate_payment(
             user={"id": uid, "name": user["name"], "email": user["email"]},
             course={"id": course["id"], "title": "Additional quiz attempt: " + str(quiz["title"])},
@@ -170,7 +168,7 @@ def purchase_extra_attempt(quiz_id):
             "message": "One additional attempt is ready." if pay["status"] == "success"
                        else "Complete payment to unlock one additional attempt."
         }), 201
-    except Exception as exc:
+    except Exception:
         try:
             db.rollback()
         except Exception:
