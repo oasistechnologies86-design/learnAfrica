@@ -134,6 +134,9 @@ export function EditCoursePage() {
               duration_seconds: Number(les.duration_seconds || 0),
               is_final: les.is_final || false,
               max_attempts: Number(les.max_attempts || 0),
+              questions_per_attempt: Number(les.questions_per_attempt || 0),
+              shuffle_questions: !!les.shuffle_questions,
+              shuffle_options: !!les.shuffle_options,
               component_key: les.component_key || les.componentKey || '',
               componentKey:  les.component_key || les.componentKey || '',
               resources: (les.resources || []).map(r => ({
@@ -204,6 +207,9 @@ export function EditCoursePage() {
             duration_seconds: Number(l.duration_seconds || 0),
             is_final: l.is_final || false,
             max_attempts: Math.max(0, Number(l.max_attempts) || 0),
+            questions_per_attempt: Math.max(0, Number(l.questions_per_attempt) || 0),
+            shuffle_questions: !!l.shuffle_questions,
+            shuffle_options: !!l.shuffle_options,
             order: li,
             component_key: l.component_key || l.componentKey || null,
             resources: (l.resources || [])

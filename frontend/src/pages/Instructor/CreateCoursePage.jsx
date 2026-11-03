@@ -138,6 +138,9 @@ export function CreateCoursePage() {
             order:     li,
             is_final:  !!l.is_final,
             max_attempts: Math.max(0, Number(l.max_attempts) || 0),
+            questions_per_attempt: Math.max(0, Number(l.questions_per_attempt) || 0),
+            shuffle_questions: !!l.shuffle_questions,
+            shuffle_options: !!l.shuffle_options,
             component_key: l.component_key || l.componentKey || null,
             resources: (l.resources || [])
               .map(r => ({ title: r.title, url: r.url, file_type: r.file_type || r.type || 'file' }))
@@ -146,6 +149,7 @@ export function CreateCoursePage() {
               text:          q.text          || '',
               options:       q.options       || ['','','',''],
               correctAnswer: q.correctAnswer ?? 0,
+              question_type: q.question_type || 'mcq',
             })),
           })),
         })),

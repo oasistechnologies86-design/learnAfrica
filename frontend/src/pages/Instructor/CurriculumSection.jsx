@@ -744,6 +744,11 @@ function CurriculumItemEditor({ item, index, onUpdate, onRemove, hasResources = 
                 <p className="text-2xs text-muted-foreground">
                   {item.is_final ? 'Choose 1 to 50 attempts for this final exam. The default is 10.' : 'Enter a number of attempts, or 0 for unlimited. Attempts are counted per student.'}
                 </p>
+                {(Number(item.max_attempts ?? 0) > 0 || item.is_final) && (
+                  <p className="text-2xs text-muted-foreground border-t border-border pt-2">
+                    When a student uses all included attempts, they can purchase one additional attempt for GHS 10. It is unlocked only after payment is verified.
+                  </p>
+                )}
               </div>
 
               {/* Anti-cheat: question bank size, shuffling */}

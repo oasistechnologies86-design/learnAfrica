@@ -2388,6 +2388,17 @@ def create_app() -> Flask:
             qd['attempts_used'] = int(used['cnt'] or 0) if used else 0
         except Exception:
             qd['attempts_used'] = 0
+        # Include paid credits in the effective limit shown to the student.
+        # The base instructor limit remains unchanged; each verified payment
+        # adds exactly one credit for this user and quiz.
+        qd['extra_attempts'] = extra_attempt_count(db, g.current_user['user_id'], qd['id'])
+        qd['effective_max_attempts'] = (
+            qd['max_attempts'] + qd['extra_attempts'] if qd['max_attempts'] > 0 else 0
+        )
+        qd['attempts_remaining'] = (
+            max(0, qd['effective_max_attempts'] - qd['attempts_used'])
+            if qd['effective_max_attempts'] > 0 else None
+        )
         return jsonify({'quiz': qd})
 
     @app.route('/api/quizzes/<qid>/start', methods=['POST'])
@@ -2986,6 +2997,9 @@ def create_app() -> Flask:
             ensure_column(db, 'lessons', 'text_content', 'TEXT')
             ensure_column(db, 'quizzes', 'duration_seconds', 'INTEGER DEFAULT 0')
             ensure_column(db, 'quizzes', 'max_attempts', 'INTEGER DEFAULT 0')
+            ensure_column(db, 'quizzes', 'questions_per_attempt', 'INTEGER DEFAULT 0')
+            ensure_column(db, 'quizzes', 'shuffle_questions', 'INTEGER DEFAULT 0')
+            ensure_column(db, 'quizzes', 'shuffle_options', 'INTEGER DEFAULT 0')
             ins = db.execute('SELECT name,avatar FROM users WHERE id=?',(g.current_user['user_id'],)).fetchone()
             cid = str(uuid.uuid4())
             price = float(d.get('price', 0))
@@ -3202,6 +3216,9 @@ def create_app() -> Flask:
         ensure_column(db, 'lessons', 'text_content', 'TEXT')
         ensure_column(db, 'quizzes', 'duration_seconds', 'INTEGER DEFAULT 0')
         ensure_column(db, 'quizzes', 'max_attempts', 'INTEGER DEFAULT 0')
+        ensure_column(db, 'quizzes', 'questions_per_attempt', 'INTEGER DEFAULT 0')
+        ensure_column(db, 'quizzes', 'shuffle_questions', 'INTEGER DEFAULT 0')
+        ensure_column(db, 'quizzes', 'shuffle_options', 'INTEGER DEFAULT 0')
         course = db.execute('SELECT * FROM courses WHERE id=? AND instructor_id=?',
                             (cid, g.current_user['user_id'])).fetchone()
         if not course:
@@ -3331,6 +3348,9 @@ def create_app() -> Flask:
             ensure_column(db, 'lessons', 'duration_seconds', 'INTEGER DEFAULT 0')
             ensure_column(db, 'quizzes', 'duration_seconds', 'INTEGER DEFAULT 0')
             ensure_column(db, 'quizzes', 'max_attempts', 'INTEGER DEFAULT 0')
+            ensure_column(db, 'quizzes', 'questions_per_attempt', 'INTEGER DEFAULT 0')
+            ensure_column(db, 'quizzes', 'shuffle_questions', 'INTEGER DEFAULT 0')
+            ensure_column(db, 'quizzes', 'shuffle_options', 'INTEGER DEFAULT 0')
 
             row = db.execute('SELECT instructor_id FROM courses WHERE id=?',(cid,)).fetchone()
             if not row: return jsonify({'error': 'Course not found'}), 404
@@ -8617,14 +8637,42 @@ def create_app() -> Flask:
             if tx['user_id'] != g.current_user['user_id'] and role not in ('admin', 'superadmin'):
                 return jsonify({'error': 'Forbidden'}), 403
 
+            def _verification_payload(current_tx, status):
+                is_extra_attempt = current_tx['type'] == 'quiz_extra_attempt'
+                payload = {
+                    'status': status,
+                    'receipt_id': current_tx['receipt_id'],
+                    'amount': float(current_tx['amount'] or 0),
+                    'transaction_type': current_tx['type'],
+                    'enrolled': not is_extra_attempt,
+                }
+                if is_extra_attempt:
+                    try:
+                        payment_details = json.loads(current_tx['payment_details'] or '{}')
+                    except Exception:
+                        payment_details = {}
+                    quiz_id = payment_details.get('quiz_id')
+                    lesson_id = None
+                    if quiz_id:
+                        quiz_row = db.execute(
+                            'SELECT lesson_id FROM quizzes WHERE id=? AND course_id=?',
+                            (quiz_id, current_tx['course_id'])
+                        ).fetchone()
+                        lesson_id = quiz_row['lesson_id'] if quiz_row else None
+                    payload.update({
+                        'purpose': 'quiz_extra_attempt',
+                        'quiz_id': quiz_id,
+                        'course_id': current_tx['course_id'],
+                        'lesson_id': lesson_id,
+                    })
+                return payload
+
             if tx['status'] == 'success':
-                # Already settled — just return current state
-                return jsonify({
-                    'status': 'success',
-                    'receipt_id': tx['receipt_id'],
-                    'amount': float(tx['amount'] or 0),
-                    'enrolled': True,
-                })
+                # Repair a missing credit safely if a previous request marked the
+                # transaction successful but failed before writing its credit.
+                if tx['type'] == 'quiz_extra_attempt':
+                    settle_extra_attempt(db, tx['id'])
+                return jsonify(_verification_payload(tx, 'success'))
 
             # Ask provider for real status
             result = verify_payment(tx['provider_ref'] or tx['id'], tx['provider'] or 'mock')
@@ -8654,21 +8702,13 @@ def create_app() -> Flask:
                         except Exception as e:
                             app.logger.warning(f'verify enroll failed: {e}')
                 db.commit()
-                return jsonify({
-                    'status': 'success',
-                    'receipt_id': tx['receipt_id'],
-                    'amount': float(tx['amount'] or 0),
-                    'enrolled': True,
-                })
+                return jsonify(_verification_payload(tx, 'success'))
             elif new_status == 'failed':
                 db.execute("UPDATE transactions SET status='failed', updated_at=CURRENT_TIMESTAMP WHERE id=?", (tx['id'],))
                 db.commit()
-            return jsonify({
-                'status': new_status,
-                'receipt_id': tx['receipt_id'],
-                'amount': float(tx['amount'] or 0),
-                'message': result.get('message', ''),
-            })
+            payload = _verification_payload(tx, new_status)
+            payload['message'] = result.get('message', '')
+            return jsonify(payload)
         except Exception as e:
             app.logger.error(f'verify_transaction: {e}')
             return jsonify({'error': 'Verify failed', 'detail': _err_detail(e)}), 500

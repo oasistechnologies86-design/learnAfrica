@@ -651,6 +651,11 @@ export default function AdminPage() {
                         <td className="p-3"><STATUS_BADGE status={c.status || 'published'} /></td>
                         <td className="p-3">
                           <div className="flex justify-end gap-1">
+                            <button onClick={() => navigate(`/instructor/courses/edit/${c.id}`)}
+                              title="Manage course content and quiz settings"
+                              className="flex items-center gap-1 px-2 py-1 text-xs rounded border border-primary/30 text-primary hover:bg-primary/5 transition-colors">
+                              Manage
+                            </button>
                             <button onClick={() => navigate(`/instructor/preview/${c.id}`)}
                               title="Preview this course as a student"
                               className="flex items-center gap-1 px-2 py-1 text-xs rounded border border-border text-muted-foreground hover:bg-muted hover:text-primary transition-colors">

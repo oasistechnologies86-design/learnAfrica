@@ -83,7 +83,9 @@ export default function PaymentReturnPage() {
             </div>
             <h2 className="text-2xl font-bold">Payment Successful</h2>
             <p className="text-sm text-muted-foreground mt-2">
-              You are now enrolled. Enjoy your course!
+              {result?.transaction_type === 'quiz_extra_attempt'
+                ? 'Your additional quiz attempt has been unlocked. You can return to your quiz now.'
+                : 'You are now enrolled. Enjoy your course!'}
             </p>
             {result && (
               <div className="mt-6 p-4 rounded-lg bg-muted/40 text-left text-sm space-y-1.5">
@@ -98,7 +100,13 @@ export default function PaymentReturnPage() {
               </div>
             )}
             <div className="mt-6 flex flex-col sm:flex-row gap-2">
-              <Button onClick={() => navigate('/dashboard')} className="flex-1">Go to dashboard</Button>
+              {result?.transaction_type === 'quiz_extra_attempt' && result?.course_id && result?.lesson_id ? (
+                <Button onClick={() => navigate(`/learn/course/${result.course_id}/quiz/${result.lesson_id}`)} className="flex-1">
+                  Return to quiz
+                </Button>
+              ) : (
+                <Button onClick={() => navigate('/dashboard')} className="flex-1">Go to dashboard</Button>
+              )}
               <Button variant="outline" onClick={() => navigate('/receipts')} className="flex-1">View receipt</Button>
             </div>
           </>
