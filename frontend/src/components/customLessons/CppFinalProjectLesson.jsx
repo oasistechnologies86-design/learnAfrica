@@ -61,7 +61,7 @@ int main() {
 }`;
 
   return (
-    <article className="max-w-3xl mx-auto py-8 px-4 sm:px-6 space-y-10">
+    <article className="w-full max-w-none mx-0 py-6 sm:py-8 px-0 space-y-8 sm:space-y-10">
       <header className="space-y-4 pb-8 border-b border-border">
         <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
           <Gamepad2 className="h-3.5 w-3.5" /> Final Project
