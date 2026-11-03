@@ -3571,7 +3571,7 @@ def create_app() -> Flask:
         ensure_transactions_table(db)
         earnings_row = db.execute(
             "SELECT COALESCE(SUM(instructor_share), 0) as t FROM transactions"
-            " WHERE instructor_id=? AND type='purchase' AND status='success'", (uid,)).fetchone()
+            " WHERE instructor_id=? AND type IN ('purchase','quiz_extra_attempt') AND status='success'", (uid,)).fetchone()
         total_earnings = round(float(earnings_row['t'] or 0), 2) if earnings_row else 0.0
         # Earnings breakdown by payout state. Manual payouts (admin pays from
         # their own account and marks it sent) leave the row as 'pending' with a
@@ -3579,7 +3579,7 @@ def create_app() -> Flask:
         # still available to request.
         paid_row = db.execute(
             "SELECT COALESCE(SUM(instructor_share), 0) as t FROM transactions"
-            " WHERE instructor_id=? AND type='purchase' AND status='success'"
+            " WHERE instructor_id=? AND type IN ('purchase','quiz_extra_attempt') AND status='success'"
             " AND payout_status='paid'", (uid,)).fetchone()
         total_paid = round(float(paid_row['t'] or 0), 2) if paid_row else 0.0
         req_row = db.execute(
@@ -3627,7 +3627,7 @@ def create_app() -> Flask:
         _split = resolve_revenue_split(db)
         gross_row = db.execute(
             "SELECT COALESCE(SUM(amount), 0) as t FROM transactions"
-            " WHERE instructor_id=? AND type='purchase' AND status='success'", (uid,)).fetchone()
+            " WHERE instructor_id=? AND type IN ('purchase','quiz_extra_attempt') AND status='success'", (uid,)).fetchone()
         gross_revenue = round(float(gross_row['t'] or 0), 2) if gross_row else 0.0
         platform_share = round(gross_revenue - total_earnings, 2)
         return jsonify({
@@ -4058,7 +4058,7 @@ def create_app() -> Flask:
             "SELECT COALESCE(SUM(t.amount), 0) as gross,"
             " COALESCE(SUM(CASE WHEN u.role IN ('admin','superadmin') THEN 0 ELSE t.instructor_share END), 0) as owed"
             " FROM transactions t LEFT JOIN users u ON u.id = t.instructor_id"
-            " WHERE t.type='purchase' AND t.status='success'"
+            " WHERE t.type IN ('purchase','quiz_extra_attempt') AND t.status='success'"
         ).fetchone()
         gross = float(rev['gross'] or 0)
         instructor_pct, admin_pct = get_revenue_split(db)
@@ -7228,7 +7228,7 @@ def create_app() -> Flask:
             ).fetchone()
             lifetime = db.execute(
                 """SELECT COALESCE(SUM(instructor_share), 0) as total FROM transactions
-                   WHERE instructor_id=? AND type='purchase' AND status='success'""", (uid,)
+                   WHERE instructor_id=? AND type IN ('purchase','quiz_extra_attempt') AND status='success'""", (uid,)
             ).fetchone()
             paid_out = db.execute(
                 """SELECT COALESCE(SUM(amount), 0) as total FROM transactions
