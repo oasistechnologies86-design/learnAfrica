@@ -261,7 +261,7 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
           <p className="font-bold text-lg">{score >= 70 ? (isFinal ? 'Final exam would be passed' : 'Test would be passed') : (isFinal ? 'Final exam would not be passed' : 'Test would not be passed')}</p>
           <p className="text-sm text-muted-foreground">
             {score >= 70
-              ? 'A student scoring at least 70% would pass this {isFinal ? 'final exam' : 'test'}. {isFinal ? 'Passing the final exam is required for certificate eligibility.' : 'Passing this test completes its lesson.'}'
+              ? `A student scoring at least 70% would pass this ${isFinal ? 'final exam' : 'test'}. ${isFinal ? 'Passing the final exam is required for certificate eligibility.' : 'Passing this test completes its lesson.'}`
               : 'A student needs at least 70% to pass. Consider reviewing the question difficulty.'}
           </p>
           <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-400">
