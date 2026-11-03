@@ -103,9 +103,10 @@ def purchase_extra_attempt(quiz_id):
             "SELECT is_final FROM lessons WHERE id=? AND course_id=?",
             (quiz["lesson_id"], quiz["course_id"])
         ).fetchone() if quiz["lesson_id"] else None
-        max_attempts = int((db.execute(
+        quiz_limits = db.execute(
             "SELECT max_attempts FROM quizzes WHERE id=?", (quiz_id,)
-        ).fetchone() or {}).get("max_attempts") or (10 if lesson and lesson["is_final"] else 0))
+        ).fetchone()
+        max_attempts = int((quiz_limits["max_attempts"] if quiz_limits else 0) or (10 if lesson and lesson["is_final"] else 0))
         if max_attempts <= 0:
             return jsonify({"error": "This quiz has unlimited attempts; no purchase is required."}), 400
         used = db.execute(
