@@ -37,6 +37,7 @@ import InstructorCouponsPage    from './pages/Instructor/InstructorCouponsPage';
 import ProfilePage              from './pages/Profile/ProfilePage';
 import SettingsPage             from './pages/Settings/SettingsPage';
 import CertificatePage          from './pages/Certificate/CertificatePage';
+import MyCertificatesPage        from './pages/Certificate/MyCertificatesPage';
 import LeaderboardPage          from './pages/Leaderboard/LeaderboardPage';
 import NotFoundPage             from './pages/NotFound/NotFoundPage';
 import AdminPage                from './pages/Admin/AdminPage';
@@ -169,6 +170,7 @@ function AppRoutes() {
       {/* ── Shared profile / settings (all authenticated) ── */}
       <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
         <Route path="profile"  element={<ProfilePage />} />
+        <Route path="my-certificates" element={<StudentOnlyRoute><MyCertificatesPage /></StudentOnlyRoute>} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="receipts" element={<ReceiptsPage />} />
         <Route path="receipts/:tid" element={<ReceiptStatementPage />} />
