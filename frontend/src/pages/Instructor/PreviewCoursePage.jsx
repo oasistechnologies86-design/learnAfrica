@@ -223,7 +223,6 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
   );
 
   const q = quiz.questions[current];
-  const opts = Array.isArray(q.options) ? q.options : [];
   const assessmentName = isFinal ? 'Final Examination' : 'Lesson Test';
 
   if (!showQuestions) return (
