@@ -39,6 +39,7 @@ export function QuizPage() {
   const [timeGate, setTimeGate] = useState(null); // {required_seconds, spent_seconds, message}
   const [attemptLimit, setAttemptLimit] = useState(false);
   const [buyingAttempt, setBuyingAttempt] = useState(false);
+  const attemptStorageKey = `learnafrica:quiz-attempt:${courseId}:${lessonId}`;
   const submittedRef = useRef(false);
 
   const purchaseExtraAttempt = async () => {
@@ -97,31 +98,54 @@ export function QuizPage() {
           setQuiz(q);
           return;
         }
-        // Every assessment must create a server-side attempt only after the
-        // student confirms on the information page. This also starts any
-        // configured timer and fixes the served question set for grading.
-        const startRes = await fetch(`${API_BASE}/api/quizzes/${q.id}/start`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...headers },
-        });
-        const startData = await startRes.json().catch(() => ({}));
-        if (!startRes.ok) {
-          if (startData.error === 'attempt_limit') {
-            setAttemptLimit(true);
-            setError(startData.message || 'You have used all attempts for this quiz.');
-            setQuiz(q);
-            return;
+        // Reuse the same server-issued attempt after a page refresh. This
+        // prevents a timed assessment from getting a fresh countdown simply
+        // because the student reloads the browser tab.
+        let startData = null;
+        try {
+          const saved = sessionStorage.getItem(attemptStorageKey);
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed?.quiz_id === q.id && parsed?.attempt_id && Array.isArray(parsed.questions)) {
+              startData = parsed;
+            } else {
+              sessionStorage.removeItem(attemptStorageKey);
+            }
           }
-          if (startData.error === 'time_gate') {
-            setTimeGate({
-              required_seconds: startData.required_seconds || 0,
-              spent_seconds:    startData.spent_seconds    || 0,
-              message:          startData.message || 'You need more time on this course before taking the final examination.',
-            });
-            setQuiz(q);
-            return;
+        } catch {
+          sessionStorage.removeItem(attemptStorageKey);
+        }
+
+        // Every new assessment attempt is created only after the student has
+        // confirmed on the information page. This starts the configured timer
+        // and fixes the exact question set used later for grading.
+        if (!startData) {
+          const startRes = await fetch(`${API_BASE}/api/quizzes/${q.id}/start`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...headers },
+          });
+          startData = await startRes.json().catch(() => ({}));
+          if (!startRes.ok) {
+            if (startData.error === 'attempt_limit') {
+              setAttemptLimit(true);
+              setError(startData.message || 'You have used all attempts for this quiz.');
+              setQuiz(q);
+              return;
+            }
+            if (startData.error === 'time_gate') {
+              setTimeGate({
+                required_seconds: startData.required_seconds || 0,
+                spent_seconds:    startData.spent_seconds    || 0,
+                message:          startData.message || 'You need more time on this course before taking the final examination.',
+              });
+              setQuiz(q);
+              return;
+            }
+            throw new Error(startData.message || startData.error || 'Could not start assessment');
           }
-          throw new Error(startData.message || startData.error || 'Could not start assessment');
+          try {
+            sessionStorage.setItem(attemptStorageKey, JSON.stringify({ ...startData, quiz_id: q.id }));
+          } catch {}
         }
         q = {
           ...q,
@@ -145,7 +169,7 @@ export function QuizPage() {
       }
     };
     fetchQuiz();
-  }, [courseId, lessonId, startConfirmed, navigate]);
+  }, [courseId, lessonId, startConfirmed, navigate, attemptStorageKey]);
 
   useEffect(() => {
     if (!quiz) return;
@@ -188,6 +212,7 @@ export function QuizPage() {
       const result = await response.json().catch(() => ({}));
       if (result.error === 'time_expired' || result.error === 'already_submitted'
           || result.error === 'invalid_attempt') {
+        sessionStorage.removeItem(attemptStorageKey);
         // The server clock is authoritative. Surface it plainly and let the
         // student restart rather than silently retrying.
         setError(result.message || 'This attempt is no longer valid. Please start the quiz again.');
@@ -216,6 +241,7 @@ export function QuizPage() {
       }
       if (!response.ok) throw new Error(result.error || 'Submission failed');
       // The quiz submission endpoint records the graded score and completion atomically.
+      sessionStorage.removeItem(attemptStorageKey);
       navigate(`/learn/course/${courseId}/quiz/${lessonId}/results`, {
         state: {
           answers,
@@ -294,7 +320,7 @@ export function QuizPage() {
       <EngagementCheckinModal show={showCheckin} onContinue={confirmContinue} />
       <header className="sticky top-0 z-30 border-b border-border/70 bg-background/90 backdrop-blur-xl shadow-sm">
         <div className="flex min-h-16 items-center justify-between gap-3 px-4 sm:px-6">
-          <Link to={`/learn/course/${courseId}/lesson/${lessonId}`} className="flex items-center gap-1 rounded-full px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+          <Link to={`/learn/course/${courseId}/lesson/${lessonId}`} onClick={() => sessionStorage.removeItem(attemptStorageKey)} className="flex items-center gap-1 rounded-full px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
             <ChevronLeft className="h-4 w-4" /> Exit
           </Link>
           <div className="text-center">
