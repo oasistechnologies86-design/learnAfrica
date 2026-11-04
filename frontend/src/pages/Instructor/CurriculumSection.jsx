@@ -752,6 +752,18 @@ function CurriculumItemEditor({ item, index, onUpdate, onRemove, hasResources = 
                 )}
               </div>
 
+              {/* Instructor-defined passing threshold */}
+              <div className="p-3 rounded-xl border border-border bg-background space-y-2">
+                <label className="block space-y-1">
+                  <span className="text-xs font-bold">Passing score (%)</span>
+                  <span className="block text-2xs text-muted-foreground">Students must achieve this percentage to pass this assessment.</span>
+                  <input type="number" min="1" max="100" step="1" inputMode="numeric"
+                    value={item.pass_score ?? 70}
+                    onChange={e => onUpdate({ pass_score: Math.max(1, Math.min(100, parseInt(e.target.value, 10) || 1)) })}
+                    className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+                </label>
+              </div>
+
               {/* Anti-cheat: question bank size, shuffling */}
               <div className="p-3 rounded-xl border border-border bg-background space-y-3">
                 <div>
