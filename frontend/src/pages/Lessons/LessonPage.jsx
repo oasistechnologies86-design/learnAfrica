@@ -848,8 +848,8 @@ export function LessonPage() {
                     <HelpCircle className="h-5 w-5" />
                     {lesson.quizScore !== null && lesson.quizScore !== undefined && !currentLessonFinished
                       ? 'Try Again'
-                      : currentLessonFinished ? (lesson.is_final ? 'Retake Final Exam' : 'Retake Test')
-                      : (lesson.is_final ? 'Start Final Exam' : 'Start Test')}
+                      : currentLessonFinished ? (lesson.is_final ? 'Retake Final Examination' : 'Retake Lesson Test')
+                      : (lesson.is_final ? 'Start Final Examination' : 'Start Lesson Test')}
                   </Button>
                 </div>
 
