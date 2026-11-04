@@ -64,7 +64,7 @@ function PreviewBanner({ courseTitle, isPaid, price }) {
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────
-function PreviewSidebar({ sections, allLessons, activeLessonId, courseId, onSelect, onClose }) {
+function PreviewSidebar({ sections, allLessons, activeLessonId, courseId, courseTitle, onSelect, onClose }) {
   const [openSections, setOpenSections] = useState(() => {
     const s = new Set();
     sections.forEach(sec => {
@@ -95,6 +95,10 @@ function PreviewSidebar({ sections, allLessons, activeLessonId, courseId, onSele
         </Button>
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
+        <div className="mb-5 flex items-center gap-3 rounded-xl border border-border bg-background/70 p-3">
+          <div className="h-11 w-11 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center"><Eye className="h-5 w-5 text-primary" /></div>
+          <div className="min-w-0"><p className="text-xs font-bold truncate">{courseTitle || 'Course Preview'}</p><p className="text-2xs text-muted-foreground">{allLessons.length} course items · student view</p></div>
+        </div>
         <h3 className="font-black text-3xs uppercase tracking-[0.2em] px-2 hidden lg:block text-muted-foreground">
           Lessons Plan
         </h3>
@@ -565,7 +569,7 @@ export function PreviewCoursePage() {
               {/* Tabs */}
               <div className="border-b border-border mb-8">
                 <div className="flex items-center gap-4 sm:gap-10 overflow-x-auto pb-px">
-                  {['content','resources','notes'].map(id => (
+                  {['content','resources','notes','discussion'].map(id => (
                     <button key={id} onClick={() => setActiveTab(id)}
                       className={cn(
                         'flex items-center gap-2 pb-4 text-sm font-bold transition-all whitespace-nowrap capitalize border-b-2 tracking-wide shrink-0',
@@ -576,6 +580,7 @@ export function PreviewCoursePage() {
                       {id === 'content'   && <FileText   className="h-4 w-4 shrink-0" />}
                       {id === 'resources' && <FolderOpen className="h-4 w-4 shrink-0" />}
                       {id === 'notes'     && <BookOpen   className="h-4 w-4 shrink-0" />}
+                      {id === 'discussion' && <MessageSquare className="h-4 w-4 shrink-0" />}
                       <span>{id}</span>
                       {id === 'resources' && resources.length > 0 && (
                         <span className="ml-0.5 bg-primary/15 text-primary text-3xs font-black w-4 h-4 rounded-full flex items-center justify-center">
@@ -628,6 +633,13 @@ export function PreviewCoursePage() {
                       </div>
                     )}
                   </div>
+                )}
+
+                {activeTab === 'discussion' && (
+                  <Card className="p-6 border-dashed bg-muted/30">
+                    <div className="flex items-center gap-2 mb-3"><MessageSquare className="h-5 w-5 text-primary" /><p className="font-semibold">Course discussion</p></div>
+                    <p className="text-sm text-muted-foreground">Students can view and participate in lesson discussions when enrolled. Discussion posts and replies are disabled in instructor preview so no real student discussion records can be changed.</p>
+                  </Card>
                 )}
 
                 {activeTab === 'notes' && (
@@ -693,6 +705,7 @@ export function PreviewCoursePage() {
             <PreviewSidebar
               sections={sections}
               allLessons={allLessons}
+              courseTitle={course?.title}
               activeLessonId={activeLesson?.id}
               courseId={courseId}
               onSelect={(id) => loadLesson(id)}
