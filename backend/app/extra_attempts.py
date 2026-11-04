@@ -110,12 +110,35 @@ def purchase_extra_attempt(quiz_id):
         amount = round(float(quiz["extra_attempt_price"] or 0), 2)
         if not (0 < amount <= 100000):
             return jsonify({"error": "The instructor has not configured a valid additional-attempt price. Please contact the instructor."}), 409
-        used = db.execute(
-            "SELECT COUNT(*) AS cnt FROM quiz_attempts WHERE user_id=? AND quiz_id=?",
-            (uid, quiz_id)
+        db.execute("""CREATE TABLE IF NOT EXISTS course_quiz_attempt_resets (
+            id TEXT PRIMARY KEY, user_id TEXT NOT NULL, course_id TEXT NOT NULL,
+            final_attempt_id TEXT NOT NULL UNIQUE, reset_at TIMESTAMP NOT NULL
+        )""")
+        db.commit()
+        reset = db.execute(
+            "SELECT MAX(reset_at) AS reset_at FROM course_quiz_attempt_resets WHERE user_id=? AND course_id=?",
+            (uid, quiz["course_id"])
         ).fetchone()
-        credits = extra_attempt_count(db, uid, quiz_id)
-        if int(used["cnt"] or 0) < max_attempts + credits:
+        reset_at = reset["reset_at"] if reset else None
+        if reset_at:
+            used = db.execute(
+                "SELECT COUNT(*) AS cnt FROM quiz_attempts WHERE user_id=? AND quiz_id=? AND attempted_at>?",
+                (uid, quiz_id, reset_at)
+            ).fetchone()
+            credits = db.execute(
+                "SELECT COUNT(*) AS cnt FROM quiz_attempt_credits WHERE user_id=? AND quiz_id=? AND created_at>?",
+                (uid, quiz_id, reset_at)
+            ).fetchone()
+        else:
+            used = db.execute(
+                "SELECT COUNT(*) AS cnt FROM quiz_attempts WHERE user_id=? AND quiz_id=?",
+                (uid, quiz_id)
+            ).fetchone()
+            credits = db.execute(
+                "SELECT COUNT(*) AS cnt FROM quiz_attempt_credits WHERE user_id=? AND quiz_id=?",
+                (uid, quiz_id)
+            ).fetchone()
+        if int(used["cnt"] or 0) < max_attempts + int(credits["cnt"] or 0):
             return jsonify({"error": "You still have an available attempt."}), 409
         course = db.execute(
             """SELECT c.id,c.title,c.instructor_id,u.role AS instructor_role
