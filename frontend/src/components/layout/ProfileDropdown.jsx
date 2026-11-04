@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { LayoutDashboard, GraduationCap, Settings, ChevronDown, User, Shield, BookMarked, BarChart2, Receipt } from 'lucide-react';
+import { LayoutDashboard, GraduationCap, Settings, ChevronDown, User, Shield, BookMarked, BarChart2, Receipt, Award } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import MobileProfileDrawer from './MobileProfileDrawer';
@@ -85,6 +85,7 @@ export default function ProfileDropdown({ hideChevron = false, closeMainMenu }) 
             {isAdmin && (
               <DropLink to="/admin" icon={<Shield className="h-4 w-4" />} label="Admin Panel" onClick={close} variant="accent" />
             )}
+            {!isInstructor && <DropLink to="/my-certificates" icon={<Award className="h-4 w-4" />} label="My Certificates" onClick={close} />}
             <DropLink to={settingsLink} icon={<Settings className="h-4 w-4" />} label="Settings" onClick={close} />
             <DropLink to="/receipts" icon={<Receipt className="h-4 w-4" />} label="Receipts" onClick={close} />
           </div>
