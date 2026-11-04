@@ -96,8 +96,9 @@ export function QuizResultsPage() {
   const {
     answers, questions, score, correctCount, totalQuestions, passed,
     correctAnswers, courseId, lessonId, quizTitle,
-    isFinalQuiz, hasCertificate,
+    isFinalQuiz, hasCertificate, passScore,
   } = state || {};
+  const passingScore = Number(passScore ?? 70);
 
   const [certData,    setCertData]    = useState(null);
   const [certLoading, setCertLoading] = useState(false);
@@ -179,8 +180,8 @@ export function QuizResultsPage() {
             </p>
             <p className="text-sm text-muted-foreground mt-1">
               {passed
-                ? `You have successfully passed this ${isFinalQuiz ? 'final exam' : 'test'}.`
-                : `You need 70% to pass this ${isFinalQuiz ? 'final exam' : 'test'}. Review the lesson and try again.`}
+                ? `You have successfully passed this ${isFinalQuiz ? 'Final Examination' : 'Lesson Test'}.`
+                : `You need ${passingScore}% to pass this ${isFinalQuiz ? 'Final Examination' : 'Lesson Test'}. Review the lesson and try again.`}
             </p>
           </div>
 
@@ -213,7 +214,7 @@ export function QuizResultsPage() {
           </div>
 
           {quizTitle && <p className="text-xs text-muted-foreground font-medium">{quizTitle}</p>}
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{isFinalQuiz ? 'Final exam result' : 'Test result'}</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{isFinalQuiz ? 'Final Examination result' : 'Lesson Test result'}</p>
 
           {/* ── Certificate section (final quiz only) ── */}
           {showCertSection && passed && (
@@ -250,7 +251,7 @@ export function QuizResultsPage() {
             <div className="rounded-xl bg-destructive/5 border border-destructive/20 p-4">
               <p className="text-sm font-semibold text-destructive">Final Exam Not Passed</p>
               <p className="text-xs text-muted-foreground mt-1">
-                You need 70% to earn the certificate. You scored {score}%. Review the material and try again!
+                You need {passingScore}% to earn the certificate. You scored {score}%. Review the material and try again!
               </p>
             </div>
           )}
@@ -285,7 +286,7 @@ export function QuizResultsPage() {
 
         {!answerKeyAvailable && (
           <Card className="p-5 text-sm text-muted-foreground">
-            You scored {score}%. The correct answers are shown once you pass. Review the material before your next {isFinalQuiz ? 'final exam' : 'test'} attempt.
+            You scored {score}%. The correct answers are shown once you pass. Review the material before your next {isFinalQuiz ? 'Final Examination' : 'Lesson Test'} attempt.
           </Card>
         )}
 
