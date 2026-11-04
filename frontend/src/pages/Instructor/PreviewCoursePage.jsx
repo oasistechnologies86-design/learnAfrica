@@ -21,6 +21,7 @@ import CustomLessonFrame from '@/components/customLessons/CustomLessonFrame';
 import { cn } from '@/lib/utils';
 import { API_BASE, parseErr } from '@/lib/api';
 import { formatPrice } from '@/lib/money';
+import { formatDuration } from '@/components/common/TimePicker';
 
 // ── helpers ───────────────────────────────────────────────────────────────
 const getEmbedUrl = (url) => {
@@ -130,7 +131,7 @@ function PreviewSidebar({ sections, allLessons, activeLessonId, courseId, onSele
                       <p className="truncate font-bold tracking-tight leading-tight">{l.title}</p>
                       <p className={cn('text-2xs mt-0.5 font-medium opacity-70',
                         isCurrent ? 'text-primary-foreground' : 'text-muted-foreground')}>
-                        {isQuiz ? (l.is_final ? 'Final Exam' : 'Test') : l.duration || ''}
+                        {isQuiz ? (l.is_final ? 'Final Examination' : 'Lesson Test') : l.duration || ''}
                       </p>
                     </div>
                   </button>
@@ -146,35 +147,44 @@ function PreviewSidebar({ sections, allLessons, activeLessonId, courseId, onSele
 
 
 // ── Preview Quiz ─────────────────────────────────────────────────────────────
-// Instructors can take the quiz in preview, but nothing is saved
+// Uses instructor-only read access to the answer key. All interaction remains
+// in local component state; no student attempt, payment, score or progress is written.
 function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
-  const [quiz,     setQuiz]     = useState(null);
-  const [answers,  setAnswers]  = useState({});
-  const [submitted,setSubmitted]= useState(false);
-  const [score,    setScore]    = useState(null);
-  const [loading,  setLoading]  = useState(true);
-  const [current,  setCurrent]  = useState(0);
+  const [quiz, setQuiz] = useState(null);
+  const [answers, setAnswers] = useState({});
+  const [submitted, setSubmitted] = useState(false);
+  const [score, setScore] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [current, setCurrent] = useState(0);
+  const [showQuestions, setShowQuestions] = useState(false);
+  const [confirmStart, setConfirmStart] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     const token = sessionStorage.getItem('auth_token');
-    fetch(`${API_BASE}/api/courses/${courseId}/quizzes/${lessonId}`, 
+    fetch(`${API_BASE}/api/instructor/courses/${courseId}/lessons/${lessonId}/quiz-preview`,
       { headers: token ? { Authorization: `Bearer ${token}` } : {} })
-      .then(r => r.ok ? r.json() : null)
-      .then(d => setQuiz(d?.quiz || null))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .then(async r => {
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(data.error || 'Could not load assessment preview');
+        return data.quiz;
+      })
+      .then(data => { if (!cancelled) setQuiz(data || null); })
+      .catch(() => { if (!cancelled) setQuiz(null); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [courseId, lessonId]);
 
+  const passScore = Number(quiz?.pass_score ?? 70);
   const submitPreview = () => {
     if (!quiz?.questions?.length) return;
     let correct = 0;
     quiz.questions.forEach((q, i) => {
-      const ua = answers[i];
+      const answer = answers[i];
       if (q.question_type === 'fill_blank') {
-        const opts = Array.isArray(q.options) ? q.options : [];
-        if (String(ua||'').trim().toLowerCase() === String(opts[Number(q.correct_answer)]||'').trim().toLowerCase()) correct++;
-      } else {
-        if (Number(ua) === Number(q.correct_answer)) correct++;
+        if (String(answer || '').trim().toLowerCase() === String(q.correct_answer || '').trim().toLowerCase()) correct++;
+      } else if (Number(answer) === Number(q.correct_answer)) {
+        correct++;
       }
     });
     setScore(Math.round((correct / quiz.questions.length) * 100));
@@ -185,91 +195,123 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
   if (!quiz?.questions?.length) return (
     <div className="p-6 rounded-xl border border-border bg-muted/20 text-center">
       <HelpCircle className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
-      <p className="text-sm text-muted-foreground">No questions have been added to this {isFinal ? 'final exam' : 'test'} yet.</p>
+      <p className="text-sm text-muted-foreground">No questions have been added to this {isFinal ? 'Final Examination' : 'Lesson Test'} yet.</p>
     </div>
   );
 
   const q = quiz.questions[current];
   const opts = Array.isArray(q.options) ? q.options : [];
+  const assessmentName = isFinal ? 'Final Examination' : 'Lesson Test';
+
+  if (!showQuestions) return (
+    <div className="space-y-5">
+      <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30">
+        <Eye className="h-4 w-4 text-amber-600 shrink-0" />
+        <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+          Instructor Preview — these are the saved assessment rules. Student-specific remaining attempts are shown to each enrolled student.
+        </p>
+      </div>
+      <Card className="p-5 sm:p-6">
+        <h3 className="font-bold text-base mb-4">{assessmentName} information</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="rounded-xl bg-muted/60 p-4">
+            <p className="text-xs text-muted-foreground mb-1">Questions in this preview</p>
+            <p className="text-lg font-extrabold">{quiz.questions.length}</p>
+          </div>
+          <div className="rounded-xl bg-muted/60 p-4">
+            <p className="text-xs text-muted-foreground mb-1">Time allowed</p>
+            <p className="text-lg font-extrabold">{quiz.timer_enabled && Number(quiz.duration_seconds) > 0 ? formatDuration(Number(quiz.duration_seconds)) : 'No time limit'}</p>
+          </div>
+          <div className="rounded-xl bg-muted/60 p-4">
+            <p className="text-xs text-muted-foreground mb-1">Attempts configured</p>
+            <p className="text-lg font-extrabold">{quiz.attempts_enabled && Number(quiz.max_attempts) > 0 ? `${Number(quiz.max_attempts)} included attempts` : 'Unlimited attempts'}</p>
+          </div>
+          <div className="rounded-xl bg-muted/60 p-4">
+            <p className="text-xs text-muted-foreground mb-1">Passing score</p>
+            <p className="text-lg font-extrabold">{passScore}%</p>
+          </div>
+          {quiz.attempts_enabled && Number(quiz.extra_attempt_price) > 0 && (
+            <div className="rounded-xl bg-muted/60 p-4 sm:col-span-2">
+              <p className="text-xs text-muted-foreground mb-1">Extra attempt fee</p>
+              <p className="text-lg font-extrabold">GHS {Number(quiz.extra_attempt_price).toFixed(2)}</p>
+            </div>
+          )}
+        </div>
+        <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm text-muted-foreground">
+          This preview uses the configured question selection and shuffling. Starting it will not create a real attempt, start a student timer, or save a score.
+        </div>
+        <Button className="w-full mt-5" onClick={() => setConfirmStart(true)}>Start {assessmentName} Preview</Button>
+      </Card>
+      {confirmStart && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" role="dialog" aria-modal="true">
+          <Card className="w-full max-w-md p-6 shadow-2xl">
+            <h3 className="text-xl font-black mb-2">Start {assessmentName} preview?</h3>
+            <p className="text-sm text-muted-foreground mb-5">This is a safe instructor preview. No student attempt or timer will be started and no records will be changed.</p>
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1" onClick={() => setConfirmStart(false)}>Go Back</Button>
+              <Button className="flex-1" onClick={() => { setConfirmStart(false); setShowQuestions(true); }}>Yes, Start Preview</Button>
+            </div>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30">
         <Eye className="h-4 w-4 text-amber-600 shrink-0" />
         <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
-          Preview Mode — This {isFinal ? 'final exam' : 'test'} is for instructor review only. Answers are not saved and no student progress is changed.
+          Preview Mode — this {assessmentName} is for instructor review only. Nothing is saved and no student progress is changed.
         </p>
       </div>
-
       {!submitted ? (
         <div className="space-y-4">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>Question {current + 1} of {quiz.questions.length}</span>
-            <span>{isFinal ? 'Final Exam' : 'Test'}</span>
+            <span>{assessmentName}</span>
           </div>
           <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-            <div className="h-full bg-primary rounded-full transition-all"
-              style={{ width: `${((current + 1) / quiz.questions.length) * 100}%` }} />
+            <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${((current + 1) / quiz.questions.length) * 100}%` }} />
           </div>
-
           <div className="p-5 rounded-xl border border-border bg-card">
-            <p className="font-semibold mb-4">{q.question_text || q.text}</p>
+            <p className="font-semibold mb-4">{q.question_text || q.question || q.text}</p>
             {q.question_type === 'fill_blank' ? (
-              <input value={answers[current] || ''} onChange={e => setAnswers(a => ({...a, [current]: e.target.value}))}
+              <input value={answers[current] || ''} onChange={e => setAnswers(a => ({ ...a, [current]: e.target.value }))}
                 placeholder="Type your answer…"
                 className="w-full border border-input rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary bg-background" />
             ) : (
               <div className="space-y-2">
                 {opts.map((opt, oi) => (
-                  <button key={oi} onClick={() => setAnswers(a => ({...a, [current]: oi}))}
-                    className={cn(
-                      'w-full text-left p-3 rounded-lg border text-sm transition-all',
-                      answers[current] === oi
-                        ? 'border-primary bg-primary/10 font-semibold'
-                        : 'border-border hover:border-primary/40 hover:bg-muted/30'
-                    )}>
+                  <button key={oi} onClick={() => setAnswers(a => ({ ...a, [current]: oi }))}
+                    className={cn('w-full text-left p-3 rounded-lg border text-sm transition-all',
+                      answers[current] === oi ? 'border-primary bg-primary/10 font-semibold' : 'border-border hover:border-primary/40 hover:bg-muted/30')}>
                     <span className="font-bold mr-2">{String.fromCharCode(65 + oi)}.</span>{opt}
                   </button>
                 ))}
               </div>
             )}
           </div>
-
           <div className="flex gap-3">
-            {current > 0 && (
-              <Button variant="outline" onClick={() => setCurrent(c => c - 1)} className="flex-1">← Previous</Button>
-            )}
+            {current > 0 && <Button variant="outline" onClick={() => setCurrent(v => v - 1)} className="flex-1">← Previous</Button>}
             {current < quiz.questions.length - 1 ? (
-              <Button onClick={() => setCurrent(c => c + 1)} className="flex-1"
-                disabled={answers[current] === undefined}>Next →</Button>
+              <Button onClick={() => setCurrent(v => v + 1)} className="flex-1" disabled={answers[current] === undefined || answers[current] === ''}>Next →</Button>
             ) : (
-              <Button onClick={submitPreview} className="flex-1 bg-primary"
-                disabled={Object.keys(answers).length < quiz.questions.length}>
-                Submit {isFinal ? 'Final Exam' : 'Test'} Preview
+              <Button onClick={submitPreview} className="flex-1" disabled={Object.keys(answers).length < quiz.questions.length || quiz.questions.some((question, i) => answers[i] === undefined || answers[i] === '')}>
+                Submit {assessmentName} Preview
               </Button>
             )}
           </div>
         </div>
       ) : (
         <div className="space-y-4 text-center">
-          <div className={cn(
-            'inline-flex h-20 w-20 items-center justify-center rounded-full mx-auto',
-            score >= 70 ? 'bg-success/10' : 'bg-destructive/10'
-          )}>
+          <div className={cn('inline-flex h-20 w-20 items-center justify-center rounded-full mx-auto', score >= passScore ? 'bg-success/10' : 'bg-destructive/10')}>
             <span className="text-2xl font-bold">{score}%</span>
           </div>
-          <p className="font-bold text-lg">{score >= 70 ? (isFinal ? 'Final exam would be passed' : 'Test would be passed') : (isFinal ? 'Final exam would not be passed' : 'Test would not be passed')}</p>
-          <p className="text-sm text-muted-foreground">
-            {score >= 70
-              ? `A student scoring at least 70% would pass this ${isFinal ? 'final exam' : 'test'}. ${isFinal ? 'Passing the final exam is required for certificate eligibility.' : 'Passing this test completes its lesson.'}`
-              : 'A student needs at least 70% to pass. Consider reviewing the question difficulty.'}
-          </p>
-          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-400">
-            Preview only — no score or progress was saved{isFinal ? ', and no certificate was issued' : ''}.
-          </div>
-          <Button variant="outline" onClick={() => { setSubmitted(false); setAnswers({}); setCurrent(0); setScore(null); }}>
-            Retake Preview
-          </Button>
+          <p className="font-bold text-lg">{score >= passScore ? `${assessmentName} would be passed` : `${assessmentName} would not be passed`}</p>
+          <p className="text-sm text-muted-foreground">The configured passing score is {passScore}%. This is a preview result only; it does not affect course completion or certificate eligibility.</p>
+          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-400">Preview only — no score, attempt, payment or progress was saved.</div>
+          <Button variant="outline" onClick={() => { setSubmitted(false); setAnswers({}); setCurrent(0); setScore(null); setShowQuestions(false); }}>Retake Preview</Button>
         </div>
       )}
     </div>
