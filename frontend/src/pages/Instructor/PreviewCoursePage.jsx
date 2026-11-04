@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils';
 import { API_BASE, parseErr } from '@/lib/api';
 import { formatPrice } from '@/lib/money';
 import { formatDuration } from '@/components/common/TimePicker';
+import { QuizQuestion } from '@/components/quiz/QuizQuestion';
 
 // ── helpers ───────────────────────────────────────────────────────────────
 const getEmbedUrl = (url) => {
@@ -162,6 +163,7 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
   const [current, setCurrent] = useState(0);
   const [showQuestions, setShowQuestions] = useState(false);
   const [confirmStart, setConfirmStart] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -180,7 +182,7 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
   }, [courseId, lessonId]);
 
   const passScore = Number(quiz?.pass_score ?? 70);
-  const submitPreview = () => {
+  const submitPreview = useCallback(() => {
     if (!quiz?.questions?.length) return;
     let correct = 0;
     quiz.questions.forEach((q, i) => {
@@ -193,6 +195,23 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
     });
     setScore(Math.round((correct / quiz.questions.length) * 100));
     setSubmitted(true);
+  }, [quiz, answers]);
+
+  // A preview timer mirrors the student's configured countdown, but remains
+  // entirely local. It creates no attempt session and writes no score.
+  useEffect(() => {
+    if (!showQuestions || submitted || timeLeft === null) return;
+    if (timeLeft <= 0) {
+      submitPreview();
+      return;
+    }
+    const timer = setInterval(() => setTimeLeft(value => value === null ? null : Math.max(0, value - 1)), 1000);
+    return () => clearInterval(timer);
+  }, [showQuestions, submitted, timeLeft, submitPreview]);
+
+  const formatPreviewTime = seconds => {
+    if (seconds === null) return 'No time limit';
+    return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
   };
 
   if (loading) return <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary/40" /></div>;
@@ -259,7 +278,11 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
             <p className="text-sm text-muted-foreground mb-5">This is a safe instructor preview. No student attempt or timer will be started and no records will be changed.</p>
             <div className="flex gap-3">
               <Button variant="outline" className="flex-1" onClick={() => setConfirmStart(false)}>Go Back</Button>
-              <Button className="flex-1" onClick={() => { setConfirmStart(false); setShowQuestions(true); }}>Yes, Start Preview</Button>
+              <Button className="flex-1" onClick={() => {
+                setConfirmStart(false);
+                setTimeLeft(quiz.timer_enabled && Number(quiz.duration_seconds) > 0 ? Number(quiz.duration_seconds) : null);
+                setShowQuestions(true);
+              }}>Yes, Start Preview</Button>
             </div>
           </Card>
         </div>
@@ -277,30 +300,34 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
       </div>
       {!submitted ? (
         <div className="space-y-3">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>Question {current + 1} of {quiz.questions.length}</span>
-            <span>{assessmentName}</span>
+          <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+            <span>Question {current + 1} of {quiz.questions.length} · {assessmentName}</span>
+            <span className={cn("rounded-md bg-muted px-2 py-1 font-semibold tabular-nums", timeLeft !== null && timeLeft < 60 && "text-destructive bg-destructive/10")}>
+              {formatPreviewTime(timeLeft)}
+            </span>
           </div>
           <div className="h-1.5 rounded-full bg-muted overflow-hidden">
             <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${((current + 1) / quiz.questions.length) * 100}%` }} />
           </div>
+          <div className="flex flex-wrap justify-center gap-2">
+            {quiz.questions.map((_, index) => (
+              <button key={index} type="button" onClick={() => setCurrent(index)}
+                className={cn("h-8 w-8 rounded-lg border text-xs font-bold transition-colors",
+                  current === index ? "bg-primary text-primary-foreground border-primary" :
+                  answers[index] !== undefined && answers[index] !== "" ? "bg-success/10 text-success border-success/30" :
+                  "bg-card border-border")}>
+                {index + 1}
+              </button>
+            ))}
+          </div>
           <div className="p-4 rounded-lg border border-border bg-card">
-            <p className="font-semibold mb-3">{q.question_text || q.question || q.text}</p>
-            {q.question_type === 'fill_blank' ? (
-              <input value={answers[current] || ''} onChange={e => setAnswers(a => ({ ...a, [current]: e.target.value }))}
-                placeholder="Type your answer…"
-                className="w-full border border-input rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary bg-background" />
-            ) : (
-              <div className="space-y-1.5">
-                {opts.map((opt, oi) => (
-                  <button key={oi} onClick={() => setAnswers(a => ({ ...a, [current]: oi }))}
-                    className={cn('w-full text-left p-2.5 rounded-lg border text-xs sm:text-sm transition-all',
-                      answers[current] === oi ? 'border-primary bg-primary/10 font-semibold' : 'border-border hover:border-primary/40 hover:bg-muted/30')}>
-                    <span className="font-bold mr-2">{String.fromCharCode(65 + oi)}.</span>{opt}
-                  </button>
-                ))}
-              </div>
-            )}
+            <QuizQuestion
+              question={{ ...q, question: q.question_text || q.question || q.text }}
+              questionNumber={current + 1}
+              totalQuestions={quiz.questions.length}
+              selectedAnswer={answers[current]}
+              onSelectAnswer={value => setAnswers(previous => ({ ...previous, [current]: value }))}
+            />
           </div>
           <div className="flex gap-3">
             {current > 0 && <Button variant="outline" onClick={() => setCurrent(v => v - 1)} className="flex-1">← Previous</Button>}
@@ -321,7 +348,7 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
           <p className="font-bold text-lg">{score >= passScore ? `${assessmentName} would be passed` : `${assessmentName} would not be passed`}</p>
           <p className="text-sm text-muted-foreground">The configured passing score is {passScore}%. This is a preview result only; it does not affect course completion or certificate eligibility.</p>
           <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-400">Preview only — no score, attempt, payment or progress was saved.</div>
-          <Button variant="outline" onClick={() => { setSubmitted(false); setAnswers({}); setCurrent(0); setScore(null); setShowQuestions(false); }}>Retake Preview</Button>
+          <Button variant="outline" onClick={() => { setSubmitted(false); setAnswers({}); setCurrent(0); setScore(null); setTimeLeft(null); setShowQuestions(false); }}>Retake Preview</Button>
         </div>
       )}
     </div>
