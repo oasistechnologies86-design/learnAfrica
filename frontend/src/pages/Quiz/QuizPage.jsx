@@ -174,7 +174,7 @@ export function QuizPage() {
   useEffect(() => {
     if (!quiz) return;
     // When the server issued a deadline, mirror it exactly. The server clock is
-    // what counts — this display just shows the same thing, and a page refresh
+    // what counts - this display just shows the same thing, and a page refresh
     // resumes from the real remaining time instead of restarting the clock.
     if (quiz._server_expires_at) {
       const remaining = Math.floor((new Date(quiz._server_expires_at).getTime() - Date.now()) / 1000);
@@ -221,7 +221,7 @@ export function QuizPage() {
         return;
       }
       if (response.status === 403 && result.error === 'time_gate') {
-        // Time gate failed — show modal, don't error out
+        // Time gate failed - show modal, don't error out
         setTimeGate({
           required_seconds: result.required_seconds || 0,
           spent_seconds:    result.spent_seconds    || 0,
@@ -232,7 +232,7 @@ export function QuizPage() {
         return;
       }
       if (response.status === 429 && result.error === 'attempt_limit') {
-        // Out of attempts — offer the secure paid extra-attempt flow.
+        // Out of attempts - offer the secure paid extra-attempt flow.
         setAttemptLimit(true);
         setError(result.message || 'You have used all attempts for this quiz.');
         submittedRef.current = false;
@@ -422,7 +422,7 @@ export function QuizPage() {
           </div>
         )}
 
-        {/* Time gate modal — only shows if backend returned 403 time_gate */}
+        {/* Time gate modal - only shows if backend returned 403 time_gate */}
         {timeGate && (
           <div
             className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
