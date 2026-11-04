@@ -613,7 +613,7 @@ export function LessonPage() {
                 )}
                 {lesson.is_final && (
                   <span className="flex items-center gap-1.5 text-warning">
-                    <Flag className="h-3.5 w-3.5" /> Final Exam
+                    <Flag className="h-3.5 w-3.5" /> Final Examination
                   </span>
                 )}
                 {currentLessonFinished && !isQuizLesson && (
