@@ -438,6 +438,51 @@ def _xml_escape(s):
             .replace("'", '&#39;'))
 
 
+
+def _ensure_course_quiz_attempt_resets(db):
+    """Append-only reset events; quiz_attempts and payment records remain untouched."""
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS course_quiz_attempt_resets (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            course_id TEXT NOT NULL,
+            final_attempt_id TEXT NOT NULL UNIQUE,
+            reset_at TIMESTAMP NOT NULL
+        )
+    """)
+    db.commit()
+
+
+def _course_quiz_attempt_usage(db, user_id, course_id, quiz_id):
+    """Count attempts and paid credits in the current course allowance cycle."""
+    _ensure_course_quiz_attempt_resets(db)
+    reset = db.execute(
+        "SELECT MAX(reset_at) AS reset_at FROM course_quiz_attempt_resets WHERE user_id=? AND course_id=?",
+        (user_id, course_id)
+    ).fetchone()
+    reset_at = reset["reset_at"] if reset else None
+    if reset_at:
+        attempts = db.execute(
+            "SELECT COUNT(*) AS cnt FROM quiz_attempts WHERE user_id=? AND quiz_id=? AND attempted_at>?",
+            (user_id, quiz_id, reset_at)
+        ).fetchone()
+        credits = db.execute(
+            "SELECT COUNT(*) AS cnt FROM quiz_attempt_credits WHERE user_id=? AND quiz_id=? AND created_at>?",
+            (user_id, quiz_id, reset_at)
+        ).fetchone()
+    else:
+        attempts = db.execute(
+            "SELECT COUNT(*) AS cnt FROM quiz_attempts WHERE user_id=? AND quiz_id=?",
+            (user_id, quiz_id)
+        ).fetchone()
+        credits = db.execute(
+            "SELECT COUNT(*) AS cnt FROM quiz_attempt_credits WHERE user_id=? AND quiz_id=?",
+            (user_id, quiz_id)
+        ).fetchone()
+    return (int(attempts["cnt"] or 0) if attempts else 0,
+            int(credits["cnt"] or 0) if credits else 0)
+
+
 def create_app() -> Flask:
     """
     Application factory.
@@ -2396,11 +2441,9 @@ def create_app() -> Flask:
             or (0 < qd['questions_per_attempt'] < len(questions))
         )
         try:
-            used = db.execute(
-                'SELECT COUNT(*) AS cnt FROM quiz_attempts WHERE user_id=? AND quiz_id=?',
-                (g.current_user['user_id'], qd['id'])
-            ).fetchone()
-            qd['attempts_used'] = int(used['cnt'] or 0) if used else 0
+            used_count, _cycle_credits = _course_quiz_attempt_usage(
+                db, g.current_user['user_id'], cid, qd['id'])
+            qd['attempts_used'] = used_count
         except Exception:
             qd['attempts_used'] = 0
         # Include paid credits in the effective limit shown to the student.
@@ -2454,11 +2497,7 @@ def create_app() -> Flask:
             max_attempts = int(quiz.get('max_attempts') or 0)
             attempts_enabled = bool(quiz.get('attempts_enabled')) if quiz.get('attempts_enabled') is not None else max_attempts > 0
             if not is_admin_user and attempts_enabled and max_attempts > 0:
-                row = db.execute(
-                    'SELECT COUNT(*) AS cnt FROM quiz_attempts WHERE user_id=? AND quiz_id=?',
-                    (uid, qid)).fetchone()
-                used = int(row['cnt'] or 0) if row else 0
-                paid_credits = extra_attempt_count(db, uid, qid)
+                used, paid_credits = _course_quiz_attempt_usage(db, uid, cid, qid)
                 if used >= max_attempts + paid_credits:
                     return jsonify({
                         'error': 'attempt_limit',
@@ -2569,12 +2608,8 @@ def create_app() -> Flask:
             max_attempts = int(quiz_row['max_attempts'] or 0)
             attempts_enabled = bool(quiz_row['attempts_enabled']) if quiz_row['attempts_enabled'] is not None else max_attempts > 0
             if not is_admin_user and attempts_enabled and max_attempts > 0:
-                row = db.execute(
-                    'SELECT COUNT(*) AS cnt FROM quiz_attempts WHERE user_id=? AND quiz_id=?',
-                    (g.current_user['user_id'], qid)
-                ).fetchone()
-                prior_attempts = int(row['cnt'] or 0) if row else 0
-                paid_credits = extra_attempt_count(db, g.current_user['user_id'], qid)
+                prior_attempts, paid_credits = _course_quiz_attempt_usage(
+                    db, g.current_user['user_id'], cid, qid)
                 if prior_attempts >= max_attempts + paid_credits:
                     return jsonify({
                         'error': 'attempt_limit',
@@ -2677,9 +2712,10 @@ def create_app() -> Flask:
                 total_questions = len(questions)
                 score = int((correct_count / total_questions) * 100) if total_questions else 0
                 passed = score >= pass_score
+            attempt_record_id = str(uuid.uuid4())
             db.execute('''INSERT INTO quiz_attempts (id,user_id,quiz_id,score,answers,correct_answers)
                           VALUES(?,?,?,?,?,?)''',
-                       (str(uuid.uuid4()), g.current_user['user_id'], qid, score,
+                       (attempt_record_id, g.current_user['user_id'], qid, score,
                         json.dumps(answers), json.dumps(correct_map)))
             if session:
                 db.execute(
@@ -2696,6 +2732,20 @@ def create_app() -> Flask:
                                 quiz_score=excluded.quiz_score,
                                 completed_at=CASE WHEN excluded.is_completed=1 THEN CURRENT_TIMESTAMP ELSE user_progress.completed_at END''',
                            (g.current_user['user_id'], cid, lid, 1 if passed else 0, score, 1 if passed else 0))
+            # Passing the course Final Examination starts a fresh attempt
+            # allowance cycle for every quiz in this course. The original
+            # attempt rows and paid-credit transactions are retained forever.
+            # A unique final_attempt_id makes this reset idempotent.
+            if passed and is_final_quiz and cid:
+                _ensure_course_quiz_attempt_resets(db)
+                reset_at = datetime.utcnow().isoformat(sep=' ', timespec='microseconds')
+                db.execute(
+                    """INSERT INTO course_quiz_attempt_resets
+                       (id,user_id,course_id,final_attempt_id,reset_at)
+                       VALUES(?,?,?,?,?) ON CONFLICT(final_attempt_id) DO NOTHING""",
+                    (str(uuid.uuid4()), g.current_user['user_id'], cid,
+                     attempt_record_id, reset_at)
+                )
             db.commit()
             if score == 100:
                 db.execute('UPDATE user_stats SET perfect_quizzes=perfect_quizzes+1 WHERE user_id=?',
@@ -2714,7 +2764,8 @@ def create_app() -> Flask:
             # submission (even the very first) leaks the key and makes the next
             # attempt — and the certificate gate — trivial to game.
             response = {'score': score, 'correct_count': correct_count,
-                        'total_questions': total_questions, 'passed': passed}
+                        'total_questions': total_questions, 'passed': passed,
+                        'attempt_allowance_reset': bool(passed and is_final_quiz)}
             if passed:
                 response['correct_answers'] = correct_map
             return jsonify(response)
