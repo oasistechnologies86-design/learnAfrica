@@ -793,7 +793,7 @@ export function LessonPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="rounded-xl bg-muted/60 p-4">
                         <p className="text-xs text-muted-foreground mb-1">Number of questions</p>
-                        <p className="text-lg font-extrabold">{Number(quizMeta.questions_per_attempt) > 0 ? Number(quizMeta.questions_per_attempt) : Number(quizMeta.question_count ?? quizMeta.questions?.length ?? 0)}</p>
+                        <p className="text-lg font-extrabold">{Number(quizMeta.questions_per_attempt) > 0 ? Math.min(Number(quizMeta.questions_per_attempt), Number(quizMeta.question_count ?? quizMeta.questions?.length ?? 0)) : Number(quizMeta.question_count ?? quizMeta.questions?.length ?? 0)}</p>
                       </div>
                       <div className="rounded-xl bg-muted/60 p-4">
                         <p className="text-xs text-muted-foreground mb-1">Time allowed</p>
