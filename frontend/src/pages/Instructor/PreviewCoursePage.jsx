@@ -222,22 +222,22 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
             <p className="text-xs text-muted-foreground mb-1">Questions in this preview</p>
             <p className="text-base font-bold">{quiz.questions.length}</p>
           </div>
-          <div className="rounded-xl bg-muted/60 p-4">
+          <div className="rounded-lg bg-muted/60 p-3">
             <p className="text-xs text-muted-foreground mb-1">Time allowed</p>
-            <p className="text-lg font-extrabold">{quiz.timer_enabled && Number(quiz.duration_seconds) > 0 ? formatDuration(Number(quiz.duration_seconds)) : 'No time limit'}</p>
+            <p className="text-sm font-bold">{quiz.timer_enabled && Number(quiz.duration_seconds) > 0 ? formatDuration(Number(quiz.duration_seconds)) : 'No time limit'}</p>
           </div>
-          <div className="rounded-xl bg-muted/60 p-4">
+          <div className="rounded-lg bg-muted/60 p-3">
             <p className="text-xs text-muted-foreground mb-1">Attempts configured</p>
-            <p className="text-lg font-extrabold">{quiz.attempts_enabled && Number(quiz.max_attempts) > 0 ? `${Number(quiz.max_attempts)} included attempts` : 'Unlimited attempts'}</p>
+            <p className="text-sm font-bold">{quiz.attempts_enabled && Number(quiz.max_attempts) > 0 ? `${Number(quiz.max_attempts)} included attempts` : 'Unlimited attempts'}</p>
           </div>
-          <div className="rounded-xl bg-muted/60 p-4">
+          <div className="rounded-lg bg-muted/60 p-3">
             <p className="text-xs text-muted-foreground mb-1">Passing score</p>
-            <p className="text-lg font-extrabold">{passScore}%</p>
+            <p className="text-sm font-bold">{passScore}%</p>
           </div>
           {quiz.attempts_enabled && Number(quiz.extra_attempt_price) > 0 && (
-            <div className="rounded-xl bg-muted/60 p-4 sm:col-span-2">
+            <div className="rounded-lg bg-muted/60 p-3 sm:col-span-2">
               <p className="text-xs text-muted-foreground mb-1">Extra attempt fee</p>
-              <p className="text-lg font-extrabold">GHS {Number(quiz.extra_attempt_price).toFixed(2)}</p>
+              <p className="text-sm font-bold">GHS {Number(quiz.extra_attempt_price).toFixed(2)}</p>
             </div>
           )}
         </div>
@@ -566,9 +566,9 @@ export function PreviewCoursePage() {
                     </span>
                   )}
                 </div>
-                <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight mb-4">{activeLesson.title}</h1>
+                <h1 className="text-lg sm:text-xl font-bold tracking-tight mb-3">{activeLesson.title}</h1>
                 {activeLesson.description && (
-                  <p className="text-muted-foreground text-base sm:text-lg leading-relaxed max-w-3xl">{activeLesson.description}</p>
+                  <p className="text-muted-foreground text-sm leading-relaxed max-w-3xl">{activeLesson.description}</p>
                 )}
               </div>
 
