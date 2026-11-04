@@ -41,9 +41,8 @@ def get_course_completion_status(db, user_id, course_id, use_postgres):
         ' JOIN section_lessons sl ON sl.lesson_id=l.id'
         ' JOIN curriculum_sections cs ON cs.id=sl.section_id'
         ' JOIN user_progress up ON up.lesson_id=l.id'
-        '  AND up.user_id=' + ph + ' AND up.course_id=' + ph
-        '  AND up.is_completed=1'
-        ' WHERE cs.course_id=' + ph,
+        ' AND up.user_id=' + ph + ' AND up.course_id=' + ph +
+        ' AND up.is_completed=1 WHERE cs.course_id=' + ph,
         (user_id, course_id, course_id)
     ).fetchone()
     total = int(total_row['total'] or 0) if total_row else 0
