@@ -1,5 +1,5 @@
 /**
- * InstructorPreviewPage — full course+lesson preview for instructors.
+ * InstructorPreviewPage - full course+lesson preview for instructors.
  * Uses dedicated /api/instructor/courses/:id/preview endpoints.
  * No enrollment, no payments, no progress saved, no certificates.
  */
@@ -57,8 +57,8 @@ function PreviewBanner({ courseTitle, isPaid, price }) {
       <span className="text-center">
         INSTRUCTOR PREVIEW
         {isPaid && price > 0
-          ? ` — This is a paid course (${formatPrice(price)}). Students see a payment flow here. No charges are made in preview.`
-          : ' — You are viewing this course as a student would. No progress or certificates are recorded.'}
+          ? ` - This is a paid course (${formatPrice(price)}). Students see a payment flow here. No charges are made in preview.`
+          : ' - You are viewing this course as a student would. No progress or certificates are recorded.'}
       </span>
     </div>
   );
@@ -230,7 +230,7 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
       <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
         <Eye className="h-4 w-4 text-amber-600 shrink-0" />
         <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
-          Instructor Preview — these are the saved assessment rules. Student-specific remaining attempts are shown to each enrolled student.
+          These are the saved assessment rules. Each enrolled student sees their own remaining attempts.
         </p>
       </div>
       <Card className="p-4 sm:p-5">
@@ -294,7 +294,7 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
       <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30">
         <Eye className="h-4 w-4 text-amber-600 shrink-0" />
         <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
-          Preview Mode — this {assessmentName} is for instructor review only. Nothing is saved and no student progress is changed.
+          This is an instructor preview of the {assessmentName}. Nothing is saved, and student progress is not changed.
         </p>
       </div>
       {!submitted ? (
@@ -346,7 +346,7 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
           </div>
           <p className="font-bold text-lg">{score >= passScore ? `${assessmentName} would be passed` : `${assessmentName} would not be passed`}</p>
           <p className="text-sm text-muted-foreground">The configured passing score is {passScore}%. This is a preview result only; it does not affect course completion or certificate eligibility.</p>
-          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-400">Preview only — no score, attempt, payment or progress was saved.</div>
+          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-400">This is a preview only. No score, attempt, payment, or progress was saved.</div>
           <Button variant="outline" onClick={() => { setSubmitted(false); setAnswers({}); setCurrent(0); setScore(null); setTimeLeft(null); setShowQuestions(false); }}>Retake Preview</Button>
         </div>
       )}
@@ -374,7 +374,7 @@ export function PreviewCoursePage() {
   const [lessonLoading,setLessonLoading]= useState(false);
   const [error,        setError]        = useState(null);
 
-  // ⚠ Defined BEFORE the useEffect below — the effect calls this on mount.
+  // ⚠ Defined BEFORE the useEffect below - the effect calls this on mount.
   const loadLesson = useCallback(async (lessonId, cid) => {
     setLessonLoading(true); setActiveTab('content');
     try {
@@ -495,7 +495,7 @@ export function PreviewCoursePage() {
       <div className="flex flex-1 overflow-hidden">
         <main className="flex-1 overflow-y-auto outline-none px-4 sm:px-6 lg:px-8 py-6">
 
-          {/* Custom page lesson — plug in a pre-built React component */}
+          {/* Custom page lesson - plug in a pre-built React component */}
           {activeLesson?.type === 'custom' ? (() => {
             const registryEntry = getCustomLesson(activeLesson.component_key || activeLesson.componentKey);
             if (registryEntry?.component) {
@@ -682,7 +682,7 @@ export function PreviewCoursePage() {
                   <Card className="p-6 border-dashed bg-muted/30">
                     <div className="flex items-center gap-2 mb-4 text-muted-foreground">
                       <Eye className="h-5 w-5 text-amber-500" />
-                      <p className="text-sm font-semibold">Preview Mode — Notes are not saved</p>
+                      <p className="text-sm font-semibold">Notes are not saved in preview mode</p>
                     </div>
                     <textarea disabled
                       placeholder="In preview mode, notes are not saved. Students can take notes here when enrolled."
@@ -702,7 +702,7 @@ export function PreviewCoursePage() {
                       </Button>
                     )}
                   </div>
-                  {/* Centre — preview mode message instead of Mark Complete */}
+                  {/* Centre - preview mode message instead of Mark Complete */}
                   <div className="flex-1 flex justify-center">
                     <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30">
                       <Eye className="h-3.5 w-3.5 text-amber-600" />
