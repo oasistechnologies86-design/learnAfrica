@@ -769,15 +769,15 @@ export function LessonPage() {
             {/* Quiz information screen. The student sees the rules before an
                 attempt is created or the quiz timer can begin. */}
             {isQuizLesson && (
-              <div className="max-w-2xl mx-auto py-8 sm:py-10 px-4">
-                <div className="text-center mb-7">
-                  <div className="h-16 w-16 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-5">
-                    <HelpCircle className="h-8 w-8 text-primary" />
+              <div className="max-w-2xl mx-auto py-5 sm:py-6 px-4">
+                <div className="text-center mb-5">
+                  <div className="h-12 w-12 mx-auto rounded-xl bg-primary/10 flex items-center justify-center mb-5">
+                    <HelpCircle className="h-6 w-6 text-primary" />
                   </div>
                   <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary mb-2">
                     {lesson.is_final ? 'Final Examination' : 'Lesson Test'}
                   </p>
-                  <h2 className="text-2xl sm:text-3xl font-black mb-2">{lesson.title || (lesson.is_final ? 'Final Examination' : 'Lesson Test')}</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold mb-2">{lesson.title || (lesson.is_final ? 'Final Examination' : 'Lesson Test')}</h2>
                   <p className="text-sm text-muted-foreground leading-relaxed max-w-xl mx-auto">
                     {lesson.description || (lesson.is_final
                       ? courseHasCertificate === true
@@ -792,14 +792,14 @@ export function LessonPage() {
                 {quizMetaLoading ? (
                   <Card className="p-5 text-center text-sm text-muted-foreground">Loading test information…</Card>
                 ) : quizMeta ? (
-                  <Card className="p-5 sm:p-6 mb-5">
+                  <Card className="p-4 sm:p-5 mb-4">
                     <h3 className="font-bold text-base mb-4 flex items-center gap-2">
                       <ClipboardList className="h-5 w-5 text-primary" /> Before you begin
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="rounded-xl bg-muted/60 p-4">
+                      <div className="rounded-lg bg-muted/60 p-3">
                         <p className="text-xs text-muted-foreground mb-1">Number of questions</p>
-                        <p className="text-lg font-extrabold">{Number(quizMeta.questions_per_attempt) > 0 ? Math.min(Number(quizMeta.questions_per_attempt), Number(quizMeta.question_count ?? quizMeta.questions?.length ?? 0)) : Number(quizMeta.question_count ?? quizMeta.questions?.length ?? 0)}</p>
+                        <p className="text-base font-bold">{Number(quizMeta.questions_per_attempt) > 0 ? Math.min(Number(quizMeta.questions_per_attempt), Number(quizMeta.question_count ?? quizMeta.questions?.length ?? 0)) : Number(quizMeta.question_count ?? quizMeta.questions?.length ?? 0)}</p>
                       </div>
                       <div className="rounded-xl bg-muted/60 p-4">
                         <p className="text-xs text-muted-foreground mb-1">Time allowed</p>
@@ -828,7 +828,7 @@ export function LessonPage() {
                         </div>
                       )}
                     </div>
-                    <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm text-muted-foreground space-y-1">
+                    <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground space-y-1">
                       <p className="font-semibold text-foreground">Please note</p>
                       <p>Once you confirm and start this assessment, your attempt begins. If a time limit is set, the countdown starts and cannot be paused by leaving this page.</p>
                       <p>Your answers must be submitted before the time expires. The test is marked according to the instructor’s assessment settings.</p>
