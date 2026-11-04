@@ -8,7 +8,7 @@ import {
   ChevronLeft, ChevronRight, CheckCircle, Play, FileText,
   MessageSquare, BookOpen, Clock, Menu, X, Save, Lock,
   FolderOpen, ExternalLink, Download, Image as ImageIcon,
-  File, ArrowUpRight, HelpCircle, Loader2, AlertTriangle, Flag, Sparkles
+  File, ArrowUpRight, HelpCircle, Loader2, AlertTriangle, Flag, Sparkles, ClipboardList
 } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
