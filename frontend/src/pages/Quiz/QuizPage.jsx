@@ -256,6 +256,7 @@ export function QuizPage() {
           correctAnswers: result.correct_answers,
           isFinalQuiz,
           hasCertificate: !!(course?.has_certificate),
+          attemptAllowanceReset: !!result.attempt_allowance_reset,
         }
       });
     } catch (err) {
@@ -299,7 +300,7 @@ export function QuizPage() {
           <div className="mt-4 space-y-2">
             {Number(quiz?.extra_attempt_price || 0) > 0 ? (
               <>
-                <p className="text-sm text-muted-foreground">Purchase one additional attempt for GHS {Number(quiz.extra_attempt_price).toFixed(2)}. Payment is credited only after it is verified.</p>
+                <p className="text-sm text-muted-foreground">Pay GHS {Number(quiz.extra_attempt_price).toFixed(2)} to unlock one additional attempt. Each verified payment grants one attempt; it does not reset the full allowance. Passing the Final Examination for the first time resets the course quiz allowances to the instructor’s original included amounts.</p>
                 <Button className="w-full" onClick={purchaseExtraAttempt} disabled={buyingAttempt}>
                   {buyingAttempt ? 'Starting secure payment…' : `Buy One More Attempt · GHS ${Number(quiz.extra_attempt_price).toFixed(2)}`}
                 </Button>
