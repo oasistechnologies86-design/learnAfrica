@@ -16,7 +16,7 @@ export function QuizPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const startConfirmed = location.state?.confirmedQuizStart === true;
-  const { updateProgress } = useAuth();
+  const { refreshProfile } = useAuth();
 
   // Same course-wide minimum-time tracking used on lesson pages, so the
   // indicator (and the 30-minute engagement check-in) is present during
@@ -240,8 +240,10 @@ export function QuizPage() {
         return;
       }
       if (!response.ok) throw new Error(result.error || 'Submission failed');
-      // The quiz submission endpoint records the graded score and completion atomically.
+      // The backend has updated the enrollment percentage with the quiz result.
+      // Refresh the shared profile so the dashboard course card uses that value.
       sessionStorage.removeItem(attemptStorageKey);
+      try { await refreshProfile(); } catch (_) { /* quiz result remains saved */ }
       navigate(`/learn/course/${courseId}/quiz/${lessonId}/results`, {
         state: {
           answers,
