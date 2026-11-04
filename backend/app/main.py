@@ -2713,6 +2713,16 @@ def create_app() -> Flask:
                 total_questions = len(questions)
                 score = int((correct_count / total_questions) * 100) if total_questions else 0
                 passed = score >= pass_score
+            # Determine whether this student had already passed this
+            # course's Final Examination before this submission. Only the
+            # first successful pass starts a fresh allowance cycle.
+            had_passed_final_before = False
+            if is_final_quiz and cid and lid:
+                previous_pass = db.execute(
+                    "SELECT is_completed FROM user_progress WHERE user_id=? AND course_id=? AND lesson_id=?",
+                    (g.current_user['user_id'], cid, lid)
+                ).fetchone()
+                had_passed_final_before = bool(previous_pass and previous_pass["is_completed"])
             attempt_record_id = str(uuid.uuid4())
             db.execute('''INSERT INTO quiz_attempts (id,user_id,quiz_id,score,answers,correct_answers)
                           VALUES(?,?,?,?,?,?)''',
@@ -2737,7 +2747,7 @@ def create_app() -> Flask:
             # allowance cycle for every quiz in this course. The original
             # attempt rows and paid-credit transactions are retained forever.
             # A unique final_attempt_id makes this reset idempotent.
-            if passed and is_final_quiz and cid:
+            if passed and is_final_quiz and cid and not had_passed_final_before:
                 _ensure_course_quiz_attempt_resets(db)
                 reset_at = datetime.utcnow().isoformat(sep=' ', timespec='microseconds')
                 db.execute(
@@ -2766,7 +2776,7 @@ def create_app() -> Flask:
             # attempt — and the certificate gate — trivial to game.
             response = {'score': score, 'correct_count': correct_count,
                         'total_questions': total_questions, 'passed': passed,
-                        'attempt_allowance_reset': bool(passed and is_final_quiz)}
+                        'attempt_allowance_reset': bool(passed and is_final_quiz and not had_passed_final_before)}
             if passed:
                 response['correct_answers'] = correct_map
             return jsonify(response)
