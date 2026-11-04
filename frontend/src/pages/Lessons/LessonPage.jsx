@@ -199,6 +199,7 @@ export function LessonPage() {
   const [lesson,       setLesson]       = useState(null);
   const [sections,     setSections]     = useState([]);
   const [allLessons,   setAllLessons]   = useState([]);
+  const [courseHasCertificate, setCourseHasCertificate] = useState(null);
   const [isCompleted,  setIsCompleted]  = useState(false);
   const [showSidebar,  setShowSidebar]  = useState(false);
   const [activeTab,    setActiveTab]    = useState('content');
@@ -250,6 +251,7 @@ export function LessonPage() {
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (cancelled || !data?.course) return;
+        setCourseHasCertificate(!!data.course.has_certificate);
         const secs = (data.course.sections || []).map(s => ({
           ...s,
           lessons: (s.lessons || []).map(l => ({
@@ -778,8 +780,12 @@ export function LessonPage() {
                   <h2 className="text-2xl sm:text-3xl font-black mb-2">{lesson.title || (lesson.is_final ? 'Final Examination' : 'Lesson Test')}</h2>
                   <p className="text-sm text-muted-foreground leading-relaxed max-w-xl mx-auto">
                     {lesson.description || (lesson.is_final
-                      ? 'Review the assessment rules below before starting. Your result contributes to course completion according to the course requirements.'
-                      : 'Review the assessment rules below before starting. Your result will be recorded when you submit the test.')}
+                      ? courseHasCertificate === true
+                        ? 'Passing this Final Examination contributes to course completion and certificate eligibility, provided all course requirements are met.'
+                        : courseHasCertificate === false
+                          ? 'Passing this Final Examination contributes to course completion. This course does not offer a certificate.'
+                          : 'Review the assessment rules below before starting. Your result contributes to course completion according to the course requirements.'
+                      : 'Review the assessment rules below before starting. Your result will be recorded when you submit the Lesson Test.')}
                   </p>
                 </div>
 
