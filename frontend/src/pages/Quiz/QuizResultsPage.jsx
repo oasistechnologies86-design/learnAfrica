@@ -249,7 +249,7 @@ export function QuizResultsPage() {
 
           {showCertSection && !passed && (
             <div className="rounded-xl bg-destructive/5 border border-destructive/20 p-4">
-              <p className="text-sm font-semibold text-destructive">Final Exam Not Passed</p>
+              <p className="text-sm font-semibold text-destructive">Final Examination Not Passed</p>
               <p className="text-xs text-muted-foreground mt-1">
                 You need {passingScore}% to earn the certificate. You scored {score}%. Review the material and try again!
               </p>
