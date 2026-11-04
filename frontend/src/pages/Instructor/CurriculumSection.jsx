@@ -508,7 +508,7 @@ function CurriculumItemEditor({ item, index, onUpdate, onRemove, hasResources = 
             </p>
             {item.is_final && (
               <span className="text-3xs font-bold bg-warning/20 text-warning px-1.5 py-0.5 rounded-full uppercase shrink-0">
-                Final Exam
+                Final Examination
               </span>
             )}
           </div>
@@ -675,7 +675,7 @@ function CurriculumItemEditor({ item, index, onUpdate, onRemove, hasResources = 
                 <div className="flex items-center gap-2">
                   <Flag className={cn('h-4 w-4', item.is_final ? 'text-warning' : 'text-muted-foreground')} />
                   <div>
-                    <p className="text-xs font-bold">Mark as Final Exam</p>
+                    <p className="text-xs font-bold">Mark as Final Examination</p>
                     <p className="text-2xs text-muted-foreground">Only the final exam generates a certificate</p>
                   </div>
                 </div>
@@ -906,7 +906,7 @@ export function CurriculumSection({
       {perks.hasCertificate && !hasExam && totalLessons > 0 && (
         <div className="flex items-start gap-2 p-3 bg-warning/10 border border-warning/30 rounded-xl text-xs text-warning">
           <Flag className="h-4 w-4 shrink-0 mt-0.5" />
-          <p><strong>Certificate perk is ON</strong> — add a Quiz lesson and toggle "Mark as Final Exam" so students can earn a certificate.</p>
+          <p><strong>Certificate perk is ON</strong> — add a Quiz lesson and toggle "Mark as Final Examination" so students can earn a certificate.</p>
         </div>
       )}
 
