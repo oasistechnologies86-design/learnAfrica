@@ -363,11 +363,11 @@ export function QuizPage() {
             </div>
             <div className="rounded-2xl bg-muted/70 p-3">
               <div className="flex items-center gap-2 text-xs text-muted-foreground"><CheckCircle2 className="h-4 w-4" /> Answered</div>
-              <p className="mt-1 text-xl font-extrabold tabular-nums">{answeredCount}<span className="ml-1 text-sm font-medium text-muted-foreground">/ {questions.length}</span></p>
+              <p className="mt-1 text-lg font-bold tabular-nums">{answeredCount}<span className="ml-1 text-sm font-medium text-muted-foreground">/ {questions.length}</span></p>
             </div>
             <div className="col-span-2 rounded-2xl bg-primary/5 p-3 sm:col-span-1">
               <div className="text-xs text-muted-foreground">Completion</div>
-              <p className="mt-1 text-xl font-extrabold tabular-nums">{questions.length ? Math.round(answeredCount / questions.length * 100) : 0}%</p>
+              <p className="mt-1 text-lg font-bold tabular-nums">{questions.length ? Math.round(answeredCount / questions.length * 100) : 0}%</p>
             </div>
           </div>
         </section>
