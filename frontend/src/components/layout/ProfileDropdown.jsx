@@ -85,7 +85,7 @@ export default function ProfileDropdown({ hideChevron = false, closeMainMenu }) 
             {isAdmin && (
               <DropLink to="/admin" icon={<Shield className="h-4 w-4" />} label="Admin Panel" onClick={close} variant="accent" />
             )}
-            {!isInstructor && <DropLink to="/my-certificates" icon={<Award className="h-4 w-4" />} label="My Certificates" onClick={close} />}
+            {user?.role === 'student' && <DropLink to="/my-certificates" icon={<Award className="h-4 w-4" />} label="My Certificates" onClick={close} />}
             <DropLink to={settingsLink} icon={<Settings className="h-4 w-4" />} label="Settings" onClick={close} />
             <DropLink to="/receipts" icon={<Receipt className="h-4 w-4" />} label="Receipts" onClick={close} />
           </div>
