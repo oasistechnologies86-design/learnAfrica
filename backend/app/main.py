@@ -2578,6 +2578,9 @@ def create_app() -> Flask:
             qid, answers = d.get('quiz_id'), d.get('answers', {})
             if not qid: return jsonify({'error': 'quiz_id required'}), 400
             db = get_db()
+            # Create the append-only reset ledger before any attempt/progress writes,
+            # so the final pass, progress update and reset event commit atomically.
+            _ensure_course_quiz_attempt_resets(db)
 
             # Resolve the quiz server-side and IGNORE any course/lesson ids the
             # client sent — those were previously trusted, which allowed a
@@ -2750,7 +2753,9 @@ def create_app() -> Flask:
             # attempt rows and paid-credit transactions are retained forever.
             # A unique final_attempt_id makes this reset idempotent.
             if passed and is_final_quiz and cid and not had_passed_final_before:
-                _ensure_course_quiz_attempt_resets(db)
+                # The reset table was ensured before this transaction's writes.
+                # Do not call its committing helper here: progress, attempt and
+                # reset must be committed together below.
                 reset_at = datetime.utcnow().isoformat(sep=' ', timespec='microseconds')
                 db.execute(
                     """INSERT INTO course_quiz_attempt_resets
