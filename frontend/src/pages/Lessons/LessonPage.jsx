@@ -773,12 +773,12 @@ export function LessonPage() {
                     <HelpCircle className="h-8 w-8 text-primary" />
                   </div>
                   <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary mb-2">
-                    {lesson.is_final ? 'Course final assessment' : 'Course assessment'}
+                    {lesson.is_final ? 'Final Examination' : 'Lesson Test'}
                   </p>
-                  <h2 className="text-2xl sm:text-3xl font-black mb-2">{lesson.title || (lesson.is_final ? 'Final Exam' : 'Test')}</h2>
+                  <h2 className="text-2xl sm:text-3xl font-black mb-2">{lesson.title || (lesson.is_final ? 'Final Examination' : 'Lesson Test')}</h2>
                   <p className="text-sm text-muted-foreground leading-relaxed max-w-xl mx-auto">
                     {lesson.description || (lesson.is_final
-                      ? 'Review the assessment rules below before starting. You must pass this final exam to complete the course and qualify for its certificate.'
+                      ? 'Review the assessment rules below before starting. Your result contributes to course completion according to the course requirements.'
                       : 'Review the assessment rules below before starting. Your result will be recorded when you submit the test.')}
                   </p>
                 </div>
@@ -793,7 +793,7 @@ export function LessonPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="rounded-xl bg-muted/60 p-4">
                         <p className="text-xs text-muted-foreground mb-1">Number of questions</p>
-                        <p className="text-lg font-extrabold">{Number(quizMeta.question_count ?? quizMeta.questions?.length ?? 0)}</p>
+                        <p className="text-lg font-extrabold">{Number(quizMeta.questions_per_attempt) > 0 ? Number(quizMeta.questions_per_attempt) : Number(quizMeta.question_count ?? quizMeta.questions?.length ?? 0)}</p>
                       </div>
                       <div className="rounded-xl bg-muted/60 p-4">
                         <p className="text-xs text-muted-foreground mb-1">Time allowed</p>
@@ -811,12 +811,16 @@ export function LessonPage() {
                         )}
                       </div>
                       <div className="rounded-xl bg-muted/60 p-4">
-                        <p className="text-xs text-muted-foreground mb-1">Extra attempt fee</p>
-                        <p className="text-lg font-extrabold">{quizMeta.attempts_enabled && Number(quizMeta.extra_attempt_price) > 0
-                          ? `GHS ${Number(quizMeta.extra_attempt_price).toFixed(2)}`
-                          : 'No extra attempt fee configured'}</p>
-                        <p className="text-xs text-muted-foreground mt-1">Only applies if you use all included attempts and an extra attempt is available for purchase.</p>
+                        <p className="text-xs text-muted-foreground mb-1">Passing score</p>
+                        <p className="text-lg font-extrabold">{Number(quizMeta.pass_score ?? 70)}%</p>
                       </div>
+                      {quizMeta.attempts_enabled && Number(quizMeta.extra_attempt_price) > 0 && (
+                        <div className="rounded-xl bg-muted/60 p-4">
+                          <p className="text-xs text-muted-foreground mb-1">Extra attempt fee</p>
+                          <p className="text-lg font-extrabold">GHS {Number(quizMeta.extra_attempt_price).toFixed(2)}</p>
+                          <p className="text-xs text-muted-foreground mt-1">Only applies after your included attempts are used and payment is verified.</p>
+                        </div>
+                      )}
                     </div>
                     <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm text-muted-foreground space-y-1">
                       <p className="font-semibold text-foreground">Please note</p>
@@ -856,19 +860,19 @@ export function LessonPage() {
                       <div className="h-12 w-12 rounded-xl bg-warning/15 text-warning flex items-center justify-center mb-4">
                         <AlertTriangle className="h-6 w-6" />
                       </div>
-                      <h3 id="start-test-title" className="text-xl font-black mb-2">Ready to start?</h3>
+                      <h3 id="start-test-title" className="text-xl font-black mb-2">{lesson.is_final ? 'Ready to start your Final Examination?' : 'Ready to start your Lesson Test?'}</h3>
                       <p className="text-sm text-muted-foreground leading-relaxed mb-5">
                         {quizMeta.timer_enabled && Number(quizMeta.duration_seconds) > 0
-                          ? `Your ${formatDuration(Number(quizMeta.duration_seconds))} timer will begin as soon as the test opens.`
-                          : 'Your test attempt will begin as soon as the test opens.'}
+                          ? `Your ${formatDuration(Number(quizMeta.duration_seconds))} timer will begin when you start the questions.`
+                          : 'Your assessment attempt will begin as soon as you start the questions.'}
                         {' '}Make sure you are ready before continuing.
                       </p>
                       <div className="flex flex-col-reverse sm:flex-row gap-3">
                         <Button variant="outline" className="flex-1" onClick={() => setShowStartConfirm(false)}>Not yet</Button>
                         <Button className="flex-1" onClick={() => {
                           setShowStartConfirm(false);
-                          navigate(`/learn/course/${courseId}/quiz/${lessonId}`);
-                        }}>Yes, start test</Button>
+                          navigate(`/learn/course/${courseId}/quiz/${lessonId}`, { state: { confirmedQuizStart: true } });
+                        }}>{lesson.is_final ? 'Yes, start Final Examination' : 'Yes, start Lesson Test'}</Button>
                       </div>
                     </Card>
                   </div>
