@@ -43,7 +43,7 @@ from .crud      import (get_revenue_split, resolve_revenue_split, create_notific
                          upload_to_supabase, seed_admin, seed_demo_courses, seed_instructor_guide,
                          REVENUE_INSTRUCTOR_KEY, REVENUE_ADMIN_KEY)
 from .sanitize  import sanitize_html, contains_html_or_script, matches_extension
-from .models    import (get_course_sections, score_quiz, get_or_issue_certificate,
+from .models    import (get_course_sections, get_course_completion_status, score_quiz, get_or_issue_certificate,
                          get_instructor_stats, get_user_enrolled_courses)
 from .quiz_service import (build_served_questions, public_questions, grade_served,
                            session_expiry, is_expired, new_session_id)
@@ -2319,26 +2319,20 @@ def create_app() -> Flask:
                     )
             db.commit()
 
-            # Recalculate course progress percentage
-            total = 0
-            done = 0
-            try:
-                t_row = db.execute('SELECT COUNT(*) as cnt FROM lessons WHERE course_id=?', (cid,)).fetchone()
-                total = t_row['cnt'] if t_row else 0
-                d_row = db.execute(
-                    'SELECT COUNT(*) as cnt FROM user_progress WHERE user_id=? AND course_id=? AND is_completed=1',
+            # Recalculate from the same curriculum lesson list shown to students.
+            completion = get_course_completion_status(db, uid, cid, _use_pg())
+            pct = completion['progress']
+            db.execute(
+                'UPDATE user_enrollments SET progress=? WHERE user_id=? AND course_id=?',
+                (pct, uid, cid)
+            )
+            if pct == 100:
+                db.execute(
+                    'UPDATE user_enrollments SET completed_at=COALESCE(completed_at,CURRENT_TIMESTAMP)'
+                    ' WHERE user_id=? AND course_id=?',
                     (uid, cid)
-                ).fetchone()
-                done = d_row['cnt'] if d_row else 0
-            except Exception as ex:
-                app.logger.warning(f'progress count failed: {ex}')
-            pct = int((done/total)*100) if total else 0
-
-            try:
-                db.execute('UPDATE user_enrollments SET progress=? WHERE user_id=? AND course_id=?', (pct, uid, cid))
-                db.commit()
-            except Exception as ex:
-                app.logger.warning(f'enrollment progress update failed: {ex}')
+                )
+            db.commit()
 
             # Best-effort badge / stats updates - never fail the request
             try:
@@ -2764,6 +2758,22 @@ def create_app() -> Flask:
                     (str(uuid.uuid4()), g.current_user['user_id'], cid,
                      attempt_record_id, reset_at)
                 )
+            # Keep the dashboard enrollment percentage in sync with the course
+            # curriculum whenever a quiz is submitted, including the final exam.
+            completion = get_course_completion_status(
+                db, g.current_user['user_id'], cid, _use_pg()
+            )
+            course_progress = completion['progress']
+            db.execute(
+                'UPDATE user_enrollments SET progress=? WHERE user_id=? AND course_id=?',
+                (course_progress, g.current_user['user_id'], cid)
+            )
+            if course_progress == 100:
+                db.execute(
+                    'UPDATE user_enrollments SET completed_at=COALESCE(completed_at,CURRENT_TIMESTAMP)'
+                    ' WHERE user_id=? AND course_id=?',
+                    (g.current_user['user_id'], cid)
+                )
             db.commit()
             if score == 100:
                 db.execute('UPDATE user_stats SET perfect_quizzes=perfect_quizzes+1 WHERE user_id=?',
@@ -2783,6 +2793,7 @@ def create_app() -> Flask:
             # attempt — and the certificate gate — trivial to game.
             response = {'score': score, 'correct_count': correct_count,
                         'total_questions': total_questions, 'passed': passed,
+                        'course_progress': course_progress,
                         'attempt_allowance_reset': bool(passed and is_final_quiz and not had_passed_final_before)}
             if passed:
                 response['correct_answers'] = correct_map
@@ -5447,6 +5458,34 @@ def create_app() -> Flask:
             app.logger.error(f'verify_credential error: {traceback.format_exc()}')
             return jsonify({'valid': False, 'message': 'Verification service error'}), 200
     
+    @app.route('/api/my-certificates', methods=['GET'])
+    @token_required
+    def list_my_certificates():
+        """List active certificates earned by the signed-in learner."""
+        db = get_db()
+        uid = g.current_user['user_id']
+        enrollments = db.execute(
+            'SELECT course_id FROM user_enrollments WHERE user_id=?',
+            (uid,)
+        ).fetchall()
+        certificates = []
+        for enrollment in enrollments:
+            cert, err = get_or_issue_certificate(
+                db, uid, enrollment['course_id'], _use_pg()
+            )
+            if err or not cert or cert.get('revoked_at'):
+                continue
+            certificates.append({
+                'courseId': cert['course_id'],
+                'courseName': cert['course_name'],
+                'certificateId': cert['cert_id'],
+                'issuedAt': cert['issued_at'],
+                'certificateName': cert.get('certificate_name') or cert.get('user_name'),
+            })
+        certificates.sort(key=lambda item: str(item.get('issuedAt') or ''), reverse=True)
+        return jsonify({'certificates': certificates})
+
+
     @app.route('/api/certificates/<cid>/issue', methods=['POST'])
     @token_required
     def issue_certificate(cid):
