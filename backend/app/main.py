@@ -3565,7 +3565,7 @@ def create_app() -> Flask:
                             q_shuf_q  = 1 if les.get('shuffle_questions') else 0
                             q_shuf_o  = 1 if les.get('shuffle_options') else 0
                             existing_quiz = db.execute(
-                                'SELECT id FROM quizzes WHERE course_id=? AND lesson_id=? ORDER BY rowid LIMIT 1',
+                                'SELECT id FROM quizzes WHERE course_id=? AND lesson_id=? ORDER BY id LIMIT 1',
                                 (cid, leid)
                             ).fetchone()
                             if existing_quiz:
