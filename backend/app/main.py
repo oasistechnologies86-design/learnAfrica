@@ -3259,14 +3259,14 @@ def create_app() -> Flask:
             if not quiz_row:
                 return jsonify({'error': 'Quiz not found for this lesson'}), 404
             quiz = safe_dict(quiz_row)
+            question_rows = db.execute('SELECT * FROM quiz_questions WHERE quiz_id=? ORDER BY "order"', (quiz['id'],)).fetchall()
+            # Build the same kind of question set a student would receive, but
+            # keep the answer key in this instructor-only response. No attempt
+            # session or student record is created by preview.
+            served_questions = build_served_questions(quiz, question_rows)
             questions = []
-            for row in db.execute('SELECT * FROM quiz_questions WHERE quiz_id=? ORDER BY "order"', (quiz['id'],)).fetchall():
-                question = safe_dict(row)
-                try:
-                    question['options'] = json.loads(question['options']) if isinstance(question.get('options'), str) else (question.get('options') or [])
-                except Exception:
-                    question['options'] = []
-                question['question'] = question.get('question_text') or ''
+            for question in served_questions:
+                question['question_text'] = question.get('question') or ''
                 questions.append(question)
             lesson = db.execute('SELECT is_final FROM lessons WHERE id=? AND course_id=?', (lid, cid)).fetchone()
             quiz['questions'] = questions
