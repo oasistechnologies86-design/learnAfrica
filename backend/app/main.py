@@ -48,7 +48,8 @@ from .models    import (get_course_sections, score_quiz, get_or_issue_certificat
 from .quiz_service import (build_served_questions, public_questions, grade_served,
                            session_expiry, is_expired, new_session_id)
 from . import email_service
-from .extra_attempts import init_extra_attempts, extra_attempt_count, settle_extra_attempt
+from .extra_attempts import (init_extra_attempts, extra_attempt_count,
+                              ensure_extra_attempts_table, settle_extra_attempt)
 
 # ── Globals (set inside create_app) ──────────────────────────────────────────
 socketio = None
@@ -456,6 +457,7 @@ def _ensure_course_quiz_attempt_resets(db):
 def _course_quiz_attempt_usage(db, user_id, course_id, quiz_id):
     """Count attempts and paid credits in the current course allowance cycle."""
     _ensure_course_quiz_attempt_resets(db)
+    ensure_extra_attempts_table(db)
     reset = db.execute(
         "SELECT MAX(reset_at) AS reset_at FROM course_quiz_attempt_resets WHERE user_id=? AND course_id=?",
         (user_id, course_id)
