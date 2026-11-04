@@ -358,6 +358,7 @@ button:disabled,
 /* Book-like lesson reading: calm paper, restrained headings, minimal decoration. */
 .custom-lesson-system {
   width: min(100%, 780px);
+  margin-inline: auto;
   padding: clamp(1.25rem, 3.2vw, 2.8rem) clamp(1.15rem, 4.5vw, 3.35rem);
   border: 1px solid color-mix(in oklab, var(--primary) 58%, var(--border));
   border-radius: .85rem;
