@@ -7059,9 +7059,12 @@ def create_app() -> Flask:
                         elapsed_real = 0
                 # Credit only short, uninterrupted heartbeat windows. Long gaps
                 # count as away time; update last_seen below so tracking can resume.
+                # The stop signal still credits the short foreground interval
+                # immediately before the tab was hidden. On a later resume, a
+                # long hidden gap is rejected because it exceeds this same limit.
                 credited = (
                     int(max(0, min(elapsed_real, MAX_ACTIVE_GAP_SECONDS)))
-                    if active and elapsed_real <= MAX_ACTIVE_GAP_SECONDS
+                    if elapsed_real <= MAX_ACTIVE_GAP_SECONDS
                     else 0
                 )
                 db.execute(
