@@ -3289,6 +3289,7 @@ def create_app() -> Flask:
             quiz['pass_score'] = int(quiz.get('pass_score') or app.config['QUIZ_PASS_SCORE'])
             return jsonify({'quiz': quiz, 'preview_only': True})
         except Exception as e:
+            import traceback
             app.logger.error(f'instructor_preview_quiz error: {traceback.format_exc()}')
             return jsonify({'error': 'Failed to load quiz preview', 'detail': _err_detail(e)}), 500
 
