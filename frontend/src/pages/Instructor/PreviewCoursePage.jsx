@@ -208,19 +208,19 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
   const assessmentName = isFinal ? 'Final Examination' : 'Lesson Test';
 
   if (!showQuestions) return (
-    <div className="space-y-5">
-      <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30">
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
         <Eye className="h-4 w-4 text-amber-600 shrink-0" />
         <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
           Instructor Preview — these are the saved assessment rules. Student-specific remaining attempts are shown to each enrolled student.
         </p>
       </div>
-      <Card className="p-5 sm:p-6">
-        <h3 className="font-bold text-base mb-4">{assessmentName} information</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="rounded-xl bg-muted/60 p-4">
+      <Card className="p-4 sm:p-5">
+        <h3 className="font-bold text-sm mb-3">{assessmentName} information</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="rounded-lg bg-muted/60 p-3">
             <p className="text-xs text-muted-foreground mb-1">Questions in this preview</p>
-            <p className="text-lg font-extrabold">{quiz.questions.length}</p>
+            <p className="text-base font-bold">{quiz.questions.length}</p>
           </div>
           <div className="rounded-xl bg-muted/60 p-4">
             <p className="text-xs text-muted-foreground mb-1">Time allowed</p>
@@ -241,7 +241,7 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
             </div>
           )}
         </div>
-        <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm text-muted-foreground">
+        <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
           This preview uses the configured question selection and shuffling. Starting it will not create a real attempt, start a student timer, or save a score.
         </div>
         <Button className="w-full mt-5" onClick={() => setConfirmStart(true)}>Start {assessmentName} Preview</Button>
@@ -270,7 +270,7 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
         </p>
       </div>
       {!submitted ? (
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>Question {current + 1} of {quiz.questions.length}</span>
             <span>{assessmentName}</span>
@@ -278,17 +278,17 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
           <div className="h-1.5 rounded-full bg-muted overflow-hidden">
             <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${((current + 1) / quiz.questions.length) * 100}%` }} />
           </div>
-          <div className="p-5 rounded-xl border border-border bg-card">
-            <p className="font-semibold mb-4">{q.question_text || q.question || q.text}</p>
+          <div className="p-4 rounded-lg border border-border bg-card">
+            <p className="font-semibold mb-3">{q.question_text || q.question || q.text}</p>
             {q.question_type === 'fill_blank' ? (
               <input value={answers[current] || ''} onChange={e => setAnswers(a => ({ ...a, [current]: e.target.value }))}
                 placeholder="Type your answer…"
                 className="w-full border border-input rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary bg-background" />
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {opts.map((opt, oi) => (
                   <button key={oi} onClick={() => setAnswers(a => ({ ...a, [current]: oi }))}
-                    className={cn('w-full text-left p-3 rounded-lg border text-sm transition-all',
+                    className={cn('w-full text-left p-2.5 rounded-lg border text-xs sm:text-sm transition-all',
                       answers[current] === oi ? 'border-primary bg-primary/10 font-semibold' : 'border-border hover:border-primary/40 hover:bg-muted/30')}>
                     <span className="font-bold mr-2">{String.fromCharCode(65 + oi)}.</span>{opt}
                   </button>
