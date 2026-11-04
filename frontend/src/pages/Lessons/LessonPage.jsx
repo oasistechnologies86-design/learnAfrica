@@ -833,6 +833,15 @@ export function LessonPage() {
                       <p>Once you confirm and start this assessment, your attempt begins. If a time limit is set, the countdown starts and cannot be paused by leaving this page.</p>
                       <p>Your answers must be submitted before the time expires. The test is marked according to the instructor’s assessment settings.</p>
                     </div>
+                    {lesson.is_final && (
+                      <div className="mt-3 rounded-lg border border-success/20 bg-success/5 p-3 text-xs text-muted-foreground">
+                        <p className="font-semibold text-foreground">Course attempt allowance</p>
+                        <p>When you pass this Final Examination, the quiz-attempt allowances for this course reset to the original included-attempt amounts set by the instructor. Your previous attempts and payment records remain in your history.</p>
+                      </div>
+                    )}
+                    {!lesson.description && !(lesson.content || lesson.text_content || lesson.textContent) && (
+                      <p className="mt-3 text-center text-xs italic text-muted-foreground">No additional lesson content is attached to this assessment. Review the assessment rules above before starting.</p>
+                    )}
                   </Card>
                 ) : (
                   <Card className="p-5 mb-5 border-warning/40 bg-warning/5">
