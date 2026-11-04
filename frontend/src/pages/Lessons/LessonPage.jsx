@@ -211,6 +211,8 @@ export function LessonPage() {
   const [quizMeta, setQuizMeta] = useState(null);
   const [quizMetaLoading, setQuizMetaLoading] = useState(false);
   const [showStartConfirm, setShowStartConfirm] = useState(false);
+  const [buyingExtraAttempt, setBuyingExtraAttempt] = useState(false);
+  const [extraAttemptError, setExtraAttemptError] = useState('');
 
   // ── Time tracking (course-wide) ─────────────────────────────────────────
   // Now the single shared implementation (see useCourseTimeTracking), used
@@ -218,6 +220,34 @@ export function LessonPage() {
   // engagement check-in that this page previously had neither of.
   const { timeSpent, timeRequired, timeEnforce, showCheckin, confirmContinue } =
     useCourseTimeTracking(courseId, { ready: !loading });
+
+  const purchaseExtraAttempt = async () => {
+    if (buyingExtraAttempt || !quizMeta?.id) return;
+    setBuyingExtraAttempt(true);
+    setExtraAttemptError('');
+    try {
+      const token = sessionStorage.getItem('auth_token');
+      const response = await fetch(`${API_BASE}/api/quizzes/${quizMeta.id}/extra-attempt/purchase`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ payment_method: 'any', payment_details: {} }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || 'Could not start the extra-attempt payment.');
+      if (result.checkout_url) {
+        window.location.assign(result.checkout_url);
+        return;
+      }
+      if (result.status === 'success') {
+        window.location.reload();
+        return;
+      }
+      throw new Error(result.message || 'Payment is not yet verified. Complete payment before starting the extra attempt.');
+    } catch (error) {
+      setExtraAttemptError(error.message || 'Could not start payment. Please try again.');
+      setBuyingExtraAttempt(false);
+    }
+  };
 
   // Fetch lesson detail from real API
   useEffect(() => {
@@ -808,12 +838,12 @@ export function LessonPage() {
                           : 'No time limit'}</p>
                       </div>
                       <div className="rounded-lg bg-muted/60 p-3">
-                        <p className="text-xs text-muted-foreground mb-1">Attempts</p>
+                        <p className="text-xs text-muted-foreground mb-1">Attempts remaining</p>
                         <p className="text-sm font-bold">{quizMeta.attempts_enabled && Number(quizMeta.max_attempts) > 0
-                          ? `${Math.max(0, Number(quizMeta.attempts_remaining ?? quizMeta.max_attempts))} of ${Number(quizMeta.effective_max_attempts ?? quizMeta.max_attempts)} remaining`
+                          ? `${Math.max(0, Number(quizMeta.attempts_remaining ?? quizMeta.max_attempts))} of ${Number(quizMeta.effective_max_attempts ?? quizMeta.max_attempts)} available`
                           : 'Unlimited attempts'}</p>
                         {quizMeta.attempts_enabled && Number(quizMeta.max_attempts) > 0 && (
-                          <p className="text-xs text-muted-foreground mt-1">Attempts used: {Number(quizMeta.attempts_used || 0)}</p>
+                          <p className="text-xs text-muted-foreground mt-1">Completed attempts in this allowance period: {Number(quizMeta.attempts_used || 0)}</p>
                         )}
                       </div>
                       <div className="rounded-lg bg-muted/60 p-3">
@@ -833,12 +863,14 @@ export function LessonPage() {
                       <p>Once you confirm and start this assessment, your attempt begins. If a time limit is set, the countdown starts and cannot be paused by leaving this page.</p>
                       <p>Your answers must be submitted before the time expires. The test is marked according to the instructor’s assessment settings.</p>
                     </div>
-                    {lesson.is_final && (
-                      <div className="mt-3 rounded-lg border border-success/20 bg-success/5 p-3 text-xs text-muted-foreground">
-                        <p className="font-semibold text-foreground">Course attempt allowance</p>
-                        <p>The first time you pass this Final Examination, the attempt limits for quizzes in this course reset to the original included-attempt amounts set by the instructor. Previous attempts and payment receipts remain in your history.</p>
-                      </div>
-                    )}
+                    <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground space-y-1">
+                      <p className="font-semibold text-foreground">{lesson.is_final ? 'How attempt resets work' : 'About extra attempts'}</p>
+                      {lesson.is_final ? (
+                        <p>If you use all included attempts, the fee shown above buys one extra attempt. If you pass this Final Examination for the first time — even using a paid extra attempt — the attempt allowance for every quiz in this course resets to the instructor’s original included amount. You will not keep paying after that reset. Earlier attempts and payment receipts stay in your history.</p>
+                      ) : (
+                        <p>If you use all included attempts, the fee shown above buys one extra attempt. A payment does not reset the full allowance. The course-wide reset happens when you pass the course’s Final Examination for the first time. Earlier attempts and payment receipts remain in your history.</p>
+                      )}
+                    </div>
                     {!lesson.description && !(lesson.content || lesson.text_content || lesson.textContent) && (
                       <p className="mt-3 text-center text-xs italic text-muted-foreground">No additional lesson content is attached to this assessment. Review the assessment rules above before starting.</p>
                     )}
@@ -856,17 +888,37 @@ export function LessonPage() {
                   <p className="text-sm text-muted-foreground text-center mb-4">Your last score was {lesson.quizScore}%. Review the material and try again.</p>
                 ) : null}
 
-                <div className="flex justify-center">
-                  <Button size="lg" className="w-full sm:w-auto gap-2 px-10"
-                    disabled={quizMetaLoading || !quizMeta}
-                    onClick={() => setShowStartConfirm(true)}>
-                    <HelpCircle className="h-5 w-5" />
-                    {lesson.quizScore !== null && lesson.quizScore !== undefined && !currentLessonFinished
-                      ? 'Try Again'
-                      : currentLessonFinished ? (lesson.is_final ? 'Retake Final Examination' : 'Retake Lesson Test')
-                      : (lesson.is_final ? 'Start Final Examination' : 'Start Lesson Test')}
-                  </Button>
-                </div>
+                {quizMeta && quizMeta.attempts_enabled && Number(quizMeta.max_attempts) > 0
+                  && Number(quizMeta.attempts_remaining ?? quizMeta.max_attempts) <= 0 ? (
+                  <Card className="p-4 border-warning/40 bg-warning/5 space-y-3">
+                    <div>
+                      <p className="font-semibold text-sm">You have used all available attempts.</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {Number(quizMeta.extra_attempt_price) > 0
+                          ? `Pay GHS ${Number(quizMeta.extra_attempt_price).toFixed(2)} to unlock one additional attempt. Payment must be verified before you can start it.`
+                          : 'The instructor has not set a price for extra attempts. Please contact the instructor.'}
+                      </p>
+                    </div>
+                    {extraAttemptError && <p className="text-xs text-destructive" role="alert">{extraAttemptError}</p>}
+                    {Number(quizMeta.extra_attempt_price) > 0 && (
+                      <Button className="w-full sm:w-auto" disabled={buyingExtraAttempt} onClick={purchaseExtraAttempt}>
+                        {buyingExtraAttempt ? 'Opening secure payment…' : `Buy one extra attempt · GHS ${Number(quizMeta.extra_attempt_price).toFixed(2)}`}
+                      </Button>
+                    )}
+                  </Card>
+                ) : (
+                  <div className="flex justify-center">
+                    <Button size="lg" className="w-full sm:w-auto gap-2 px-10"
+                      disabled={quizMetaLoading || !quizMeta}
+                      onClick={() => setShowStartConfirm(true)}>
+                      <HelpCircle className="h-5 w-5" />
+                      {lesson.quizScore !== null && lesson.quizScore !== undefined && !currentLessonFinished
+                        ? 'Try Again'
+                        : currentLessonFinished ? (lesson.is_final ? 'Retake Final Examination' : 'Retake Lesson Test')
+                        : (lesson.is_final ? 'Start Final Examination' : 'Start Lesson Test')}
+                    </Button>
+                  </div>
+                )}
 
                 {showStartConfirm && (
                   <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
