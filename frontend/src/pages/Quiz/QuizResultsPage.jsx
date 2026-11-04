@@ -60,10 +60,10 @@ function InlineCertificate({ certData, user }) {
                   {certData.signatory.text || certData.signatory.name}
                 </span>
               ) : (
-                <span className="text-slate-400">—</span>
+                <span className="text-slate-400">Not provided</span>
               )}
             </div>
-            <p className="text-xs font-semibold text-slate-800 mt-1">{certData.signatory?.name || '—'}</p>
+            <p className="text-xs font-semibold text-slate-800 mt-1">{certData.signatory?.name || 'Not provided'}</p>
             <p className="text-2xs text-slate-500">{certData.signatory?.role || 'Authorized Signatory'}</p>
           </div>
           <CertificateSeal size={78} />
@@ -265,7 +265,7 @@ export function QuizResultsPage() {
             </div>
           )}
 
-          {/* ── Action buttons — Back to Lesson | Download (if cert) | Try Again ── */}
+          {/* ── Action buttons - Back to Lesson | Download (if cert) | Try Again ── */}
           <div className="flex flex-col sm:flex-row gap-3 pt-1">
             {/* Back to the exact lesson they came from */}
             <Link to={backToLesson} className="flex-1">
@@ -274,7 +274,7 @@ export function QuizResultsPage() {
               </Button>
             </Link>
 
-            {/* Download cert shortcut — only if earned */}
+            {/* Download cert shortcut - only if earned */}
             {showCertSection && passed && certData && (
               <Button
                 onClick={handleDownload}
