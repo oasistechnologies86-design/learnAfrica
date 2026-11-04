@@ -351,7 +351,7 @@ export function QuizPage() {
               <Sparkles className="h-6 w-6" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">{isFinalQuiz ? 'Final exam in progress' : 'Test in progress'}</p>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">{isFinalQuiz ? 'Final Examination in progress' : 'Lesson Test in progress'}</p>
               <h1 className="mt-1 text-2xl font-black tracking-tight text-foreground sm:text-3xl">{quiz.title}</h1>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Read each question carefully and choose your answer. Your answers stay on this page until you submit your {isFinalQuiz ? 'final exam' : 'test'}.</p>
             </div>
@@ -408,7 +408,7 @@ export function QuizPage() {
             <span className="text-xs text-muted-foreground self-center">{currentQuestion + 1} / {questions.length}</span>
             {currentQuestion === questions.length - 1 ? (
               <Button onClick={handleSubmit} disabled={!canSubmit || isSubmitting} className="rounded-xl px-5 font-bold shadow-lg shadow-primary/20 transition-transform hover:-translate-y-0.5">
-                {isSubmitting ? 'Submitting...' : (isFinalQuiz ? 'Submit Final Exam' : 'Submit Test')}
+                {isSubmitting ? 'Submitting...' : (isFinalQuiz ? 'Submit Final Examination' : 'Submit Lesson Test')}
               </Button>
             ) : (
               <Button onClick={handleNext} className="rounded-xl px-5 font-bold shadow-md transition-transform hover:-translate-y-0.5">Next <ChevronRight className="h-4 w-4" /></Button>
