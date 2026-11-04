@@ -3300,6 +3300,7 @@ def create_app() -> Flask:
         ensure_column(db, 'quizzes', 'shuffle_options', 'INTEGER DEFAULT 0')
         ensure_column(db, 'quizzes', 'attempts_enabled', 'INTEGER')
         ensure_column(db, 'quizzes', 'extra_attempt_price', 'REAL DEFAULT 0')
+        ensure_column(db, 'quizzes', 'pass_score', 'INTEGER DEFAULT 70')
         course = db.execute('SELECT * FROM courses WHERE id=? AND instructor_id=?',
                             (cid, g.current_user['user_id'])).fetchone()
         if not course:
@@ -3344,8 +3345,10 @@ def create_app() -> Flask:
                             ld['max_attempts'] = int(quiz['max_attempts'] or 0)
                             ld['attempts_enabled'] = bool(quiz['attempts_enabled']) if quiz['attempts_enabled'] is not None else ld['max_attempts'] > 0
                             ld['extra_attempt_price'] = float(quiz['extra_attempt_price'] or 0)
+                            ld['pass_score'] = int(quiz['pass_score'] or app.config['QUIZ_PASS_SCORE'])
                         except Exception:
                             ld['max_attempts'] = 0
+                            ld['pass_score'] = int(app.config['QUIZ_PASS_SCORE'])
                         # Anti-cheat settings, so the instructor editor can show
                         # their current values when re-opening a course.
                         try:
