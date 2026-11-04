@@ -53,7 +53,7 @@ export default function MobileProfileDrawer({ isOpen, onClose, user, isLoading,
             label={isInstructor ? 'Instructor Dashboard' : 'My Dashboard'} onClick={onClose} />
           {isInstructor && <MenuLink to="/instructor/courses" icon={<BookMarked className="h-4 w-4" />} label="My Courses" onClick={onClose} />}
           {isAdmin && <MenuLink to="/admin" icon={<Shield className="h-4 w-4" />} label="Admin Panel" onClick={onClose} variant="primary" />}
-          {!isInstructor && <MenuLink to="/my-certificates" icon={<Award className="h-4 w-4" />} label="My Certificates" onClick={onClose} />}
+          {user?.role === 'student' && <MenuLink to="/my-certificates" icon={<Award className="h-4 w-4" />} label="My Certificates" onClick={onClose} />}
           <MenuLink to="/settings" icon={<Settings className="h-4 w-4" />} label="Settings" onClick={onClose} />
           <MenuLink to="/receipts" icon={<Receipt className="h-4 w-4" />} label="Receipts" onClick={onClose} />
         </div>
