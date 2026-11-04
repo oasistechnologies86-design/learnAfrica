@@ -604,7 +604,7 @@ export function LessonPage() {
           <div className={lesson.type === 'custom' ? 'w-full max-w-none py-8' : 'max-w-4xl mx-auto py-8'}>
 
             {/* Lesson meta — hidden for custom lessons because they show it at the top */}
-            {lesson.type !== 'custom' && (
+            {lesson.type !== 'custom' && !isQuizLesson && (
             <div className="mb-10">
               <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
                 {lesson.duration && (
@@ -771,13 +771,13 @@ export function LessonPage() {
             {isQuizLesson && (
               <div className="max-w-2xl mx-auto py-5 sm:py-6 px-4">
                 <div className="text-center mb-5">
-                  <div className="h-12 w-12 mx-auto rounded-xl bg-primary/10 flex items-center justify-center mb-5">
-                    <HelpCircle className="h-6 w-6 text-primary" />
+                  <div className="h-10 w-10 mx-auto rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+                    <HelpCircle className="h-5 w-5 text-primary" />
                   </div>
                   <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary mb-2">
                     {lesson.is_final ? 'Final Examination' : 'Lesson Test'}
                   </p>
-                  <h2 className="text-xl sm:text-2xl font-bold mb-2">{lesson.title || (lesson.is_final ? 'Final Examination' : 'Lesson Test')}</h2>
+                  <h2 className="text-lg sm:text-xl font-bold mb-2">{lesson.title || (lesson.is_final ? 'Final Examination' : 'Lesson Test')}</h2>
                   <p className="text-sm text-muted-foreground leading-relaxed max-w-xl mx-auto">
                     {lesson.description || (lesson.is_final
                       ? courseHasCertificate === true
@@ -792,8 +792,8 @@ export function LessonPage() {
                 {quizMetaLoading ? (
                   <Card className="p-5 text-center text-sm text-muted-foreground">Loading test information…</Card>
                 ) : quizMeta ? (
-                  <Card className="p-4 sm:p-5 mb-4">
-                    <h3 className="font-bold text-base mb-4 flex items-center gap-2">
+                  <Card className="p-3 sm:p-4 mb-4">
+                    <h3 className="font-bold text-sm mb-3 flex items-center gap-2">
                       <ClipboardList className="h-5 w-5 text-primary" /> Before you begin
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -801,29 +801,29 @@ export function LessonPage() {
                         <p className="text-xs text-muted-foreground mb-1">Number of questions</p>
                         <p className="text-base font-bold">{Number(quizMeta.questions_per_attempt) > 0 ? Math.min(Number(quizMeta.questions_per_attempt), Number(quizMeta.question_count ?? quizMeta.questions?.length ?? 0)) : Number(quizMeta.question_count ?? quizMeta.questions?.length ?? 0)}</p>
                       </div>
-                      <div className="rounded-xl bg-muted/60 p-4">
+                      <div className="rounded-lg bg-muted/60 p-3">
                         <p className="text-xs text-muted-foreground mb-1">Time allowed</p>
-                        <p className="text-lg font-extrabold">{quizMeta.timer_enabled && Number(quizMeta.duration_seconds) > 0
+                        <p className="text-sm font-bold">{quizMeta.timer_enabled && Number(quizMeta.duration_seconds) > 0
                           ? formatDuration(Number(quizMeta.duration_seconds))
                           : 'No time limit'}</p>
                       </div>
-                      <div className="rounded-xl bg-muted/60 p-4">
+                      <div className="rounded-lg bg-muted/60 p-3">
                         <p className="text-xs text-muted-foreground mb-1">Attempts</p>
-                        <p className="text-lg font-extrabold">{quizMeta.attempts_enabled && Number(quizMeta.max_attempts) > 0
+                        <p className="text-sm font-bold">{quizMeta.attempts_enabled && Number(quizMeta.max_attempts) > 0
                           ? `${Math.max(0, Number(quizMeta.attempts_remaining ?? quizMeta.max_attempts))} of ${Number(quizMeta.effective_max_attempts ?? quizMeta.max_attempts)} remaining`
                           : 'Unlimited attempts'}</p>
                         {quizMeta.attempts_enabled && Number(quizMeta.max_attempts) > 0 && (
                           <p className="text-xs text-muted-foreground mt-1">Attempts used: {Number(quizMeta.attempts_used || 0)}</p>
                         )}
                       </div>
-                      <div className="rounded-xl bg-muted/60 p-4">
+                      <div className="rounded-lg bg-muted/60 p-3">
                         <p className="text-xs text-muted-foreground mb-1">Passing score</p>
-                        <p className="text-lg font-extrabold">{Number(quizMeta.pass_score ?? 70)}%</p>
+                        <p className="text-sm font-bold">{Number(quizMeta.pass_score ?? 70)}%</p>
                       </div>
                       {quizMeta.attempts_enabled && Number(quizMeta.extra_attempt_price) > 0 && (
-                        <div className="rounded-xl bg-muted/60 p-4">
+                        <div className="rounded-lg bg-muted/60 p-3">
                           <p className="text-xs text-muted-foreground mb-1">Extra attempt fee</p>
-                          <p className="text-lg font-extrabold">GHS {Number(quizMeta.extra_attempt_price).toFixed(2)}</p>
+                          <p className="text-sm font-bold">GHS {Number(quizMeta.extra_attempt_price).toFixed(2)}</p>
                           <p className="text-xs text-muted-foreground mt-1">Only applies after your included attempts are used and payment is verified.</p>
                         </div>
                       )}
@@ -875,7 +875,7 @@ export function LessonPage() {
                       <div className="h-12 w-12 rounded-xl bg-warning/15 text-warning flex items-center justify-center mb-4">
                         <AlertTriangle className="h-6 w-6" />
                       </div>
-                      <h3 id="start-test-title" className="text-xl font-black mb-2">{lesson.is_final ? 'Ready to start your Final Examination?' : 'Ready to start your Lesson Test?'}</h3>
+                      <h3 id="start-test-title" className="text-lg font-bold mb-2">{lesson.is_final ? 'Ready to start your Final Examination?' : 'Ready to start your Lesson Test?'}</h3>
                       <p className="text-sm text-muted-foreground leading-relaxed mb-5">
                         {quizMeta.timer_enabled && Number(quizMeta.duration_seconds) > 0
                           ? `Your ${formatDuration(Number(quizMeta.duration_seconds))} timer will begin when you start the questions.`
