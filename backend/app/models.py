@@ -24,6 +24,34 @@ def get_user_enrolled_courses(db, user_id, use_postgres):
     return [dict(r) for r in rows]
 
 
+def get_course_completion_status(db, user_id, course_id, use_postgres):
+    """Return progress based on the exact lessons included in the course curriculum."""
+    ph = '%s' if use_postgres else '?'
+    total_row = db.execute(
+        'SELECT COUNT(DISTINCT l.id) AS total'
+        ' FROM lessons l'
+        ' JOIN section_lessons sl ON sl.lesson_id=l.id'
+        ' JOIN curriculum_sections cs ON cs.id=sl.section_id'
+        ' WHERE cs.course_id=' + ph,
+        (course_id,)
+    ).fetchone()
+    done_row = db.execute(
+        'SELECT COUNT(DISTINCT l.id) AS done'
+        ' FROM lessons l'
+        ' JOIN section_lessons sl ON sl.lesson_id=l.id'
+        ' JOIN curriculum_sections cs ON cs.id=sl.section_id'
+        ' JOIN user_progress up ON up.lesson_id=l.id'
+        '  AND up.user_id=' + ph + ' AND up.course_id=' + ph
+        '  AND up.is_completed=1'
+        ' WHERE cs.course_id=' + ph,
+        (user_id, course_id, course_id)
+    ).fetchone()
+    total = int(total_row['total'] or 0) if total_row else 0
+    done = int(done_row['done'] or 0) if done_row else 0
+    percent = min(100, int((done / total) * 100)) if total else 0
+    return {'total': total, 'completed': done, 'progress': percent}
+
+
 def get_course_sections(db, course_id, use_postgres, user_id=None):
     ph = '%s' if use_postgres else '?'
 
@@ -137,14 +165,27 @@ def get_or_issue_certificate(db, user_id, course_id, use_postgres):
     if not final_lesson:
         return None, 'This course does not have a final exam configured yet. A certificate cannot be issued until one is added and passed.'
 
+    completion = get_course_completion_status(db, user_id, course_id, use_postgres)
+    if completion['total'] == 0:
+        return None, 'This course has no lessons in its curriculum yet.'
+    if completion['completed'] < completion['total']:
+        remaining = completion['total'] - completion['completed']
+        return None, f'Complete all course lessons before earning this certificate. {remaining} lesson(s) remaining.'
+
     sql_prog = ('SELECT quiz_score FROM user_progress'
                 ' WHERE user_id=' + ph + ' AND course_id=' + ph +
                 ' AND lesson_id=' + ph + ' AND is_completed=1')
     prog = db.execute(sql_prog, (user_id, course_id, final_lesson['id'])).fetchone()
     if not prog:
         return None, 'You must complete the final exam to earn this certificate'
-    if (prog['quiz_score'] or 0) < 70:
-        return None, f'You scored {prog["quiz_score"]}% on the final exam. You need 70% to earn the certificate.'
+    final_quiz = db.execute(
+        'SELECT pass_score FROM quizzes WHERE course_id=' + ph +
+        ' AND lesson_id=' + ph + ' ORDER BY id LIMIT 1',
+        (course_id, final_lesson['id'])
+    ).fetchone()
+    required_score = int((final_quiz['pass_score'] if final_quiz else None) or 70)
+    if (prog['quiz_score'] or 0) < required_score:
+        return None, f'You scored {prog["quiz_score"]}% on the final exam. You need {required_score}% to earn the certificate.'
 
     existing = db.execute(
         'SELECT * FROM issued_certificates WHERE user_id=' + ph + ' AND course_id=' + ph,
