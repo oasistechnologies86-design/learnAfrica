@@ -96,7 +96,7 @@ export function QuizResultsPage() {
   const {
     answers, questions, score, correctCount, totalQuestions, passed,
     correctAnswers, courseId, lessonId, quizTitle,
-    isFinalQuiz, hasCertificate, passScore,
+    isFinalQuiz, hasCertificate, passScore, attemptAllowanceReset,
   } = state || {};
   const passingScore = Number(passScore ?? 70);
 
@@ -184,6 +184,15 @@ export function QuizResultsPage() {
                 : `You need ${passingScore}% to pass this ${isFinalQuiz ? 'Final Examination' : 'Lesson Test'}. Review the lesson and try again.`}
             </p>
           </div>
+
+          {passed && isFinalQuiz && attemptAllowanceReset && (
+            <div className="rounded-xl border border-success/25 bg-success/5 p-4 text-left space-y-1">
+              <p className="text-sm font-semibold text-foreground">Your course quiz attempts have been reset</p>
+              <p className="text-sm text-muted-foreground">
+                You passed the Final Examination for the first time. Your attempt allowance for quizzes in this course is now back to the original included amounts set by the instructor. You do not need to keep buying extra attempts after this reset. Your earlier attempts and payment receipts remain in your history.
+              </p>
+            </div>
+          )}
 
           {/* Score circle */}
           <div className="relative mx-auto h-36 w-36">
