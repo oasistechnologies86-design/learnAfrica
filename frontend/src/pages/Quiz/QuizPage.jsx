@@ -344,22 +344,22 @@ export function QuizPage() {
         </div>
       </header>
 
-      <div className="container max-w-4xl mx-auto px-4 py-7 sm:py-10">
-        <section className="mb-7 overflow-hidden rounded-3xl border border-primary/15 bg-card/90 p-5 shadow-lg shadow-primary/5 sm:p-7">
+      <div className="container max-w-4xl mx-auto px-4 py-5 sm:py-7">
+        <section className="mb-5 overflow-hidden rounded-2xl border border-primary/15 bg-card/90 p-4 shadow-sm sm:p-5">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-              <Sparkles className="h-6 w-6" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Sparkles className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">{isFinalQuiz ? 'Final Examination in progress' : 'Lesson Test in progress'}</p>
-              <h1 className="mt-1 text-2xl font-black tracking-tight text-foreground sm:text-3xl">{quiz.title}</h1>
+              <h1 className="mt-1 text-lg font-bold tracking-tight text-foreground sm:text-xl">{quiz.title}</h1>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Read each question carefully and choose your answer. Your answers stay on this page until you submit your {isFinalQuiz ? 'final exam' : 'test'}.</p>
             </div>
           </div>
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl bg-muted/70 p-3">
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <div className="rounded-xl bg-muted/70 p-2.5">
               <div className="flex items-center gap-2 text-xs text-muted-foreground"><ClipboardList className="h-4 w-4" /> Questions</div>
-              <p className="mt-1 text-xl font-extrabold tabular-nums">{questions.length}</p>
+              <p className="mt-1 text-lg font-bold tabular-nums">{questions.length}</p>
             </div>
             <div className="rounded-2xl bg-muted/70 p-3">
               <div className="flex items-center gap-2 text-xs text-muted-foreground"><CheckCircle2 className="h-4 w-4" /> Answered</div>
@@ -373,7 +373,7 @@ export function QuizPage() {
         </section>
 
         {/* Question navigator */}
-        <div className="mb-5 rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm">
+        <div className="mb-4 rounded-xl border border-border/70 bg-card/80 p-3 shadow-sm">
           <div className="mb-3 flex items-center justify-between gap-3">
             <p className="text-sm font-bold">Your questions</p>
             <p className="text-xs text-muted-foreground">{answeredCount} of {questions.length} answered</p>
@@ -393,7 +393,7 @@ export function QuizPage() {
           </div>
         </div>
 
-        <Card className="overflow-hidden rounded-3xl border border-border/70 bg-card p-5 shadow-xl shadow-slate-900/5 sm:p-9">
+        <Card className="overflow-hidden rounded-2xl border border-border/70 bg-card p-4 shadow-md sm:p-6">
           <QuizQuestion
             question={questions[currentQuestion]}
             questionNumber={currentQuestion + 1}
@@ -401,7 +401,7 @@ export function QuizPage() {
             selectedAnswer={answers[currentQuestion]}
             onSelectAnswer={handleSelectAnswer}
           />
-          <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border/70 pt-6">
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border/70 pt-4">
             <Button variant="ghost" onClick={handlePrev} disabled={currentQuestion === 0}>
               <ChevronLeft className="h-4 w-4" /> Previous
             </Button>
