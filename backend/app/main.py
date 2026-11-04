@@ -1633,7 +1633,37 @@ def create_app() -> Flask:
     @app.route('/api/users/profile', methods=['GET'])
     @token_required
     def get_profile():
-        u = full_user(get_db(), g.current_user['user_id'], app.config.get('USE_POSTGRES'))
+        db = get_db()
+        uid = g.current_user['user_id']
+        # Repair saved percentages for existing enrollments whenever the shared
+        # profile loads. This brings older records onto the same curriculum-based
+        # calculation used by the course player.
+        try:
+            enrollments = db.execute(
+                'SELECT course_id FROM user_enrollments WHERE user_id=?',
+                (uid,)
+            ).fetchall()
+            for enrollment in enrollments:
+                course_id = enrollment['course_id']
+                completion = get_course_completion_status(db, uid, course_id, _use_pg())
+                db.execute(
+                    'UPDATE user_enrollments SET progress=? WHERE user_id=? AND course_id=?',
+                    (completion['progress'], uid, course_id)
+                )
+                if completion['progress'] == 100:
+                    db.execute(
+                        'UPDATE user_enrollments SET completed_at=COALESCE(completed_at,CURRENT_TIMESTAMP)'
+                        ' WHERE user_id=? AND course_id=?',
+                        (uid, course_id)
+                    )
+            db.commit()
+        except Exception as ex:
+            app.logger.warning(f'profile progress refresh failed: {ex}')
+            try:
+                if hasattr(db, '_conn'): db._conn.rollback()
+            except Exception:
+                pass
+        u = full_user(db, uid, app.config.get('USE_POSTGRES'))
         if not u: return jsonify({'error': 'Not found'}), 404
         return jsonify(u)
     
