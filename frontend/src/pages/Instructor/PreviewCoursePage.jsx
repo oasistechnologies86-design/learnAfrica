@@ -247,7 +247,7 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
         {isFinal && (
           <div className="mt-3 rounded-lg border border-success/20 bg-success/5 p-3 text-xs text-muted-foreground">
             <p className="font-semibold text-foreground">Course attempt allowance</p>
-            <p>When a student passes this Final Examination, the quiz-attempt allowances for this course reset to the original included-attempt amounts set by the instructor. Previous attempts and payment records remain in history.</p>
+            <p>The first time a student passes this Final Examination, the attempt limits for quizzes in this course reset to the original included-attempt amounts set by the instructor. Previous attempts and payment receipts remain in history.</p>
           </div>
         )}
         <Button className="w-full mt-5" onClick={() => setConfirmStart(true)}>Start {assessmentName} Preview</Button>
@@ -607,7 +607,11 @@ export function PreviewCoursePage() {
                       <div className="prose prose-slate dark:prose-invert max-w-none"
                         dangerouslySetInnerHTML={{ __html: sanitizeHtml(activeLesson.content) }} />
                     ) : (
-                      <p className="text-muted-foreground italic text-sm">No written content for this lesson.</p>
+                      <p className="text-muted-foreground italic text-sm">
+                        {activeLesson.type === 'quiz'
+                          ? 'No additional lesson content is attached to this assessment.'
+                          : 'No written content for this lesson.'}
+                      </p>
                     )}
                     {activeLesson.type === 'quiz' && (
                       <PreviewQuiz courseId={courseId} lessonId={activeLesson.id} isFinal={!!activeLesson.is_final} />
