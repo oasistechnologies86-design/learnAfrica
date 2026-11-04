@@ -13,14 +13,14 @@ export function QuizQuestion({
   const options = question.options || [];
 
   return (
-    <div className="space-y-7 animate-in fade-in duration-300">
+    <div className="space-y-5 animate-in fade-in duration-300">
       {/* Progress bar */}
       <div className="space-y-1.5">
-        <div className="flex justify-between text-sm text-muted-foreground">
+        <div className="flex justify-between text-xs text-muted-foreground">
           <span>Question {questionNumber} of {totalQuestions}</span>
           <span className="font-medium">{Math.round((questionNumber / totalQuestions) * 100)}%</span>
         </div>
-        <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
           <div className="h-full rounded-full bg-primary transition-all"
             style={{ width: `${(questionNumber / totalQuestions) * 100}%` }} />
         </div>
@@ -38,12 +38,12 @@ export function QuizQuestion({
            qType === 'true_false' ? 'True or False'   :
                                     'Fill in the Blank'}
         </span>
-        <h2 className="mt-3 text-xl font-bold leading-relaxed tracking-tight text-foreground sm:text-2xl">{question.question}</h2>
+        <h2 className="mt-2 text-lg font-bold leading-relaxed tracking-tight text-foreground sm:text-xl">{question.question}</h2>
       </div>
 
       {/* ── MCQ ── */}
       {qType === 'mcq' && (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {options.map((option, index) => {
             const isSelected = selectedAnswer === index;
             const isCorrect  = correctAnswer === index;
@@ -52,7 +52,7 @@ export function QuizQuestion({
                 onClick={() => !showResult && onSelectAnswer(index)}
                 disabled={showResult}
                 className={cn(
-                  'group w-full rounded-2xl border-2 p-4 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md sm:p-5',
+                  'group w-full rounded-xl border p-3 text-left transition-colors duration-200 sm:p-3.5',
                   showResult
                     ? isCorrect   ? 'border-success bg-success/10'
                     : isSelected  ? 'border-destructive bg-destructive/10'
@@ -62,7 +62,7 @@ export function QuizQuestion({
                 )}>
                 <div className="flex items-center gap-3">
                   <div className={cn(
-                    'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold',
+                    'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold',
                     showResult
                       ? isCorrect   ? 'border-success bg-success text-white'
                       : isSelected  ? 'border-destructive bg-destructive text-white'
@@ -93,7 +93,7 @@ export function QuizQuestion({
                 onClick={() => !showResult && onSelectAnswer(index)}
                 disabled={showResult}
                 className={cn(
-                  'rounded-2xl border-2 bg-card p-6 text-center text-lg font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md',
+                  'rounded-xl border bg-card p-4 text-center text-base font-bold transition-colors duration-200',
                   showResult
                     ? isCorrect   ? 'border-success bg-success/10 text-success'
                     : isSelected  ? 'border-destructive bg-destructive/10 text-destructive'
@@ -119,7 +119,7 @@ export function QuizQuestion({
             disabled={showResult}
             placeholder="Type your answer here…"
             className={cn(
-              'w-full rounded-2xl border-2 bg-background px-5 py-4 text-base outline-none transition-all focus:ring-4 focus:ring-primary/10',
+              'w-full rounded-xl border bg-background px-4 py-3 text-sm outline-none transition-all focus:ring-4 focus:ring-primary/10',
               showResult
                 ? typeof selectedAnswer === 'string' &&
                   selectedAnswer.trim().toLowerCase() === (options[correctAnswer] || '').toString().trim().toLowerCase()
