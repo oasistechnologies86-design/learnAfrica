@@ -216,6 +216,7 @@ export function EditCoursePage() {
             quiz_timer_enabled: !!l.quiz_timer_enabled,
             is_final: l.is_final || false,
             attempts_enabled: !!l.attempts_enabled,
+            pass_score: Math.max(1, Math.min(100, Number(l.pass_score) || 70)),
             max_attempts: Math.max(0, Math.min(50, Number(l.max_attempts) || 0)),
             extra_attempt_price: Math.max(0, Number(l.extra_attempt_price || 0)),
             questions_per_attempt: Math.max(0, Number(l.questions_per_attempt) || 0),
