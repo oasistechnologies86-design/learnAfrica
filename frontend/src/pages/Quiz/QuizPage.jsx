@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Clock, CheckCircle2, Loader2, Sparkles, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
@@ -14,6 +14,8 @@ import { EngagementCheckinModal } from '@/components/common/EngagementCheckinMod
 export function QuizPage() {
   const { courseId, lessonId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const startConfirmed = location.state?.confirmedQuizStart === true;
   const { updateProgress } = useAuth();
 
   // Same course-wide minimum-time tracking used on lesson pages, so the
@@ -68,6 +70,10 @@ export function QuizPage() {
 
   useEffect(() => {
     const fetchQuiz = async () => {
+      if (!startConfirmed) {
+        navigate(`/learn/course/${courseId}/lesson/${lessonId}`, { replace: true });
+        return;
+      }
       setIsLoading(true);
       try {
         const token = sessionStorage.getItem('auth_token');
@@ -91,40 +97,38 @@ export function QuizPage() {
           setQuiz(q);
           return;
         }
-        // Randomised and/or timed quizzes run through /start, which serves the
-        // student's specific question set and starts the authoritative server
-        // timer. Plain quizzes keep their original behaviour.
-        if (q.randomized || (q.timer_enabled && Number(q.duration_seconds) > 0)) {
-          const startRes = await fetch(`${API_BASE}/api/quizzes/${q.id}/start`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...headers },
-          });
-          const startData = await startRes.json().catch(() => ({}));
-          if (!startRes.ok) {
-            if (startData.error === 'attempt_limit') {
-              setAttemptLimit(true);
-              setError(startData.message || 'You have used all attempts for this quiz.');
-              setQuiz(q);
-              return;
-            }
-            if (startData.error === 'time_gate') {
-              setTimeGate({
-                required_seconds: startData.required_seconds || 0,
-                spent_seconds:    startData.spent_seconds    || 0,
-                message:          startData.message || 'You need more time on this course before taking the final quiz.',
-              });
-              setQuiz(q);
-              return;
-            }
-            throw new Error(startData.message || startData.error || 'Could not start quiz');
+        // Every assessment must create a server-side attempt only after the
+        // student confirms on the information page. This also starts any
+        // configured timer and fixes the served question set for grading.
+        const startRes = await fetch(`${API_BASE}/api/quizzes/${q.id}/start`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...headers },
+        });
+        const startData = await startRes.json().catch(() => ({}));
+        if (!startRes.ok) {
+          if (startData.error === 'attempt_limit') {
+            setAttemptLimit(true);
+            setError(startData.message || 'You have used all attempts for this quiz.');
+            setQuiz(q);
+            return;
           }
-          q = {
-            ...q,
-            questions: startData.questions || q.questions,
-            _server_expires_at: startData.expires_at || null,
-          };
-          setAttemptId(startData.attempt_id || null);
+          if (startData.error === 'time_gate') {
+            setTimeGate({
+              required_seconds: startData.required_seconds || 0,
+              spent_seconds:    startData.spent_seconds    || 0,
+              message:          startData.message || 'You need more time on this course before taking the final examination.',
+            });
+            setQuiz(q);
+            return;
+          }
+          throw new Error(startData.message || startData.error || 'Could not start assessment');
         }
+        q = {
+          ...q,
+          questions: startData.questions || q.questions,
+          _server_expires_at: startData.expires_at || null,
+        };
+        setAttemptId(startData.attempt_id || null);
         setQuiz(q);
         if (courseRes.ok) {
           const cd = (await courseRes.json()).course;
@@ -141,7 +145,7 @@ export function QuizPage() {
       }
     };
     fetchQuiz();
-  }, [courseId, lessonId]);
+  }, [courseId, lessonId, startConfirmed, navigate]);
 
   useEffect(() => {
     if (!quiz) return;
@@ -293,7 +297,7 @@ export function QuizPage() {
             <ChevronLeft className="h-4 w-4" /> Exit
           </Link>
           <div className="text-center">
-            <p className="text-sm font-bold">{isFinalQuiz ? 'Final Exam' : 'Test'}</p>
+            <p className="text-sm font-bold">{isFinalQuiz ? 'Final Examination' : 'Lesson Test'}</p>
             <p className="text-xs text-muted-foreground">{quiz.title}</p>
             {course && <p className="text-xs text-muted-foreground">{course.title}</p>}
             {(quiz.effective_max_attempts ?? quiz.max_attempts) > 0 && (
