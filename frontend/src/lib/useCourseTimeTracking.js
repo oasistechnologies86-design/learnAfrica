@@ -65,16 +65,29 @@ export function useCourseTimeTracking(courseId, { ready = true } = {}) {
     return () => { cancelled = true; };
   }, [courseId, authedFetch]);
 
-  // Only count time while the tab is actually in the foreground
+  // Close the server's active window as soon as the tab is hidden. On return,
+  // the next heartbeat starts a fresh window; hidden time is never credited.
   useEffect(() => {
-    const onVis = () => { pageVisibleRef.current = !document.hidden; };
+    pageVisibleRef.current = !document.hidden;
+    const onVis = () => {
+      const visible = !document.hidden;
+      pageVisibleRef.current = visible;
+      if (!visible && trackingEnabled) {
+        const delta = timeTickRef.current;
+        timeTickRef.current = 0;
+        sendHeartbeat(delta, false);
+      } else if (visible && trackingEnabled) {
+        sendHeartbeat(1, true);
+      }
+    };
     document.addEventListener('visibilitychange', onVis);
     return () => document.removeEventListener('visibilitychange', onVis);
-  }, []);
+  }, [trackingEnabled, sendHeartbeat]);
 
-  const sendHeartbeat = useCallback((delta) => {
-    if (delta <= 0 || !courseId || !trackingEnabled) return;
-    authedFetch(`/api/courses/${courseId}/time`, { method: 'POST', body: JSON.stringify({ seconds: delta }) })
+  const sendHeartbeat = useCallback((delta, active = true) => {
+    if (!courseId || !trackingEnabled) return;
+    // Close the active window when the tab is hidden; the server rejects long gaps.
+    authedFetch(`/api/courses/${courseId}/time`, { method: 'POST', body: JSON.stringify({ seconds: Math.max(1, delta), active }) })
       .then(r => r.ok ? r.json() : null)
       .then(d => {
         // Re-sync to the server's real authoritative total after every
@@ -112,20 +125,23 @@ export function useCourseTimeTracking(courseId, { ready = true } = {}) {
     return () => clearInterval(id);
   }, [courseId, ready, trackingEnabled, sendHeartbeat]);
 
-  // Flush any accumulated time when leaving the page
+  // Flush the last foreground interval with authenticated keepalive fetch.
+  // sendBeacon cannot attach the Bearer token required by this endpoint.
   useEffect(() => {
     return () => {
       const delta = timeTickRef.current;
       if (!courseId || delta <= 0 || !trackingEnabled) return;
       try {
         const token = sessionStorage.getItem('auth_token');
-        const url = `${API_BASE}/api/courses/${courseId}/time`;
-        const body = JSON.stringify({ seconds: delta });
-        if (navigator.sendBeacon) {
-          navigator.sendBeacon(url, new Blob([body], { type: 'application/json' }));
-        } else {
-          fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body, keepalive: true }).catch(() => {});
-        }
+        fetch(`${API_BASE}/api/courses/${courseId}/time`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ seconds: delta, active: true }),
+          keepalive: true,
+        }).catch(() => {});
       } catch (_) {}
     };
   }, [courseId, trackingEnabled]);

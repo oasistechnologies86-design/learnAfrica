@@ -7003,6 +7003,7 @@ def create_app() -> Flask:
         try:
             d = request.get_json() or {}
             claimed_seconds = int(d.get('seconds') or 0)
+            active = d.get('active', True) is not False
             if claimed_seconds <= 0:
                 return jsonify({'message': 'noop', 'added': 0})
 
@@ -7025,13 +7026,14 @@ def create_app() -> Flask:
             ).fetchone()
 
             now = datetime.utcnow()
-            MAX_CREDIT_PER_HEARTBEAT = 120  # hard ceiling regardless of anything else
+            # Normal heartbeats are 30 seconds apart. Allow small scheduling
+            # jitter, but reject long gaps caused by hidden tabs or sleeping devices.
+            MAX_ACTIVE_GAP_SECONDS = 45
 
             if not existing:
-                # First heartbeat ever for this user+course: no prior timestamp to
-                # diff against, so credit a small conservative bootstrap amount
-                # rather than trusting the client's number outright.
-                credited = min(claimed_seconds, 30)
+                # First active heartbeat starts conservatively; a stop signal
+                # only establishes a zero-time anchor.
+                credited = min(claimed_seconds, 30) if active else 0
                 try:
                     db.execute(
                         'INSERT INTO time_tracking (user_id, course_id, total_seconds, last_seen) VALUES (?,?,?,CURRENT_TIMESTAMP)',
@@ -7055,9 +7057,16 @@ def create_app() -> Flask:
                         elapsed_real = (now - last_seen_dt).total_seconds()
                     except Exception:
                         elapsed_real = 0
-                # Credit whichever is smaller: real elapsed time, or the hard
-                # per-heartbeat ceiling. Never the client-claimed value.
-                credited = int(max(0, min(elapsed_real, MAX_CREDIT_PER_HEARTBEAT)))
+                # Credit only short, uninterrupted heartbeat windows. Long gaps
+                # count as away time; update last_seen below so tracking can resume.
+                # The stop signal still credits the short foreground interval
+                # immediately before the tab was hidden. On a later resume, a
+                # long hidden gap is rejected because it exceeds this same limit.
+                credited = (
+                    int(max(0, min(elapsed_real, MAX_ACTIVE_GAP_SECONDS)))
+                    if elapsed_real <= MAX_ACTIVE_GAP_SECONDS
+                    else 0
+                )
                 db.execute(
                     'UPDATE time_tracking SET total_seconds=total_seconds+?, last_seen=CURRENT_TIMESTAMP WHERE user_id=? AND course_id=?',
                     (credited, uid, cid)
