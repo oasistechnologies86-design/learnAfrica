@@ -152,6 +152,15 @@ def get_or_issue_certificate(db, user_id, course_id, use_postgres):
     if not enr:
         return None, 'You are not enrolled in this course'
 
+    # Once a certificate has been issued, later course edits must not invalidate
+    # that historical award. Existing records keep their original ID and details.
+    existing = db.execute(
+        'SELECT * FROM issued_certificates WHERE user_id=' + ph + ' AND course_id=' + ph,
+        (user_id, course_id)
+    ).fetchone()
+    if existing:
+        return dict(existing), None
+
     sql_final = ("SELECT id FROM lessons WHERE course_id=" + ph +
                  " AND is_final=1 AND type='quiz'")
     final_lesson = db.execute(sql_final, (course_id,)).fetchone()
@@ -185,13 +194,6 @@ def get_or_issue_certificate(db, user_id, course_id, use_postgres):
     required_score = int((final_quiz['pass_score'] if final_quiz else None) or 70)
     if (prog['quiz_score'] or 0) < required_score:
         return None, f'You scored {prog["quiz_score"]}% on the final exam. You need {required_score}% to earn the certificate.'
-
-    existing = db.execute(
-        'SELECT * FROM issued_certificates WHERE user_id=' + ph + ' AND course_id=' + ph,
-        (user_id, course_id)
-    ).fetchone()
-    if existing:
-        return dict(existing), None
 
     user     = db.execute('SELECT name FROM users WHERE id=' + ph, (user_id,)).fetchone()
     cert_id  = f'LA-CERT-{str(uuid.uuid4())[:8].upper()}'
