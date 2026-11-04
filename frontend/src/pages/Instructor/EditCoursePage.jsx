@@ -175,7 +175,7 @@ export function EditCoursePage() {
 
   const handleSave = async () => {
     const invalidAttemptQuiz = sections.flatMap(s => s.lessons || []).find(l => l.type === 'quiz' && l.attempts_enabled && (!(Number(l.max_attempts) >= 1 && Number(l.max_attempts) <= 50) || !(Number(l.extra_attempt_price) > 0)));
-    if (invalidAttemptQuiz) { setError('For every quiz with attempt limits enabled, set 1–50 included attempts and a price greater than GHS 0.'); setTab('curriculum'); return; }
+    if (invalidAttemptQuiz) { setError('For every quiz with attempt limits enabled, set 1-50 included attempts and a price greater than GHS 0.'); setTab('curriculum'); return; }
     if (!form.title || !form.description || !form.category || !form.difficulty) {
       setError('Please fill in all required fields.');
       setTab('basics');
@@ -355,7 +355,7 @@ export function EditCoursePage() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase text-muted-foreground">Rating (0–5 ★)</label>
+              <label className="text-xs font-bold uppercase text-muted-foreground">Rating (0-5 ★)</label>
               <div className="relative">
                 <input type="text" inputMode="decimal" min="0" max="5" step="0.1" className={inputCls}
                   value={form.rating} onChange={e => setField('rating', e.target.value)} placeholder="4.5" />
@@ -481,7 +481,7 @@ export function EditCoursePage() {
         <Card className="p-6 space-y-5">
           <h2 className="text-lg font-bold">Pricing &amp; Publish</h2>
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold">Price (GH₵) — 0 for free</label>
+            <label className="text-sm font-semibold">Price (GH₵) - 0 for free</label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">$</span>
               <input type="text" inputMode="decimal" min="0" step="0.01"
