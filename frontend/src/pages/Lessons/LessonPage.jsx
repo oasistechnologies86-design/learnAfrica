@@ -176,7 +176,7 @@ function SidebarContent({ sections, allLessons, lessonId, courseId, onClose }) {
                     <p className="truncate font-bold tracking-tight leading-tight">{l.title}</p>
                     <p className={cn('text-2xs mt-0.5 font-medium opacity-70',
                       isCurrent ? 'text-primary-foreground' : 'text-muted-foreground')}>
-                      {isQuiz ? 'Quiz' : l.duration || ''}
+                      {isQuiz ? (l.is_final ? 'Final Examination' : 'Lesson Test') : l.duration || ''}
                       {l.is_final ? ' · Final' : ''}
                     </p>
                   </div>
