@@ -124,9 +124,7 @@ function SidebarContent({ sections, allLessons, lessonId, courseId, onClose }) {
     const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n;
   });
 
-  const link = (l) => l.type === 'quiz'
-    ? `/learn/course/${courseId}/quiz/${l.id}`
-    : `/learn/course/${courseId}/lesson/${l.id}`;
+  const link = (l) => `/learn/course/${courseId}/lesson/${l.id}`;
 
   return (
     <div className="space-y-1.5">
@@ -209,6 +207,9 @@ export function LessonPage() {
   const [isSaving,     setIsSaving]     = useState(false);
   const [loading,      setLoading]      = useState(true);
   const [error,        setError]        = useState(null);
+  const [quizMeta, setQuizMeta] = useState(null);
+  const [quizMetaLoading, setQuizMetaLoading] = useState(false);
+  const [showStartConfirm, setShowStartConfirm] = useState(false);
 
   // ── Time tracking (course-wide) ─────────────────────────────────────────
   // Now the single shared implementation (see useCourseTimeTracking), used
@@ -261,6 +262,30 @@ export function LessonPage() {
       .catch(() => {});
     return () => { cancelled = true; };
   }, [courseId]);
+
+  // Load the quiz rules for the information screen only. This GET request does
+  // not create an attempt or start the quiz timer.
+  useEffect(() => {
+    if (!courseId || !lessonId || lesson?.type !== 'quiz') {
+      setQuizMeta(null);
+      return;
+    }
+    let cancelled = false;
+    setQuizMetaLoading(true);
+    const token = sessionStorage.getItem('auth_token');
+    fetch(`${API_BASE}/api/courses/${courseId}/quizzes/${lessonId}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then(async response => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Could not load test information');
+        return data.quiz;
+      })
+      .then(data => { if (!cancelled) setQuizMeta(data || null); })
+      .catch(() => { if (!cancelled) setQuizMeta(null); })
+      .finally(() => { if (!cancelled) setQuizMetaLoading(false); });
+    return () => { cancelled = true; };
+  }, [courseId, lessonId, lesson?.type]);
 
   // Keep completed flags in sync after marking complete
   const syncDone = useCallback((lid) => {
@@ -739,33 +764,115 @@ export function LessonPage() {
             </>
             )}
 
-            {/* Dedicated quiz screen: just the quiz, a short guideline, and
-                the Start button. No Resources/Discussion/Content tabs. */}
+            {/* Quiz information screen. The student sees the rules before an
+                attempt is created or the quiz timer can begin. */}
             {isQuizLesson && (
-              <div className="max-w-lg mx-auto text-center py-10 px-4">
-                <div className="h-16 w-16 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-5">
-                  <HelpCircle className="h-8 w-8 text-primary" />
+              <div className="max-w-2xl mx-auto py-8 sm:py-10 px-4">
+                <div className="text-center mb-7">
+                  <div className="h-16 w-16 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-5">
+                    <HelpCircle className="h-8 w-8 text-primary" />
+                  </div>
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary mb-2">
+                    {lesson.is_final ? 'Course final assessment' : 'Course assessment'}
+                  </p>
+                  <h2 className="text-2xl sm:text-3xl font-black mb-2">{lesson.title || (lesson.is_final ? 'Final Exam' : 'Test')}</h2>
+                  <p className="text-sm text-muted-foreground leading-relaxed max-w-xl mx-auto">
+                    {lesson.description || (lesson.is_final
+                      ? 'Review the assessment rules below before starting. You must pass this final exam to complete the course and qualify for its certificate.'
+                      : 'Review the assessment rules below before starting. Your result will be recorded when you submit the test.')}
+                  </p>
                 </div>
-                <h2 className="text-xl font-bold mb-2">{lesson.is_final ? 'Final Exam' : 'Test'}</h2>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-                  {lesson.is_final
-                    ? 'Answer each question carefully. You must pass this final exam to complete it and qualify for the course certificate.'
-                    : 'Answer each question carefully. Your test is marked complete automatically when you pass.'}
-                </p>
+
+                {quizMetaLoading ? (
+                  <Card className="p-5 text-center text-sm text-muted-foreground">Loading test information…</Card>
+                ) : quizMeta ? (
+                  <Card className="p-5 sm:p-6 mb-5">
+                    <h3 className="font-bold text-base mb-4 flex items-center gap-2">
+                      <ClipboardList className="h-5 w-5 text-primary" /> Before you begin
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="rounded-xl bg-muted/60 p-4">
+                        <p className="text-xs text-muted-foreground mb-1">Number of questions</p>
+                        <p className="text-lg font-extrabold">{Number(quizMeta.question_count ?? quizMeta.questions?.length ?? 0)}</p>
+                      </div>
+                      <div className="rounded-xl bg-muted/60 p-4">
+                        <p className="text-xs text-muted-foreground mb-1">Time allowed</p>
+                        <p className="text-lg font-extrabold">{quizMeta.timer_enabled && Number(quizMeta.duration_seconds) > 0
+                          ? formatDuration(Number(quizMeta.duration_seconds))
+                          : 'No time limit'}</p>
+                      </div>
+                      <div className="rounded-xl bg-muted/60 p-4">
+                        <p className="text-xs text-muted-foreground mb-1">Attempts</p>
+                        <p className="text-lg font-extrabold">{quizMeta.attempts_enabled && Number(quizMeta.max_attempts) > 0
+                          ? `${Math.max(0, Number(quizMeta.attempts_remaining ?? quizMeta.max_attempts))} of ${Number(quizMeta.effective_max_attempts ?? quizMeta.max_attempts)} remaining`
+                          : 'Unlimited attempts'}</p>
+                        {quizMeta.attempts_enabled && Number(quizMeta.max_attempts) > 0 && (
+                          <p className="text-xs text-muted-foreground mt-1">Attempts used: {Number(quizMeta.attempts_used || 0)}</p>
+                        )}
+                      </div>
+                      <div className="rounded-xl bg-muted/60 p-4">
+                        <p className="text-xs text-muted-foreground mb-1">Extra attempt fee</p>
+                        <p className="text-lg font-extrabold">{quizMeta.attempts_enabled && Number(quizMeta.extra_attempt_price) > 0
+                          ? `GHS ${Number(quizMeta.extra_attempt_price).toFixed(2)}`
+                          : 'No extra attempt fee configured'}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Only applies if you use all included attempts and an extra attempt is available for purchase.</p>
+                      </div>
+                    </div>
+                    <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm text-muted-foreground space-y-1">
+                      <p className="font-semibold text-foreground">Please note</p>
+                      <p>Once you press “Start test”, your attempt begins. If a time limit is set, the countdown starts and cannot be paused by leaving this page.</p>
+                      <p>Your answers must be submitted before the time expires. The test is marked according to the instructor’s assessment settings.</p>
+                    </div>
+                  </Card>
+                ) : (
+                  <Card className="p-5 mb-5 border-warning/40 bg-warning/5">
+                    <p className="text-sm font-semibold">Test settings could not be loaded.</p>
+                    <p className="text-xs text-muted-foreground mt-1">Please refresh this page before starting so you can review the test rules.</p>
+                  </Card>
+                )}
+
                 {currentLessonFinished ? (
-                  <p className="text-sm text-success font-medium mb-4">You have passed this {lesson.is_final ? 'final exam' : 'test'}.</p>
+                  <p className="text-sm text-success font-medium text-center mb-4">You have passed this {lesson.is_final ? 'final exam' : 'test'}.</p>
                 ) : lesson.quizScore !== null && lesson.quizScore !== undefined ? (
-                  <p className="text-sm text-muted-foreground mb-4">Your last score was {lesson.quizScore}%. You have not passed yet. Review the lesson and try again.</p>
+                  <p className="text-sm text-muted-foreground text-center mb-4">Your last score was {lesson.quizScore}%. Review the material and try again.</p>
                 ) : null}
-                <Link to={`/learn/course/${courseId}/quiz/${lessonId}`}>
-                  <Button size="lg" className="w-full sm:w-auto gap-2 px-8">
+
+                <div className="flex justify-center">
+                  <Button size="lg" className="w-full sm:w-auto gap-2 px-10"
+                    disabled={quizMetaLoading || !quizMeta}
+                    onClick={() => setShowStartConfirm(true)}>
                     <HelpCircle className="h-5 w-5" />
                     {lesson.quizScore !== null && lesson.quizScore !== undefined && !currentLessonFinished
                       ? 'Try Again'
                       : currentLessonFinished ? (lesson.is_final ? 'Retake Final Exam' : 'Retake Test')
-                      : (lesson.is_final ? 'Take Final Exam' : 'Take Test')}
+                      : (lesson.is_final ? 'Start Final Exam' : 'Start Test')}
                   </Button>
-                </Link>
+                </div>
+
+                {showStartConfirm && (
+                  <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+                    role="dialog" aria-modal="true" aria-labelledby="start-test-title">
+                    <Card className="w-full max-w-md p-6 shadow-2xl">
+                      <div className="h-12 w-12 rounded-xl bg-warning/15 text-warning flex items-center justify-center mb-4">
+                        <AlertTriangle className="h-6 w-6" />
+                      </div>
+                      <h3 id="start-test-title" className="text-xl font-black mb-2">Ready to start?</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed mb-5">
+                        {quizMeta.timer_enabled && Number(quizMeta.duration_seconds) > 0
+                          ? `Your ${formatDuration(Number(quizMeta.duration_seconds))} timer will begin as soon as the test opens.`
+                          : 'Your test attempt will begin as soon as the test opens.'}
+                        {' '}Make sure you are ready before continuing.
+                      </p>
+                      <div className="flex flex-col-reverse sm:flex-row gap-3">
+                        <Button variant="outline" className="flex-1" onClick={() => setShowStartConfirm(false)}>Not yet</Button>
+                        <Button className="flex-1" onClick={() => {
+                          setShowStartConfirm(false);
+                          navigate(`/learn/course/${courseId}/quiz/${lessonId}`);
+                        }}>Yes, start test</Button>
+                      </div>
+                    </Card>
+                  </div>
+                )}
               </div>
             )}
 
