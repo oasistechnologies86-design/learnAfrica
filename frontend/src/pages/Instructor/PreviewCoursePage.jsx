@@ -244,6 +244,12 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
         <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
           This preview uses the configured question selection and shuffling. Starting it will not create a real attempt, start a student timer, or save a score.
         </div>
+        {isFinal && (
+          <div className="mt-3 rounded-lg border border-success/20 bg-success/5 p-3 text-xs text-muted-foreground">
+            <p className="font-semibold text-foreground">Course attempt allowance</p>
+            <p>When a student passes this Final Examination, the quiz-attempt allowances for this course reset to the original included-attempt amounts set by the instructor. Previous attempts and payment records remain in history.</p>
+          </div>
+        )}
         <Button className="w-full mt-5" onClick={() => setConfirmStart(true)}>Start {assessmentName} Preview</Button>
       </Card>
       {confirmStart && (
