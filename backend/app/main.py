@@ -2351,6 +2351,7 @@ def create_app() -> Flask:
         ensure_column(db, 'quizzes', 'attempts_enabled', 'INTEGER')
         ensure_column(db, 'quizzes', 'extra_attempt_price', 'REAL DEFAULT 0')
         ensure_column(db, 'quizzes', 'timer_enabled', 'INTEGER DEFAULT 0')
+        ensure_column(db, 'quizzes', 'pass_score', 'INTEGER DEFAULT 70')
         q = db.execute('SELECT * FROM quizzes WHERE course_id=? AND lesson_id=?',(cid,lid)).fetchone()
         if not q: return jsonify({'error': 'Quiz not found for this lesson'}), 404
         qd = dict(q)
@@ -2382,6 +2383,7 @@ def create_app() -> Flask:
         qd['max_attempts'] = int(qd.get('max_attempts') or 0)
         qd['attempts_enabled'] = bool(qd.get('attempts_enabled')) if qd.get('attempts_enabled') is not None else qd['max_attempts'] > 0
         qd['extra_attempt_price'] = float(qd.get('extra_attempt_price') or 0)
+        qd['pass_score'] = int(qd.get('pass_score') or app.config['QUIZ_PASS_SCORE'])
         # Anti-cheat flags. When any of these are on, the student flow calls
         # POST /api/quizzes/<id>/start instead of relying on this response.
         qd['duration_seconds']     = int(qd.get('duration_seconds') or 0)
@@ -2427,6 +2429,7 @@ def create_app() -> Flask:
         try:
             db = get_db()
             ensure_column(db, 'quizzes', 'timer_enabled', 'INTEGER DEFAULT 0')
+            ensure_column(db, 'quizzes', 'pass_score', 'INTEGER DEFAULT 70')
             quiz_row = db.execute('SELECT * FROM quizzes WHERE id=?', (qid,)).fetchone()
             if not quiz_row:
                 return jsonify({'error': 'Quiz not found'}), 404
@@ -2537,6 +2540,7 @@ def create_app() -> Flask:
             # Resolve the quiz server-side and IGNORE any course/lesson ids the
             # client sent — those were previously trusted, which allowed a
             # submitted quiz to be attributed to an arbitrary course/lesson.
+            ensure_column(db, 'quizzes', 'pass_score', 'INTEGER DEFAULT 70')
             quiz_row = db.execute('SELECT * FROM quizzes WHERE id=?', (qid,)).fetchone()
             if not quiz_row:
                 return jsonify({'error': 'Quiz not found'}), 404
@@ -2618,6 +2622,8 @@ def create_app() -> Flask:
             # Without a session (legacy quizzes), fall back to the ordered
             # question table, which reproduces the original behaviour.
             attempt_id = d.get('attempt_id')
+            if not attempt_id:
+                return jsonify({'error': 'invalid_attempt', 'message': 'Please return to the assessment information page and confirm Start before answering.'}), 400
             session = None
             if attempt_id:
                 session = db.execute(
@@ -2637,10 +2643,11 @@ def create_app() -> Flask:
                         'message': 'Time is up — the attempt was not accepted. Please start the quiz again.',
                     }), 403
 
+            pass_score = int(quiz_row['pass_score'] or app.config['QUIZ_PASS_SCORE'])
             if session:
                 served = json.loads(session['served_questions'] or '[]')
                 score, correct_count, correct_map, passed = grade_served(
-                    served, answers, app.config['QUIZ_PASS_SCORE'])
+                    served, answers, pass_score)
                 total_questions = len(served)
             else:
                 questions = db.execute(
@@ -2669,7 +2676,7 @@ def create_app() -> Flask:
                                 pass
                 total_questions = len(questions)
                 score = int((correct_count / total_questions) * 100) if total_questions else 0
-                passed = score >= app.config['QUIZ_PASS_SCORE']
+                passed = score >= pass_score
             db.execute('''INSERT INTO quiz_attempts (id,user_id,quiz_id,score,answers,correct_answers)
                           VALUES(?,?,?,?,?,?)''',
                        (str(uuid.uuid4()), g.current_user['user_id'], qid, score,
@@ -3130,10 +3137,14 @@ def create_app() -> Flask:
                         q_per_att = max(0, int(les.get('questions_per_attempt') or 0))
                         q_shuf_q  = 1 if les.get('shuffle_questions') else 0
                         q_shuf_o  = 1 if les.get('shuffle_options') else 0
+                        ensure_column(db, 'quizzes', 'pass_score', 'INTEGER DEFAULT 70')
+                        q_pass_score = int(les.get('pass_score') or app.config['QUIZ_PASS_SCORE'])
+                        if not 1 <= q_pass_score <= 100:
+                            return jsonify({'error': 'Passing score must be between 1 and 100.'}), 400
                         db.execute('INSERT INTO quizzes (id,course_id,lesson_id,title,duration,duration_seconds,timer_enabled,max_attempts,'
-                                   'questions_per_attempt,shuffle_questions,shuffle_options,attempts_enabled,extra_attempt_price) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                                   'questions_per_attempt,shuffle_questions,shuffle_options,attempts_enabled,extra_attempt_price,pass_score) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
                                    (qzid, cid, leid, les.get('title','Quiz'), q_dur_text, q_dur_sec, q_timer_enabled, q_max_att,
-                                    q_per_att, q_shuf_q, q_shuf_o, q_attempts_enabled, q_extra_price))
+                                    q_per_att, q_shuf_q, q_shuf_o, q_attempts_enabled, q_extra_price, q_pass_score))
                         for qi, q in enumerate(les['questions']):
                             db.execute('''INSERT INTO quiz_questions (id,quiz_id,question_text,options,correct_answer,question_type,"order")
                                           VALUES(?,?,?,?,?,?,?)''',
@@ -3230,6 +3241,48 @@ def create_app() -> Flask:
             import traceback
             app.logger.error(f'preview_lesson error: {traceback.format_exc()}')
             return jsonify({'error': 'Failed to load lesson preview', 'detail': _err_detail(e)}), 500
+
+
+    @app.route('/api/instructor/courses/<cid>/lessons/<lid>/quiz-preview', methods=['GET'])
+    @instructor_required
+    def instructor_preview_quiz(cid, lid):
+        """Return instructor-owned quiz settings and answer key for a non-persistent preview."""
+        try:
+            db = get_db()
+            ensure_column(db, 'quizzes', 'pass_score', 'INTEGER DEFAULT 70')
+            course = db.execute('SELECT instructor_id FROM courses WHERE id=?', (cid,)).fetchone()
+            if not course:
+                return jsonify({'error': 'Course not found'}), 404
+            if course['instructor_id'] != g.current_user['user_id'] and g.current_user['role'] not in ('admin', 'superadmin'):
+                return jsonify({'error': 'Forbidden'}), 403
+            quiz_row = db.execute('SELECT * FROM quizzes WHERE course_id=? AND lesson_id=?', (cid, lid)).fetchone()
+            if not quiz_row:
+                return jsonify({'error': 'Quiz not found for this lesson'}), 404
+            quiz = safe_dict(quiz_row)
+            questions = []
+            for row in db.execute('SELECT * FROM quiz_questions WHERE quiz_id=? ORDER BY "order"', (quiz['id'],)).fetchall():
+                question = safe_dict(row)
+                try:
+                    question['options'] = json.loads(question['options']) if isinstance(question.get('options'), str) else (question.get('options') or [])
+                except Exception:
+                    question['options'] = []
+                question['question'] = question.get('question_text') or ''
+                questions.append(question)
+            lesson = db.execute('SELECT is_final FROM lessons WHERE id=? AND course_id=?', (lid, cid)).fetchone()
+            quiz['questions'] = questions
+            quiz['question_count'] = len(questions)
+            quiz['is_final'] = bool(lesson['is_final']) if lesson else False
+            quiz['timer_enabled'] = bool(quiz.get('timer_enabled'))
+            quiz['duration_seconds'] = int(quiz.get('duration_seconds') or 0) if quiz['timer_enabled'] else 0
+            quiz['attempts_enabled'] = bool(quiz.get('attempts_enabled')) if quiz.get('attempts_enabled') is not None else int(quiz.get('max_attempts') or 0) > 0
+            quiz['max_attempts'] = int(quiz.get('max_attempts') or 0)
+            quiz['extra_attempt_price'] = float(quiz.get('extra_attempt_price') or 0)
+            quiz['questions_per_attempt'] = int(quiz.get('questions_per_attempt') or 0)
+            quiz['pass_score'] = int(quiz.get('pass_score') or app.config['QUIZ_PASS_SCORE'])
+            return jsonify({'quiz': quiz, 'preview_only': True})
+        except Exception as e:
+            app.logger.error(f'instructor_preview_quiz error: {traceback.format_exc()}')
+            return jsonify({'error': 'Failed to load quiz preview', 'detail': _err_detail(e)}), 500
 
     @app.route('/api/instructor/courses/<cid>', methods=['GET'])
     @instructor_required
@@ -3564,6 +3617,10 @@ def create_app() -> Flask:
                             q_per_att = max(0, int(les.get('questions_per_attempt') or 0))
                             q_shuf_q  = 1 if les.get('shuffle_questions') else 0
                             q_shuf_o  = 1 if les.get('shuffle_options') else 0
+                            ensure_column(db, 'quizzes', 'pass_score', 'INTEGER DEFAULT 70')
+                            q_pass_score = int(les.get('pass_score') or app.config['QUIZ_PASS_SCORE'])
+                            if not 1 <= q_pass_score <= 100:
+                                return jsonify({'error': 'Passing score must be between 1 and 100.'}), 400
                             existing_quiz = db.execute(
                                 'SELECT id FROM quizzes WHERE course_id=? AND lesson_id=? ORDER BY id LIMIT 1',
                                 (cid, leid)
@@ -3572,17 +3629,17 @@ def create_app() -> Flask:
                                 qzid = existing_quiz['id']
                                 db.execute(
                                     'UPDATE quizzes SET title=?,duration=?,duration_seconds=?,timer_enabled=?,max_attempts=?,'
-                                    'questions_per_attempt=?,shuffle_questions=?,shuffle_options=?,attempts_enabled=?,extra_attempt_price=? WHERE id=?',
+                                    'questions_per_attempt=?,shuffle_questions=?,shuffle_options=?,attempts_enabled=?,extra_attempt_price=?,pass_score=? WHERE id=?',
                                     (les.get('title','Quiz'), q_dur_text, q_dur_sec, q_timer_enabled, q_max_att,
-                                     q_per_att, q_shuf_q, q_shuf_o, q_attempts_enabled, q_extra_price, qzid)
+                                     q_per_att, q_shuf_q, q_shuf_o, q_attempts_enabled, q_extra_price, q_pass_score, qzid)
                                 )
                             else:
                                 qzid = str(uuid.uuid4())
                                 db.execute(
                                     'INSERT INTO quizzes (id,course_id,lesson_id,title,duration,duration_seconds,timer_enabled,max_attempts,'
-                                    'questions_per_attempt,shuffle_questions,shuffle_options,attempts_enabled,extra_attempt_price) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                                    'questions_per_attempt,shuffle_questions,shuffle_options,attempts_enabled,extra_attempt_price,pass_score) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
                                     (qzid, cid, leid, les.get('title','Quiz'), q_dur_text, q_dur_sec, q_timer_enabled, q_max_att,
-                                     q_per_att, q_shuf_q, q_shuf_o, q_attempts_enabled, q_extra_price)
+                                     q_per_att, q_shuf_q, q_shuf_o, q_attempts_enabled, q_extra_price, q_pass_score)
                                 )
                             # Replace the question bank, not the quiz itself. This
                             # preserves historical attempts, active session IDs,
