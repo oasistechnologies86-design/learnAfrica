@@ -135,6 +135,7 @@ export function EditCoursePage() {
               quiz_duration_seconds: Number(les.quiz_duration_seconds || 0),
               quiz_timer_enabled: !!les.quiz_timer_enabled,
               is_final: les.is_final || false,
+              pass_score: Number(les.pass_score || 70),
               max_attempts: Number(les.max_attempts || 0),
               attempts_enabled: les.attempts_enabled !== undefined ? !!les.attempts_enabled : Number(les.max_attempts || 0) > 0,
               extra_attempt_price: Number(les.extra_attempt_price || 0),
