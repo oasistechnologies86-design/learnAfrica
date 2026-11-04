@@ -260,7 +260,7 @@ export function LessonPage() {
       .then(async r => {
         const data = await r.json();
         if (r.status === 403) {
-          // Not enrolled — redirect to course page instead of error screen
+          // Not enrolled - redirect to course page instead of error screen
           if (!cancelled) navigate(`/courses/${courseId}`, { replace: true });
           return null;
         }
@@ -457,7 +457,7 @@ export function LessonPage() {
 
           {/* ── PERSISTENT LEARNING-TIME BANNER ── */}
           {/* Shown on every lesson page when the instructor has enforced a minimum time. */}
-          {/* Option A: when met, banner stays visible in green forever — "Minimum time met" + final-quiz hint */}
+          {/* Option A: when met, banner stays visible in green forever - "Minimum time met" + final-quiz hint */}
           {timeEnforce && timeRequired > 0 && (() => {
             const met = timeSpent >= timeRequired;
             const pct = Math.min(100, Math.round((timeSpent / timeRequired) * 100));
@@ -513,7 +513,7 @@ export function LessonPage() {
             );
           })()}
 
-          {/* CUSTOM PAGE lesson — plug in a pre-built React component.
+          {/* CUSTOM PAGE lesson - plug in a pre-built React component.
               For custom pages, we render the lesson meta (title + duration + completed
               indicator) ABOVE the custom component so students see what lesson they're
               on before diving into the content. Video/text/quiz lessons keep the
@@ -633,7 +633,7 @@ export function LessonPage() {
 
           <div className={lesson.type === 'custom' ? 'w-full max-w-none py-8' : 'max-w-4xl mx-auto py-8'}>
 
-            {/* Lesson meta — hidden for custom lessons because they show it at the top */}
+            {/* Lesson meta - hidden for custom lessons because they show it at the top */}
             {lesson.type !== 'custom' && !isQuizLesson && (
             <div className="mb-10">
               <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
@@ -662,7 +662,7 @@ export function LessonPage() {
             )}
 
             {/* Tabs (Content/Resources/Notes/Discussion) never apply to quiz
-                lessons — a quiz gets its own clean, dedicated screen below
+                lessons - a quiz gets its own clean, dedicated screen below
                 instead of being buried inside a tab. */}
             {!isQuizLesson && (
             <>
@@ -719,7 +719,7 @@ export function LessonPage() {
                 </div>
               )}
 
-              {/* Resources — real lesson resources from API */}
+              {/* Resources - real lesson resources from API */}
               {activeTab === 'resources' && (
                 <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <h3 className="text-lg font-bold mb-4">Lesson Resources</h3>
@@ -788,7 +788,7 @@ export function LessonPage() {
                 </Card>
               )}
 
-              {/* Discussion — real DiscussionBoard */}
+              {/* Discussion - real DiscussionBoard */}
               {activeTab === 'discussion' && (
                 <DiscussionBoard courseId={courseId} lessonId={lessonId} />
               )}
@@ -866,7 +866,7 @@ export function LessonPage() {
                     <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground space-y-1">
                       <p className="font-semibold text-foreground">{lesson.is_final ? 'How attempt resets work' : 'About extra attempts'}</p>
                       {lesson.is_final ? (
-                        <p>If you use all included attempts, the fee shown above buys one extra attempt. If you pass this Final Examination for the first time — even using a paid extra attempt — the attempt allowance for every quiz in this course resets to the instructor’s original included amount. You will not keep paying after that reset. Earlier attempts and payment receipts stay in your history.</p>
+                        <p>If you use all included attempts, the fee shown above buys one extra attempt. If you pass this Final Examination for the first time, including with a paid extra attempt, the attempt allowance for every quiz in this course returns to the original number of attempts set by the instructor. You will not keep paying after that reset. Earlier attempts and payment receipts stay in your history.</p>
                       ) : (
                         <p>If you use all included attempts, the fee shown above buys one extra attempt. A payment does not reset the full allowance. The course-wide reset happens when you pass the course’s Final Examination for the first time. Earlier attempts and payment receipts remain in your history.</p>
                       )}
