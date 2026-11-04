@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import { X, LayoutDashboard, Settings, Shield, User, ChevronRight, ArrowLeft, BookMarked, Receipt } from 'lucide-react';
+import { X, LayoutDashboard, Settings, Shield, User, ChevronRight, ArrowLeft, BookMarked, Receipt, Award } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import LogoutButton from '@/components/common/LogoutButton';
 
@@ -53,6 +53,7 @@ export default function MobileProfileDrawer({ isOpen, onClose, user, isLoading,
             label={isInstructor ? 'Instructor Dashboard' : 'My Dashboard'} onClick={onClose} />
           {isInstructor && <MenuLink to="/instructor/courses" icon={<BookMarked className="h-4 w-4" />} label="My Courses" onClick={onClose} />}
           {isAdmin && <MenuLink to="/admin" icon={<Shield className="h-4 w-4" />} label="Admin Panel" onClick={onClose} variant="primary" />}
+          {!isInstructor && <MenuLink to="/my-certificates" icon={<Award className="h-4 w-4" />} label="My Certificates" onClick={onClose} />}
           <MenuLink to="/settings" icon={<Settings className="h-4 w-4" />} label="Settings" onClick={onClose} />
           <MenuLink to="/receipts" icon={<Receipt className="h-4 w-4" />} label="Receipts" onClick={onClose} />
         </div>
