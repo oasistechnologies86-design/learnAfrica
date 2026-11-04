@@ -94,7 +94,7 @@ export function CreateCoursePage() {
   const handleSubmit = async () => {
     if (!validateBasics()) { setTab('basics'); return; }
     const invalidAttemptQuiz = sections.flatMap(s => s.lessons || []).find(l => l.type === 'quiz' && l.attempts_enabled && (!(Number(l.max_attempts) >= 1 && Number(l.max_attempts) <= 50) || !(Number(l.extra_attempt_price) > 0)));
-    if (invalidAttemptQuiz) { setSubmitError('For every quiz with attempt limits enabled, set 1–50 included attempts and a price greater than GHS 0.'); setTab('curriculum'); return; }
+    if (invalidAttemptQuiz) { setSubmitError('For every quiz with attempt limits enabled, set 1-50 included attempts and a price greater than GHS 0.'); setTab('curriculum'); return; }
     setIsSubmitting(true);
     setSubmitError('');
     try {
@@ -413,7 +413,7 @@ export function CreateCoursePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Initial Rating (0–5 ★)">
+            <Field label="Initial Rating (0-5 ★)">
               <div className="relative">
                 <input type="text" inputMode="decimal" min="0" max="5" step="0.1" className={inputCls}
                   value={form.initialRating}
@@ -430,7 +430,7 @@ export function CreateCoursePage() {
                 placeholder="e.g. 0" />
               <p className="text-2xs text-muted-foreground mt-1">Review count shown next to the stars.</p>
             </Field>
-            <Field label="Price (GH₵ — set in step 3)">
+            <Field label="Price (GH₵ - set in step 3)">
               <input type="text" inputMode="decimal" min="0" step="0.01" className={inputCls} value={form.price}
                 onChange={e => set('price', e.target.value)} placeholder="0.00" />
             </Field>
@@ -507,7 +507,7 @@ export function CreateCoursePage() {
             </div>
           )}
 
-          <Field label="Price (GH₵) — enter 0 for free">
+          <Field label="Price (GH₵) - enter 0 for free">
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">$</span>
               <input type="text" inputMode="decimal" min="0" step="0.01" value={form.price}
