@@ -836,7 +836,7 @@ export function LessonPage() {
                     {lesson.is_final && (
                       <div className="mt-3 rounded-lg border border-success/20 bg-success/5 p-3 text-xs text-muted-foreground">
                         <p className="font-semibold text-foreground">Course attempt allowance</p>
-                        <p>When you pass this Final Examination, the quiz-attempt allowances for this course reset to the original included-attempt amounts set by the instructor. Your previous attempts and payment records remain in your history.</p>
+                        <p>The first time you pass this Final Examination, the attempt limits for quizzes in this course reset to the original included-attempt amounts set by the instructor. Previous attempts and payment receipts remain in your history.</p>
                       </div>
                     )}
                     {!lesson.description && !(lesson.content || lesson.text_content || lesson.textContent) && (
