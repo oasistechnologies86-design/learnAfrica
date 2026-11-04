@@ -481,7 +481,7 @@ export function PreviewCoursePage() {
                     <section className="custom-lesson-finish mt-10 border-t border-border pt-8 text-center">
                       <div className="mb-4 flex justify-center"><div className="custom-lesson-down-cue" aria-hidden="true"><ChevronRight className="h-7 w-7 rotate-90" /></div></div>
                       <p className="text-base font-bold text-foreground">You’ve reached the end of this lesson</p>
-                      <p className="mt-1 text-sm text-muted-foreground">Continue below to mark this lesson complete.</p>
+                      <p className="mt-1 text-sm text-muted-foreground">You have reached the end of the lesson content. Preview does not record lesson completion.</p>
                     </section>
                   </CustomLessonFrame>
                 </div>
