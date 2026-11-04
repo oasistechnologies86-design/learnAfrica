@@ -226,6 +226,7 @@ export function QuizPage() {
           correctCount: result.correct_count,
           totalQuestions: result.total_questions,
           passed: result.passed,
+          passScore: Number(quiz.pass_score ?? 70),
           correctAnswers: result.correct_answers,
           isFinalQuiz,
           hasCertificate: !!(course?.has_certificate),
