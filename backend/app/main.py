@@ -2440,16 +2440,17 @@ def create_app() -> Flask:
             qd['shuffle_questions'] or qd['shuffle_options']
             or (0 < qd['questions_per_attempt'] < len(questions))
         )
+        _cycle_credits = 0
         try:
             used_count, _cycle_credits = _course_quiz_attempt_usage(
                 db, g.current_user['user_id'], cid, qd['id'])
             qd['attempts_used'] = used_count
         except Exception:
             qd['attempts_used'] = 0
-        # Include paid credits in the effective limit shown to the student.
-        # The base instructor limit remains unchanged; each verified payment
-        # adds exactly one credit for this user and quiz.
-        qd['extra_attempts'] = extra_attempt_count(db, g.current_user['user_id'], qd['id'])
+            _cycle_credits = 0
+        # Only paid credits purchased in the current course allowance cycle
+        # count toward the displayed limit. Older receipts remain preserved.
+        qd['extra_attempts'] = _cycle_credits
         qd['effective_max_attempts'] = (
             qd['max_attempts'] + qd['extra_attempts'] if qd['attempts_enabled'] and qd['max_attempts'] > 0 else 0
         )
