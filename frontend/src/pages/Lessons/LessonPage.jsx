@@ -824,7 +824,7 @@ export function LessonPage() {
                     </div>
                     <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm text-muted-foreground space-y-1">
                       <p className="font-semibold text-foreground">Please note</p>
-                      <p>Once you press “Start test”, your attempt begins. If a time limit is set, the countdown starts and cannot be paused by leaving this page.</p>
+                      <p>Once you confirm and start this assessment, your attempt begins. If a time limit is set, the countdown starts and cannot be paused by leaving this page.</p>
                       <p>Your answers must be submitted before the time expires. The test is marked according to the instructor’s assessment settings.</p>
                     </div>
                   </Card>
