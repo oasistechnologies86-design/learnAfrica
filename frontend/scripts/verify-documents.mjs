@@ -92,7 +92,7 @@ createRoot(document.getElementById('root')).render(<App />);
 // would be ~0. This proves the QR is in the download, not just the DOM.
 window.__rasterQr = async (sel) => {
   const el = document.querySelector(sel);
-  const qr = el.querySelector('a[href*="verify-section"] svg');
+  const qr = el.querySelector('a[href*="verify-credential"] svg');
   const r = el.getBoundingClientRect();
   const qrRect = qr.getBoundingClientRect();
   const canvas = await html2canvas(el, { backgroundColor: '#ffffff', scale: 1, useCORS: true, logging: false });
@@ -137,7 +137,7 @@ try {
       const el = document.querySelector(sel);
       if (!el) { out[name] = { found: false }; continue; }
       const r = el.getBoundingClientRect();
-      const qr = el.querySelector('a[href*="verify-section"] svg');
+      const qr = el.querySelector('a[href*="verify-credential"] svg');
       const qrRect = qr ? qr.getBoundingClientRect() : null;
       // The block that carries the ID + verify URL (the last flex row).
       const block = [...el.querySelectorAll('div')].find((d) => /Verify at|Verify/.test(d.textContent) && d.querySelector('svg')) || null;

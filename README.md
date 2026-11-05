@@ -197,7 +197,7 @@ learnafrica-lite/
 │   ├── render.yaml                   # Render blueprint
 │   ├── Procfile                      # Alternate start command
 │   ├── env.example                   # Local env template → copy to .env
-│   └── test_sendpulse.py             # Standalone SendPulse credential tester
+│   └── check_sendpulse.py             # Standalone SendPulse credential tester
 │
 ├── frontend/                         # React SPA (deploys to Vercel)
 │   ├── src/
@@ -453,7 +453,7 @@ delete the admin row.
 | `RESET_RESEND_COOLDOWN_SECONDS` | optional | `60` | Minimum gap between reset-link sends for the same account (the UI shows this as a countdown). |
 | `OTP_EXPIRY_MINUTES` | optional | `15` | How long an email verification code stays valid. |
 | `OTP_RESEND_COOLDOWN_SECONDS` | optional | `60` | Minimum gap between verification-code sends for the same email. |
-| `SITE_URL` | optional | Vercel URL | Public frontend origin used to build absolute URLs in `/api/sitemap.xml`. Set it on Render. |
+| `SITE_URL` | optional | Vercel URL | The site's own public URL. Used for `/api/sitemap.xml`, share/verification links and the CORS allowlist. Set it in the deployment environment so changing domain needs no code change. |
 | `PORT` | set by host | `5000` | Port the server binds to (Render sets this). |
 
 ### Frontend
@@ -461,6 +461,7 @@ delete the admin row.
 | Variable | Required | Local | Production | Description |
 |---|---|---|---|---|
 | `VITE_API_URL` | ✅ prod | `http://localhost:5000` | your Render URL | Backend base URL. |
+| `VITE_SITE_URL` | recommended | unset | your frontend URL | The site's own URL. Drives `robots.txt`, `sitemap.xml` and share/verify links. On Vercel, leaving it unset falls back to `VERCEL_URL`. |
 | `VITE_GOOGLE_CLIENT_ID` | optional | unset | same as backend | Shows the "Continue with Google" button. Public value, not a secret. |
 
 > Supabase is called from the **backend only**, so the frontend does **not** need
@@ -498,7 +499,7 @@ third-party purchase to start.
 | `FORCE_SEED_GUIDE` | Optional — set to `1` to re-seed the instructor guide. |
 | `RESET_LINK_HOURS`, `RESET_RESEND_COOLDOWN_SECONDS` | Optional — **you choose** (defaults `1` hour, `60` seconds). |
 | `OTP_EXPIRY_MINUTES`, `OTP_RESEND_COOLDOWN_SECONDS` | Optional — **you choose** (defaults `15` minutes, `60` seconds). |
-| `SITE_URL` | **Your frontend URL** — e.g. `https://learnafrica-lite-weld.vercel.app`. Used by `/api/sitemap.xml` so search-engine entries are absolute. See [SEARCH_AND_GOOGLE_SETUP.md](SEARCH_AND_GOOGLE_SETUP.md). |
+| `SITE_URL` | **Your frontend URL** — e.g. `https://learn-africa-five.vercel.app`. The site's own address: drives `/api/sitemap.xml`, share/verification links and the CORS allowlist, so a domain change is an environment change only. See [SEARCH_AND_GOOGLE_SETUP.md](SEARCH_AND_GOOGLE_SETUP.md). |
 | `PORT` | **Set automatically** by Render. Do not set it yourself in production. |
 | `VITE_API_URL` (frontend) | **Your backend URL** — after Render deploys, e.g. `https://learnafrica-backend-xxxx.onrender.com`. |
 
@@ -632,8 +633,8 @@ Optional. Skip this if you want users to sign up without email verification
 
 ```bash
 pip install python-dotenv requests
-python test_sendpulse.py                    # checks the keys only
-python test_sendpulse.py you@example.com    # sends a real test email
+python check_sendpulse.py                    # checks the keys only
+python check_sendpulse.py you@example.com    # sends a real test email
 ```
 
 ### 2.5 Turn it on

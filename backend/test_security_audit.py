@@ -193,10 +193,58 @@ check('verification code uses secrets, not random.randint',
       'secrets.randbelow' in src and 'random.randint' not in src)
 
 # ── 9/10. Production secret guards ───────────────────────────────────────────
-check('production refuses to boot without SECRET_KEY',
-      'must be set in production' in src or 'refusing to start' in src)
-check('Paystack mock mode refused in production',
-      'PAYSTACK_SECRET_KEY' in src and 'mock' in src.lower())
+# Exercised behaviorally (not by grepping source): the guards must actually
+# raise, and must not raise when the environment is correct.
+import subprocess as _subprocess
+
+_PROD_GUARD = (
+    "import os;"
+    "os.environ['FLASK_ENV']='production';"
+    "os.environ['SECRET_KEY']={secret!r};"
+    "from app import create_app;"
+    "create_app();"
+    "print('BOOTED')"
+)
+
+_weak = _subprocess.run(
+    [sys.executable, '-c', _PROD_GUARD.format(secret='dev-secret-CHANGE-IN-PRODUCTION')],
+    capture_output=True, text=True, cwd=os.path.dirname(os.path.abspath(__file__)),
+)
+check('production refuses to boot with a weak/absent SECRET_KEY',
+      _weak.returncode != 0 and 'BOOTED' not in _weak.stdout,
+      (_weak.stderr or '').strip().splitlines()[-1] if _weak.stderr else '')
+
+_strong = _subprocess.run(
+    [sys.executable, '-c', _PROD_GUARD.format(secret='a-strong-unique-secret-value-32chars-plus')],
+    capture_output=True, text=True, cwd=os.path.dirname(os.path.abspath(__file__)),
+)
+check('production boots with a strong SECRET_KEY', 'BOOTED' in _strong.stdout,
+      (_strong.stderr or '').strip().splitlines()[-1] if _strong.stderr else '')
+
+# Mock payments must be refused in production, and allowed outside it.
+from app import payments as _payments  # noqa: E402
+_prev_env = os.environ.get('FLASK_ENV')
+_prev_key = os.environ.get('PAYSTACK_SECRET_KEY')
+try:
+    os.environ['FLASK_ENV'] = 'production'
+    os.environ.pop('PAYSTACK_SECRET_KEY', None)
+    try:
+        _payments._provider_name()
+        _refused = False
+    except RuntimeError:
+        _refused = True
+    check('Paystack mock mode refused in production', _refused)
+
+    os.environ.pop('FLASK_ENV', None)
+    check('mock payments still allowed outside production',
+          _payments._provider_name() == 'mock')
+finally:
+    if _prev_env is not None:
+        os.environ['FLASK_ENV'] = _prev_env
+    else:
+        os.environ.pop('FLASK_ENV', None)
+    if _prev_key is not None:
+        os.environ['PAYSTACK_SECRET_KEY'] = _prev_key
 
 # ── 11. Error detail redaction ───────────────────────────────────────────────
 check('_err_detail redacts outside debug', 'An internal error occurred' in src)

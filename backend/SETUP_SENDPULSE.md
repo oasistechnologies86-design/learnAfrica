@@ -75,8 +75,8 @@ From the `backend` folder:
 
 ```bash
 pip install python-dotenv requests
-python test_sendpulse.py                    # checks the keys only
-python test_sendpulse.py you@example.com    # also sends a real test email
+python check_sendpulse.py                    # checks the keys only
+python check_sendpulse.py you@example.com    # also sends a real test email
 ```
 
 You should see the token step pass, and (with an address) the email step pass.
@@ -127,7 +127,7 @@ signups then must enter the code before they are active.
 - `backend/render.yaml` — declared the four SendPulse variables (kept out of git
   with `sync: false`).
 - `backend/.env.example` — new; a local template including the SendPulse vars.
-- `backend/test_sendpulse.py` — new; checks credentials and can send a test.
+- `backend/check_sendpulse.py` — new; checks credentials and can send a test.
 
 No application logic changed. The sending code already exists in
 `backend/app/main.py` (`_send_via_sendpulse`).

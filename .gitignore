@@ -1,0 +1,31 @@
+# ── Secrets and local environment ────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# ── Local database and uploaded files (never commit runtime data) ─────────────
+backend/instance/
+
+# ── Node / frontend build output ─────────────────────────────────────────────
+node_modules/
+dist/
+.vite/
+
+# ── Generated at build time from VITE_SITE_URL (see scripts/generate-seo.mjs) ─
+frontend/public/robots.txt
+frontend/public/sitemap.xml
+
+# ── Editor / OS noise ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

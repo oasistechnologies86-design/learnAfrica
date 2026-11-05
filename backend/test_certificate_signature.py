@@ -81,6 +81,12 @@ with app.app_context():
                " VALUES ('c1','Python for Data Science','d','ins1','Kwame Boateng','Tech','beginner',0,1,1,1,1)")
     db.execute("INSERT INTO lessons (id,course_id,title,type,content,video_url,\"order\",is_final)"
                " VALUES ('fin1','c1','Final Exam','quiz','',NULL,9,1)")
+    # Completion and certificates are computed from curriculum-linked lessons,
+    # so the final exam must belong to a section.
+    db.execute("INSERT INTO curriculum_sections (id,course_id,title,\"order\")"
+               " VALUES ('sec1','c1','Course Content',0)")
+    db.execute("INSERT INTO section_lessons (section_id,lesson_id,\"order\")"
+               " VALUES ('sec1','fin1',0)")
     db.execute("INSERT INTO user_enrollments (id,user_id,course_id,progress)"
                " VALUES ('e1','stu1','c1',100)")
     db.execute("INSERT INTO user_progress (user_id,course_id,lesson_id,is_completed,quiz_score)"

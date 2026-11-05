@@ -2284,7 +2284,7 @@ function AdminSettingsTab() {
                   <li>Set env var: <code className="px-1 py-0.5 bg-background rounded text-2xs">PAYSTACK_SECRET_KEY=sk_live_…</code></li>
                   <li>Set env var: <code className="px-1 py-0.5 bg-background rounded text-2xs">PAYSTACK_CALLBACK_URL=https://your-site.com/payment/return</code></li>
                   <li>In Paystack Dashboard → Settings → Webhooks, add your backend webhook URL:
-                    <code className="block mt-1 px-2 py-1 bg-background rounded text-2xs break-all">https://your-backend.onrender.com{providerStatus.webhook_url}</code>
+                    <code className="block mt-1 px-2 py-1 bg-background rounded text-2xs break-all">{(API_BASE || window.location.origin)}{providerStatus.webhook_url}</code>
                   </li>
                   <li>Enable Transfers in Paystack Dashboard → Settings.</li>
                 </ol>

@@ -41,3 +41,38 @@ jobs:
           python-version: "3.12"
       - name: Compile backend modules
         run: python -m compileall -q backend/app
+
+  backend-tests:
+    name: Backend test suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Install backend dependencies
+        run: pip install -r backend/requirements.txt
+      - name: Run backend tests
+        working-directory: backend
+        env:
+          # Tests boot the real app on a throwaway SQLite database and set
+          # their own per-test secrets; these just satisfy import-time reads.
+          SECRET_KEY: ci-test-secret-value-not-for-production-use
+          FLASK_ENV: development
+          USE_POSTGRES: "false"
+        run: |
+          set -o pipefail
+          failed=0
+          for t in test_*.py; do
+            echo "::group::$t"
+            if ! python "$t"; then
+              echo "::error file=backend/$t::$t failed"
+              failed=1
+            fi
+            echo "::endgroup::"
+          done
+          exit $failed

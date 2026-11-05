@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './components/common/Toast';
@@ -9,46 +10,50 @@ import MainLayout    from './layouts/MainLayout';
 import DashboardLayout  from './layouts/DashboardLayout';
 import InstructorLayout from './layouts/InstructorLayout';
 
-import { LandingPage }          from './pages/Landing/LandingPage';
-import { LoginPage }            from './pages/Auth/LoginPage';
-import { SignupPage }           from './pages/Auth/SignupPage';
-import { ForgotPasswordPage }   from './pages/Auth/ForgotPasswordPage';
-import { ResetPasswordPage }    from './pages/Auth/ResetPasswordPage';
-import EmailVerificationPage    from './pages/Auth/EmailVerificationPage';
-import InstructorOnboarding     from './pages/Auth/InstructorOnboarding';
-import InstructorInfoPage       from './pages/Auth/InstructorInfoPage';
-import InstructorProfileCompletion from './pages/Auth/InstructorProfileCompletion';
-import { CoursesPage }          from './pages/Courses/CoursesPage';
-import { CourseDetailPage }     from './pages/Courses/CourseDetailPage';
-import PaymentPage              from './pages/Payment/PaymentPage';
-import PaymentReturnPage        from './pages/Payment/PaymentReturnPage';
-import { LessonPage }           from './pages/Lessons/LessonPage';
-import { PreviewCoursePage }    from './pages/Instructor/PreviewCoursePage';
-import { QuizPage }             from './pages/Quiz/QuizPage';
-import { QuizResultsPage }      from './pages/Quiz/QuizResultsPage';
-import StudentDashboard         from './pages/Dashboard/StudentDashboard';
-import { InstructorDashboard }  from './pages/Instructor/InstructorDashboard';
-import { CreateCoursePage }     from './pages/Instructor/CreateCoursePage';
-import { AnalyticsPage }        from './pages/Instructor/AnalyticsPage';
-import ManageCoursesPage        from './pages/Instructor/ManageCoursesPage';
-import RegistrationPaymentPage  from './pages/Instructor/RegistrationPaymentPage';
-import { EditCoursePage }        from './pages/Instructor/EditCoursePage';
-import InstructorCouponsPage    from './pages/Instructor/InstructorCouponsPage';
-import ProfilePage              from './pages/Profile/ProfilePage';
-import SettingsPage             from './pages/Settings/SettingsPage';
-import CertificatePage          from './pages/Certificate/CertificatePage';
-import MyCertificatesPage        from './pages/Certificate/MyCertificatesPage';
-import LeaderboardPage          from './pages/Leaderboard/LeaderboardPage';
-import NotFoundPage             from './pages/NotFound/NotFoundPage';
-import AdminPage                from './pages/Admin/AdminPage';
-import ReceiptsPage             from './pages/Receipts/ReceiptsPage';
-import ReceiptStatementPage    from './pages/Receipts/ReceiptStatementPage';
-import InstructorsPage          from './pages/Directory/InstructorsPage';
-import InstructorProfilePage    from './pages/Directory/InstructorProfilePage';
-import BlogPage                 from './pages/Blog/BlogPage';
-import BlogPostPage             from './pages/Blog/BlogPostPage';
-import VerifyCredentialPage     from './pages/VerifyCredential/VerifyCredentialPage';
-import CommunityPage             from './pages/Community/CommunityPage';
+// Every page is loaded on demand. The landing page and layouts ship in the
+// initial bundle; everything else is fetched when its route is opened, so a
+// first-time visitor no longer downloads the admin panel, the course editor
+// and the certificate renderer before seeing the homepage.
+const LandingPage              = lazy(() => import('./pages/Landing/LandingPage').then(m => ({ default: m.LandingPage })));
+const LoginPage                = lazy(() => import('./pages/Auth/LoginPage').then(m => ({ default: m.LoginPage })));
+const SignupPage               = lazy(() => import('./pages/Auth/SignupPage').then(m => ({ default: m.SignupPage })));
+const ForgotPasswordPage       = lazy(() => import('./pages/Auth/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
+const ResetPasswordPage        = lazy(() => import('./pages/Auth/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
+const EmailVerificationPage    = lazy(() => import('./pages/Auth/EmailVerificationPage'));
+const InstructorOnboarding     = lazy(() => import('./pages/Auth/InstructorOnboarding'));
+const InstructorInfoPage       = lazy(() => import('./pages/Auth/InstructorInfoPage'));
+const InstructorProfileCompletion = lazy(() => import('./pages/Auth/InstructorProfileCompletion'));
+const CoursesPage              = lazy(() => import('./pages/Courses/CoursesPage').then(m => ({ default: m.CoursesPage })));
+const CourseDetailPage         = lazy(() => import('./pages/Courses/CourseDetailPage').then(m => ({ default: m.CourseDetailPage })));
+const PaymentPage              = lazy(() => import('./pages/Payment/PaymentPage'));
+const PaymentReturnPage        = lazy(() => import('./pages/Payment/PaymentReturnPage'));
+const LessonPage               = lazy(() => import('./pages/Lessons/LessonPage').then(m => ({ default: m.LessonPage })));
+const PreviewCoursePage        = lazy(() => import('./pages/Instructor/PreviewCoursePage').then(m => ({ default: m.PreviewCoursePage })));
+const QuizPage                 = lazy(() => import('./pages/Quiz/QuizPage').then(m => ({ default: m.QuizPage })));
+const QuizResultsPage          = lazy(() => import('./pages/Quiz/QuizResultsPage').then(m => ({ default: m.QuizResultsPage })));
+const StudentDashboard         = lazy(() => import('./pages/Dashboard/StudentDashboard'));
+const InstructorDashboard      = lazy(() => import('./pages/Instructor/InstructorDashboard').then(m => ({ default: m.InstructorDashboard })));
+const CreateCoursePage         = lazy(() => import('./pages/Instructor/CreateCoursePage').then(m => ({ default: m.CreateCoursePage })));
+const AnalyticsPage            = lazy(() => import('./pages/Instructor/AnalyticsPage').then(m => ({ default: m.AnalyticsPage })));
+const ManageCoursesPage        = lazy(() => import('./pages/Instructor/ManageCoursesPage'));
+const RegistrationPaymentPage  = lazy(() => import('./pages/Instructor/RegistrationPaymentPage'));
+const EditCoursePage           = lazy(() => import('./pages/Instructor/EditCoursePage').then(m => ({ default: m.EditCoursePage })));
+const InstructorCouponsPage    = lazy(() => import('./pages/Instructor/InstructorCouponsPage'));
+const ProfilePage              = lazy(() => import('./pages/Profile/ProfilePage'));
+const SettingsPage             = lazy(() => import('./pages/Settings/SettingsPage'));
+const CertificatePage          = lazy(() => import('./pages/Certificate/CertificatePage'));
+const MyCertificatesPage       = lazy(() => import('./pages/Certificate/MyCertificatesPage'));
+const LeaderboardPage          = lazy(() => import('./pages/Leaderboard/LeaderboardPage'));
+const NotFoundPage             = lazy(() => import('./pages/NotFound/NotFoundPage'));
+const AdminPage                = lazy(() => import('./pages/Admin/AdminPage'));
+const ReceiptsPage             = lazy(() => import('./pages/Receipts/ReceiptsPage'));
+const ReceiptStatementPage     = lazy(() => import('./pages/Receipts/ReceiptStatementPage'));
+const InstructorsPage          = lazy(() => import('./pages/Directory/InstructorsPage'));
+const InstructorProfilePage    = lazy(() => import('./pages/Directory/InstructorProfilePage'));
+const BlogPage                 = lazy(() => import('./pages/Blog/BlogPage'));
+const BlogPostPage             = lazy(() => import('./pages/Blog/BlogPostPage'));
+const VerifyCredentialPage     = lazy(() => import('./pages/VerifyCredential/VerifyCredentialPage'));
+const CommunityPage            = lazy(() => import('./pages/Community/CommunityPage'));
 
 // Shared full-screen loading state, used consistently by every route guard
 // below instead of each one inventing its own behavior (previously
@@ -125,6 +130,7 @@ function AppGate({ children }) {
 
 function AppRoutes() {
   return (
+    <Suspense fallback={<RouteLoadingScreen />}>
     <Routes>
       {/* ── Public ── */}
       <Route path="/" element={<MainLayout />}>
@@ -234,6 +240,7 @@ function AppRoutes() {
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
+    </Suspense>
   );
 }
 

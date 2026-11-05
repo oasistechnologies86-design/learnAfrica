@@ -59,6 +59,21 @@ socketio = None
 INSTRUCTOR_AGREEMENT_VERSION = '2026-01'
 
 
+def public_site_url():
+    """Return the public address of the frontend, taken from the environment.
+
+    Deployment environments own this value, so moving to a new domain (or a
+    preview/staging host) never requires a code change. SITE_URL wins, then
+    FRONTEND_URL, then APP_URL. When none is configured we return '' so callers
+    can fall back to the request's own host instead of a baked-in domain.
+    """
+    for name in ('SITE_URL', 'FRONTEND_URL', 'APP_URL'):
+        value = (os.environ.get(name) or '').strip().rstrip('/')
+        if value:
+            return value
+    return ''
+
+
 def _normalize_ghana_card(value):
     """Normalise a Ghana Card number to GHA-#########-# (upper-case).
 
@@ -623,6 +638,12 @@ def create_app() -> Flask:
     _frontend_url = os.environ.get('FRONTEND_URL', '').strip().rstrip('/')
     if _frontend_url and _frontend_url not in _origins:
         _origins.append(_frontend_url)
+    # SITE_URL is the site's own address (also used for the sitemap and reset
+    # links), so honour it as an allowed origin too — one variable keeps the
+    # public URL and the CORS allowlist in step.
+    _site_url = public_site_url()
+    if _site_url and _site_url not in _origins:
+        _origins.append(_site_url)
     # If deployment configuration is missing, fail closed to local development
     # origins instead of silently allowing every website.
     if not _origins:
@@ -2933,8 +2954,8 @@ def create_app() -> Flask:
         """Machine-readable sitemap of public pages for search engines."""
         try:
             db = get_db()
-            base = (request.args.get('base') or os.environ.get('SITE_URL')
-                    or 'https://learnafrica-lite-weld.vercel.app').rstrip('/')
+            base = (request.args.get('base') or public_site_url()
+                    or request.host_url).rstrip('/')
             urls = [f'{base}/', f'{base}/courses', f'{base}/instructors', f'{base}/blog']
             for r in db.execute("SELECT id FROM courses WHERE is_published=1").fetchall():
                 urls.append(f'{base}/courses/{r["id"]}')
@@ -10135,7 +10156,7 @@ def create_app() -> Flask:
                 return str(row['value']).strip().rstrip('/')
         except Exception:
             pass
-        for key in ('FRONTEND_URL', 'APP_URL'):
+        for key in ('SITE_URL', 'FRONTEND_URL', 'APP_URL'):
             v = (os.environ.get(key) or '').strip()
             if v:
                 return v.rstrip('/')

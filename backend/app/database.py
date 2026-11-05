@@ -532,7 +532,8 @@ TABLES = [
         lesson_id TEXT,
         title TEXT NOT NULL,
         duration TEXT DEFAULT 'No limit',
-        max_attempts INTEGER DEFAULT 0
+        max_attempts INTEGER DEFAULT 0,
+        pass_score INTEGER DEFAULT 70
     )""",
     """CREATE TABLE IF NOT EXISTS quiz_questions (
         id TEXT PRIMARY KEY,
@@ -994,6 +995,10 @@ MIGRATIONS = [
     "ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS shuffle_options INTEGER DEFAULT 0",
     "ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS attempts_enabled INTEGER",
     "ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS extra_attempt_price REAL DEFAULT 0",
+    # pass_score is read when deciding whether a final exam earns a certificate,
+    # so it must exist on every database, including ones created before the
+    # column was introduced.
+    "ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS pass_score INTEGER DEFAULT 70",
     # is_bank marks a question as part of the pool that randomisation draws from.
     "ALTER TABLE quiz_questions ADD COLUMN IF NOT EXISTS is_bank INTEGER DEFAULT 1",
     # Credential revocation — a revoked certificate/badge still exists but the

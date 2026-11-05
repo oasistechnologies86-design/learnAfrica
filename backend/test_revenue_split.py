@@ -53,6 +53,13 @@ with app.app_context():
                    (uid, name, email, generate_password_hash('Pass12345!'), role))
     db.execute("UPDATE users SET instructor_status='approved', payment_method='bank',"
                " payment_details='acct' WHERE id='ins1'")
+    # The instructor needs a complete country-aware profile to use instructor
+    # features, including reading their own stats.
+    db.execute(
+        "INSERT INTO instructor_applications"
+        " (id,user_id,status,country,id_type,id_number,city,street_address,profile_completed_at)"
+        " VALUES ('ins1-app','ins1','approved','GH','ghana_card','GHA-123456789-0',"
+        "'Accra','1 High Street',CURRENT_TIMESTAMP)")
     db.execute("INSERT INTO courses (id,title,description,instructor_id,instructor_name,category,"
                "difficulty,price,is_free,is_published,is_visible)"
                " VALUES ('c1','Course','d','ins1','Instructor','Tech','beginner',10000,0,1,1)")

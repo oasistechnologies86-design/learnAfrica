@@ -1,9 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /admin
-Disallow: /dashboard
-Disallow: /instructor
-Disallow: /learn
-Disallow: /payment
-
-Sitemap: https://learn-africa-five.vercel.app/sitemap.xml

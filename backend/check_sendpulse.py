@@ -1,9 +1,9 @@
 """
-test_sendpulse.py — check your SendPulse credentials and optionally send a test email.
+check_sendpulse.py — check your SendPulse credentials and optionally send a test email.
 
 Usage:
-    python test_sendpulse.py                 # only checks the credentials
-    python test_sendpulse.py you@email.com   # also sends a real test email
+    python check_sendpulse.py                 # only checks the credentials
+    python check_sendpulse.py you@email.com   # also sends a real test email
 
 Reads the same env vars the app uses:
     SENDPULSE_CLIENT_ID, SENDPULSE_CLIENT_SECRET,
@@ -54,7 +54,7 @@ def main():
 
     if len(sys.argv) < 2:
         print('\nCredentials are valid. Pass an email address to send a real test:')
-        print('   python test_sendpulse.py you@email.com')
+        print('   python check_sendpulse.py you@email.com')
         return 0
 
     to_email = sys.argv[1].strip()

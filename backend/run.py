@@ -12,7 +12,7 @@ load_dotenv()
 
 from app import create_app
 from app.database import init_db, get_db
-from app.crud import seed_admin, seed_demo_courses, seed_instructor_guide
+from app.crud import seed_admin, seed_demo_courses, seed_instructor_guide, backfill_orphan_lessons
 
 # Create the app (this also assigns the module-level `socketio`)
 flask_app = create_app()
@@ -26,10 +26,14 @@ with flask_app.app_context():
     db = get_db()
     seed_admin(flask_app, db)
     seed_demo_courses(flask_app, db)
+    backfill_orphan_lessons(flask_app, db)
     seed_instructor_guide(flask_app, db)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
+    # Debug stays on for local work but must never be on in production: the
+    # Werkzeug debugger allows arbitrary code execution and leaks tracebacks.
+    debug = os.environ.get('FLASK_ENV', 'development').strip().lower() != 'production'
     print(f"""
 ============================================================
 🚀 LearnAfrica Lite  →  http://localhost:{port}
@@ -41,6 +45,6 @@ if __name__ == '__main__':
         flask_app,
         host='0.0.0.0',
         port=port,
-        debug=True,
+        debug=debug,
         allow_unsafe_werkzeug=True
     )

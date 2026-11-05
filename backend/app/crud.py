@@ -206,7 +206,7 @@ def seed_admin(app, db):
         'accessible to learners across Africa.'
     )
     DEFAULT_LOCATION     = 'Accra, Ghana'
-    DEFAULT_WEBSITE      = (os.environ.get('SITE_URL') or os.environ.get('FRONTEND_URL') or '').rstrip('/')
+    DEFAULT_WEBSITE      = (os.environ.get('SITE_URL') or os.environ.get('FRONTEND_URL') or os.environ.get('APP_URL') or '').rstrip('/')
     # Specialisation: stored primarily in instructor_field.
     # instructor_title is kept identical for backward compatibility.
     DEFAULT_SPECIALISATION = 'Web Development & Online Education'
@@ -688,6 +688,80 @@ def _upgrade_demo_courses(app, db, use_pg, ph):
 
 
 
+def backfill_orphan_lessons(app, db):
+    """Attach lessons that belong to no curriculum section.
+
+    Course completion and certificates are computed from the lessons linked to a
+    course's curriculum (see models.get_course_completion_status), so a lesson
+    missing from section_lessons is invisible to progress tracking: the learner
+    completes it, sees no progress, and can never earn a certificate. Courses
+    created before the curriculum tables existed can have such lessons.
+
+    Idempotent: lessons already linked are left untouched.
+    """
+    use_pg = app.config.get('USE_POSTGRES')
+    ph = '%s' if use_pg else '?'
+    try:
+        orphans = db.execute(
+            'SELECT l.id, l.course_id, l.title, l."order" FROM lessons l'
+            ' WHERE NOT EXISTS (SELECT 1 FROM section_lessons sl WHERE sl.lesson_id=l.id)'
+            ' ORDER BY l.course_id, l."order"'
+        ).fetchall()
+    except Exception as ex:
+        print(f'  ⚠ Could not scan for unlinked lessons: {ex}')
+        return 0
+
+    if not orphans:
+        return 0
+
+    attached = 0
+    for lesson in orphans:
+        cid = lesson['course_id']
+        try:
+            section = db.execute(
+                'SELECT id FROM curriculum_sections WHERE course_id=' + ph +
+                ' ORDER BY "order" ASC LIMIT 1',
+                (cid,)
+            ).fetchone()
+            if not section:
+                import uuid as _uuid
+                section_id = str(_uuid.uuid4())
+                db.execute(
+                    'INSERT INTO curriculum_sections (id,course_id,title,"order")'
+                    ' VALUES (' + ph + ',' + ph + ',' + ph + ',0)',
+                    (section_id, cid, 'Course Content')
+                )
+            else:
+                section_id = section['id']
+
+            next_order = db.execute(
+                'SELECT COALESCE(MAX("order"), -1) + 1 AS n FROM section_lessons'
+                ' WHERE section_id=' + ph,
+                (section_id,)
+            ).fetchone()['n']
+            db.execute(
+                'INSERT INTO section_lessons (section_id,lesson_id,"order")'
+                ' VALUES (' + ph + ',' + ph + ',' + ph + ')',
+                (section_id, lesson['id'], next_order)
+            )
+            attached += 1
+        except Exception as ex:
+            try:
+                if hasattr(db, '_conn'): db._conn.rollback()
+            except Exception:
+                pass
+            print(f'  ⚠ Could not link lesson {lesson["id"]}: {ex}')
+
+    try:
+        db.commit()
+    except Exception:
+        pass
+
+    if attached:
+        print(f'  ✅ Linked {attached} unlinked lesson(s) into their course curriculum')
+    return attached
+
+
 def seed_demo_courses(app, db):
     """Seed demo courses with sections, lessons and a quiz if DB is empty."""
     use_pg = app.config.get('USE_POSTGRES')
@@ -703,6 +777,12 @@ def seed_demo_courses(app, db):
         "SELECT id, name FROM users WHERE role='superadmin' LIMIT 1"
     ).fetchone()
     if not admin:
+        # Demo courses are owned by the superadmin. With no superadmin (fresh
+        # database and ADMIN_EMAIL/ADMIN_PASSWORD not yet configured) there is
+        # nobody to attribute them to, so the catalogue stays empty. Say so
+        # loudly — otherwise a blank /courses page looks like a broken deploy.
+        print('⚠ demo course seed skipped: no superadmin found '
+              '(set ADMIN_EMAIL and ADMIN_PASSWORD, then restart)')
         return
 
     aid = admin['id']

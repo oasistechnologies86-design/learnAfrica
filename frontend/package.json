@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/generate-seo.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "verify:pdf": "node scripts/verify-pdf.mjs",

@@ -1,23 +1,32 @@
 /**
  * siteUrl.js — the one place the public site's own address is defined.
  *
- * Certificate and badge documents point to the dedicated public /verify-credential page.
- * That domain used to be hardcoded in three separate components, so changing
- * it (or pointing a preview/staging build elsewhere) meant editing them all.
- * Set VITE_SITE_URL at build time to override; the production value is the
- * default so existing deployments are unaffected.
+ * The address comes from the environment (VITE_SITE_URL), so changing domain or
+ * deploying a preview/staging build never needs a code edit. When the variable
+ * is not set we fall back to the host actually serving the page, so the site is
+ * always self-consistent instead of pointing at a hardcoded domain.
  */
-export const SITE_URL = (
-  import.meta.env.VITE_SITE_URL || 'https://learn-africa-five.vercel.app'
-).replace(/\/+$/, '');
+const CONFIGURED_SITE_URL = (import.meta.env.VITE_SITE_URL || '').replace(/\/+$/, '');
+
+function currentOrigin() {
+  if (typeof window !== 'undefined' && window.location && window.location.origin) {
+    return window.location.origin;
+  }
+  return '';
+}
+
+/** The site's own base URL, resolved at call time (env first, live host second). */
+export function getSiteUrl() {
+  return CONFIGURED_SITE_URL || currentOrigin();
+}
 
 /** Public verification URL, optionally pre-filling a credential id. */
 export function verifyUrl(credentialId) {
-  const base = `${SITE_URL}/verify-credential`;
+  const base = `${getSiteUrl()}/verify-credential`;
   return credentialId ? `${base}?id=${encodeURIComponent(credentialId)}` : base;
 }
 
 /** Short, human-readable host (no scheme) for printing on a document. */
 export function siteHost() {
-  return SITE_URL.replace(/^https?:\/\//, '');
+  return getSiteUrl().replace(/^https?:\/\//, '');
 }

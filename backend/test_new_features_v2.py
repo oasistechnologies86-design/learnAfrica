@@ -56,6 +56,14 @@ with app.app_context():
                " payment_details='acct' WHERE id='ins1'")
     db.execute("UPDATE users SET instructor_status='approved', payment_method='bank',"
                " payment_details='acct' WHERE id='ins2'")
+    # Instructors must have a complete country-aware profile before they can
+    # create or change courses, so give both a finished application.
+    for _iid in ('ins1', 'ins2'):
+        db.execute(
+            "INSERT INTO instructor_applications"
+            " (id,user_id,status,country,id_type,id_number,city,street_address,profile_completed_at)"
+            " VALUES (?,'" + _iid + "','approved','GH','ghana_card','GHA-123456789-0',"
+            "'Accra','1 High Street',CURRENT_TIMESTAMP)", (_iid + '-app',))
     # Two courses: one visible (legacy default) and one hidden.
     db.execute("INSERT INTO courses (id,title,description,instructor_id,instructor_name,category,"
                "difficulty,price,is_free,is_published,is_visible)"

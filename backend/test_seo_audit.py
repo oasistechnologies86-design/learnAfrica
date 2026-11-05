@@ -76,6 +76,29 @@ r = c.get('/api/sitemap.xml')
 check('GET /api/sitemap.xml 200', r.status_code == 200, r.status_code)
 check('sitemap is XML', 'urlset' in r.get_data(as_text=True))
 
+# The sitemap's domain must come from the environment, so changing domain never
+# needs a code edit. SITE_URL wins; with none set it falls back to the request's
+# own host rather than a baked-in domain.
+import os as _os  # noqa: E402
+_prev_site = _os.environ.get('SITE_URL')
+try:
+    _os.environ['SITE_URL'] = 'https://env-driven.example.org'
+    body = c.get('/api/sitemap.xml').get_data(as_text=True)
+    check('sitemap uses SITE_URL from the environment',
+          'https://env-driven.example.org/' in body, body[:120])
+    check('sitemap contains no hardcoded deployment domain',
+          'vercel.app' not in body and 'onrender.com' not in body, body[:200])
+
+    _os.environ.pop('SITE_URL', None)
+    body = c.get('/api/sitemap.xml').get_data(as_text=True)
+    check('sitemap falls back to the request host when SITE_URL is unset',
+          'env-driven.example.org' not in body and 'localhost' in body, body[:120])
+finally:
+    if _prev_site is not None:
+        _os.environ['SITE_URL'] = _prev_site
+    else:
+        _os.environ.pop('SITE_URL', None)
+
 # Audit endpoints must be admin-protected.
 r = c.get('/api/admin/audit-log')
 check('audit-log requires auth', r.status_code in (401, 403), r.status_code)
