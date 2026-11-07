@@ -47,11 +47,12 @@ export function CoursesPage() {
       ...(Array.isArray(course.topics) ? course.topics : []),
       ...(Array.isArray(course.keywords) ? course.keywords : []),
     ]);
-    const query = searchQuery.trim().toLowerCase();
+    const normalize = value => String(value || '').toLowerCase().replace(/[\\s-]+/g, '');
+    const query = normalize(searchQuery.trim());
     const unique = new Map();
     values.forEach(value => {
       const label = String(value || '').trim();
-      if (!label || (query && !label.toLowerCase().includes(query))) return;
+      if (!label || (query && !normalize(label).includes(query))) return;
       if (!unique.has(label.toLowerCase())) unique.set(label.toLowerCase(), label);
     });
     return Array.from(unique.values()).slice(0, 6);
