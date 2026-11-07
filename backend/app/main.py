@@ -39,7 +39,7 @@ from .security  import (token_required, admin_required, instructor_required,
 from .schema    import (full_user, settings_dict, upsert_settings,
                          validate_signup, allowed_image, allowed_file,
                          COURSE_CATEGORIES)
-from .crud      import (get_revenue_split, resolve_revenue_split, create_notification, push_notification,
+from .crud      import (get_revenue_split, resolve_revenue_split, resolve_instructor_revenue_split, create_notification, push_notification,
                          upload_to_supabase, seed_admin, seed_demo_courses, seed_instructor_guide,
                          REVENUE_INSTRUCTOR_KEY, REVENUE_ADMIN_KEY)
 from .sanitize  import sanitize_html, contains_html_or_script, matches_extension
@@ -3847,7 +3847,7 @@ def create_app() -> Flask:
         ).fetchall()
         course_ids = [r['id'] for r in course_rows]
         if not course_ids:
-            _split = resolve_revenue_split(db)
+            _split = resolve_instructor_revenue_split(db, uid, g.current_user.get('role') in ('admin', 'superadmin'))
             return jsonify({
                 'total_courses': 0, 'total_students': 0, 'total_earnings': 0,
                 'average_rating': 0, 'completion_rate': 0,
@@ -3918,7 +3918,7 @@ def create_app() -> Flask:
         # platform's cut is the remainder after the instructor's recorded share,
         # so the two always reconcile to the stored transaction records. The
         # percentages come from the admin config, never a hardcoded default.
-        _split = resolve_revenue_split(db)
+        _split = resolve_instructor_revenue_split(db, uid, g.current_user.get('role') in ('admin', 'superadmin'))
         gross_row = db.execute(
             "SELECT COALESCE(SUM(amount), 0) as t FROM transactions"
             " WHERE instructor_id=? AND type IN ('purchase','quiz_extra_attempt') AND status='success'", (uid,)).fetchone()
@@ -3994,11 +3994,8 @@ def create_app() -> Flask:
         One row per course owned by the instructor."""
         db = get_db()
         uid = g.current_user['user_id']
-        instructor_pct, _ = get_revenue_split(db)
-        # Admin-owned courses get 100%, non-admin get configured split
         u = db.execute('SELECT role FROM users WHERE id=?', (uid,)).fetchone()
-        is_admin = u and u['role'] in ('admin', 'superadmin')
-        share_pct = 100 if is_admin else instructor_pct
+        is_admin = bool(u and u['role'] in ('admin', 'superadmin'))
         courses = db.execute(
             'SELECT id, title, price, rating FROM courses WHERE instructor_id=? ORDER BY created_at DESC',
             (uid,)
@@ -4011,7 +4008,15 @@ def create_app() -> Flask:
             ).fetchone()
             total = int(total_row['t'] or 0) if total_row else 0
             done  = int(total_row['d'] or 0) if total_row else 0
-            revenue = round(float(c['price'] or 0) * total * (share_pct / 100.0), 2)
+            revenue_row = db.execute(
+                "SELECT COALESCE(SUM(amount), 0) AS gross, COALESCE(SUM(instructor_share), 0) AS instructor "
+                "FROM transactions WHERE course_id=? AND instructor_id=? "
+                "AND type IN ('purchase','quiz_extra_attempt') AND status='success'",
+                (c['id'], uid)
+            ).fetchone()
+            # Use settled transaction amounts, not list price × enrolments. This
+            # correctly includes discounts and the split that was active at purchase.
+            revenue = round(float((revenue_row['gross'] if is_admin else revenue_row['instructor']) or 0), 2)
             results.append({
                 'course_id':      c['id'],
                 'title':          c['title'],
@@ -6539,6 +6544,68 @@ def create_app() -> Flask:
             'admin_share': admin_share
         })
     
+    @app.route('/api/admin/instructors/<uid>/revenue-split', methods=['PUT'])
+    @admin_required
+    def update_instructor_revenue_split(uid):
+        """Set or clear one instructor's future revenue split override."""
+        try:
+            db = get_db()
+            target = db.execute('SELECT id, name, email, role FROM users WHERE id=?', (uid,)).fetchone()
+            if not target:
+                return jsonify({'error': 'Instructor not found'}), 404
+            if target['role'] != 'instructor':
+                return jsonify({'error': 'Individual revenue splits can only be set for instructor accounts'}), 400
+
+            data = request.get_json(silent=True) or {}
+            value = data.get('instructor_share')
+            if value is None:
+                db.execute('DELETE FROM instructor_revenue_splits WHERE instructor_id=?', (uid,))
+                db.commit()
+                audit('instructor_revenue_split_reset', 'user', uid, target['email'],
+                      {'uses_platform_default': True})
+                split = resolve_instructor_revenue_split(db, uid)
+                return jsonify({
+                    'message': 'Instructor now uses the platform default split',
+                    'instructor_share': split['instructor_pct'],
+                    'admin_share': split['admin_pct'],
+                    'has_custom_split': False
+                })
+
+            try:
+                instructor_pct = float(value)
+            except (TypeError, ValueError):
+                return jsonify({'error': 'Instructor share must be a number between 0 and 100'}), 400
+            if not (0 <= instructor_pct <= 100):
+                return jsonify({'error': 'Instructor share must be between 0 and 100'}), 400
+            admin_pct = round(100.0 - instructor_pct, 2)
+            db.execute(
+                """INSERT INTO instructor_revenue_splits
+                   (instructor_id, instructor_share, admin_share, updated_at, updated_by)
+                   VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?)
+                   ON CONFLICT (instructor_id) DO UPDATE SET
+                     instructor_share=EXCLUDED.instructor_share,
+                     admin_share=EXCLUDED.admin_share,
+                     updated_at=CURRENT_TIMESTAMP,
+                     updated_by=EXCLUDED.updated_by""",
+                (uid, round(instructor_pct, 2), admin_pct, g.current_user['user_id'])
+            )
+            db.commit()
+            audit('instructor_revenue_split_updated', 'user', uid, target['email'],
+                  {'instructor_share': round(instructor_pct, 2), 'platform_share': admin_pct})
+            return jsonify({
+                'message': 'Instructor revenue split updated',
+                'instructor_share': round(instructor_pct, 2),
+                'admin_share': admin_pct,
+                'has_custom_split': True
+            })
+        except Exception as e:
+            app.logger.error(f'update_instructor_revenue_split: {e}')
+            try:
+                db = get_db()
+                if hasattr(db, '_conn'): db._conn.rollback()
+            except Exception: pass
+            return jsonify({'error': 'Could not update this instructor revenue split'}), 500
+
     @app.route('/api/admin/earnings', methods=['GET'])
     @admin_required
     def admin_earnings():
@@ -6567,6 +6634,7 @@ def create_app() -> Flask:
             instr = 0.0 if row['role'] in ('admin', 'superadmin') else float(row['instr'] or 0)
             total_gross += gross
             total_instr += instr
+            effective_split = resolve_instructor_revenue_split(db, row['id'], row['role'] in ('admin', 'superadmin'))
             result.append({
                 'id': row['id'],
                 'name': row['name'],
@@ -6575,6 +6643,9 @@ def create_app() -> Flask:
                 'gross_revenue': round(gross, 2),
                 'instructor_earnings': round(instr, 2),
                 'platform_earnings':   round(gross - instr, 2),
+                'instructor_share_pct': effective_split['instructor_pct'],
+                'admin_share_pct': effective_split['admin_pct'],
+                'has_custom_split': effective_split['has_override'],
             })
         reg_row = db.execute(
             "SELECT COALESCE(SUM(amount), 0) as t FROM transactions"
@@ -8403,8 +8474,8 @@ def create_app() -> Flask:
                 plat_share  = 0.0
                 payout_status = 'n/a'
             else:
-                instructor_pct, _admin_pct = get_revenue_split(db)
-                instr_share, plat_share = compute_split(amount, instructor_pct)
+                effective_split = resolve_instructor_revenue_split(db, course['instructor_id'])
+                instr_share, plat_share = compute_split(amount, effective_split['instructor_pct'])
                 payout_status = 'pending'
 
             # Initiate via payment provider abstraction
