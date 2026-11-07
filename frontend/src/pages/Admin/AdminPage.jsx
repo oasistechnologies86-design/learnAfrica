@@ -310,6 +310,7 @@ export default function AdminPage() {
       // Reload earnings data
       const earnData = await API('/api/admin/earnings');
       setEarnings(earnData);
+      setInstructorSplitEdits(Object.fromEntries((earnData.instructors || []).map(inst => [inst.id, String(inst.instructor_share_pct ?? splitForm.instructor_share)])));
       setSplitForm({ instructor_share: res.instructor_share });
     } catch (e) { showStatus('error', e.message); }
     setSavingSplit(false);
@@ -839,6 +840,7 @@ export default function AdminPage() {
                       showStatus('success', `Split updated: Instructor ${res.instructor_share}% / Platform ${res.admin_share}%`);
                       const earnData = await API('/api/admin/earnings');
                       setEarnings(earnData);
+                      setInstructorSplitEdits(Object.fromEntries((earnData.instructors || []).map(inst => [inst.id, String(inst.instructor_share_pct ?? splitForm.instructor_share)])));
                     } catch(e) { showStatus('error', e.message); }
                     setActionLoading('');
                   }} disabled={actionLoading === 'split'} className="w-full">
