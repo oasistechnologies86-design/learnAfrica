@@ -334,6 +334,13 @@ def ensure_transactions_table(db):
             reference TEXT,
             admin_note TEXT
         )""")
+        db.execute("""CREATE TABLE IF NOT EXISTS instructor_revenue_splits (
+            instructor_id TEXT PRIMARY KEY,
+            instructor_share REAL NOT NULL,
+            admin_share REAL NOT NULL,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_by TEXT
+        )""")
         db.commit()
     except Exception:
         try:
@@ -633,6 +640,13 @@ TABLES = [
         key TEXT PRIMARY KEY,
         value TEXT NOT NULL,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )""",
+    """CREATE TABLE IF NOT EXISTS instructor_revenue_splits (
+        instructor_id TEXT PRIMARY KEY,
+        instructor_share REAL NOT NULL,
+        admin_share REAL NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_by TEXT
     )""",
     """CREATE TABLE IF NOT EXISTS instructor_guide_steps (
         id SERIAL PRIMARY KEY,
