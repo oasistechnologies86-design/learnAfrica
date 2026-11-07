@@ -41,26 +41,30 @@ export default function ProfileDropdown({ hideChevron = false, closeMainMenu }) 
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <div onClick={() => setIsOpen(!isOpen)}
-        className="group flex px-3 md:px-0 md:h-9 h-14 cursor-pointer items-center md:justify-center rounded-lg bg-card md:bg-transparent border md:border-none border-input hover:bg-muted">
-        <div className="ml-3 md:ml-0 flex md:w-full shrink-0 justify-start md:justify-center">
-          <div className="relative inline-flex h-7 w-7 items-center justify-center rounded-full overflow-hidden">
+      <button type="button" onClick={() => setIsOpen(!isOpen)}
+        aria-label="Open profile menu" aria-expanded={isOpen}
+        className={cn(
+          'group flex w-full px-3 md:px-2 md:w-10 md:h-10 h-14 cursor-pointer items-center md:justify-center rounded-xl border border-primary/25 bg-primary/10 text-primary hover:bg-primary/15 hover:border-primary/40 transition-all active:scale-[0.98]',
+          isOpen && 'bg-primary/15 border-primary/50'
+        )}>
+        <span className="ml-1 md:ml-0 flex shrink-0 items-center justify-center">
+          <span className="relative inline-flex h-8 w-8 items-center justify-center rounded-full overflow-hidden bg-primary/10 ring-1 ring-primary/30">
             {!imgError && user?.avatar
               ? <img src={user.avatar} onError={() => setImgError(true)} className="h-full w-full object-cover" alt="" />
-              : <User className="h-5 w-5" />}
-          </div>
-        </div>
-        <span className="ml-3 md:hidden text-sm font-semibold">Profile</span>
+              : <User className="h-5 w-5 text-primary" />}
+          </span>
+        </span>
+        <span className="ml-3 md:hidden text-sm font-bold">Profile</span>
         {!hideChevron && <ChevronDown className={cn('ml-auto md:ml-0 h-4 w-4 transition-transform', isOpen && 'rotate-180')} />}
-      </div>
+      </button>
 
       {/* Desktop dropdown */}
       {isOpen && (
         <div className="absolute top-full right-0 mt-2 w-64 rounded-2xl border border-border bg-background shadow-2xl z-[200] hidden md:flex flex-col overflow-hidden animate-in slide-in-from-top-2 duration-200">
           {/* User info */}
           <Link to="/profile" onClick={close}
-            className="flex items-center gap-3 p-4 hover:bg-muted/50 border-b border-border transition-colors">
-            <div className="h-10 w-10 rounded-xl overflow-hidden bg-muted border border-border shrink-0">
+            className="flex items-center gap-3 p-4 bg-primary/10 hover:bg-primary/15 border-b border-primary/20 transition-colors">
+            <div className="h-10 w-10 rounded-xl overflow-hidden bg-primary/10 border border-primary/30 ring-1 ring-primary/15 shrink-0">
               {!imgError && user?.avatar
                 ? <img src={user.avatar} className="h-full w-full object-cover" alt="" />
                 : <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary"><User className="h-5 w-5" /></div>}
@@ -68,6 +72,7 @@ export default function ProfileDropdown({ hideChevron = false, closeMainMenu }) 
             <div className="min-w-0">
               <p className="font-bold text-sm truncate">{user?.name}</p>
               <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+              <p className="text-[10px] font-semibold text-primary mt-0.5">View and edit profile</p>
               <span className={cn('text-3xs font-bold uppercase',
                 isAdmin ? 'text-destructive' : isInstructor ? 'text-primary' : 'text-muted-foreground')}>
                 {user?.role}
