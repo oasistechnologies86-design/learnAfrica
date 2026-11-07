@@ -1,14 +1,7 @@
-"""Tests for Google sign-up name handling.
+"""Regression tests for Google sign-in-only behaviour.
 
-Reproduces the bug where a Google account was named after the email local part
-(e.g. 'kofi.owusu') when Google did not return the `name` claim, and checks the
-fix: a readable fallback, given/family fallback, repair of existing bad names,
-and that a user-chosen name is never overwritten.
-
-Boots the real app on SQLite and calls the real /api/auth/google route with the
-Google verification call stubbed out.
-
-    python backend/test_google_signup.py
+Google authentication must never create a new account. Users first register
+with their email address; Google can then authenticate that existing account.
 """
 import os
 import sys
@@ -62,47 +55,46 @@ class _Resp:
 def google(payload):
     with patch('app.main.requests.get', return_value=_Resp(payload)):
         r = c.post('/api/auth/google', json={'credential': 'fake', 'role': 'student'})
-        return r.status_code, (r.get_json() or {}).get('user', {})
+        return r.status_code, (r.get_json() or {})
 
 
-# ── 1. A real name from Google is stored as-is ───────────────────────────────
-s, u = google({**BASE, 'email': 'ama.mensah@gmail.com', 'name': 'Ama Mensah'})
-check('Google name is stored as given', u.get('name') == 'Ama Mensah', repr(u.get('name')))
+def register(email, name='Test Learner'):
+    return c.post('/api/auth/signup', json={
+        'name': name, 'email': email, 'password': 'StrongPass123!',
+        'role': 'student',
+    })
 
-# ── 2. No name -> readable fallback, not the raw local part ──────────────────
-s, u = google({**BASE, 'email': 'kofi.owusu@gmail.com'})
-check('missing name falls back to a readable name, not the email local part',
-      u.get('name') == 'Kofi Owusu', repr(u.get('name')))
 
-# ── 3. given_name / family_name only ─────────────────────────────────────────
-s, u = google({**BASE, 'email': 'x@y.com', 'given_name': 'Yaa', 'family_name': 'Boateng'})
-check('given/family names are combined when name is absent',
-      u.get('name') == 'Yaa Boateng', repr(u.get('name')))
-
-# ── 4. An existing account named after its email is repaired ─────────────────
+status, body = google({**BASE, 'email': 'new.google@gmail.com', 'name': 'New Google'})
+check('Google sign-in rejects an email with no existing Learn Africa account',
+      status == 404 and 'user' not in body, body)
 with app.app_context():
-    db = get_db()
-    db.execute("UPDATE users SET name='kofi.owusu' WHERE email='kofi.owusu@gmail.com'")
-    db.commit()
-s, u = google({**BASE, 'email': 'kofi.owusu@gmail.com', 'name': 'Kofi Owusu Mensah'})
-check('existing bad name is repaired on next Google sign-in',
-      u.get('name') == 'Kofi Owusu Mensah', repr(u.get('name')))
+    missing = get_db().execute("SELECT id FROM users WHERE email='new.google@gmail.com'").fetchone()
+check('rejected Google sign-in does not create a user', missing is None)
 
-# ── 5. A name the user actually chose is never overwritten ───────────────────
+r = register('ama.mensah@gmail.com', 'ama.mensah')
+check('normal email registration creates the account first', r.status_code in (200, 201), r.status_code)
+status, body = google({**BASE, 'email': 'ama.mensah@gmail.com', 'name': 'Ama Mensah'})
+user = body.get('user') or {}
+check('Google signs into an existing email-registered account',
+      status == 200 and user.get('email') == 'ama.mensah@gmail.com', body)
+check('Google can repair an old email-local-part display name',
+      user.get('name') == 'Ama Mensah', user.get('name'))
+
 with app.app_context():
     db = get_db()
     db.execute("UPDATE users SET name='My Custom Name' WHERE email='ama.mensah@gmail.com'")
     db.commit()
-s, u = google({**BASE, 'email': 'ama.mensah@gmail.com', 'name': 'Ama Mensah'})
-check('a user-chosen name is left untouched', u.get('name') == 'My Custom Name', repr(u.get('name')))
+status, body = google({**BASE, 'email': 'ama.mensah@gmail.com', 'name': 'Ama Mensah'})
+user = body.get('user') or {}
+check('Google does not overwrite a name the user chose',
+      status == 200 and user.get('name') == 'My Custom Name', user.get('name'))
 
-# ── 6. Google accounts still have no usable password ─────────────────────────
-r = c.post('/api/auth/login', json={'email': 'kofi.owusu@gmail.com', 'password': 'anything'})
-check('Google account cannot be logged into with a made-up password',
-      r.status_code == 401, r.status_code)
+r = c.post('/api/auth/login', json={'email': 'ama.mensah@gmail.com', 'password': 'StrongPass123!'})
+check('existing email account can still sign in with its password', r.status_code == 200, r.status_code)
 
 print()
 if failures:
     print(f'{len(failures)} CHECK(S) FAILED: {failures}')
     sys.exit(1)
-print('ALL GOOGLE SIGNUP CHECKS PASSED')
+print('ALL GOOGLE SIGN-IN TESTS PASSED')
