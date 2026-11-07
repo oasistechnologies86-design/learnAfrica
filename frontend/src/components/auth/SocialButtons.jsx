@@ -1,9 +1,10 @@
 /**
- * Google sign-in control.
+ * Learn Africa's themed Google sign-in control.
  *
- * Use Google's real, visible Identity Services button. Keep the rendered
- * button mounted while the user opens or dismisses the account chooser;
- * repeatedly replacing its iframe can cause a visible blank flash.
+ * The Google Identity Services button is rendered once per mounted control.
+ * We deliberately do not rebuild its iframe on focus, visibility, or resize:
+ * doing so can cause the white/blank flash users reported after returning
+ * from Google's account chooser.
  */
 import { useEffect, useRef, useState } from 'react';
 import { GoogleMark } from './BrandIcons';
@@ -11,17 +12,32 @@ import { cn } from '@/lib/utils';
 
 const GSI_SRC = 'https://accounts.google.com/gsi/client';
 let scriptPromise = null;
+let activeGoogleHandler = null;
+let initializedClientId = null;
 
 function loadGsi() {
   if (window.google?.accounts?.id) return Promise.resolve();
   if (scriptPromise) return scriptPromise;
+
+  // Reuse a script another part of the app may already have requested.
+  const existingScript = document.querySelector(`script[src="${GSI_SRC}"]`);
+  if (existingScript) {
+    scriptPromise = new Promise((resolve, reject) => {
+      existingScript.addEventListener('load', resolve, { once: true });
+      existingScript.addEventListener('error', reject, { once: true });
+    }).catch((error) => {
+      scriptPromise = null;
+      throw error;
+    });
+    return scriptPromise;
+  }
 
   scriptPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.src = GSI_SRC;
     script.async = true;
     script.defer = true;
-    script.onload = () => resolve();
+    script.onload = resolve;
     script.onerror = () => {
       scriptPromise = null;
       script.remove();
@@ -37,7 +53,7 @@ export function SocialButtons({ onGoogle, googleClientId, disabled = false, clas
   const host = useRef(null);
   const onGoogleRef = useRef(onGoogle);
   const [notice, setNotice] = useState('');
-
+  const [buttonReady, setButtonReady] = useState(false);
   const googleConfigured = Boolean(googleClientId);
 
   useEffect(() => {
@@ -48,32 +64,42 @@ export function SocialButtons({ onGoogle, googleClientId, disabled = false, clas
     if (!googleConfigured) return undefined;
 
     let cancelled = false;
-
-    const renderGoogleButton = () => {
-      if (cancelled || !host.current || !window.google?.accounts?.id) return;
-      const availableWidth = host.current.clientWidth || 320;
-      host.current.replaceChildren();
-      window.google.accounts.id.renderButton(host.current, {
-        type: 'standard',
-        theme: 'filled_blue',
-        size: 'large',
-        text: 'continue_with',
-        shape: 'rectangular',
-        logo_alignment: 'left',
-        width: Math.max(200, Math.min(400, Math.floor(availableWidth))),
-      });
-    };
+    const handler = (credential) => onGoogleRef.current?.(credential);
+    activeGoogleHandler = handler;
 
     loadGsi()
       .then(() => {
-        if (cancelled || !window.google?.accounts?.id) return;
-        window.google.accounts.id.initialize({
-          client_id: googleClientId,
-          callback: (response) => {
-            if (response?.credential) onGoogleRef.current?.(response.credential);
-          },
-        });
-        renderGoogleButton();
+        if (cancelled || !host.current || !window.google?.accounts?.id) return;
+
+        // GIS should be initialized once per client ID. Its callback forwards
+        // to the currently mounted LoginPage rather than a stale closure.
+        if (initializedClientId !== googleClientId) {
+          window.google.accounts.id.initialize({
+            client_id: googleClientId,
+            auto_select: false,
+            callback: (response) => {
+              if (response?.credential) activeGoogleHandler?.(response.credential);
+            },
+          });
+          initializedClientId = googleClientId;
+        }
+
+        // React StrictMode can run an effect setup/cleanup/setup cycle.
+        // Keep an already-rendered Google iframe instead of replacing it.
+        if (!host.current.querySelector('iframe')) {
+          const availableWidth = host.current.clientWidth || 320;
+          window.google.accounts.id.renderButton(host.current, {
+            type: 'standard',
+            theme: 'filled_blue',
+            size: 'large',
+            text: 'continue_with',
+            shape: 'pill',
+            logo_alignment: 'left',
+            width: Math.max(200, Math.min(400, Math.floor(availableWidth))),
+          });
+        }
+
+        setButtonReady(Boolean(host.current.querySelector('iframe')));
       })
       .catch(() => {
         if (!cancelled) setNotice('Google sign-in could not load. Please refresh the page and try again.');
@@ -81,6 +107,7 @@ export function SocialButtons({ onGoogle, googleClientId, disabled = false, clas
 
     return () => {
       cancelled = true;
+      if (activeGoogleHandler === handler) activeGoogleHandler = null;
     };
   }, [googleClientId, googleConfigured]);
 
@@ -89,16 +116,34 @@ export function SocialButtons({ onGoogle, googleClientId, disabled = false, clas
       {googleConfigured ? (
         <div
           className={cn(
-            'flex min-h-12 w-full items-center justify-center overflow-hidden rounded-[10px]',
-            'bg-transparent transition-opacity duration-200',
-            disabled && 'pointer-events-none opacity-60'
+            'relative isolate w-full overflow-hidden rounded-2xl border border-primary/20',
+            'bg-gradient-to-br from-primary/[0.08] via-card to-accent/[0.08]',
+            'p-2 shadow-[0_14px_34px_-26px_var(--primary)]',
+            'transition-colors duration-300',
+            disabled && 'opacity-60'
           )}
           aria-label="Sign in with Google"
         >
-          <div
-            ref={host}
-            className="flex min-h-12 w-full items-center justify-center [&>div]:!mx-auto [&_iframe]:!max-w-full"
-          />
+          <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+          <div className="relative flex min-h-[58px] w-full items-center justify-center overflow-hidden rounded-xl border border-border/80 bg-background/80 px-1 shadow-sm backdrop-blur-sm">
+            {!buttonReady && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center gap-3 bg-card text-sm font-semibold text-foreground">
+                <GoogleMark size={19} />
+                <span>Preparing secure sign-in…</span>
+              </div>
+            )}
+            <div
+              ref={host}
+              className={cn(
+                'flex min-h-[48px] w-full items-center justify-center',
+                '[&>div]:!mx-auto [&_iframe]:!max-w-full',
+                !buttonReady && 'opacity-0'
+              )}
+            />
+          </div>
+          <p className="mt-2 text-center text-[10px] font-medium tracking-[0.12em] text-muted-foreground">
+            SECURE ACCESS · POWERED BY GOOGLE
+          </p>
         </div>
       ) : (
         <button
@@ -106,17 +151,16 @@ export function SocialButtons({ onGoogle, googleClientId, disabled = false, clas
           disabled={disabled}
           onClick={() => setNotice('Google sign-in is not set up yet.')}
           className={cn(
-            'flex h-12 w-full items-center justify-center gap-2 rounded-[10px]',
-            'border border-input bg-card text-[13px] font-medium text-foreground/80',
-            'transition-[transform,background-color,border-color] duration-200',
-            'hover:-translate-y-px hover:border-foreground/25 hover:bg-muted',
-            'active:translate-y-0 active:scale-[0.99]',
+            'flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-primary/20',
+            'bg-gradient-to-r from-primary/[0.08] via-card to-accent/[0.08]',
+            'text-sm font-semibold text-foreground shadow-sm transition-all duration-200',
+            'hover:border-primary/40 hover:shadow-md',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
             disabled && 'pointer-events-none opacity-60'
           )}
           aria-label="Continue with Google"
         >
-          <GoogleMark size={16} />
+          <GoogleMark size={19} />
           <span>Continue with Google</span>
         </button>
       )}
