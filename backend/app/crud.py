@@ -102,8 +102,8 @@ def resolve_instructor_revenue_split(db, instructor_id, is_admin=False):
     """
     if is_admin:
         return {
-            'instructor_pct': 100.0, 'admin_pct': 0.0,
-            'has_override': False, 'source': 'admin_platform'
+            'instructor_pct': 0.0, 'admin_pct': 100.0,
+            'has_override': False, 'configured': True, 'source': 'admin_platform'
         }
 
     row = db.execute(
@@ -119,7 +119,7 @@ def resolve_instructor_revenue_split(db, instructor_id, is_admin=False):
                 return {
                     'instructor_pct': round(instructor_pct, 2),
                     'admin_pct': round(admin_pct, 2),
-                    'has_override': True, 'source': 'instructor_override'
+                    'has_override': True, 'configured': True, 'source': 'instructor_override'
                 }
         except (TypeError, ValueError):
             pass
@@ -128,7 +128,8 @@ def resolve_instructor_revenue_split(db, instructor_id, is_admin=False):
     return {
         'instructor_pct': split['instructor_pct'],
         'admin_pct': split['admin_pct'],
-        'has_override': False, 'source': split['source']
+        'has_override': False, 'configured': split['configured'],
+        'source': split['source']
     }
 
 
