@@ -106,15 +106,6 @@ def resolve_instructor_revenue_split(db, instructor_id, is_admin=False):
             'has_override': False, 'source': 'admin_platform'
         }
 
-    db.execute("""
-        CREATE TABLE IF NOT EXISTS instructor_revenue_splits (
-            instructor_id TEXT PRIMARY KEY,
-            instructor_share REAL NOT NULL,
-            admin_share REAL NOT NULL,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_by TEXT
-        )
-    """)
     row = db.execute(
         'SELECT instructor_share, admin_share FROM instructor_revenue_splits WHERE instructor_id=?',
         (instructor_id,)
