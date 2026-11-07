@@ -807,7 +807,7 @@ export default function AdminPage() {
                     <DollarSign className="h-5 w-5 text-primary" /> Revenue Split
                   </h2>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Set how revenue is split between instructors and the platform. Changes affect all future earnings calculations.
+                    Set the default split for instructors who do not have an individual override. New transactions use the applicable split; past transactions keep their recorded amounts.
                   </p>
                 </div>
                 <div className="space-y-4">
@@ -2290,7 +2290,7 @@ function AdminSettingsTab() {
           <Settings className="h-5 w-5 text-primary" /> Platform Settings
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Configure how revenue is split between instructors and the platform on every paid course purchase.
+          Set the default split for instructors without an individual override. Individual instructor settings take priority for their future course and paid quiz-attempt transactions.
         </p>
       </div>
 
