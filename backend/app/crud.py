@@ -98,12 +98,12 @@ def resolve_instructor_revenue_split(db, instructor_id, is_admin=False):
     """Resolve the effective split for one instructor without changing history.
 
     A saved instructor override wins; otherwise the platform-wide split applies.
-    Admin-owned courses retain the platform's existing 100% platform treatment.
+    Admin-owned courses retain their existing full-share treatment.
     """
     if is_admin:
         return {
-            'instructor_pct': 0.0, 'admin_pct': 100.0,
-            'has_override': False, 'configured': True, 'source': 'admin_platform'
+            'instructor_pct': 100.0, 'admin_pct': 0.0,
+            'has_override': False, 'configured': True, 'source': 'admin_owned'
         }
 
     row = db.execute(
