@@ -3,7 +3,6 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Eye, EyeOff, Mail, Lock, User, GraduationCap, X, Check, BookOpen, ArrowRight, IdCard, ShieldCheck, Loader2 } from 'lucide-react'
 import { AuthCard } from '@/components/auth/AuthCard'
 import { Field } from '@/components/auth/Field'
-import { SocialButtons } from '@/components/auth/SocialButtons'
 import { PhoneField } from '@/components/common/PhoneField'
 import { useAuth } from '@/context/AuthContext'
 import { isValidIntlPhone } from '@/lib/payoutDetails'
@@ -68,7 +67,7 @@ export function SignupPage() {
   const [requirements, setRequirements] = useState(null)
   const [regInfo, setRegInfo] = useState(null)
   const [modal, setModal] = useState(null) // 'terms' | 'privacy' | null
-  const { signup, loginWithGoogle } = useAuth()
+  const { signup } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
@@ -119,22 +118,6 @@ export function SignupPage() {
       .catch(() => { if (alive) setRegInfo({ is_free: true, fee: 0, currency: 'GHS' }) })
     return () => { alive = false }
   }, [formData.isInstructor])
-
-  // Sign up with Google. This button is only shown on the student flow — instructor
-  // accounts must be created with email so identity details are collected. New
-  // accounts are created on the backend (never auto-approved as instructors).
-  const handleGoogle = async (credential) => {
-    setErrors({})
-    setIsLoading(true)
-    try {
-      await loginWithGoogle(credential, 'student')
-      navigate('/dashboard')
-    } catch (err) {
-      setErrors({ general: err.message || 'Google sign up failed. Please try again.' })
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   // Live evaluation of each rule
   const ruleStatuses = useMemo(
@@ -365,26 +348,16 @@ export function SignupPage() {
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <p className="text-xs text-muted-foreground">
               Instructor accounts are created with an email address so we can verify your
-              identity before approval. Google sign-up is available to students — you can
-              still use Google to sign in once your account exists.
+              identity before approval. Google sign-in is available after your account has been created.
             </p>
           </div>
         ) : (
-          <>
-            <SocialButtons
-              googleClientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ''}
-              onGoogle={handleGoogle}
-              disabled={isLoading}
-            />
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
-              <div className="relative flex justify-center">
-                <span className="bg-card px-3 text-[11px] uppercase tracking-wide text-muted-foreground">
-                  or sign up with email
-                </span>
-              </div>
-            </div>
-          </>
+          <div className="rounded-[10px] border border-primary/15 bg-primary/5 px-3 py-3">
+            <p className="text-sm font-medium text-foreground">Create your student account with email</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Use your email address and a password. You can use Google to sign in later if this email already has an account.
+            </p>
+          </div>
         )}
 
         {errors.general && (
