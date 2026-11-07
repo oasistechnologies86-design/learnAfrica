@@ -491,11 +491,11 @@ export default function ProfilePage() {
           {/* ── IDENTITY & VERIFICATION (read-only; country + ID are locked) ── */}
           {showIdentity && (
             <Card className="w-full bg-card border-border flex flex-col shadow-sm">
-              <CardHeader className="py-4 px-5 md:px-6 border-b border-border flex flex-row items-center justify-between bg-primary/[0.01]">
+              <CardHeader className="py-4 px-5 md:px-6 border-b border-border flex flex-col gap-3 bg-primary/[0.01] sm:flex-row sm:items-center sm:justify-between">
                 <CardTitle className="text-xs md:text-sm font-bold uppercase tracking-widest text-primary">Identity &amp; Verification</CardTitle>
                 {identity && !identityEdit && (
                   <button type="button" onClick={openIdentityEdit}
-                    className="bg-primary text-primary-foreground text-3xs font-bold uppercase tracking-widest px-4 md:px-6 h-9 md:h-10 rounded-lg shadow-md shadow-primary/20">
+                    className="w-full sm:w-auto max-w-full bg-primary text-primary-foreground text-3xs font-bold uppercase tracking-widest px-3 md:px-6 h-9 md:h-10 rounded-lg shadow-md shadow-primary/20 whitespace-nowrap">
                     Update address / phone
                   </button>
                 )}
