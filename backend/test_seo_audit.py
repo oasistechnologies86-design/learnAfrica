@@ -99,6 +99,48 @@ finally:
     else:
         _os.environ.pop('SITE_URL', None)
 
+# ── Reset links must follow the environment, not a stale database value ───────
+# platform_settings.frontend_url may have been written under an earlier domain.
+# If it won over SITE_URL, a domain change in the deployment environment would
+# silently keep emailing links to the old host.
+from app.security import generate_token as _gen_token  # noqa: E402
+
+with app.app_context():
+    db = get_db()
+    db.execute("INSERT INTO users (id,name,email,password_hash,role,is_active) VALUES (?,?,?,?,?,1)",
+               ('rladmin', 'Reset Admin', 'reset-admin@example.com', 'x', 'admin'))
+    db.execute("INSERT INTO users (id,name,email,password_hash,role,is_active) VALUES (?,?,?,?,?,1)",
+               ('rl1', 'Reset Learner', 'reset-learner@example.com', 'x', 'student'))
+    db.execute("INSERT INTO password_reset_requests (id,email,user_id,reason,status)"
+               " VALUES (?,?,?,?,?)",
+               ('rr1', 'reset-learner@example.com', 'rl1', 'forgot', 'pending'))
+    db.execute("INSERT INTO platform_settings (key,value) VALUES ('frontend_url',?)",
+               ('https://stale-old-domain.example.net',))
+    db.commit()
+    _sa_rl_hdr = {'Authorization': f'Bearer {_gen_token("rladmin", "reset-admin@example.com", "admin")}'}
+
+_prev_site = _os.environ.get('SITE_URL')
+try:
+    _os.environ['SITE_URL'] = 'https://brand-new-domain.example.net'
+    r = c.post('/api/admin/password-reset-requests/rr1/generate-link', headers=_sa_rl_hdr)
+    link = (r.get_json() or {}).get('link', '')
+    check('reset link uses env SITE_URL over a stale database value',
+          link.startswith('https://brand-new-domain.example.net/'), link)
+    check('reset link does not leak the stale domain',
+          'stale-old-domain.example.net' not in link, link)
+
+    # With no env value, the stored setting is still honoured as a fallback.
+    _os.environ.pop('SITE_URL', None)
+    r = c.post('/api/admin/password-reset-requests/rr1/generate-link', headers=_sa_rl_hdr)
+    link = (r.get_json() or {}).get('link', '')
+    check('reset link falls back to the stored setting when no env is set',
+          link.startswith('https://stale-old-domain.example.net/'), link)
+finally:
+    if _prev_site is not None:
+        _os.environ['SITE_URL'] = _prev_site
+    else:
+        _os.environ.pop('SITE_URL', None)
+
 # Audit endpoints must be admin-protected.
 r = c.get('/api/admin/audit-log')
 check('audit-log requires auth', r.status_code in (401, 403), r.status_code)

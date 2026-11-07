@@ -10148,7 +10148,18 @@ def create_app() -> Flask:
         return True
 
     def _reset_link_base():
-        """Base URL for user-facing reset links (no trailing slash)."""
+        """Base URL for user-facing links (no trailing slash).
+
+        The deployment environment owns this value, so it is read from
+        SITE_URL/FRONTEND_URL/APP_URL FIRST. A `frontend_url` row in
+        platform_settings is only consulted when none of those is set — it may
+        have been written under an earlier domain, and letting it win would send
+        reset links to a host the operator has already moved away from.
+        """
+        for key in ('SITE_URL', 'FRONTEND_URL', 'APP_URL'):
+            v = (os.environ.get(key) or '').strip()
+            if v:
+                return v.rstrip('/')
         try:
             row = get_db().execute(
                 "SELECT value FROM platform_settings WHERE key='frontend_url'").fetchone()
@@ -10156,10 +10167,6 @@ def create_app() -> Flask:
                 return str(row['value']).strip().rstrip('/')
         except Exception:
             pass
-        for key in ('SITE_URL', 'FRONTEND_URL', 'APP_URL'):
-            v = (os.environ.get(key) or '').strip()
-            if v:
-                return v.rstrip('/')
         origins = (os.environ.get('ALLOWED_ORIGINS') or '').strip()
         if origins:
             first = origins.split(',')[0].strip()

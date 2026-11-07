@@ -74,7 +74,7 @@ function InlineCertificate({ certData, user }) {
         </div>
         <div className="flex items-center justify-center gap-3">
           <p className="text-2xs font-mono text-slate-400">
-            ID: {certData.certificateId} · Verify at {siteHost()}/#verify-section
+            ID: {certData.certificateId} · Verify at {siteHost()}/verify-credential
           </p>
           {certData.certificateId && (
             <QRCodeSVG value={verifyUrl(certData.certificateId)} size={40} level="M" marginSize={0} bgColor="#ffffff" fgColor="#0f4d34" />
