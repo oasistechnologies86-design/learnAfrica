@@ -46,12 +46,16 @@ export function CoursesPage() {
 
     if (searchQuery) {
       const q = searchQuery.toLowerCase().trim();
-      const normalize = (value) => String(value || '').toLowerCase().replace(/[\\s-]+/g, '');
+      const normalize = (value) => String(value || '').toLowerCase().replace(/[\s-]+/g, '');
       const normalizedQuery = normalize(q);
       result = result.filter(c => {
         const searchable = [
-          c.title, c.description, c.instructor_name, c.category, c.course_code,
+          c.title, c.description, c.instructor_name, c.instructor_title,
+          c.instructor_specialization, c.instructor_field, c.category, c.course_code,
+          c.keywords, c.topics,
           ...(Array.isArray(c.tags) ? c.tags : []),
+          ...(Array.isArray(c.topics) ? c.topics : []),
+          ...(Array.isArray(c.keywords) ? c.keywords : []),
           ...(Array.isArray(c.learningOutcomes) ? c.learningOutcomes : []),
           ...(Array.isArray(c.learning_outcomes) ? c.learning_outcomes : []),
         ];
