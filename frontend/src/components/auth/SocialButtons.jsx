@@ -28,7 +28,11 @@ function loadGsi() {
     s.async = true;
     s.defer = true;
     s.onload = () => resolve();
-    s.onerror = () => reject(new Error('Could not load Google sign-in'));
+    s.onerror = () => {
+      scriptPromise = null; // Allow a later visit to retry loading the GIS script.
+      s.remove();
+      reject(new Error('Could not load Google sign-in'));
+    };
     document.head.appendChild(s);
   });
   return scriptPromise;
@@ -46,10 +50,17 @@ const visualBtn = cn(
 
 export function SocialButtons({ onGoogle, googleClientId, disabled = false, className }) {
   const host = useRef(null);
+  const onGoogleRef = useRef(onGoogle);
   const [notice, setNotice] = useState('');
   const [pressed, setPressed] = useState(false);
 
   const googleConfigured = Boolean(googleClientId);
+
+  // Keep the latest page callback without rebuilding Google's iframe whenever
+  // the parent rerenders (for example when login loading state changes).
+  useEffect(() => {
+    onGoogleRef.current = onGoogle;
+  }, [onGoogle]);
 
   useEffect(() => {
     if (!googleConfigured) return;
@@ -60,7 +71,7 @@ export function SocialButtons({ onGoogle, googleClientId, disabled = false, clas
         window.google.accounts.id.initialize({
           client_id: googleClientId,
           callback: (response) => {
-            if (response?.credential) onGoogle?.(response.credential);
+            if (response?.credential) onGoogleRef.current?.(response.credential);
           },
         });
         host.current.innerHTML = '';
@@ -76,7 +87,7 @@ export function SocialButtons({ onGoogle, googleClientId, disabled = false, clas
       })
       .catch(() => setNotice('Google sign-in could not load. Please try again.'));
     return () => { cancelled = true; };
-  }, [googleClientId, googleConfigured, onGoogle]);
+  }, [googleClientId, googleConfigured]);
 
   return (
     <div className={cn('w-full', className)}>
