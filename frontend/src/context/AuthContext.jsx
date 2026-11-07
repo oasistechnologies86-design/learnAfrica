@@ -109,7 +109,8 @@ export function AuthProvider({ children }) {
     try {
       const socketUrl = API_BASE || (import.meta.env.DEV ? 'http://localhost:5000' : window.location.origin);
     const s = io(socketUrl, {
-        query: { token },
+        // Send JWT in the Socket.IO handshake auth payload, never in the URL.
+        auth: { token },
         transports: ['polling', 'websocket'], // polling first avoids invalid frame header
         reconnection: true,
         reconnectionAttempts: 5,
