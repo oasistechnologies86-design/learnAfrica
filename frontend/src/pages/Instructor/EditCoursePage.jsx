@@ -269,10 +269,10 @@ export function EditCoursePage() {
       <h1 className="text-2xl font-bold mb-6">Edit Course</h1>
 
       {/* Tab bar */}
-      <div className="flex items-center gap-1 bg-muted/30 p-1.5 rounded-xl border border-border mb-6">
+      <div className="mb-6 flex min-w-0 items-stretch gap-1 rounded-xl border border-border bg-muted/30 p-1.5">
         {tabs.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className={cn('flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all',
+            className={cn('min-w-0 flex-1 whitespace-normal break-words px-1 py-2 text-center text-[11px] font-bold leading-tight transition-all rounded-lg sm:px-3 sm:text-xs',
               tab === t.id
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground hover:bg-muted')}>
