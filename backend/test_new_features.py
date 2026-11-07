@@ -2,7 +2,7 @@
 
   1. Emergency instructor password reset (superadmin-only, revokes sessions).
   2. Email senders: Gmail 1 / Gmail 2 / SendPulse selector + ON/OFF switch.
-  3. Google sign-up / login.
+  3. Google sign-in for accounts already registered by email.
 
 Boots the real app against a throwaway SQLite database. Google's tokeninfo
 endpoint is replaced with a fake because it is an external service we cannot
@@ -164,13 +164,13 @@ check('test send on unconnected gmail fails clearly', r.status_code == 400, r.st
 r = c.put('/api/admin/email/config', headers=ad_hdr, json={'selected': 'sendpulse'})
 check('can select sendpulse as sender', r.get_json().get('selected') == 'sendpulse', r.get_json())
 
-# ── 3. Google sign-up / login ─────────────────────────────────────────────────
+# ── 3. Google sign-in only ──────────────────────────────────────────────────
 r = c.post('/api/auth/google', json={'credential': 'x'})
 check('google auth needs server config', r.status_code == 400, r.status_code)
 
-# With config + a successful (faked) Google verification.
+# Google may authenticate an existing email-registered account, but must never
+# create a new student or instructor account.
 os.environ['GOOGLE_OAUTH_CLIENT_ID'] = 'test-client.apps.googleusercontent.com'
-
 
 class _FakeResp:
     def __init__(self, status, data):
@@ -186,7 +186,6 @@ import app.main as m  # noqa: E402
 
 _orig_get = m.requests.get
 
-
 def _fake_get(url, *a, **k):
     if 'tokeninfo' in url:
         return _FakeResp(200, {
@@ -198,20 +197,32 @@ def _fake_get(url, *a, **k):
         })
     return _orig_get(url, *a, **k)
 
-
 m.requests.get = _fake_get
-
 r = c.post('/api/auth/google', json={'credential': 'ok', 'role': 'student'})
-check('google student signup 201', r.status_code == 201, r.status_code)
-j = r.get_json()
-check('google signup returns token', bool(j.get('token')))
-check('google signup role is student', j.get('user', {}).get('role') == 'student', j.get('user'))
+check('Google cannot create a new student account', r.status_code == 404, r.status_code)
+check('rejected Google student signup returns no token', not (r.get_json() or {}).get('token'))
+with app.app_context():
+    missing = get_db().execute("SELECT id FROM users WHERE email='newstudent@gmail.com'").fetchone()
+check('rejected Google student signup creates no user', missing is None)
 
 # A client cannot claim instructor for an existing student account.
-r = c.post('/api/auth/google', json={'credential': 'ok', 'role': 'instructor'})
-check('google login does not change existing role', r.get_json().get('user', {}).get('role') == 'student')
+def _fake_existing(url, *a, **k):
+    if 'tokeninfo' in url:
+        return _FakeResp(200, {
+            'aud': 'test-client.apps.googleusercontent.com',
+            'email': 'sam@example.com',
+            'email_verified': 'true',
+            'name': 'Sam Student',
+        })
+    return _orig_get(url, *a, **k)
 
-# New instructor via Google is pending, never auto-approved.
+m.requests.get = _fake_existing
+r = c.post('/api/auth/google', json={'credential': 'ok', 'role': 'instructor'})
+check('Google login preserves the existing student role',
+      r.status_code == 200 and r.get_json().get('user', {}).get('role') == 'student',
+      (r.get_json() or {}).get('user', {}).get('role'))
+
+# A new instructor cannot bypass the normal registration and approval process.
 def _fake_instr(url, *a, **k):
     if 'tokeninfo' in url:
         return _FakeResp(200, {
@@ -222,13 +233,12 @@ def _fake_instr(url, *a, **k):
         })
     return _orig_get(url, *a, **k)
 
-
 m.requests.get = _fake_instr
 r = c.post('/api/auth/google', json={'credential': 'ok', 'role': 'instructor'})
-check('google instructor signup 201', r.status_code == 201, r.status_code)
-u = r.get_json().get('user', {})
-check('google instructor is not auto-approved', u.get('instructor_status') == 'pending', u.get('instructor_status'))
-check('google instructor role is instructor', u.get('role') == 'instructor', u.get('role'))
+check('Google cannot create a new instructor account', r.status_code == 404, r.status_code)
+with app.app_context():
+    missing = get_db().execute("SELECT id FROM users WHERE email='newinstructor@gmail.com'").fetchone()
+check('rejected Google instructor signup creates no user', missing is None)
 
 # Unverified Google email is rejected.
 m.requests.get = lambda url, *a, **k: _FakeResp(200, {
