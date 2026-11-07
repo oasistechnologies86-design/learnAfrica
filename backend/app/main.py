@@ -896,14 +896,22 @@ def create_app() -> Flask:
         return bool(app.config.get('USE_POSTGRES'))
 
     @socketio.on('connect')
-    def on_connect():
-        p = decode_token(request.args.get('token', ''))
+    def on_connect(auth=None):
+        # Socket.IO credentials belong in the handshake auth payload, not the
+        # URL query string. Query-string JWTs are commonly copied into proxy,
+        # access and application logs.
+        token = (auth or {}).get('token', '') if isinstance(auth, dict) else ''
+        p = decode_token(token)
         if p:
-            uid = p['user_id']
-            with connections_lock: active_connections[uid] = request.sid
+            uid = p.get('user_id')
+            if not uid:
+                return False
+            with connections_lock:
+                active_connections[uid] = request.sid
             join_room(f'user_{uid}')
             emit('connected', {'status': 'ok', 'user_id': uid})
         else:
+            # Preserve public/guest socket behavior without granting a room.
             emit('connected', {'status': 'ok', 'guest': True})
     
     @socketio.on('disconnect')
@@ -1623,8 +1631,10 @@ def create_app() -> Flask:
         return jsonify(resp)
     
     @app.route('/api/auth/logout', methods=['POST'])
-    @token_required
     def logout():
+        # JWT sessions are stateless. The browser clears its local token after
+        # this acknowledgement; making logout idempotent lets users sign out
+        # even when their token has expired or their account was revoked.
         return jsonify({'message': 'Logged out'})
     
     # ── USERS ─────────────────────────────────────────────────────────────────────
@@ -7111,6 +7121,7 @@ def create_app() -> Flask:
         db.commit()
         return jsonify({'message': 'Deleted'})
     
+    @app.route('/health', methods=['GET'])
     @app.route('/api/health', methods=['GET'])
     def health():
         try:
