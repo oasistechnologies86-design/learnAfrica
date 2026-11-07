@@ -2575,10 +2575,144 @@ function AdminSettingsTab() {
         </CardContent>
       </Card>
 
+      <StudentTutorialSettingsCard />
       <EmailSendersCard />
       <EmailUsageCard />
       <DatabaseBackupCard />
     </div>
+  );
+}
+
+// ── Universal student dashboard tutorial settings ──────────────────────────
+function StudentTutorialSettingsCard() {
+  const [form, setForm] = useState({
+    enabled: false, format: 'text', title: 'How Learn Africa Works',
+    description: 'A quick guide to your learning journey.',
+    content: '1. Explore courses and search by course name or course code.\n2. Enrol in a course and open it from your dashboard.\n3. Study custom lessons, watch videos and download available resources.\n4. Complete lesson quizzes and final exams according to the course rules.\n5. Track your progress and access your certificate when you meet the requirements.\n6. Contact support if you need help.',
+    media_url: '',
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [preview, setPreview] = useState(false);
+  const [message, setMessage] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    API('/api/admin/student-tutorial')
+      .then(data => { if (active) setForm(prev => ({ ...prev, ...data })); })
+      .catch(error => { if (active) setMessage({ type: 'error', text: error.message || 'Could not load tutorial settings.' }); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
+
+  const update = (key, value) => setForm(prev => ({ ...prev, [key]: value }));
+
+  const uploadMedia = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setMessage(null);
+    try {
+      const body = new FormData();
+      body.append('file', file);
+      const token = sessionStorage.getItem('auth_token');
+      const response = await fetch(API_BASE + '/api/admin/student-tutorial/upload', {
+        method: 'POST', headers: token ? { Authorization: 'Bearer ' + token } : {}, body,
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || 'Media upload failed.');
+      setForm(prev => ({ ...prev, media_url: data.media_url, format: data.media_type || prev.format }));
+      setMessage({ type: 'success', text: (data.filename || 'Tutorial media') + ' uploaded successfully.' });
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message || 'Media upload failed.' });
+    } finally {
+      setUploading(false);
+      event.target.value = '';
+    }
+  };
+
+  const save = async () => {
+    setSaving(true);
+    setMessage(null);
+    try {
+      const data = await API('/api/admin/student-tutorial', { method: 'PUT', body: JSON.stringify(form) });
+      setForm(prev => ({ ...prev, ...(data.tutorial || form) }));
+      setMessage({ type: 'success', text: 'Student dashboard tutorial saved.' });
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message || 'Could not save the tutorial.' });
+    } finally { setSaving(false); }
+  };
+
+  const youtubeEmbed = (value) => {
+    try {
+      const url = new URL(value);
+      let id = '';
+      if (url.hostname.includes('youtu.be')) id = url.pathname.slice(1);
+      else if (url.hostname.includes('youtube.com')) id = url.searchParams.get('v') || url.pathname.split('/').filter(Boolean).pop();
+      return id ? 'https://www.youtube-nocookie.com/embed/' + id : '';
+    } catch { return ''; }
+  };
+
+  const mediaPreview = () => {
+    if (!form.media_url) return <p className="text-xs text-muted-foreground">No media has been added yet.</p>;
+    if (form.format === 'audio') return <audio className="w-full" controls preload="none" src={form.media_url}>Audio playback is not supported by this browser.</audio>;
+    const embed = youtubeEmbed(form.media_url);
+    if (embed) return <div className="aspect-video overflow-hidden rounded-xl"><iframe title="Student tutorial preview" src={embed} className="h-full w-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen /></div>;
+    return <video className="w-full max-h-72 rounded-xl bg-black" controls preload="none" src={form.media_url}>Video playback is not supported by this browser.</video>;
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-sm flex items-center gap-2"><BookOpen className="h-4 w-4 text-primary" /> Student Dashboard Tutorial</CardTitle>
+        <p className="text-xs text-muted-foreground">Manage one universal guide for every student. Existing instructor guidance and platform settings remain separate.</p>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {loading ? (
+          <div className="flex items-center justify-center py-6 text-muted-foreground"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading tutorial settings…</div>
+        ) : (
+          <>
+            <label className="flex items-center gap-3 rounded-xl border border-border bg-muted/20 p-3">
+              <input type="checkbox" className="h-4 w-4 accent-primary" checked={!!form.enabled} onChange={event => update('enabled', event.target.checked)} />
+              <span><span className="block text-sm font-semibold">Show tutorial to students</span><span className="block text-xs text-muted-foreground">Disable it without deleting the saved content.</span></span>
+            </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="space-y-1.5"><span className="text-xs font-semibold">Tutorial title</span><Input value={form.title || ''} onChange={event => update('title', event.target.value)} placeholder="How Learn Africa Works" /></label>
+              <label className="space-y-1.5"><span className="text-xs font-semibold">Format</span>
+                <select value={form.format || 'text'} onChange={event => update('format', event.target.value)} className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm">
+                  <option value="text">Written guide</option><option value="audio">Audio tutorial</option><option value="video">Video tutorial</option>
+                </select>
+              </label>
+            </div>
+            <label className="block space-y-1.5"><span className="text-xs font-semibold">Short introduction</span><Input value={form.description || ''} onChange={event => update('description', event.target.value)} placeholder="A quick guide to your learning journey." /></label>
+            {form.format === 'text' ? (
+              <label className="block space-y-1.5"><span className="text-xs font-semibold">Tutorial content</span>
+                <textarea value={form.content || ''} onChange={event => update('content', event.target.value)} rows={8}
+                  className="w-full rounded-xl border border-input bg-background p-3 text-sm leading-relaxed outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Explain how students find courses, enrol, learn, take tests and access certificates." />
+              </label>
+            ) : (
+              <div className="space-y-3 rounded-xl border border-border p-3">
+                <label className="block space-y-1.5"><span className="text-xs font-semibold">Media link (optional if you upload a file)</span><Input value={form.media_url || ''} onChange={event => update('media_url', event.target.value)} placeholder="Paste a direct media link or YouTube URL" /></label>
+                <label className="block space-y-1.5"><span className="text-xs font-semibold">Or upload {form.format === 'audio' ? 'audio' : 'video'}</span>
+                  <input type="file" accept={form.format === 'audio' ? 'audio/*,.mp3,.m4a,.wav,.ogg,.aac' : 'video/*,.mp4,.webm,.mov,.m4v'} onChange={uploadMedia} disabled={uploading}
+                    className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-primary" />
+                  {uploading && <span className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" /> Uploading media…</span>}
+                  <span className="block text-xs text-muted-foreground">Audio: MP3, M4A, WAV, OGG, AAC. Video: MP4, WEBM, MOV, M4V. Maximum 100 MB.</span>
+                </label>
+              </div>
+            )}
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" onClick={() => setPreview(value => !value)} className="gap-2"><Eye className="h-4 w-4" /> {preview ? 'Hide preview' : 'Preview student view'}</Button>
+              <Button onClick={save} disabled={saving || uploading} className="gap-2">{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save tutorial</Button>
+            </div>
+            {preview && <div className="rounded-2xl border border-primary/20 bg-primary/[0.035] p-4 space-y-3"><div><p className="text-xs font-bold uppercase tracking-wide text-primary">Student preview</p><h3 className="mt-1 text-lg font-bold">{form.title || 'How Learn Africa Works'}</h3><p className="text-sm text-muted-foreground">{form.description}</p></div>{form.format === 'text' ? <div className="whitespace-pre-line text-sm leading-relaxed">{form.content || 'Your written tutorial will appear here.'}</div> : mediaPreview()}</div>}
+            {message && <div role="status" className={cn('rounded-xl border p-3 text-sm', message.type === 'success' ? 'border-success/30 bg-success/10 text-success' : 'border-destructive/30 bg-destructive/10 text-destructive')}>{message.text}</div>}
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
