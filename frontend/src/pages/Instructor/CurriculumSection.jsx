@@ -839,13 +839,13 @@ function CurriculumItemEditor({ item, index, onUpdate, onRemove, hasResources = 
 // ── Stat Card ───────────────────────────────────────────────────────────────
 function StatCard({ icon: Icon, label, value }) {
   return (
-    <div className="bg-muted/5 border border-border p-3 rounded-xl flex items-center gap-3">
-      <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+    <div className="flex min-w-0 flex-col items-start gap-1.5 rounded-xl border border-border bg-muted/5 p-2.5 sm:flex-row sm:items-center sm:gap-3 sm:p-3">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary sm:h-9 sm:w-9">
         <Icon className="h-4 w-4" />
       </div>
-      <div>
-        <p className="text-3xs uppercase font-bold text-muted-foreground">{label}</p>
-        <p className="text-sm font-bold">{value}</p>
+      <div className="min-w-0 w-full">
+        <p className="break-words text-[9px] font-bold uppercase leading-tight text-muted-foreground sm:text-3xs">{label}</p>
+        <p className="text-sm font-bold leading-tight">{value}</p>
       </div>
     </div>
   );
@@ -896,7 +896,7 @@ export function CurriculumSection({
   return (
     <div className="space-y-5 pb-20">
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid min-w-0 grid-cols-3 gap-2 sm:gap-3">
         <StatCard icon={BookOpen} label="Lessons"  value={totalLessons} />
         <StatCard icon={Video}    label="Videos"   value={videoCount} />
         <StatCard icon={Layout}   label="Sections" value={sections.length} />
