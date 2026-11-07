@@ -10,7 +10,8 @@ import uuid
 from flask import Blueprint, request, jsonify, g
 from .database import get_db, ensure_transactions_table
 from .security import token_required
-from .payments import initiate_payment
+from .payments import initiate_payment, compute_split
+from .crud import resolve_instructor_revenue_split
 
 extra_attempts_bp = Blueprint("extra_attempts", __name__)
 
@@ -148,7 +149,13 @@ def purchase_extra_attempt(quiz_id):
         ).fetchone()
         if not course or not course["instructor_id"]:
             return jsonify({"error": "The course instructor could not be identified."}), 409
-        payout_status = "n/a" if course["instructor_role"] in ("admin", "superadmin") else "pending"
+        instructor_is_admin = course["instructor_role"] in ("admin", "superadmin")
+        payout_status = "n/a" if instructor_is_admin else "pending"
+        if instructor_is_admin:
+            instructor_share, platform_share = amount, 0.0
+        else:
+            effective_split = resolve_instructor_revenue_split(db, course["instructor_id"])
+            instructor_share, platform_share = compute_split(amount, effective_split["instructor_pct"])
         user = db.execute("SELECT id,name,email FROM users WHERE id=?", (uid,)).fetchone()
         if not user:
             return jsonify({"error": "Student account not found."}), 404
@@ -181,7 +188,7 @@ def purchase_extra_attempt(quiz_id):
                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (pay["id"], pay["receipt_id"], "quiz_extra_attempt", uid, user["name"],
              user["email"], course["id"], "Additional quiz attempt: " + str(quiz["title"]),
-             course["instructor_id"], amount, "GHS", amount, 0.0, pay["status"],
+             course["instructor_id"], amount, "GHS", instructor_share, platform_share, pay["status"],
              pay["provider"], pay["provider_ref"], method, json.dumps(tx_details),
              payout_status, "One additional attempt for quiz " + quiz_id)
         )
