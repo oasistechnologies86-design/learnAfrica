@@ -39,7 +39,7 @@ const visualBtn = cn(
   'rounded-[10px] border border-input bg-card',
   'text-[13px] font-medium text-foreground/80',
   'transition-[transform,background-color,border-color] duration-200',
-  'hover:bg-muted hover:border-foreground/25 hover:-translate-y-px',
+  'group-hover:bg-muted group-hover:border-foreground/25 group-hover:-translate-y-px',
   'active:translate-y-0 active:scale-[0.99]',
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
 );
@@ -47,6 +47,7 @@ const visualBtn = cn(
 export function SocialButtons({ onGoogle, googleClientId, disabled = false, className }) {
   const host = useRef(null);
   const [notice, setNotice] = useState('');
+  const [pressed, setPressed] = useState(false);
 
   const googleConfigured = Boolean(googleClientId);
 
@@ -80,9 +81,27 @@ export function SocialButtons({ onGoogle, googleClientId, disabled = false, clas
   return (
     <div className={cn('w-full', className)}>
       {googleConfigured ? (
-        <div className="relative w-full" role="group" aria-label="Sign in with Google">
-          {/* Visual layer — what the user sees. */}
-          <div className={cn(visualBtn, disabled && 'opacity-60')} aria-hidden="true">
+        <div
+          className="group relative w-full"
+          role="group"
+          aria-label="Sign in with Google"
+          onPointerDown={() => !disabled && setPressed(true)}
+          onPointerUp={() => setPressed(false)}
+          onPointerCancel={() => setPressed(false)}
+          onPointerLeave={() => setPressed(false)}
+          onKeyDown={(event) => {
+            if (!disabled && (event.key === 'Enter' || event.key === ' ')) setPressed(true);
+          }}
+          onKeyUp={() => setPressed(false)}
+          onBlur={() => setPressed(false)}
+        >
+          {/* Visual layer — theme-aware and reacts to pointer/keyboard input. */}
+          <div className={cn(
+            visualBtn,
+            'group-hover:shadow-sm',
+            pressed && 'translate-y-0 scale-[0.99] border-primary/40 bg-muted shadow-inner',
+            disabled && 'opacity-60'
+          )} aria-hidden="true">
             <GoogleMark size={16} />
             <span>Google</span>
           </div>
@@ -100,8 +119,9 @@ export function SocialButtons({ onGoogle, googleClientId, disabled = false, clas
       ) : (
         <button
           type="button"
+          disabled={disabled}
           onClick={() => setNotice('Google sign-in is not set up yet.')}
-          className={cn(visualBtn, disabled && 'opacity-60 pointer-events-none')}
+          className={cn(visualBtn, 'hover:bg-muted hover:border-foreground/25 hover:-translate-y-px', disabled && 'opacity-60')}
           aria-label="Continue with Google"
         >
           <GoogleMark size={16} />
