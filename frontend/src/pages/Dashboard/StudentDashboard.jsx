@@ -410,10 +410,11 @@ function BadgeCard({ badge, userName }) {
 
 
 // ── Universal student dashboard tutorial ───────────────────────────────────
-function StudentTutorialCard() {
+function StudentTutorialCard({ userId }) {
+  const dismissedKey = 'la-student-tutorial-dismissed:' + (userId || 'guest');
   const [tutorial, setTutorial] = useState(null);
   const [dismissed, setDismissed] = useState(() => {
-    try { return window.localStorage.getItem('la-student-tutorial-dismissed') === '1'; }
+    try { return window.localStorage.getItem(dismissedKey) === '1'; }
     catch { return false; }
   });
   useEffect(() => {
@@ -425,11 +426,11 @@ function StudentTutorialCard() {
     return () => { active = false; };
   }, []);
   const reopen = () => {
-    try { window.localStorage.removeItem('la-student-tutorial-dismissed'); } catch {}
+    try { window.localStorage.removeItem(dismissedKey); } catch {}
     setDismissed(false);
   };
   const dismiss = () => {
-    try { window.localStorage.setItem('la-student-tutorial-dismissed', '1'); } catch {}
+    try { window.localStorage.setItem(dismissedKey, '1'); } catch {}
     setDismissed(true);
   };
   if (!tutorial?.enabled) return null;
@@ -544,7 +545,7 @@ export default function StudentDashboard() {
         </Link>
       </div>
 
-      <StudentTutorialCard />
+      <StudentTutorialCard userId={user?.id} />
 
       {/* Mobile quick-nav strip */}
       <div className="sm:hidden fixed top-[64px] left-0 right-0 z-30 bg-background/95 backdrop-blur border-b border-border px-4 py-2.5 flex justify-center gap-2 shadow-sm">
