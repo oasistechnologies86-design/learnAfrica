@@ -139,6 +139,8 @@ export default function AdminPage() {
   const [guideStatus, setGuideStatus]   = useState(null);
   const [uploadingVideo, setUploadingVideo] = useState('');
   const [savingSplit, setSavingSplit]   = useState(false);
+  const [instructorSplitEdits, setInstructorSplitEdits] = useState({});
+  const [savingInstructorSplit, setSavingInstructorSplit] = useState('');
 
   const showStatus = (type, msg) => {
     setGlobalStatus({ type, msg });
@@ -160,6 +162,7 @@ export default function AdminPage() {
         ]);
         setEarnings(earnData);
         setSplitForm({ instructor_share: splitData.instructor_share });
+        setInstructorSplitEdits(Object.fromEntries((earnData.instructors || []).map(inst => [inst.id, String(inst.instructor_share_pct ?? splitData.instructor_share)])));
       }
       else if (section === 'Guide') {
         const d = await API('/api/admin/instructor-guide');
@@ -310,6 +313,30 @@ export default function AdminPage() {
       setSplitForm({ instructor_share: res.instructor_share });
     } catch (e) { showStatus('error', e.message); }
     setSavingSplit(false);
+  };
+  const saveInstructorSplit = async (instructorId, reset = false) => {
+    setSavingInstructorSplit(instructorId);
+    try {
+      const raw = instructorSplitEdits[instructorId];
+      const value = reset ? null : Number(raw);
+      if (!reset && (!Number.isFinite(value) || value < 0 || value > 100)) {
+        throw new Error('Enter an instructor share between 0 and 100.');
+      }
+      const res = await API('/api/admin/instructors/' + instructorId + '/revenue-split', {
+        method: 'PUT',
+        body: JSON.stringify({ instructor_share: value }),
+      });
+      showStatus('success', reset
+        ? 'Instructor returned to the platform default split.'
+        : 'Instructor split saved: ' + res.instructor_share + '% / Platform ' + res.admin_share + '%');
+      const earnData = await API('/api/admin/earnings');
+      setEarnings(earnData);
+      setInstructorSplitEdits(Object.fromEntries((earnData.instructors || []).map(inst => [inst.id, String(inst.instructor_share_pct ?? splitForm.instructor_share)])));
+    } catch (e) {
+      showStatus('error', e.message);
+    } finally {
+      setSavingInstructorSplit('');
+    }
   };
 
   const filterList = (list, keys) => {
@@ -833,11 +860,11 @@ export default function AdminPage() {
                       </div>
                       <div className="text-center p-3 bg-primary/5 rounded-xl border border-primary/20">
                         <p className="text-2xl font-bold text-primary">{formatPrice(earnings.instructors_total || 0)}</p>
-                        <p className="text-xs text-muted-foreground mt-1">To Instructors ({earnings.instructor_share_pct}%)</p>
+                        <p className="text-xs text-muted-foreground mt-1">Instructor earnings (actual recorded shares)</p>
                       </div>
                       <div className="text-center p-3 bg-success/5 rounded-xl border border-success/20">
                         <p className="text-2xl font-bold text-success">{formatPrice(earnings.platform_total || 0)}</p>
-                        <p className="text-xs text-muted-foreground mt-1">Platform Course Share ({earnings.admin_share_pct}%)</p>
+                        <p className="text-xs text-muted-foreground mt-1">Platform earnings (actual recorded shares)</p>
                       </div>
                       <div className="text-center p-3 bg-warning/5 rounded-xl border border-warning/20">
                         <p className="text-2xl font-bold text-warning">{formatPrice(earnings.registration_fees_total || 0)}</p>
@@ -855,6 +882,7 @@ export default function AdminPage() {
                             <th className="text-right p-3 font-medium text-muted-foreground">Gross</th>
                             <th className="text-right p-3 font-medium text-muted-foreground">Their Share</th>
                             <th className="text-right p-3 font-medium text-muted-foreground">Platform Share</th>
+                            <th className="text-left p-3 font-medium text-muted-foreground">Individual Split</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -868,6 +896,29 @@ export default function AdminPage() {
                               <td className="p-3 text-right font-medium">{formatPrice(inst.gross_revenue)}</td>
                               <td className="p-3 text-right font-bold text-primary">{formatPrice(inst.instructor_earnings)}</td>
                               <td className="p-3 text-right text-success">{formatPrice(inst.platform_earnings)}</td>
+                              <td className="p-3 min-w-[190px]">
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="number" min="0" max="100" step="0.01"
+                                    aria-label={"Instructor share for " + inst.name}
+                                    value={instructorSplitEdits[inst.id] ?? String(inst.instructor_share_pct ?? 50)}
+                                    onChange={e => setInstructorSplitEdits(prev => ({ ...prev, [inst.id]: e.target.value }))}
+                                    className="w-20 rounded-md border border-border bg-background px-2 py-1 text-sm tabular-nums"
+                                  />
+                                  <span className="text-xs text-muted-foreground">/ {100 - Number(instructorSplitEdits[inst.id] ?? inst.instructor_share_pct ?? 50)}%</span>
+                                </div>
+                                <div className="flex flex-wrap gap-1 mt-2">
+                                  <Button size="sm" onClick={() => saveInstructorSplit(inst.id)} disabled={savingInstructorSplit === inst.id}>
+                                    {savingInstructorSplit === inst.id ? 'Saving…' : 'Save'}
+                                  </Button>
+                                  {inst.has_custom_split && (
+                                    <Button size="sm" variant="outline" onClick={() => saveInstructorSplit(inst.id, true)} disabled={savingInstructorSplit === inst.id}>
+                                      Reset
+                                    </Button>
+                                  )}
+                                </div>
+                                <p className="text-[11px] text-muted-foreground mt-1">{inst.has_custom_split ? 'Custom split' : 'Using platform default'}</p>
+                              </td>
                             </tr>
                           ))}
                         </tbody>
