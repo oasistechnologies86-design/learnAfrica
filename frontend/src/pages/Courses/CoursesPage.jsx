@@ -46,13 +46,20 @@ export function CoursesPage() {
 
     if (searchQuery) {
       const q = searchQuery.toLowerCase().trim();
-      result = result.filter(c =>
-        c.title?.toLowerCase().includes(q) ||
-        c.description?.toLowerCase().includes(q) ||
-        c.instructor_name?.toLowerCase().includes(q) ||
-        c.category?.toLowerCase().includes(q) ||
-        (Array.isArray(c.tags) && c.tags.some(t => t?.toLowerCase().includes(q)))
-      );
+      const normalize = (value) => String(value || '').toLowerCase().replace(/[\\s-]+/g, '');
+      const normalizedQuery = normalize(q);
+      result = result.filter(c => {
+        const searchable = [
+          c.title, c.description, c.instructor_name, c.category, c.course_code,
+          ...(Array.isArray(c.tags) ? c.tags : []),
+          ...(Array.isArray(c.learningOutcomes) ? c.learningOutcomes : []),
+          ...(Array.isArray(c.learning_outcomes) ? c.learning_outcomes : []),
+        ];
+        return searchable.some(value => {
+          const text = String(value || '').toLowerCase();
+          return text.includes(q) || (normalizedQuery.length >= 3 && normalize(text).includes(normalizedQuery));
+        });
+      });
     }
 
     if (selectedCategory !== 'All Categories') {
@@ -133,7 +140,7 @@ export function CoursesPage() {
       {/* Search + Controls */}
       <div className="flex flex-col lg:flex-row gap-4 mb-6">
         <div className="flex-1">
-          <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search courses, topics, or instructors…" />
+          <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search course name, code (e.g. ACC 101), topics or instructor…" />
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <select value={sortBy} onChange={e => setSortBy(e.target.value)}
