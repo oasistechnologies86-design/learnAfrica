@@ -5960,41 +5960,41 @@ def create_app() -> Flask:
     def _student_tutorial_config(db):
         row = db.execute("SELECT value FROM platform_config WHERE key='student_dashboard_tutorial'").fetchone()
         if not row or not row['value']:
-            return {
-                'enabled': False, 'format': 'text',
-                'title': 'How Learn Africa Works',
-                'description': 'A quick guide to your learning journey.',
-                'content': 'Find a course, enrol, study the lessons, take quizzes and exams, track your progress, and access your certificate when you meet the course requirements.',
-                'media_url': '', 'updated_at': None,
-            }
-        try:
-            value = json.loads(row['value'])
-            if not isinstance(value, dict):
-                raise ValueError('Tutorial setting is not an object')
-        except Exception:
             value = {}
+        else:
+            try:
+                value = json.loads(row['value'])
+                if not isinstance(value, dict): value = {}
+            except Exception:
+                value = {}
         defaults = {
-            'enabled': False, 'format': 'text',
-            'title': 'How Learn Africa Works',
-            'description': 'A quick guide to your learning journey.',
-            'content': '', 'media_url': '', 'updated_at': None,
+            'enabled': False, 'format': 'text', 'title': 'How Learn Africa Works',
+            'description': 'Listen to the guide or watch the steps to get started.',
+            'content': '', 'media_url': '', 'audio_items': [], 'video_items': [],
+            'default_audio_id': '', 'updated_at': None,
         }
         defaults.update(value)
+        if not isinstance(defaults.get('audio_items'), list): defaults['audio_items'] = []
+        if not isinstance(defaults.get('video_items'), list): defaults['video_items'] = []
+        if not defaults['audio_items'] and defaults.get('format') == 'audio' and defaults.get('media_url'):
+            defaults['audio_items'] = [{'id':'legacy-audio','title':defaults.get('title') or 'Student audio guide','description':defaults.get('description') or '','media_url':defaults['media_url']}]
+        if not defaults['video_items'] and defaults.get('format') == 'video' and defaults.get('media_url'):
+            defaults['video_items'] = [{'id':'legacy-video','title':defaults.get('title') or 'Student video guide','description':defaults.get('description') or '','media_url':defaults['media_url']}]
+        audio_ids = [str(item.get('id') or '') for item in defaults['audio_items'] if isinstance(item, dict)]
+        if defaults.get('default_audio_id') not in audio_ids:
+            defaults['default_audio_id'] = next((str(item.get('id')) for item in defaults['audio_items'] if isinstance(item,dict) and item.get('is_default') and item.get('id')), audio_ids[0] if audio_ids else '')
         return defaults
 
     def _save_student_tutorial(db, config):
         payload = json.dumps(config)
         exists = db.execute("SELECT key FROM platform_config WHERE key='student_dashboard_tutorial'").fetchone()
-        if exists:
-            db.execute("UPDATE platform_config SET value=? WHERE key='student_dashboard_tutorial'", (payload,))
-        else:
-            db.execute("INSERT INTO platform_config (key,value) VALUES ('student_dashboard_tutorial',?)", (payload,))
+        if exists: db.execute("UPDATE platform_config SET value=? WHERE key='student_dashboard_tutorial'", (payload,))
+        else: db.execute("INSERT INTO platform_config (key,value) VALUES ('student_dashboard_tutorial',?)", (payload,))
         db.commit()
 
     @app.route('/api/student-tutorial', methods=['GET'])
     def get_student_tutorial():
-        try:
-            return jsonify(_student_tutorial_config(get_db()))
+        try: return jsonify(_student_tutorial_config(get_db()))
         except Exception as ex:
             app.logger.error(f'get_student_tutorial: {ex}')
             return jsonify({'enabled': False}), 200
@@ -6009,59 +6009,59 @@ def create_app() -> Flask:
     def admin_save_student_tutorial():
         try:
             d = request.get_json() or {}
-            current = _student_tutorial_config(get_db())
-            config = dict(current)
-            if 'enabled' in d:
-                config['enabled'] = bool(d.get('enabled'))
-            if 'format' in d:
-                if d['format'] not in ('audio', 'video', 'text'):
-                    return jsonify({'error': 'Choose audio, video or text for the tutorial.'}), 400
-                config['format'] = d['format']
-            for key in ('title', 'description', 'content', 'media_url'):
+            config = dict(_student_tutorial_config(get_db()))
+            if 'enabled' in d: config['enabled'] = bool(d.get('enabled'))
+            for key in ('title','description'):
+                if key in d: config[key] = str(d.get(key) or '').strip()
+            for key, label in (('audio_items','audio'),('video_items','video')):
                 if key in d:
-                    config[key] = str(d.get(key) or '').strip()
-            if not config['title']:
-                return jsonify({'error': 'Please enter a tutorial title.'}), 400
-            if config['format'] == 'text' and not config['content']:
-                return jsonify({'error': 'Please add the tutorial text before publishing.'}), 400
-            if config['format'] in ('audio', 'video') and not config['media_url']:
-                return jsonify({'error': 'Please upload or provide a media link before publishing.'}), 400
+                    if not isinstance(d[key], list): return jsonify({'error': label.title()+' guides must be a list.'}), 400
+                    items = []
+                    for item in d[key]:
+                        if not isinstance(item,dict): continue
+                        url = str(item.get('media_url') or '').strip()
+                        if not url: continue
+                        items.append({'id':str(item.get('id') or uuid.uuid4().hex)[:100],
+                          'title':str(item.get('title') or ('Student '+label+' guide')).strip()[:160],
+                          'description':str(item.get('description') or '').strip()[:300], 'media_url':url[:2048]})
+                    config[key] = items
+            if 'default_audio_id' in d: config['default_audio_id'] = str(d.get('default_audio_id') or '').strip()[:100]
+            audio_ids = [item['id'] for item in config.get('audio_items',[])]
+            if config.get('default_audio_id') not in audio_ids: config['default_audio_id'] = audio_ids[0] if audio_ids else ''
+            if not config['title']: return jsonify({'error':'Please enter a tutorial title.'}), 400
+            if config['enabled'] and not config.get('audio_items') and not config.get('video_items'):
+                return jsonify({'error':'Add at least one audio or video guide before showing the tutorial to students.'}), 400
+            config['format'] = 'audio' if config.get('audio_items') else ('video' if config.get('video_items') else 'text')
+            config['media_url'] = ''
             config['updated_at'] = datetime.utcnow().isoformat()
-            _save_student_tutorial(get_db(), config)
-            return jsonify({'message': 'Student tutorial saved.', 'tutorial': config})
+            _save_student_tutorial(get_db(),config)
+            return jsonify({'message':'Student tutorial saved.','tutorial':config})
         except Exception as ex:
             app.logger.error(f'admin_save_student_tutorial: {ex}')
-            return jsonify({'error': 'Could not save the student tutorial.'}), 500
+            return jsonify({'error':'Could not save the student tutorial.'}), 500
 
     @app.route('/api/admin/student-tutorial/upload', methods=['POST'])
     @admin_required
     def admin_upload_student_tutorial():
         uploaded = request.files.get('file')
-        if not uploaded or not uploaded.filename:
-            return jsonify({'error': 'Choose an audio or video file to upload.'}), 400
-        if request.content_length and request.content_length > 105 * 1024 * 1024:
-            return jsonify({'error': 'The file is too large. Maximum upload size is 100 MB.'}), 413
+        if not uploaded or not uploaded.filename: return jsonify({'error':'Choose an audio or video file to upload.'}), 400
+        if request.content_length and request.content_length > 105 * 1024 * 1024: return jsonify({'error':'The file is too large. Maximum upload size is 100 MB.'}), 413
         original = secure_filename(uploaded.filename)
-        ext = original.rsplit('.', 1)[-1].lower() if '.' in original else ''
-        allowed_audio = {'mp3', 'm4a', 'wav', 'ogg', 'aac'}
-        allowed_video = {'mp4', 'webm', 'mov', 'm4v'}
-        if ext not in allowed_audio | allowed_video:
-            return jsonify({'error': 'Supported files: MP3, M4A, WAV, OGG, AAC, MP4, WEBM and MOV.'}), 400
+        ext = original.rsplit('.',1)[-1].lower() if '.' in original else ''
+        allowed_audio = {'mp3','m4a','wav','ogg','aac'}
+        allowed_video = {'mp4','webm','mov','m4v'}
+        if ext not in allowed_audio | allowed_video: return jsonify({'error':'Supported files: MP3, M4A, WAV, OGG, AAC, MP4, WEBM and MOV.'}), 400
         content_type = uploaded.mimetype or 'application/octet-stream'
         expected_audio = content_type.startswith('audio/') or ext in allowed_audio
         expected_video = content_type.startswith('video/') or ext in allowed_video
-        if not (expected_audio or expected_video):
-            return jsonify({'error': 'The selected file is not a supported audio or video file.'}), 400
+        if not (expected_audio or expected_video): return jsonify({'error':'The selected file is not a supported audio or video file.'}), 400
         file_bytes = uploaded.read()
-        if not file_bytes:
-            return jsonify({'error': 'The selected file is empty.'}), 400
-        if len(file_bytes) > 100 * 1024 * 1024:
-            return jsonify({'error': 'The file is too large. Maximum upload size is 100 MB.'}), 413
+        if not file_bytes: return jsonify({'error':'The selected file is empty.'}), 400
+        if len(file_bytes) > 100 * 1024 * 1024: return jsonify({'error':'The file is too large. Maximum upload size is 100 MB.'}), 413
         object_name = f"student-tutorial/{uuid.uuid4().hex}.{ext}"
-        public_url, error = _upload_to_supabase(file_bytes, object_name, content_type)
-        if error:
-            return jsonify({'error': f'Upload failed: {error}'}), 502
-        return jsonify({'media_url': public_url, 'filename': original, 'media_type': 'audio' if expected_audio else 'video'})
+        public_url, error = _upload_to_supabase(file_bytes,object_name,content_type)
+        if error: return jsonify({'error':f'Upload failed: {error}'}), 502
+        return jsonify({'media_url':public_url,'filename':original,'media_type':'audio' if expected_audio else 'video'})
 
     @app.route('/api/admin/instructor-guide/reseed', methods=['POST'])
     @admin_required
