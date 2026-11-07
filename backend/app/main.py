@@ -975,7 +975,9 @@ def create_app() -> Flask:
             # Normalize once before checking or storing so student and instructor
             # registrations share one case-insensitive email identity.
             email = str(d.get('email') or '').strip().lower()
-            if not email or not re.match(r'^[^\\s@]+@[^\\s@]+\\.[^\\s@]+
+            if not email or email.count('@') != 1 or '.' not in email.rsplit('@', 1)[-1] or any(ch.isspace() for ch in email):
+                return jsonify({'error': 'Please enter a valid email address'}), 400
+            d['email'] = email
                 return jsonify({'error': f'Password must be at least {app.config["PASS_MIN_LENGTH"]} characters'}), 400
 
             # Optional contact phone ("call line"). Stored normalised so it can be
