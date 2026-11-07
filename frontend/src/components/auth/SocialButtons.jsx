@@ -64,6 +64,7 @@ export function SocialButtons({ onGoogle, googleClientId, disabled = false, clas
     if (!googleConfigured) return undefined;
 
     let cancelled = false;
+    let buttonObserver = null;
     const handler = (credential) => onGoogleRef.current?.(credential);
     activeGoogleHandler = handler;
 
@@ -99,14 +100,29 @@ export function SocialButtons({ onGoogle, googleClientId, disabled = false, clas
           });
         }
 
-        setButtonReady(Boolean(host.current.querySelector('iframe')));
+        if (host.current.querySelector('iframe')) {
+          setButtonReady(true);
+        } else {
+          buttonObserver = new MutationObserver(() => {
+            if (host.current?.querySelector('iframe')) {
+              setButtonReady(true);
+              buttonObserver?.disconnect();
+              buttonObserver = null;
+            }
+          });
+          buttonObserver.observe(host.current, { childList: true, subtree: true });
+        }
       })
       .catch(() => {
-        if (!cancelled) setNotice('Google sign-in could not load. Please refresh the page and try again.');
+        if (!cancelled) {
+          setButtonReady(true);
+          setNotice('Google sign-in could not load. Please refresh the page and try again.');
+        }
       });
 
     return () => {
       cancelled = true;
+      buttonObserver?.disconnect();
       if (activeGoogleHandler === handler) activeGoogleHandler = null;
     };
   }, [googleClientId, googleConfigured]);
@@ -120,7 +136,7 @@ export function SocialButtons({ onGoogle, googleClientId, disabled = false, clas
             'bg-gradient-to-br from-primary/[0.08] via-card to-accent/[0.08]',
             'p-2 shadow-[0_14px_34px_-26px_var(--primary)]',
             'transition-colors duration-300',
-            disabled && 'opacity-60'
+            disabled && 'pointer-events-none opacity-60'
           )}
           aria-label="Sign in with Google"
         >
