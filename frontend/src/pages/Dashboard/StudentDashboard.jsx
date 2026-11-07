@@ -405,7 +405,10 @@ function BadgeCard({ badge, userName }) {
       <BadgePreviewModal badge={badge} userName={userName} onClose={() => setShowPreview(false)} />
     )}
     </>
- // ── Universal student dashboard tutorial ───────────────────────────────────
+  );
+}
+
+// ── Universal student dashboard tutorial ───────────────────────────────────
 function StudentTutorialCard({ userId }) {
   const dismissedKey = 'la-student-tutorial-dismissed:' + (userId || 'guest');
   const [tutorial, setTutorial] = useState(null);
@@ -560,9 +563,6 @@ function StudentTutorialCard({ userId }) {
         </div>
       </div>
     </section>
-  );
-}
-
   );
 }
 
