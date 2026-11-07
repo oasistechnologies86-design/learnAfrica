@@ -5971,11 +5971,12 @@ def create_app() -> Flask:
             'enabled': False, 'format': 'text', 'title': 'How Learn Africa Works',
             'description': 'Listen to the guide or watch the steps to get started.',
             'content': '', 'media_url': '', 'audio_items': [], 'video_items': [],
-            'default_audio_id': '', 'updated_at': None,
+            'default_audio_id': '', 'display_order': 'audio', 'updated_at': None,
         }
         defaults.update(value)
         if not isinstance(defaults.get('audio_items'), list): defaults['audio_items'] = []
         if not isinstance(defaults.get('video_items'), list): defaults['video_items'] = []
+        defaults['display_order'] = 'video' if defaults.get('display_order') == 'video' else 'audio'
         if not defaults['audio_items'] and defaults.get('format') == 'audio' and defaults.get('media_url'):
             defaults['audio_items'] = [{'id':'legacy-audio','title':defaults.get('title') or 'Student audio guide','description':defaults.get('description') or '','media_url':defaults['media_url']}]
         if not defaults['video_items'] and defaults.get('format') == 'video' and defaults.get('media_url'):
@@ -6026,6 +6027,7 @@ def create_app() -> Flask:
                           'description':str(item.get('description') or '').strip()[:300], 'media_url':url[:2048]})
                     config[key] = items
             if 'default_audio_id' in d: config['default_audio_id'] = str(d.get('default_audio_id') or '').strip()[:100]
+            if 'display_order' in d: config['display_order'] = 'video' if d.get('display_order') == 'video' else 'audio'
             audio_ids = [item['id'] for item in config.get('audio_items',[])]
             if config.get('default_audio_id') not in audio_ids: config['default_audio_id'] = audio_ids[0] if audio_ids else ''
             if not config['title']: return jsonify({'error':'Please enter a tutorial title.'}), 400
