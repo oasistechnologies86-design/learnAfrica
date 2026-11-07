@@ -94,6 +94,53 @@ def get_revenue_split(db):
     return r['instructor_pct'], r['admin_pct']
 
 
+def resolve_instructor_revenue_split(db, instructor_id, is_admin=False):
+    """Resolve the effective split for one instructor without changing history.
+
+    A saved instructor override wins; otherwise the platform-wide split applies.
+    Admin-owned courses retain the platform's existing 100% platform treatment.
+    """
+    if is_admin:
+        return {
+            'instructor_pct': 0.0, 'admin_pct': 100.0,
+            'has_override': False, 'source': 'admin_platform'
+        }
+
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS instructor_revenue_splits (
+            instructor_id TEXT PRIMARY KEY,
+            instructor_share REAL NOT NULL,
+            admin_share REAL NOT NULL,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_by TEXT
+        )
+    """)
+    row = db.execute(
+        'SELECT instructor_share, admin_share FROM instructor_revenue_splits WHERE instructor_id=?',
+        (instructor_id,)
+    ).fetchone()
+    if row:
+        try:
+            instructor_pct = float(row['instructor_share'])
+            admin_pct = float(row['admin_share'])
+            if (0 <= instructor_pct <= 100 and 0 <= admin_pct <= 100
+                    and abs(instructor_pct + admin_pct - 100) <= 0.01):
+                return {
+                    'instructor_pct': round(instructor_pct, 2),
+                    'admin_pct': round(admin_pct, 2),
+                    'has_override': True, 'source': 'instructor_override'
+                }
+        except (TypeError, ValueError):
+            pass
+
+    split = resolve_revenue_split(db)
+    return {
+        'instructor_pct': split['instructor_pct'],
+        'admin_pct': split['admin_pct'],
+        'has_override': False, 'source': split['source']
+    }
+
+
 # ── Notification helpers ──────────────────────────────────────────────────────
 def create_notification(db, user_id: str, ntype: str, title: str,
                          message: str, internal_id: str = None,
