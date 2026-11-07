@@ -718,6 +718,13 @@ export default function AdminPage() {
           {/* ── APPLICATIONS ── */}
           {tab === 'Applications' && (
             <div className="space-y-5">
+              <div className="rounded-xl border border-warning/30 bg-warning/10 p-4">
+                <p className="text-sm font-semibold text-foreground">Instructor application review</p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  Applicants are advised that review may take up to 5 working days. The Learn Africa team may
+                  contact them using the phone number or email they submitted, either before or after a decision.
+                </p>
+              </div>
               <div className="flex gap-2">
                 {['pending','approved','rejected'].map(s => (
                   <button key={s} onClick={() => setAppFilter(s)}
@@ -739,7 +746,13 @@ export default function AdminPage() {
                           </div>
                           <div>
                             <p className="font-bold">{app.name}</p>
-                            <p className="text-sm text-muted-foreground">{app.email}</p>
+                            <p className="text-sm text-muted-foreground break-all inline-flex items-center gap-1.5">
+                              <Mail className="h-3.5 w-3.5 shrink-0" />{app.email || 'Email not provided'}
+                            </p>
+                            <p className="text-xs text-muted-foreground inline-flex items-center gap-1.5">
+                              <Phone className="h-3.5 w-3.5 shrink-0" />
+                              {app.phone || 'Phone number not provided'}
+                            </p>
                           </div>
                         </div>
                         {app.bio && <p className="text-sm text-muted-foreground">{app.bio}</p>}
@@ -2730,6 +2743,9 @@ function DatabaseBackupCard() {
 function AdminPayoutsTab() {
   const [data,    setData]    = useState({ instructors: [], total_pending: 0, currency: 'GHS' });
   const [requests, setRequests] = useState({ requests: [], total_requested: 0 });
+  const [history, setHistory] = useState(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busy,    setBusy]    = useState(false);
   const [busyId,  setBusyId]  = useState(null);
@@ -2748,6 +2764,22 @@ function AdminPayoutsTab() {
   };
 
   useEffect(() => { load(); }, []);
+
+  const toggleHistory = async () => {
+    const shouldShow = !showHistory;
+    setShowHistory(shouldShow);
+    if (!shouldShow || history !== null) return;
+    setHistoryLoading(true);
+    try {
+      const result = await API('/api/admin/payouts/requests?status=all');
+      setHistory(result.requests || []);
+    } catch (e) {
+      setMsg({ type: 'error', text: e.message || 'Could not load payout history' });
+      setHistory([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
 
   const markSent = async (req) => {
     const ref = window.prompt(
@@ -2888,8 +2920,13 @@ function AdminPayoutsTab() {
         <CardHeader>
           <CardTitle className="text-sm flex items-center justify-between">
             <span>Payment requests</span>
-            <span className="text-xs font-normal text-muted-foreground">
-              GH₵ {Number(requests.total_requested || 0).toFixed(2)} requested
+            <span className="flex items-center gap-2">
+              <span className="text-xs font-normal text-muted-foreground">
+                GH₵ {Number(requests.total_requested || 0).toFixed(2)} requested
+              </span>
+              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={toggleHistory}>
+                {showHistory ? 'Hide history' : 'View history'}
+              </Button>
             </span>
           </CardTitle>
         </CardHeader>
@@ -2935,6 +2972,47 @@ function AdminPayoutsTab() {
           )}
         </CardContent>
       </Card>
+
+      {showHistory && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Payout request history</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {historyLoading ? (
+              <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-primary/50" /></div>
+            ) : (history || []).length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">No payout request history found.</p>
+            ) : (
+              <div className="space-y-2">
+                {history.map(item => (
+                  <div key={item.id} className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 rounded-lg border border-border p-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold">{item.instructor_name || 'Instructor'}</p>
+                      <p className="text-xs text-muted-foreground break-all">{item.instructor_email || 'No email available'}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Requested {String(item.requested_at || '').slice(0, 10) || 'Date unavailable'}
+                        {item.processed_at && <> · Processed {String(item.processed_at).slice(0, 10)}</>}
+                      </p>
+                      {item.reference && <p className="mt-1 text-xs text-muted-foreground break-all">Reference: {item.reference}</p>}
+                      {item.admin_note && <p className="mt-1 text-xs text-muted-foreground">Admin note: {item.admin_note}</p>}
+                    </div>
+                    <div className="flex shrink-0 items-center gap-3">
+                      <span className="text-sm font-bold tabular-nums">GH₵ {Number(item.amount || 0).toFixed(2)}</span>
+                      <span className={cn('rounded-full px-2.5 py-1 text-[10px] font-bold uppercase',
+                        item.status === 'sent' ? 'bg-success/10 text-success' :
+                        item.status === 'rejected' ? 'bg-destructive/10 text-destructive' :
+                        'bg-warning/10 text-warning')}>
+                        {item.status || 'unknown'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardContent className="p-5 sm:p-6">
