@@ -2585,135 +2585,81 @@ function AdminSettingsTab() {
 
 // ── Universal student dashboard tutorial settings ──────────────────────────
 function StudentTutorialSettingsCard() {
-  const [form, setForm] = useState({
-    enabled: false, format: 'text', title: 'How Learn Africa Works',
-    description: 'A quick guide to your learning journey.',
-    content: '1. Explore courses and search by course name or course code.\n2. Enrol in a course and open it from your dashboard.\n3. Study custom lessons, watch videos and download available resources.\n4. Complete lesson quizzes and final exams according to the course rules.\n5. Track your progress and access your certificate when you meet the requirements.\n6. Contact support if you need help.',
-    media_url: '',
+  const [form,setForm]=useState({enabled:true,title:'How Learn Africa Works',description:'Listen to the guide or watch the steps to get started.',audio_items:[],video_items:[],default_audio_id:''});
+  const [loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[uploading,setUploading]=useState(''),[preview,setPreview]=useState(false),[message,setMessage]=useState(null);
+  const [audioTitle,setAudioTitle]=useState(''),[audioUrl,setAudioUrl]=useState(''),[videoTitle,setVideoTitle]=useState(''),[videoUrl,setVideoUrl]=useState('');
+  const makeId=()=> 'guide-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);
+  useEffect(()=>{
+    let active=true;
+    API('/api/admin/student-tutorial').then(data=>{
+      if(!active)return;
+      let aud=Array.isArray(data.audio_items)?data.audio_items:[];
+      let vid=Array.isArray(data.video_items)?data.video_items:[];
+      if(!aud.length&&data.format==='audio'&&data.media_url)aud=[{id:'legacy-audio',title:data.title||'Student audio guide',media_url:data.media_url}];
+      if(!vid.length&&data.format==='video'&&data.media_url)vid=[{id:'legacy-video',title:data.title||'Student video guide',media_url:data.media_url}];
+      setForm(p=>({...p,...data,audio_items:aud,video_items:vid,default_audio_id:data.default_audio_id||aud[0]?.id||''}));
+    }).catch(e=>{if(active)setMessage({type:'error',text:e.message||'Could not load tutorial settings.'});}).finally(()=>{if(active)setLoading(false);});
+    return()=>{active=false;};
+  },[]);
+  const update=(k,v)=>setForm(p=>({...p,[k]:v}));
+  const uploadMedia=async(event,kind)=>{
+    const file=event.target.files?.[0];if(!file)return;setUploading(kind);setMessage(null);
+    try{
+      const body=new FormData();body.append('file',file);const token=sessionStorage.getItem('auth_token');
+      const response=await fetch(API_BASE+'/api/admin/student-tutorial/upload',{method:'POST',headers:token?{Authorization:'Bearer '+token}:{},body});
+      const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||'Media upload failed.');
+      const item={id:makeId(),title:file.name.replace(/\.[^.]+$/,''),description:'',media_url:data.media_url};
+      if(kind==='audio')setForm(p=>({...p,audio_items:[...(p.audio_items||[]),item],default_audio_id:p.default_audio_id||item.id}));
+      else setForm(p=>({...p,video_items:[...(p.video_items||[]),item]}));
+      setMessage({type:'success',text:file.name+' uploaded. Save the guide to publish it.'});
+    }catch(e){setMessage({type:'error',text:e.message||'Media upload failed.'});}
+    finally{setUploading('');event.target.value='';}
+  };
+  const addLink=kind=>{
+    const title=(kind==='audio'?audioTitle:videoTitle).trim(),url=(kind==='audio'?audioUrl:videoUrl).trim();
+    if(!url){setMessage({type:'error',text:'Enter a media link first.'});return;}
+    const item={id:makeId(),title:title||(kind==='audio'?'Additional audio guide':'Student video guide'),description:'',media_url:url};
+    if(kind==='audio'){setForm(p=>({...p,audio_items:[...(p.audio_items||[]),item],default_audio_id:p.default_audio_id||item.id}));setAudioTitle('');setAudioUrl('');}
+    else{setForm(p=>({...p,video_items:[...(p.video_items||[]),item]}));setVideoTitle('');setVideoUrl('');}
+    setMessage(null);
+  };
+  const removeItem=(kind,id)=>setForm(p=>{
+    const key=kind==='audio'?'audio_items':'video_items',items=(p[key]||[]).filter(x=>x.id!==id);
+    return {...p,[key]:items,...(kind==='audio'&&p.default_audio_id===id?{default_audio_id:items[0]?.id||''}:{})};
   });
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [preview, setPreview] = useState(false);
-  const [message, setMessage] = useState(null);
-
-  useEffect(() => {
-    let active = true;
-    API('/api/admin/student-tutorial')
-      .then(data => { if (active) setForm(prev => ({ ...prev, ...data })); })
-      .catch(error => { if (active) setMessage({ type: 'error', text: error.message || 'Could not load tutorial settings.' }); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, []);
-
-  const update = (key, value) => setForm(prev => ({ ...prev, [key]: value }));
-
-  const uploadMedia = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    setMessage(null);
-    try {
-      const body = new FormData();
-      body.append('file', file);
-      const token = sessionStorage.getItem('auth_token');
-      const response = await fetch(API_BASE + '/api/admin/student-tutorial/upload', {
-        method: 'POST', headers: token ? { Authorization: 'Bearer ' + token } : {}, body,
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || 'Media upload failed.');
-      setForm(prev => ({ ...prev, media_url: data.media_url, format: data.media_type || prev.format }));
-      setMessage({ type: 'success', text: (data.filename || 'Tutorial media') + ' uploaded successfully.' });
-    } catch (error) {
-      setMessage({ type: 'error', text: error.message || 'Media upload failed.' });
-    } finally {
-      setUploading(false);
-      event.target.value = '';
-    }
+  const save=async()=>{
+    setSaving(true);setMessage(null);
+    try{const payload={enabled:!!form.enabled,title:form.title,description:form.description,audio_items:form.audio_items||[],video_items:form.video_items||[],default_audio_id:form.default_audio_id||''};
+      const data=await API('/api/admin/student-tutorial',{method:'PUT',body:JSON.stringify(payload)});
+      setForm(p=>({...p,...(data.tutorial||payload)}));setMessage({type:'success',text:'Student audio and video guides saved.'});
+    }catch(e){setMessage({type:'error',text:e.message||'Could not save the tutorial.'});}finally{setSaving(false);}
   };
-
-  const save = async () => {
-    setSaving(true);
-    setMessage(null);
-    try {
-      const data = await API('/api/admin/student-tutorial', { method: 'PUT', body: JSON.stringify(form) });
-      setForm(prev => ({ ...prev, ...(data.tutorial || form) }));
-      setMessage({ type: 'success', text: 'Student dashboard tutorial saved.' });
-    } catch (error) {
-      setMessage({ type: 'error', text: error.message || 'Could not save the tutorial.' });
-    } finally { setSaving(false); }
-  };
-
-  const youtubeEmbed = (value) => {
-    try {
-      const url = new URL(value);
-      let id = '';
-      if (url.hostname.includes('youtu.be')) id = url.pathname.slice(1);
-      else if (url.hostname.includes('youtube.com')) id = url.searchParams.get('v') || url.pathname.split('/').filter(Boolean).pop();
-      return id ? 'https://www.youtube-nocookie.com/embed/' + id : '';
-    } catch { return ''; }
-  };
-
-  const mediaPreview = () => {
-    if (!form.media_url) return <p className="text-xs text-muted-foreground">No media has been added yet.</p>;
-    if (form.format === 'audio') return <audio className="w-full" controls preload="none" src={form.media_url}>Audio playback is not supported by this browser.</audio>;
-    const embed = youtubeEmbed(form.media_url);
-    if (embed) return <div className="aspect-video overflow-hidden rounded-xl"><iframe title="Student tutorial preview" src={embed} className="h-full w-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen /></div>;
-    return <video className="w-full max-h-72 rounded-xl bg-black" controls preload="none" src={form.media_url}>Video playback is not supported by this browser.</video>;
-  };
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-sm flex items-center gap-2"><BookOpen className="h-4 w-4 text-primary" /> Student Dashboard Tutorial</CardTitle>
-        <p className="text-xs text-muted-foreground">Manage one universal guide for every student. Existing instructor guidance and platform settings remain separate.</p>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {loading ? (
-          <div className="flex items-center justify-center py-6 text-muted-foreground"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading tutorial settings…</div>
-        ) : (
-          <>
-            <label className="flex items-center gap-3 rounded-xl border border-border bg-muted/20 p-3">
-              <input type="checkbox" className="h-4 w-4 accent-primary" checked={!!form.enabled} onChange={event => update('enabled', event.target.checked)} />
-              <span><span className="block text-sm font-semibold">Show tutorial to students</span><span className="block text-xs text-muted-foreground">Disable it without deleting the saved content.</span></span>
-            </label>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="space-y-1.5"><span className="text-xs font-semibold">Tutorial title</span><Input value={form.title || ''} onChange={event => update('title', event.target.value)} placeholder="How Learn Africa Works" /></label>
-              <label className="space-y-1.5"><span className="text-xs font-semibold">Format</span>
-                <select value={form.format || 'text'} onChange={event => update('format', event.target.value)} className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm">
-                  <option value="text">Written guide</option><option value="audio">Audio tutorial</option><option value="video">Video tutorial</option>
-                </select>
-              </label>
-            </div>
-            <label className="block space-y-1.5"><span className="text-xs font-semibold">Short introduction</span><Input value={form.description || ''} onChange={event => update('description', event.target.value)} placeholder="A quick guide to your learning journey." /></label>
-            {form.format === 'text' ? (
-              <label className="block space-y-1.5"><span className="text-xs font-semibold">Tutorial content</span>
-                <textarea value={form.content || ''} onChange={event => update('content', event.target.value)} rows={8}
-                  className="w-full rounded-xl border border-input bg-background p-3 text-sm leading-relaxed outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Explain how students find courses, enrol, learn, take tests and access certificates." />
-              </label>
-            ) : (
-              <div className="space-y-3 rounded-xl border border-border p-3">
-                <label className="block space-y-1.5"><span className="text-xs font-semibold">Media link (optional if you upload a file)</span><Input value={form.media_url || ''} onChange={event => update('media_url', event.target.value)} placeholder="Paste a direct media link or YouTube URL" /></label>
-                <label className="block space-y-1.5"><span className="text-xs font-semibold">Or upload {form.format === 'audio' ? 'audio' : 'video'}</span>
-                  <input type="file" accept={form.format === 'audio' ? 'audio/*,.mp3,.m4a,.wav,.ogg,.aac' : 'video/*,.mp4,.webm,.mov,.m4v'} onChange={uploadMedia} disabled={uploading}
-                    className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-primary" />
-                  {uploading && <span className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" /> Uploading media…</span>}
-                  <span className="block text-xs text-muted-foreground">Audio: MP3, M4A, WAV, OGG, AAC. Video: MP4, WEBM, MOV, M4V. Maximum 100 MB.</span>
-                </label>
-              </div>
-            )}
-            <div className="flex flex-wrap items-center gap-2">
-              <Button variant="outline" onClick={() => setPreview(value => !value)} className="gap-2"><Eye className="h-4 w-4" /> {preview ? 'Hide preview' : 'Preview student view'}</Button>
-              <Button onClick={save} disabled={saving || uploading} className="gap-2">{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save tutorial</Button>
-            </div>
-            {preview && <div className="rounded-2xl border border-primary/20 bg-primary/[0.035] p-4 space-y-3"><div><p className="text-xs font-bold uppercase tracking-wide text-primary">Student preview</p><h3 className="mt-1 text-lg font-bold">{form.title || 'How Learn Africa Works'}</h3><p className="text-sm text-muted-foreground">{form.description}</p></div>{form.format === 'text' ? <div className="whitespace-pre-line text-sm leading-relaxed">{form.content || 'Your written tutorial will appear here.'}</div> : mediaPreview()}</div>}
-            {message && <div role="status" className={cn('rounded-xl border p-3 text-sm', message.type === 'success' ? 'border-success/30 bg-success/10 text-success' : 'border-destructive/30 bg-destructive/10 text-destructive')}>{message.text}</div>}
-          </>
-        )}
-      </CardContent>
-    </Card>
-  );
+  const youtube=value=>{try{const u=new URL(value),id=u.hostname.includes('youtu.be')?u.pathname.slice(1):(u.hostname.includes('youtube.com')?(u.searchParams.get('v')||u.pathname.split('/').filter(Boolean).pop()):'');return id?'https://www.youtube-nocookie.com/embed/'+id:'';}catch{return '';}};
+  const videoPreview=item=>{const src=youtube(item.media_url);return src?<div className="aspect-video overflow-hidden rounded-xl"><iframe title="Student video preview" src={src} className="h-full w-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen /></div>:<video className="aspect-video w-full rounded-xl bg-black object-contain" controls preload="metadata" src={item.media_url}/>;};
+  return <Card>
+    <CardHeader><CardTitle className="text-sm flex items-center gap-2"><BookOpen className="h-4 w-4 text-primary"/> Student Audio &amp; Video Guide</CardTitle><p className="text-xs text-muted-foreground">Audio appears first on the student dashboard, followed by videos. Choose the default recording and add more whenever you need them.</p></CardHeader>
+    <CardContent className="space-y-5">
+      {loading?<div className="flex items-center justify-center py-6 text-muted-foreground"><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Loading tutorial settings…</div>:<>
+        <label className="flex items-center gap-3 rounded-xl border border-border bg-muted/20 p-3"><input type="checkbox" className="h-4 w-4 accent-primary" checked={!!form.enabled} onChange={e=>update('enabled',e.target.checked)}/><span><span className="block text-sm font-semibold">Show guide to students</span><span className="block text-xs text-muted-foreground">Turn it off without deleting saved media.</span></span></label>
+        <div className="grid gap-3 sm:grid-cols-2"><label className="space-y-1.5"><span className="text-xs font-semibold">Guide title</span><Input value={form.title||''} onChange={e=>update('title',e.target.value)} placeholder="How Learn Africa Works"/></label><label className="space-y-1.5"><span className="text-xs font-semibold">Short introduction</span><Input value={form.description||''} onChange={e=>update('description',e.target.value)} placeholder="Listen or watch to get started."/></label></div>
+        <section className="space-y-3 rounded-2xl border border-primary/20 bg-primary/[0.035] p-3 sm:p-4">
+          <div className="flex items-center justify-between"><div className="flex items-center gap-2"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">♫</span><div><h4 className="text-sm font-bold">Audio guides</h4><p className="text-xs text-muted-foreground">Select the default recording.</p></div></div><span className="rounded-full bg-background px-2 py-1 text-[10px]">{(form.audio_items||[]).length} saved</span></div>
+          {(form.audio_items||[]).map((item,i)=><div key={item.id} className="rounded-xl border border-border bg-background p-3"><div className="flex items-start gap-2"><input type="radio" name="default-student-audio" checked={form.default_audio_id===item.id} onChange={()=>update('default_audio_id',item.id)} aria-label={'Set '+(item.title||'audio')+' as default'} className="mt-1 accent-primary"/><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="text-sm font-semibold">{item.title||('Audio guide '+(i+1))}</p>{form.default_audio_id===item.id&&<span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">Default</span>}</div><audio className="mt-2 w-full" controls preload="none" src={item.media_url}/></div><button type="button" onClick={()=>removeItem('audio',item.id)} className="rounded-lg p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" aria-label="Remove audio"><Trash2 className="h-4 w-4"/></button></div></div>)}
+          <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]"><Input value={audioTitle} onChange={e=>setAudioTitle(e.target.value)} placeholder="Audio title"/><Input value={audioUrl} onChange={e=>setAudioUrl(e.target.value)} placeholder="Direct audio URL"/><Button type="button" variant="outline" onClick={()=>addLink('audio')} className="gap-1"><Plus className="h-4 w-4"/> Add link</Button></div>
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-primary/30 bg-background px-3 py-2.5 text-xs font-semibold text-primary">{uploading==='audio'?<Loader2 className="h-4 w-4 animate-spin"/>:<Plus className="h-4 w-4"/>} Upload audio file<input type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac" className="hidden" onChange={e=>uploadMedia(e,'audio')} disabled={!!uploading}/></label>
+        </section>
+        <section className="space-y-3 rounded-2xl border border-border bg-card p-3 sm:p-4">
+          <div className="flex items-center justify-between"><div className="flex items-center gap-2"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary"><Video className="h-4 w-4"/></span><div><h4 className="text-sm font-bold">Video guides</h4><p className="text-xs text-muted-foreground">Add YouTube links or upload videos.</p></div></div><span className="rounded-full bg-muted px-2 py-1 text-[10px]">{(form.video_items||[]).length} saved</span></div>
+          {(form.video_items||[]).map((item,i)=><div key={item.id} className="flex items-start gap-2 rounded-xl border border-border bg-background p-3"><div className="min-w-0 flex-1"><p className="mb-2 text-sm font-semibold">{item.title||('Video guide '+(i+1))}</p>{videoPreview(item)}</div><button type="button" onClick={()=>removeItem('video',item.id)} className="rounded-lg p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" aria-label="Remove video"><Trash2 className="h-4 w-4"/></button></div>)}
+          <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]"><Input value={videoTitle} onChange={e=>setVideoTitle(e.target.value)} placeholder="Video title"/><Input value={videoUrl} onChange={e=>setVideoUrl(e.target.value)} placeholder="YouTube or video URL"/><Button type="button" variant="outline" onClick={()=>addLink('video')} className="gap-1"><Plus className="h-4 w-4"/> Add link</Button></div>
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-border bg-background px-3 py-2.5 text-xs font-semibold">{uploading==='video'?<Loader2 className="h-4 w-4 animate-spin"/>:<Plus className="h-4 w-4"/>} Upload video file<input type="file" accept="video/*,.mp4,.webm,.mov,.m4v" className="hidden" onChange={e=>uploadMedia(e,'video')} disabled={!!uploading}/></label>
+        </section>
+        <div className="flex flex-wrap items-center gap-2"><Button variant="outline" onClick={()=>setPreview(v=>!v)} className="gap-2"><Eye className="h-4 w-4"/>{preview?'Hide preview':'Preview student view'}</Button><Button onClick={save} disabled={saving||!!uploading} className="gap-2">{saving?<Loader2 className="h-4 w-4 animate-spin"/>:<Save className="h-4 w-4"/>} Save guide</Button></div>
+        {preview&&<div className="space-y-3 rounded-2xl border border-primary/20 bg-primary/[0.035] p-4"><div><p className="text-xs font-bold uppercase tracking-wide text-primary">Student preview</p><h3 className="mt-1 text-lg font-bold">{form.title}</h3><p className="text-sm text-muted-foreground">{form.description}</p></div>{(form.audio_items||[]).length>0&&<div className="rounded-xl border bg-background p-3"><p className="mb-2 text-sm font-semibold">♫ Listen to the student guide</p>{(()=>{const item=form.audio_items.find(x=>x.id===form.default_audio_id)||form.audio_items[0];return <><p className="mb-2 text-xs">{item.title}</p><audio className="w-full" controls src={item.media_url}/></>;})()}</div>}{(form.video_items||[]).map(item=><div key={item.id} className="rounded-xl border bg-background p-3"><p className="mb-2 text-sm font-semibold">{item.title}</p>{videoPreview(item)}</div>)}</div>}
+        {message&&<div role="status" className={cn('rounded-xl border p-3 text-sm',message.type==='success'?'border-success/30 bg-success/10 text-success':'border-destructive/30 bg-destructive/10 text-destructive')}>{message.text}</div>}
+      </>}
+    </CardContent>
+  </Card>;
 }
 
 // ─── Database backup / restore ────────────────────────────────────────────
