@@ -408,6 +408,61 @@ function BadgeCard({ badge, userName }) {
   );
 }
 
+
+// ── Universal student dashboard tutorial ───────────────────────────────────
+function StudentTutorialCard() {
+  const [tutorial, setTutorial] = useState(null);
+  const [dismissed, setDismissed] = useState(() => {
+    try { return window.localStorage.getItem('la-student-tutorial-dismissed') === '1'; }
+    catch { return false; }
+  });
+  useEffect(() => {
+    let active = true;
+    publicFetch('/api/student-tutorial')
+      .then(response => response.ok ? response.json() : null)
+      .then(data => { if (active && data?.enabled) setTutorial(data); })
+      .catch(() => {});
+    return () => { active = false; };
+  }, []);
+  const reopen = () => {
+    try { window.localStorage.removeItem('la-student-tutorial-dismissed'); } catch {}
+    setDismissed(false);
+  };
+  const dismiss = () => {
+    try { window.localStorage.setItem('la-student-tutorial-dismissed', '1'); } catch {}
+    setDismissed(true);
+  };
+  if (!tutorial?.enabled) return null;
+  if (dismissed) return <div className="flex justify-end"><button type="button" onClick={reopen} className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/10"><BookOpen className="h-3.5 w-3.5" /> How Learn Africa Works</button></div>;
+  const youtubeEmbed = (() => {
+    if (tutorial.format !== 'video' || !tutorial.media_url) return '';
+    try {
+      const url = new URL(tutorial.media_url);
+      let id = '';
+      if (url.hostname.includes('youtu.be')) id = url.pathname.slice(1);
+      else if (url.hostname.includes('youtube.com')) id = url.searchParams.get('v') || url.pathname.split('/').filter(Boolean).pop();
+      return id ? 'https://www.youtube-nocookie.com/embed/' + id : '';
+    } catch { return ''; }
+  })();
+  return (
+    <section className="relative overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/[0.07] via-card to-accent/[0.06] p-4 sm:p-5 shadow-sm">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3"><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><BookOpen className="h-5 w-5" /></div>
+          <div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary">Your quick-start guide</p><h2 className="mt-0.5 text-base font-bold text-foreground sm:text-lg">{tutorial.title || 'How Learn Africa Works'}</h2>{tutorial.description && <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{tutorial.description}</p>}</div>
+        </div>
+        <button type="button" onClick={dismiss} className="self-start rounded-lg px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-foreground">Hide guide</button>
+      </div>
+      {tutorial.format === 'text' ? (
+        <div className="mt-3 whitespace-pre-line rounded-xl bg-background/70 p-3 text-sm leading-relaxed text-foreground">{tutorial.content}</div>
+      ) : tutorial.format === 'audio' ? (
+        <div className="mt-3 rounded-xl bg-background/70 p-3"><p className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground"><span aria-hidden="true">👆</span> Play the audio tutorial</p><audio className="w-full" controls preload="none" src={tutorial.media_url}>Audio playback is not supported by this browser.</audio></div>
+      ) : (
+        <div className="mt-3 overflow-hidden rounded-xl bg-black">{youtubeEmbed ? <div className="aspect-video"><iframe title={tutorial.title || 'Learn Africa student tutorial'} src={youtubeEmbed} className="h-full w-full" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen /></div> : <video className="max-h-72 w-full" controls preload="none" src={tutorial.media_url}>Video playback is not supported by this browser.</video>}</div>
+      )}
+    </section>
+  );
+}
+
 // ── Main Dashboard ─────────────────────────────────────────────────────────
 export default function StudentDashboard() {
   const { user, courses, isLoading } = useAuth();
@@ -488,6 +543,8 @@ export default function StudentDashboard() {
           </Button>
         </Link>
       </div>
+
+      <StudentTutorialCard />
 
       {/* Mobile quick-nav strip */}
       <div className="sm:hidden fixed top-[64px] left-0 right-0 z-30 bg-background/95 backdrop-blur border-b border-border px-4 py-2.5 flex justify-center gap-2 shadow-sm">
