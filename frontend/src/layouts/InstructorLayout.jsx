@@ -48,11 +48,12 @@ export default function InstructorLayout() {
             <Clock className="h-12 w-12 text-warning" />
           </div>
           <h2 className="text-2xl md:text-3xl font-bold">Application Pending</h2>
-          <p className="text-muted-foreground max-w-md text-sm md:text-base leading-relaxed">
+          <p className="text-muted-foreground max-w-md text-sm md:text-base leading-relaxed text-justify">
             Your instructor application has been received and is under review. Please allow up to
             <strong className="text-foreground"> 5 working days</strong> for the review process.
             Learn Africa may contact you using the phone number or email address you submitted if
             we need more information. We may also contact you after the review to communicate our decision.
+            Please refresh this page from time to time to check whether your application has been approved.
           </p>
           <div className="w-full max-w-md p-4 rounded-xl border border-primary/30 bg-primary/[0.04] text-left">
             <p className="text-sm font-semibold flex items-center gap-2">
