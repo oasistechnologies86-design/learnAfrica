@@ -103,7 +103,7 @@ export default function InstructorProfilePage() {
             )}
           </div>
           {instructor.bio && (
-            <p className="mt-4 text-muted-foreground max-w-2xl whitespace-pre-line">{instructor.bio}</p>
+            <p className="mt-4 text-muted-foreground max-w-2xl whitespace-pre-line text-justify">{instructor.bio}</p>
           )}
         </div>
       </div>
