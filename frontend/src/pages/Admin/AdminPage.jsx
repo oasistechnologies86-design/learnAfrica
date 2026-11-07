@@ -319,8 +319,8 @@ export default function AdminPage() {
     setSavingInstructorSplit(instructorId);
     try {
       const raw = instructorSplitEdits[instructorId];
-      const value = reset ? null : Number(raw);
-      if (!reset && (!Number.isFinite(value) || value < 0 || value > 100)) {
+      const value = reset ? null : Number(String(raw ?? '').trim());
+      if (!reset && (String(raw ?? '').trim() === '' || !Number.isFinite(value) || value < 0 || value > 100)) {
         throw new Error('Enter an instructor share between 0 and 100.');
       }
       const res = await API('/api/admin/instructors/' + instructorId + '/revenue-split', {
@@ -807,7 +807,7 @@ export default function AdminPage() {
                     <DollarSign className="h-5 w-5 text-primary" /> Revenue Split
                   </h2>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Set the default split for instructors who do not have an individual override. New transactions use the applicable split; past transactions keep their recorded amounts.
+                    Set the default split for instructors without an individual override. Individual overrides affect only new course purchases and paid quiz-attempt transactions. Existing transactions, receipts, earnings already recorded, and payouts keep their original amounts.
                   </p>
                 </div>
                 <div className="space-y-4">
@@ -884,7 +884,7 @@ export default function AdminPage() {
                             <th className="text-right p-3 font-medium text-muted-foreground">Gross</th>
                             <th className="text-right p-3 font-medium text-muted-foreground">Their Share</th>
                             <th className="text-right p-3 font-medium text-muted-foreground">Platform Share</th>
-                            <th className="text-left p-3 font-medium text-muted-foreground">Individual Split</th>
+                            <th className="text-left p-3 font-medium text-muted-foreground">Future Split Override</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -921,7 +921,7 @@ export default function AdminPage() {
                                         </Button>
                                       )}
                                     </div>
-                                    <p className="text-[11px] text-muted-foreground mt-1">{inst.has_custom_split ? 'Custom split' : 'Using platform default'}</p>
+                                    <p className="text-[11px] text-muted-foreground mt-1">{inst.has_custom_split ? 'Custom split · future payments only' : 'Using platform default'}</p>
                                   </>
                                 ) : (
                                   <span className="text-xs text-muted-foreground">Platform-owned account</span>
@@ -3419,6 +3419,8 @@ function AdminAuditLogTab() {
     badge_issue: 'Issued badge',
     credential_revoke: 'Revoked credential',
     credential_restore: 'Restored credential',
+    instructor_revenue_split_updated: 'Changed instructor revenue split',
+    instructor_revenue_split_reset: 'Reset instructor revenue split',
     coupon_create: 'Created coupon', coupon_update: 'Updated coupon',
     coupon_delete: 'Deleted coupon',
   };
