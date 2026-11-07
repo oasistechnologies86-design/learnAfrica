@@ -12,7 +12,7 @@ import {
   Award, Download, ExternalLink, Trophy, BookOpen, Target,
   Flame, Compass, CheckCircle2, Star, Zap, Loader2,
   ArrowRight, ArrowLeft, ChevronDown, ChevronUp, Book,
-  Eye, Pencil, Check, X, Printer
+  Eye, EyeOff, Pencil, Check, X, Printer
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { API_BASE, publicFetch } from '@/lib/api';
@@ -405,18 +405,20 @@ function BadgeCard({ badge, userName }) {
       <BadgePreviewModal badge={badge} userName={userName} onClose={() => setShowPreview(false)} />
     )}
     </>
-  );
-}
-
-
-// ── Universal student dashboard tutorial ───────────────────────────────────
+ // ── Universal student dashboard tutorial ───────────────────────────────────
 function StudentTutorialCard({ userId }) {
   const dismissedKey = 'la-student-tutorial-dismissed:' + (userId || 'guest');
   const [tutorial, setTutorial] = useState(null);
-  const [dismissed, setDismissed] = useState(() => {
-    try { return window.localStorage.getItem(dismissedKey) === '1'; }
-    catch { return false; }
-  });
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    try {
+      setDismissed(window.localStorage.getItem(dismissedKey) === '1');
+    } catch {
+      setDismissed(false);
+    }
+  }, [dismissedKey]);
+
   useEffect(() => {
     let active = true;
     publicFetch('/api/student-tutorial')
@@ -425,16 +427,44 @@ function StudentTutorialCard({ userId }) {
       .catch(() => {});
     return () => { active = false; };
   }, []);
+
   const reopen = () => {
     try { window.localStorage.removeItem(dismissedKey); } catch {}
     setDismissed(false);
   };
+
   const dismiss = () => {
     try { window.localStorage.setItem(dismissedKey, '1'); } catch {}
     setDismissed(true);
   };
+
   if (!tutorial?.enabled) return null;
-  if (dismissed) return <div className="flex justify-end"><button type="button" onClick={reopen} className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/10"><BookOpen className="h-3.5 w-3.5" /> How Learn Africa Works</button></div>;
+
+  if (dismissed) {
+    return (
+      <div className="flex flex-col gap-3 rounded-2xl border border-primary/15 bg-card px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <BookOpen className="h-4 w-4" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground">Quick-start guide hidden</p>
+            <p className="text-xs text-muted-foreground">You can bring it back whenever you need help.</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={reopen}
+          className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-primary/25 bg-primary/5 px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          aria-label="Show the Learn Africa student guide again"
+        >
+          <Eye className="h-4 w-4" />
+          Show guide
+        </button>
+      </div>
+    );
+  }
+
   const youtubeEmbed = (() => {
     if (tutorial.format !== 'video' || !tutorial.media_url) return '';
     try {
@@ -445,22 +475,94 @@ function StudentTutorialCard({ userId }) {
       return id ? 'https://www.youtube-nocookie.com/embed/' + id : '';
     } catch { return ''; }
   })();
+
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/[0.07] via-card to-accent/[0.06] p-4 sm:p-5 shadow-sm">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex min-w-0 items-start gap-3"><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><BookOpen className="h-5 w-5" /></div>
-          <div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary">Your quick-start guide</p><h2 className="mt-0.5 text-base font-bold text-foreground sm:text-lg">{tutorial.title || 'How Learn Africa Works'}</h2>{tutorial.description && <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{tutorial.description}</p>}</div>
+    <section
+      aria-labelledby="student-guide-title"
+      className="relative isolate overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/[0.09] via-card to-accent/[0.08] shadow-sm"
+    >
+      <div className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-primary/[0.07] blur-2xl" />
+      <div className="relative p-4 sm:p-5 lg:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm sm:h-12 sm:w-12">
+              <BookOpen className="h-5 w-5 sm:h-6 sm:w-6" />
+            </div>
+            <div className="min-w-0">
+              <div className="mb-1 flex flex-wrap items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-[0.17em] text-primary">Student guide</span>
+                <span className="rounded-full border border-primary/20 bg-background/70 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">Start here</span>
+              </div>
+              <h2 id="student-guide-title" className="text-lg font-bold leading-tight text-foreground sm:text-xl">
+                {tutorial.title || 'How Learn Africa Works'}
+              </h2>
+              {tutorial.description && (
+                <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                  {tutorial.description}
+                </p>
+              )}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={dismiss}
+            className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-border bg-background/80 px-3.5 py-2 text-xs font-semibold text-foreground shadow-sm transition-colors hover:border-primary/30 hover:bg-primary/5 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            aria-label="Hide the student guide"
+            title="Hide this guide from your dashboard"
+          >
+            <EyeOff className="h-4 w-4" />
+            Hide guide
+          </button>
         </div>
-        <button type="button" onClick={dismiss} className="self-start rounded-lg px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-foreground">Hide guide</button>
+
+        {tutorial.format === 'text' ? (
+          <div className="mt-5 rounded-xl border border-border/70 bg-background/85 p-4 text-sm leading-7 text-foreground shadow-inner sm:p-5">
+            <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-primary">
+              <Book className="h-4 w-4" /> Read the guide
+            </div>
+            <div className="whitespace-pre-line">{tutorial.content}</div>
+          </div>
+        ) : tutorial.format === 'audio' ? (
+          <div className="mt-5 rounded-xl border border-border/70 bg-background/85 p-4 sm:p-5">
+            <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">♫</span>
+              Listen to your student guide
+            </p>
+            <audio className="w-full" controls preload="none" src={tutorial.media_url}>
+              Audio playback is not supported by this browser.
+            </audio>
+          </div>
+        ) : (
+          <div className="mt-5 overflow-hidden rounded-xl border border-border/70 bg-black shadow-md">
+            {youtubeEmbed ? (
+              <div className="aspect-video">
+                <iframe
+                  title={tutorial.title || 'Learn Africa student tutorial'}
+                  src={youtubeEmbed}
+                  className="h-full w-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  loading="lazy"
+                />
+              </div>
+            ) : (
+              <video className="max-h-[min(65vh,560px)] w-full" controls preload="metadata" playsInline src={tutorial.media_url}>
+                Video playback is not supported by this browser.
+              </video>
+            )}
+          </div>
+        )}
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-primary/10 pt-3">
+          <p className="text-[11px] text-muted-foreground">Need this later? You can show the guide again from your dashboard.</p>
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-primary">
+            <CheckCircle2 className="h-3.5 w-3.5" /> Your learning journey starts here
+          </span>
+        </div>
       </div>
-      {tutorial.format === 'text' ? (
-        <div className="mt-3 whitespace-pre-line rounded-xl bg-background/70 p-3 text-sm leading-relaxed text-foreground">{tutorial.content}</div>
-      ) : tutorial.format === 'audio' ? (
-        <div className="mt-3 rounded-xl bg-background/70 p-3"><p className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground"><span aria-hidden="true">👆</span> Play the audio tutorial</p><audio className="w-full" controls preload="none" src={tutorial.media_url}>Audio playback is not supported by this browser.</audio></div>
-      ) : (
-        <div className="mt-3 overflow-hidden rounded-xl bg-black">{youtubeEmbed ? <div className="aspect-video"><iframe title={tutorial.title || 'Learn Africa student tutorial'} src={youtubeEmbed} className="h-full w-full" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen /></div> : <video className="max-h-72 w-full" controls preload="none" src={tutorial.media_url}>Video playback is not supported by this browser.</video>}</div>
-      )}
     </section>
+  );
+}
+
   );
 }
 
