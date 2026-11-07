@@ -102,7 +102,7 @@ def resolve_instructor_revenue_split(db, instructor_id, is_admin=False):
     """
     if is_admin:
         return {
-            'instructor_pct': 0.0, 'admin_pct': 100.0,
+            'instructor_pct': 100.0, 'admin_pct': 0.0,
             'has_override': False, 'source': 'admin_platform'
         }
 
