@@ -978,6 +978,7 @@ def create_app() -> Flask:
             if not email or email.count('@') != 1 or '.' not in email.rsplit('@', 1)[-1] or any(ch.isspace() for ch in email):
                 return jsonify({'error': 'Please enter a valid email address'}), 400
             d['email'] = email
+            if len(d['password']) < app.config['PASS_MIN_LENGTH']:
                 return jsonify({'error': f'Password must be at least {app.config["PASS_MIN_LENGTH"]} characters'}), 400
 
             # Optional contact phone ("call line"). Stored normalised so it can be
@@ -5948,7 +5949,7 @@ def create_app() -> Flask:
     # ── UNIVERSAL STUDENT DASHBOARD TUTORIAL ─────────────────────────────────
     def _student_tutorial_config(db):
         row = db.execute("SELECT value FROM platform_config WHERE key='student_dashboard_tutorial'").fetchone()
-        if not row or not row.get('value'):
+        if not row or not row['value']:
             return {
                 'enabled': False, 'format': 'text',
                 'title': 'How Learn Africa Works',
