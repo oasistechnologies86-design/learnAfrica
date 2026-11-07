@@ -6550,6 +6550,7 @@ def create_app() -> Flask:
         """Set or clear one instructor's future revenue split override."""
         try:
             db = get_db()
+            ensure_transactions_table(db)
             target = db.execute('SELECT id, name, email, role FROM users WHERE id=?', (uid,)).fetchone()
             if not target:
                 return jsonify({'error': 'Instructor not found'}), 404
