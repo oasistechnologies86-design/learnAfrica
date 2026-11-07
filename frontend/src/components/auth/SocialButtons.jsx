@@ -106,7 +106,14 @@ export function SocialButtons({ onGoogle, googleClientId, disabled = false, clas
           // Reveal the real button only after its embedded Google UI has
           // finished loading, keeping the branded loading surface in place
           // instead of exposing a temporarily empty iframe.
-          frame.addEventListener('load', () => setButtonReady(true), { once: true });
+          if (frame.dataset.learnAfricaLoaded === 'true') {
+            setButtonReady(true);
+          } else {
+            frame.addEventListener('load', () => {
+              frame.dataset.learnAfricaLoaded = 'true';
+              setButtonReady(true);
+            }, { once: true });
+          }
           return true;
         };
 
