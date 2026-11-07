@@ -233,7 +233,7 @@ function EarningsCard({ stats, onChanged }) {
             <div className="bg-success transition-all" style={{width:`${instructorPct || 0}%`}} />
             <div className="bg-muted transition-all" style={{width:`${platformPct || 0}%`}} />
           </div>
-          <p className="text-2xs text-muted-foreground">Revenue split set by platform admin.</p>
+          <p className="text-2xs text-muted-foreground">Your current split applies to new sales. Earlier transactions keep the amounts recorded when they were created.</p>
         </div>
       )}
     </div>
