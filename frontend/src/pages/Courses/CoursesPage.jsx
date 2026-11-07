@@ -38,6 +38,25 @@ export function CoursesPage() {
   const [showFilters,        setShowFilters]        = useState(false);
   const [currentPage,        setCurrentPage]        = useState(1);
 
+  const searchSuggestions = useMemo(() => {
+    const values = courses.flatMap(course => [
+      course.course_code,
+      course.title,
+      course.instructor_name,
+      ...(Array.isArray(course.tags) ? course.tags : []),
+      ...(Array.isArray(course.topics) ? course.topics : []),
+      ...(Array.isArray(course.keywords) ? course.keywords : []),
+    ]);
+    const query = searchQuery.trim().toLowerCase();
+    const unique = new Map();
+    values.forEach(value => {
+      const label = String(value || '').trim();
+      if (!label || (query && !label.toLowerCase().includes(query))) return;
+      if (!unique.has(label.toLowerCase())) unique.set(label.toLowerCase(), label);
+    });
+    return Array.from(unique.values()).slice(0, 6);
+  }, [courses, searchQuery]);
+
   // Reset page on filter/search change
   useEffect(() => { setCurrentPage(1); }, [searchQuery, selectedCategory, selectedDifficulty, sortBy]);
 
@@ -144,7 +163,7 @@ export function CoursesPage() {
       {/* Search + Controls */}
       <div className="flex flex-col lg:flex-row gap-4 mb-6">
         <div className="flex-1">
-          <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search course name, code (e.g. ACC 101), topics or instructor…" />
+          <SearchBar value={searchQuery} onChange={setSearchQuery} suggestions={searchSuggestions} placeholder="Search course name, code (e.g. ACC 101), topics or instructor…" />
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <select value={sortBy} onChange={e => setSortBy(e.target.value)}
