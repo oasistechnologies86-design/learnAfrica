@@ -12,7 +12,7 @@ import {
   Award, Download, ExternalLink, Trophy, BookOpen, Target,
   Flame, Compass, CheckCircle2, Star, Zap, Loader2,
   ArrowRight, ArrowLeft, ChevronDown, ChevronUp, Book,
-  Eye, EyeOff, Pencil, Check, X, Printer
+  Eye, EyeOff, Pencil, Check, X, Printer, Headphones, Video, Music2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { API_BASE, publicFetch } from '@/lib/api';
@@ -413,154 +413,49 @@ function StudentTutorialCard({ userId }) {
   const dismissedKey = 'la-student-tutorial-dismissed:' + (userId || 'guest');
   const [tutorial, setTutorial] = useState(null);
   const [dismissed, setDismissed] = useState(false);
-
+  const [activeAudioId, setActiveAudioId] = useState('');
   useEffect(() => {
-    try {
-      setDismissed(window.localStorage.getItem(dismissedKey) === '1');
-    } catch {
-      setDismissed(false);
-    }
+    try { setDismissed(window.localStorage.getItem(dismissedKey) === '1'); } catch { setDismissed(false); }
   }, [dismissedKey]);
-
   useEffect(() => {
     let active = true;
-    publicFetch('/api/student-tutorial')
-      .then(response => response.ok ? response.json() : null)
-      .then(data => { if (active && data?.enabled) setTutorial(data); })
-      .catch(() => {});
+    publicFetch('/api/student-tutorial').then(r => r.ok ? r.json() : null)
+      .then(data => { if (active && data?.enabled) setTutorial(data); }).catch(() => {});
     return () => { active = false; };
   }, []);
-
-  const reopen = () => {
-    try { window.localStorage.removeItem(dismissedKey); } catch {}
-    setDismissed(false);
-  };
-
-  const dismiss = () => {
-    try { window.localStorage.setItem(dismissedKey, '1'); } catch {}
-    setDismissed(true);
-  };
-
+  const reopen = () => { try { window.localStorage.removeItem(dismissedKey); } catch {} setDismissed(false); };
+  const dismiss = () => { try { window.localStorage.setItem(dismissedKey, '1'); } catch {} setDismissed(true); };
   if (!tutorial?.enabled) return null;
-
-  if (dismissed) {
-    return (
-      <div className="flex flex-col gap-3 rounded-2xl border border-primary/15 bg-card px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <BookOpen className="h-4 w-4" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground">Quick-start guide hidden</p>
-            <p className="text-xs text-muted-foreground">You can bring it back whenever you need help.</p>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={reopen}
-          className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-xl border-2 border-primary bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg hover:brightness-110 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:w-auto"
-          aria-label="Show the Learn Africa student guide again"
-        >
-          <Eye className="h-4 w-4" />
-          Show guide
-        </button>
-      </div>
-    );
-  }
-
-  const youtubeEmbed = (() => {
-    if (tutorial.format !== 'video' || !tutorial.media_url) return '';
-    try {
-      const url = new URL(tutorial.media_url);
-      let id = '';
-      if (url.hostname.includes('youtu.be')) id = url.pathname.slice(1);
-      else if (url.hostname.includes('youtube.com')) id = url.searchParams.get('v') || url.pathname.split('/').filter(Boolean).pop();
-      return id ? 'https://www.youtube-nocookie.com/embed/' + id : '';
-    } catch { return ''; }
-  })();
-
+  if (dismissed) return (
+    <div className="flex flex-col gap-3 rounded-2xl border border-primary/15 bg-card px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary"><BookOpen className="h-4 w-4" /></span><div><p className="text-sm font-semibold">Quick-start guide hidden</p><p className="text-xs text-muted-foreground">You can bring it back whenever you need help.</p></div></div>
+      <button type="button" onClick={reopen} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-primary bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground sm:w-auto"><Eye className="h-4 w-4" /> Show guide</button>
+    </div>
+  );
+  const audioItems = Array.isArray(tutorial.audio_items) && tutorial.audio_items.length ? tutorial.audio_items
+    : (tutorial.format === 'audio' && tutorial.media_url ? [{ id:'legacy-audio', title:tutorial.title, media_url:tutorial.media_url }] : []);
+  const videoItems = Array.isArray(tutorial.video_items) && tutorial.video_items.length ? tutorial.video_items
+    : (tutorial.format === 'video' && tutorial.media_url ? [{ id:'legacy-video', title:tutorial.title, media_url:tutorial.media_url }] : []);
+  const defaultAudio = audioItems.find(x => x.id === tutorial.default_audio_id) || audioItems.find(x => x.is_default) || audioItems[0];
+  const selectedAudio = audioItems.find(x => x.id === activeAudioId) || defaultAudio;
+  const embed = value => {
+    try { const u = new URL(value); const id = u.hostname.includes('youtu.be') ? u.pathname.slice(1) : (u.hostname.includes('youtube.com') ? (u.searchParams.get('v') || u.pathname.split('/').filter(Boolean).pop()) : ''); return id ? 'https://www.youtube-nocookie.com/embed/' + id : ''; } catch { return ''; }
+  };
   return (
-    <section
-      aria-labelledby="student-guide-title"
-      className="relative isolate overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/[0.09] via-card to-accent/[0.08] shadow-sm"
-    >
-      <div className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-primary/[0.07] blur-2xl" />
+    <section aria-labelledby="student-guide-title" className="relative isolate overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/[0.07] via-card to-accent/[0.06] shadow-sm">
       <div className="relative p-4 sm:p-5 lg:p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex min-w-0 items-start gap-3 sm:gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm sm:h-12 sm:w-12">
-              <BookOpen className="h-5 w-5 sm:h-6 sm:w-6" />
-            </div>
-            <div className="min-w-0">
-              <div className="mb-1 flex flex-wrap items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.17em] text-primary">Student guide</span>
-                <span className="rounded-full border border-primary/20 bg-background/70 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">Start here</span>
-              </div>
-              <h2 id="student-guide-title" className="text-lg font-bold leading-tight text-foreground sm:text-xl">
-                {tutorial.title || 'How Learn Africa Works'}
-              </h2>
-              {tutorial.description && (
-                <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-                  {tutorial.description}
-                </p>
-              )}
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={dismiss}
-            className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 self-stretch rounded-xl border-2 border-primary bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg hover:brightness-110 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:w-auto sm:self-start"
-            aria-label="Hide the student guide"
-            title="Hide this guide from your dashboard"
-          >
-            <EyeOff className="h-4 w-4" />
-            Hide guide
-          </button>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground"><BookOpen className="h-5 w-5" /></span><div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[0.17em] text-primary">Your quick-start guide</p><h2 id="student-guide-title" className="text-lg font-bold">{tutorial.title || 'How Learn Africa Works'}</h2>{tutorial.description && <p className="mt-1 text-xs text-muted-foreground">{tutorial.description}</p>}</div></div>
+          <button type="button" onClick={dismiss} className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl border border-border bg-background/80 px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-primary"><EyeOff className="h-4 w-4" /> Hide</button>
         </div>
-
-        {tutorial.format === 'text' ? (
-          <div className="mt-5 rounded-xl border border-border/70 bg-background/85 p-4 text-sm leading-7 text-foreground shadow-inner sm:p-5">
-            <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-primary">
-              <Book className="h-4 w-4" /> Read the guide
-            </div>
-            <div className="whitespace-pre-line">{tutorial.content}</div>
-          </div>
-        ) : tutorial.format === 'audio' ? (
-          <div className="mt-5 rounded-xl border border-border/70 bg-background/85 p-4 sm:p-5">
-            <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">♫</span>
-              Listen to your student guide
-            </p>
-            <audio className="w-full" controls preload="none" src={tutorial.media_url}>
-              Audio playback is not supported by this browser.
-            </audio>
-          </div>
-        ) : (
-          <div className="mt-5 overflow-hidden rounded-xl border border-border/70 bg-black shadow-md">
-            {youtubeEmbed ? (
-              <div className="aspect-video">
-                <iframe
-                  title={tutorial.title || 'Learn Africa student tutorial'}
-                  src={youtubeEmbed}
-                  className="h-full w-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                  loading="lazy"
-                />
-              </div>
-            ) : (
-              <video className="max-h-[min(65vh,560px)] w-full" controls preload="metadata" playsInline src={tutorial.media_url}>
-                Video playback is not supported by this browser.
-              </video>
-            )}
-          </div>
-        )}
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-primary/10 pt-3">
-          <p className="text-[11px] text-muted-foreground">Need this later? You can show the guide again from your dashboard.</p>
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-primary">
-            <CheckCircle2 className="h-3.5 w-3.5" /> Your learning journey starts here
-          </span>
-        </div>
+        {audioItems.length > 0 && <div className="mt-5 rounded-2xl border border-primary/20 bg-background/90 p-3 shadow-sm sm:p-4">
+          <div className="flex items-center gap-3"><span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary sm:h-14 sm:w-14"><Headphones className="h-7 w-7" /></span><div><p className="text-sm font-bold">Listen to the student guide</p><p className="text-xs text-muted-foreground">Press play and follow along as you explore Learn Africa.</p></div></div>
+          {selectedAudio && <div className="mt-3 rounded-xl bg-muted/40 p-3"><div className="mb-2 flex items-center justify-between gap-2"><p className="truncate text-sm font-semibold">{selectedAudio.title || 'Learn Africa student guide'}</p>{selectedAudio.id === defaultAudio?.id && <span className="rounded-full border border-primary/20 bg-background px-2 py-1 text-[10px] font-semibold text-primary">Default</span>}</div><audio key={selectedAudio.media_url} className="w-full" controls preload="metadata" src={selectedAudio.media_url}>Audio playback is not supported by this browser.</audio></div>}
+          {audioItems.length > 1 && <div className="mt-3 flex flex-wrap gap-2">{audioItems.map((item,i) => <button key={item.id || item.media_url} type="button" onClick={() => setActiveAudioId(item.id || '')} className={cn('inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium', (selectedAudio?.id || '') === (item.id || '') ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-background text-muted-foreground')}><Music2 className="h-3.5 w-3.5" />{item.title || ('Audio ' + (i+1))}</button>)}</div>}
+        </div>}
+        {videoItems.length > 0 && <div className="mt-4"><div className="mb-3 flex items-center gap-2"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary"><Video className="h-4 w-4" /></span><div><p className="text-sm font-bold">Watch the video guide</p><p className="text-xs text-muted-foreground">See the steps in action.</p></div></div><div className="grid gap-3 sm:grid-cols-2">{videoItems.map((item,i) => { const src=embed(item.media_url); return <div key={item.id || item.media_url || i} className="overflow-hidden rounded-xl border border-border bg-background shadow-sm">{src ? <div className="aspect-video bg-black"><iframe title={item.title || 'Student tutorial'} src={src} className="h-full w-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen loading="lazy" /></div> : <video className="aspect-video w-full bg-black object-contain" controls preload="metadata" playsInline src={item.media_url}>Video playback is not supported.</video>}<p className="p-3 text-sm font-semibold">{item.title || ('Video guide ' + (i+1))}</p></div>; })}</div></div>}
+        {!audioItems.length && !videoItems.length && <p className="mt-4 rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">Your student audio and video guides will appear here.</p>}
+        <div className="mt-4 border-t border-primary/10 pt-3 text-[11px] text-muted-foreground">You can hide this guide and bring it back whenever you need it.</div>
       </div>
     </section>
   );
