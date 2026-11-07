@@ -153,10 +153,15 @@ export default function InstructorOnboarding() {
           </div>
           <h1 className="text-2xl font-bold">Application Submitted!</h1>
           <p className="text-muted-foreground text-sm leading-relaxed">
-            Your instructor application is pending admin review. You'll be notified once it's
-            approved. If you haven't added your payout method yet, add it on your Profile page; admins can
-            only approve applications that have one.
+            Your instructor application has been received and is now under review. Please allow up to
+            <strong className="text-foreground"> 5 working days</strong> for the review process.
+            Learn Africa may contact you using the phone number or email address you provided if we
+            need more information. We may also contact you after the review to communicate the decision.
           </p>
+          <div className="rounded-xl border border-border bg-muted/30 p-4 text-left space-y-1">
+            <p className="text-sm font-semibold text-foreground">What happens next?</p>
+            <p className="text-xs text-muted-foreground">You can sign in while your application is being reviewed. We will notify you when a decision has been made.</p>
+          </div>
           <Button onClick={() => navigate('/')} className="w-full">Back to Home</Button>
         </div>
       </AuthCard>
@@ -174,8 +179,8 @@ export default function InstructorOnboarding() {
           </button>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Professional Profile</h1>
           <p className="text-sm text-muted-foreground">
-            Complete your instructor profile to start creating courses. An admin will review your
-            application before you can publish.
+            Complete your instructor profile and submit it for review. Applications may take up to
+            5 working days to review. Learn Africa may contact you using the phone number or email you provide.
           </p>
         </div>
 
