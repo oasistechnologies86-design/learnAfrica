@@ -6640,6 +6640,7 @@ def create_app() -> Flask:
                 'id': row['id'],
                 'name': row['name'],
                 'email': row['email'],
+                'role': row['role'],
                 'course_count': row['course_count'],
                 'gross_revenue': round(gross, 2),
                 'instructor_earnings': round(instr, 2),
