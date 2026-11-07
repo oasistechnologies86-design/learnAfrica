@@ -100,12 +100,19 @@ export function SocialButtons({ onGoogle, googleClientId, disabled = false, clas
           });
         }
 
-        if (host.current.querySelector('iframe')) {
-          setButtonReady(true);
-        } else {
+        const revealAfterGoogleFrameLoads = () => {
+          const frame = host.current?.querySelector('iframe');
+          if (!frame) return false;
+          // Reveal the real button only after its embedded Google UI has
+          // finished loading, keeping the branded loading surface in place
+          // instead of exposing a temporarily empty iframe.
+          frame.addEventListener('load', () => setButtonReady(true), { once: true });
+          return true;
+        };
+
+        if (!revealAfterGoogleFrameLoads()) {
           buttonObserver = new MutationObserver(() => {
-            if (host.current?.querySelector('iframe')) {
-              setButtonReady(true);
+            if (revealAfterGoogleFrameLoads()) {
               buttonObserver?.disconnect();
               buttonObserver = null;
             }
@@ -143,7 +150,7 @@ export function SocialButtons({ onGoogle, googleClientId, disabled = false, clas
           <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
           <div className="relative flex min-h-[58px] w-full items-center justify-center overflow-hidden rounded-xl border border-border/80 bg-background/80 px-1 shadow-sm backdrop-blur-sm">
             {!buttonReady && (
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center gap-3 bg-card text-sm font-semibold text-foreground">
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center gap-3 rounded-full bg-[#1a73e8] text-sm font-semibold text-white shadow-sm">
                 <GoogleMark size={19} />
                 <span>Preparing secure sign-in…</span>
               </div>
