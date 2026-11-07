@@ -455,7 +455,7 @@ function StudentTutorialCard({ userId }) {
         <button
           type="button"
           onClick={reopen}
-          className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-primary/25 bg-primary/5 px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-xl border-2 border-primary bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg hover:brightness-110 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:w-auto"
           aria-label="Show the Learn Africa student guide again"
         >
           <Eye className="h-4 w-4" />
@@ -506,7 +506,7 @@ function StudentTutorialCard({ userId }) {
           <button
             type="button"
             onClick={dismiss}
-            className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-border bg-background/80 px-3.5 py-2 text-xs font-semibold text-foreground shadow-sm transition-colors hover:border-primary/30 hover:bg-primary/5 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 self-stretch rounded-xl border-2 border-primary bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg hover:brightness-110 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:w-auto sm:self-start"
             aria-label="Hide the student guide"
             title="Hide this guide from your dashboard"
           >
