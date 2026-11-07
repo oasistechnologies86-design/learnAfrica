@@ -6558,6 +6558,8 @@ def create_app() -> Flask:
                 return jsonify({'error': 'Individual revenue splits can only be set for instructor accounts'}), 400
 
             data = request.get_json(silent=True) or {}
+            if 'instructor_share' not in data:
+                return jsonify({'error': 'Send instructor_share as a number, or null to restore the platform default'}), 400
             value = data.get('instructor_share')
             if value is None:
                 db.execute('DELETE FROM instructor_revenue_splits WHERE instructor_id=?', (uid,))
