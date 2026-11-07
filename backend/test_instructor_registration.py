@@ -84,6 +84,25 @@ check('instructor signup rejected with malformed Ghana Card', r.status_code == 4
 r = signup_instructor('nogps@example.com', {'ghana_post_gps': 'nonsense'})
 check('instructor signup rejected with malformed GPS', r.status_code == 400, r.status_code)
 
+# ── One email identity is shared across student and instructor roles ────────
+r = signup_instructor('shared.role@example.com')
+check('first instructor registration with an unused email succeeds', r.status_code in (200, 201), r.status_code)
+r = c.post('/api/auth/signup', json={
+    'name': 'Student Attempt', 'email': 'SHARED.ROLE@EXAMPLE.COM',
+    'password': 'Pass12345!', 'role': 'student',
+})
+check('same email cannot be registered again as a student with different casing',
+      r.status_code == 409, r.status_code)
+
+r = c.post('/api/auth/signup', json={
+    'name': 'Student First', 'email': 'student.first@example.com',
+    'password': 'Pass12345!', 'role': 'student',
+})
+check('student registration with an unused email succeeds', r.status_code in (200, 201), r.status_code)
+r = signup_instructor('STUDENT.FIRST@EXAMPLE.COM')
+check('same email cannot later be registered as an instructor',
+      r.status_code == 409, r.status_code)
+
 # ── Item 5: both agreements required ─────────────────────────────────────────
 r = signup_instructor('noterms@example.com', {'accept_terms': False})
 check('instructor signup rejected without terms agreement', r.status_code == 400, r.status_code)
