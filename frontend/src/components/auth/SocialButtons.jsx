@@ -1,9 +1,9 @@
 /**
  * Google sign-in control.
  *
- * Use Google's real, visible Identity Services button. Keeping the actual
- * Google iframe visible avoids the stale/inert hidden-overlay problem that
- * can occur after the account chooser is dismissed or the tab regains focus.
+ * Use Google's real, visible Identity Services button. Keep the rendered
+ * button mounted while the user opens or dismisses the account chooser;
+ * repeatedly replacing its iframe can cause a visible blank flash.
  */
 import { useEffect, useRef, useState } from 'react';
 import { GoogleMark } from './BrandIcons';
@@ -48,9 +48,6 @@ export function SocialButtons({ onGoogle, googleClientId, disabled = false, clas
     if (!googleConfigured) return undefined;
 
     let cancelled = false;
-    let hadFocusLoss = false;
-    let refreshTimer = null;
-    let initialized = false;
 
     const renderGoogleButton = () => {
       if (cancelled || !host.current || !window.google?.accounts?.id) return;
@@ -58,7 +55,7 @@ export function SocialButtons({ onGoogle, googleClientId, disabled = false, clas
       host.current.replaceChildren();
       window.google.accounts.id.renderButton(host.current, {
         type: 'standard',
-        theme: 'outline',
+        theme: 'filled_blue',
         size: 'large',
         text: 'continue_with',
         shape: 'rectangular',
@@ -67,66 +64,23 @@ export function SocialButtons({ onGoogle, googleClientId, disabled = false, clas
       });
     };
 
-    const scheduleButtonRefresh = () => {
-      if (cancelled || document.visibilityState === 'hidden') return;
-      window.clearTimeout(refreshTimer);
-      refreshTimer = window.setTimeout(renderGoogleButton, 250);
-    };
-
-    const handleBlur = () => {
-      hadFocusLoss = true;
-    };
-
-    const handleFocus = () => {
-      if (!hadFocusLoss) return;
-      hadFocusLoss = false;
-      scheduleButtonRefresh();
-    };
-
-    const handleVisibility = () => {
-      if (document.visibilityState === 'hidden') {
-        hadFocusLoss = true;
-      } else if (hadFocusLoss) {
-        hadFocusLoss = false;
-        scheduleButtonRefresh();
-      }
-    };
-
-    const handlePageShow = () => scheduleButtonRefresh();
-    const handleResize = () => scheduleButtonRefresh();
-
     loadGsi()
       .then(() => {
         if (cancelled || !window.google?.accounts?.id) return;
-        if (!initialized) {
-          window.google.accounts.id.initialize({
-            client_id: googleClientId,
-            callback: (response) => {
-              if (response?.credential) onGoogleRef.current?.(response.credential);
-            },
-          });
-          initialized = true;
-        }
-
+        window.google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: (response) => {
+            if (response?.credential) onGoogleRef.current?.(response.credential);
+          },
+        });
         renderGoogleButton();
-        window.addEventListener('blur', handleBlur);
-        window.addEventListener('focus', handleFocus);
-        window.addEventListener('pageshow', handlePageShow);
-        window.addEventListener('resize', handleResize);
-        document.addEventListener('visibilitychange', handleVisibility);
       })
       .catch(() => {
-        if (!cancelled) setNotice('Google sign-in could not load. Please try again.');
+        if (!cancelled) setNotice('Google sign-in could not load. Please refresh the page and try again.');
       });
 
     return () => {
       cancelled = true;
-      window.clearTimeout(refreshTimer);
-      window.removeEventListener('blur', handleBlur);
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('pageshow', handlePageShow);
-      window.removeEventListener('resize', handleResize);
-      document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, [googleClientId, googleConfigured]);
 
@@ -136,8 +90,7 @@ export function SocialButtons({ onGoogle, googleClientId, disabled = false, clas
         <div
           className={cn(
             'flex min-h-12 w-full items-center justify-center overflow-hidden rounded-[10px]',
-            'border border-border bg-card transition-colors duration-200',
-            'hover:border-foreground/25 hover:shadow-sm',
+            'bg-transparent transition-opacity duration-200',
             disabled && 'pointer-events-none opacity-60'
           )}
           aria-label="Sign in with Google"
