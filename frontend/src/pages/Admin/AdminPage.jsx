@@ -2585,7 +2585,7 @@ function AdminSettingsTab() {
 
 // ── Universal student dashboard tutorial settings ──────────────────────────
 function StudentTutorialSettingsCard() {
-  const [form,setForm]=useState({enabled:true,title:'How Learn Africa Works',description:'Listen to the guide or watch the steps to get started.',audio_items:[],video_items:[],default_audio_id:''});
+  const [form,setForm]=useState({enabled:true,title:'How Learn Africa Works',description:'Listen to the guide or watch the steps to get started.',audio_items:[],video_items:[],default_audio_id:'',display_order:'audio'});
   const [loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[uploading,setUploading]=useState(''),[preview,setPreview]=useState(false),[message,setMessage]=useState(null);
   const [audioTitle,setAudioTitle]=useState(''),[audioUrl,setAudioUrl]=useState(''),[videoTitle,setVideoTitle]=useState(''),[videoUrl,setVideoUrl]=useState('');
   const makeId=()=> 'guide-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);
@@ -2597,7 +2597,7 @@ function StudentTutorialSettingsCard() {
       let vid=Array.isArray(data.video_items)?data.video_items:[];
       if(!aud.length&&data.format==='audio'&&data.media_url)aud=[{id:'legacy-audio',title:data.title||'Student audio guide',media_url:data.media_url}];
       if(!vid.length&&data.format==='video'&&data.media_url)vid=[{id:'legacy-video',title:data.title||'Student video guide',media_url:data.media_url}];
-      setForm(p=>({...p,...data,audio_items:aud,video_items:vid,default_audio_id:data.default_audio_id||aud[0]?.id||''}));
+      setForm(p=>({...p,...data,audio_items:aud,video_items:vid,default_audio_id:data.default_audio_id||aud[0]?.id||'',display_order:data.display_order==='video'?'video':'audio'}));
     }).catch(e=>{if(active)setMessage({type:'error',text:e.message||'Could not load tutorial settings.'});}).finally(()=>{if(active)setLoading(false);});
     return()=>{active=false;};
   },[]);
@@ -2629,7 +2629,7 @@ function StudentTutorialSettingsCard() {
   });
   const save=async()=>{
     setSaving(true);setMessage(null);
-    try{const payload={enabled:!!form.enabled,title:form.title,description:form.description,audio_items:form.audio_items||[],video_items:form.video_items||[],default_audio_id:form.default_audio_id||''};
+    try{const payload={enabled:!!form.enabled,title:form.title,description:form.description,audio_items:form.audio_items||[],video_items:form.video_items||[],default_audio_id:form.default_audio_id||'',display_order:form.display_order==='video'?'video':'audio'};
       const data=await API('/api/admin/student-tutorial',{method:'PUT',body:JSON.stringify(payload)});
       setForm(p=>({...p,...(data.tutorial||payload)}));setMessage({type:'success',text:'Student audio and video guides saved.'});
     }catch(e){setMessage({type:'error',text:e.message||'Could not save the tutorial.'});}finally{setSaving(false);}
@@ -2637,11 +2637,26 @@ function StudentTutorialSettingsCard() {
   const youtube=value=>{try{const u=new URL(value),id=u.hostname.includes('youtu.be')?u.pathname.slice(1):(u.hostname.includes('youtube.com')?(u.searchParams.get('v')||u.pathname.split('/').filter(Boolean).pop()):'');return id?'https://www.youtube-nocookie.com/embed/'+id:'';}catch{return '';}};
   const videoPreview=item=>{const src=youtube(item.media_url);return src?<div className="aspect-video overflow-hidden rounded-xl"><iframe title="Student video preview" src={src} className="h-full w-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen /></div>:<video className="aspect-video w-full rounded-xl bg-black object-contain" controls preload="metadata" src={item.media_url}/>;};
   return <Card>
-    <CardHeader><CardTitle className="text-sm flex items-center gap-2"><BookOpen className="h-4 w-4 text-primary"/> Student Audio &amp; Video Guide</CardTitle><p className="text-xs text-muted-foreground">Audio appears first on the student dashboard, followed by videos. Choose the default recording and add more whenever you need them.</p></CardHeader>
+    <CardHeader><CardTitle className="text-sm flex items-center gap-2"><BookOpen className="h-4 w-4 text-primary"/> Student Audio &amp; Video Guide</CardTitle><p className="text-xs text-muted-foreground">Choose which guide section students see first. You can change this anytime without re-uploading media.</p></CardHeader>
     <CardContent className="space-y-5">
       {loading?<div className="flex items-center justify-center py-6 text-muted-foreground"><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Loading tutorial settings…</div>:<>
         <label className="flex items-center gap-3 rounded-xl border border-border bg-muted/20 p-3"><input type="checkbox" className="h-4 w-4 accent-primary" checked={!!form.enabled} onChange={e=>update('enabled',e.target.checked)}/><span><span className="block text-sm font-semibold">Show guide to students</span><span className="block text-xs text-muted-foreground">Turn it off without deleting saved media.</span></span></label>
         <div className="grid gap-3 sm:grid-cols-2"><label className="space-y-1.5"><span className="text-xs font-semibold">Guide title</span><Input value={form.title||''} onChange={e=>update('title',e.target.value)} placeholder="How Learn Africa Works"/></label><label className="space-y-1.5"><span className="text-xs font-semibold">Short introduction</span><Input value={form.description||''} onChange={e=>update('description',e.target.value)} placeholder="Listen or watch to get started."/></label></div>
+        <section className="space-y-3 rounded-2xl border border-border bg-muted/20 p-3 sm:p-4">
+          <div><h4 className="text-sm font-bold">Display order</h4><p className="text-xs text-muted-foreground">Choose which section appears first on the student dashboard.</p></div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <label className={cn('flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-colors',form.display_order!=='video'?'border-primary bg-primary/10':'border-border bg-background')}>
+              <input type="radio" name="student-guide-display-order" value="audio" checked={form.display_order!=='video'} onChange={()=>update('display_order','audio')} className="accent-primary"/>
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">♫</span>
+              <span><span className="block text-sm font-semibold">Audio first</span><span className="block text-xs text-muted-foreground">Video appears underneath</span></span>
+            </label>
+            <label className={cn('flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-colors',form.display_order==='video'?'border-primary bg-primary/10':'border-border bg-background')}>
+              <input type="radio" name="student-guide-display-order" value="video" checked={form.display_order==='video'} onChange={()=>update('display_order','video')} className="accent-primary"/>
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary"><Video className="h-4 w-4"/></span>
+              <span><span className="block text-sm font-semibold">Video first</span><span className="block text-xs text-muted-foreground">Audio appears underneath</span></span>
+            </label>
+          </div>
+        </section>
         <section className="space-y-3 rounded-2xl border border-primary/20 bg-primary/[0.035] p-3 sm:p-4">
           <div className="flex items-center justify-between"><div className="flex items-center gap-2"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">♫</span><div><h4 className="text-sm font-bold">Audio guides</h4><p className="text-xs text-muted-foreground">Select the default recording.</p></div></div><span className="rounded-full bg-background px-2 py-1 text-[10px]">{(form.audio_items||[]).length} saved</span></div>
           {(form.audio_items||[]).map((item,i)=><div key={item.id} className="rounded-xl border border-border bg-background p-3"><div className="flex items-start gap-2"><input type="radio" name="default-student-audio" checked={form.default_audio_id===item.id} onChange={()=>update('default_audio_id',item.id)} aria-label={'Set '+(item.title||'audio')+' as default'} className="mt-1 accent-primary"/><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="text-sm font-semibold">{item.title||('Audio guide '+(i+1))}</p>{form.default_audio_id===item.id&&<span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">Default</span>}</div><audio className="mt-2 w-full" controls preload="none" src={item.media_url}/></div><button type="button" onClick={()=>removeItem('audio',item.id)} className="rounded-lg p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" aria-label="Remove audio"><Trash2 className="h-4 w-4"/></button></div></div>)}
@@ -2655,7 +2670,7 @@ function StudentTutorialSettingsCard() {
           <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-border bg-background px-3 py-2.5 text-xs font-semibold">{uploading==='video'?<Loader2 className="h-4 w-4 animate-spin"/>:<Plus className="h-4 w-4"/>} Upload video file<input type="file" accept="video/*,.mp4,.webm,.mov,.m4v" className="hidden" onChange={e=>uploadMedia(e,'video')} disabled={!!uploading}/></label>
         </section>
         <div className="flex flex-wrap items-center gap-2"><Button variant="outline" onClick={()=>setPreview(v=>!v)} className="gap-2"><Eye className="h-4 w-4"/>{preview?'Hide preview':'Preview student view'}</Button><Button onClick={save} disabled={saving||!!uploading} className="gap-2">{saving?<Loader2 className="h-4 w-4 animate-spin"/>:<Save className="h-4 w-4"/>} Save guide</Button></div>
-        {preview&&<div className="space-y-3 rounded-2xl border border-primary/20 bg-primary/[0.035] p-4"><div><p className="text-xs font-bold uppercase tracking-wide text-primary">Student preview</p><h3 className="mt-1 text-lg font-bold">{form.title}</h3><p className="text-sm text-muted-foreground">{form.description}</p></div>{(form.audio_items||[]).length>0&&<div className="rounded-xl border bg-background p-3"><p className="mb-2 text-sm font-semibold">♫ Listen to the student guide</p>{(()=>{const item=form.audio_items.find(x=>x.id===form.default_audio_id)||form.audio_items[0];return <><p className="mb-2 text-xs">{item.title}</p><audio className="w-full" controls src={item.media_url}/></>;})()}</div>}{(form.video_items||[]).map(item=><div key={item.id} className="rounded-xl border bg-background p-3"><p className="mb-2 text-sm font-semibold">{item.title}</p>{videoPreview(item)}</div>)}</div>}
+        {preview&&<div className="space-y-3 rounded-2xl border border-primary/20 bg-primary/[0.035] p-4"><div><p className="text-xs font-bold uppercase tracking-wide text-primary">Student preview</p><h3 className="mt-1 text-lg font-bold">{form.title}</h3><p className="text-sm text-muted-foreground">{form.description}</p></div>{form.display_order==='video'?<>{videoPreview}{audioPreview}</>:<>{audioPreview}{videoPreview}</>}</div>}
         {message&&<div role="status" className={cn('rounded-xl border p-3 text-sm',message.type==='success'?'border-success/30 bg-success/10 text-success':'border-destructive/30 bg-destructive/10 text-destructive')}>{message.text}</div>}
       </>}
     </CardContent>
