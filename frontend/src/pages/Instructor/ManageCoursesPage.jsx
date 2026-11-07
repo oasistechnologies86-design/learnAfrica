@@ -66,8 +66,8 @@ export default function ManageCoursesPage() {
           <h1 className="text-xl sm:text-2xl font-bold break-words">My Courses</h1>
           <p className="text-muted-foreground text-sm mt-1">{courses.length} course{courses.length !== 1 ? 's' : ''} created</p>
         </div>
-        <Link to="/instructor/courses/create" className="shrink-0">
-          <Button className="gap-2 w-full sm:w-auto"><Plus className="h-4 w-4" />New Course</Button>
+        <Link to="/instructor/courses/create" className="inline-flex shrink-0">
+          <Button className="gap-2"><Plus className="h-4 w-4" />New Course</Button>
         </Link>
       </div>
 
