@@ -897,27 +897,33 @@ export default function AdminPage() {
                               <td className="p-3 text-right font-bold text-primary">{formatPrice(inst.instructor_earnings)}</td>
                               <td className="p-3 text-right text-success">{formatPrice(inst.platform_earnings)}</td>
                               <td className="p-3 min-w-[190px]">
-                                <div className="flex items-center gap-2">
-                                  <input
-                                    type="number" min="0" max="100" step="0.01"
-                                    aria-label={"Instructor share for " + inst.name}
-                                    value={instructorSplitEdits[inst.id] ?? String(inst.instructor_share_pct ?? 50)}
-                                    onChange={e => setInstructorSplitEdits(prev => ({ ...prev, [inst.id]: e.target.value }))}
-                                    className="w-20 rounded-md border border-border bg-background px-2 py-1 text-sm tabular-nums"
-                                  />
-                                  <span className="text-xs text-muted-foreground">/ {100 - Number(instructorSplitEdits[inst.id] ?? inst.instructor_share_pct ?? 50)}%</span>
-                                </div>
-                                <div className="flex flex-wrap gap-1 mt-2">
-                                  <Button size="sm" onClick={() => saveInstructorSplit(inst.id)} disabled={savingInstructorSplit === inst.id}>
-                                    {savingInstructorSplit === inst.id ? 'Saving…' : 'Save'}
-                                  </Button>
-                                  {inst.has_custom_split && (
-                                    <Button size="sm" variant="outline" onClick={() => saveInstructorSplit(inst.id, true)} disabled={savingInstructorSplit === inst.id}>
-                                      Reset
-                                    </Button>
-                                  )}
-                                </div>
-                                <p className="text-[11px] text-muted-foreground mt-1">{inst.has_custom_split ? 'Custom split' : 'Using platform default'}</p>
+                                {inst.role === "instructor" ? (
+                                  <>
+                                    <div className="flex items-center gap-2">
+                                      <input
+                                        type="number" min="0" max="100" step="0.01"
+                                        aria-label={"Instructor share for " + inst.name}
+                                        value={instructorSplitEdits[inst.id] ?? String(inst.instructor_share_pct ?? 50)}
+                                        onChange={e => setInstructorSplitEdits(prev => ({ ...prev, [inst.id]: e.target.value }))}
+                                        className="w-20 rounded-md border border-border bg-background px-2 py-1 text-sm tabular-nums"
+                                      />
+                                      <span className="text-xs text-muted-foreground">/ {100 - Number(instructorSplitEdits[inst.id] ?? inst.instructor_share_pct ?? 50)}%</span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1 mt-2">
+                                      <Button size="sm" onClick={() => saveInstructorSplit(inst.id)} disabled={savingInstructorSplit === inst.id}>
+                                        {savingInstructorSplit === inst.id ? 'Saving…' : 'Save'}
+                                      </Button>
+                                      {inst.has_custom_split && (
+                                        <Button size="sm" variant="outline" onClick={() => saveInstructorSplit(inst.id, true)} disabled={savingInstructorSplit === inst.id}>
+                                          Reset
+                                        </Button>
+                                      )}
+                                    </div>
+                                    <p className="text-[11px] text-muted-foreground mt-1">{inst.has_custom_split ? 'Custom split' : 'Using platform default'}</p>
+                                  </>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">Platform-owned account</span>
+                                )}
                               </td>
                             </tr>
                           ))}
