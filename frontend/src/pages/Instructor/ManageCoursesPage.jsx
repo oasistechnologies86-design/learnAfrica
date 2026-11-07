@@ -60,14 +60,14 @@ export default function ManageCoursesPage() {
   if (loading) return <div className="flex h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary/60" /></div>;
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">My Courses</h1>
+    <div className="container mx-auto px-3 sm:px-4 py-5 sm:py-8 space-y-6 sm:space-y-8">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold break-words">My Courses</h1>
           <p className="text-muted-foreground text-sm mt-1">{courses.length} course{courses.length !== 1 ? 's' : ''} created</p>
         </div>
-        <Link to="/instructor/courses/create">
-          <Button className="gap-2"><Plus className="h-4 w-4" />New Course</Button>
+        <Link to="/instructor/courses/create" className="shrink-0">
+          <Button className="gap-2 w-full sm:w-auto"><Plus className="h-4 w-4" />New Course</Button>
         </Link>
       </div>
 
@@ -105,13 +105,13 @@ export default function ManageCoursesPage() {
                 </div>
               )}
 
-              <div className="flex gap-5 p-5 relative">
+              <div className="relative flex w-full min-w-0 flex-col gap-4 p-3 sm:flex-row sm:gap-5 sm:p-5">
                 <img src={courseThumbnail(c)} alt={c.title}
                   className="w-32 h-24 rounded-xl object-cover shrink-0 hidden sm:block" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                <div className="w-full min-w-0 flex-1">
+                  <div className="flex min-w-0 items-start justify-between gap-3">
+                    <div className="w-full min-w-0">
+                      <div className="mb-2 flex flex-wrap items-center gap-1.5">
                         <span className={cn('text-2xs font-bold px-2 py-0.5 rounded-full border',
                           c.status === 'published' ? 'bg-success/10 text-success border-success/20' :
                           c.status === 'suspended' ? 'bg-destructive/10 text-destructive border-destructive/20' :
@@ -124,8 +124,8 @@ export default function ManageCoursesPage() {
                             : 'bg-primary/10 text-primary border-primary/20')}>
                           {(c.is_visible === false || c.is_visible === 0) ? 'Hidden' : 'Visible'}
                         </span>
-                        <span className="text-2xs text-muted-foreground font-medium">{c.category}</span>
-                        <span className="text-2xs text-muted-foreground font-medium">{c.difficulty}</span>
+                        <span className="max-w-full break-words rounded-full bg-muted/60 px-2 py-0.5 text-2xs font-medium text-muted-foreground">{c.category || 'Uncategorised'}</span>
+                        <span className="max-w-full break-words rounded-full bg-muted/60 px-2 py-0.5 text-2xs font-medium text-muted-foreground">{c.difficulty || 'Not specified'}</span>
                       </div>
                       <h3 className="font-bold text-base truncate">{c.title}</h3>
                       <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{c.description}</p>
@@ -138,20 +138,20 @@ export default function ManageCoursesPage() {
                     <span className="font-semibold text-foreground">{c.is_free ? 'Free' : `${formatPrice(c.price)}`}</span>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2 mt-4">
-                    <Link to={`/instructor/preview/${c.id}`} className="shrink-0">
-                      <Button variant="outline" size="sm" className="gap-1.5 text-xs whitespace-nowrap"><Eye className="h-3.5 w-3.5" />Preview</Button>
+                  <div className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                    <Link to={`/instructor/preview/${c.id}`} className="min-w-0">
+                      <Button variant="outline" size="sm" className="w-full gap-1.5 whitespace-nowrap text-xs sm:w-auto"><Eye className="h-3.5 w-3.5" />Preview</Button>
                     </Link>
-                    <Link to={`/instructor/courses/edit/${c.id}`} className="shrink-0">
-                      <Button variant="outline" size="sm" className="gap-1.5 text-xs whitespace-nowrap"><Edit2 className="h-3.5 w-3.5" />Edit</Button>
+                    <Link to={`/instructor/courses/edit/${c.id}`} className="min-w-0">
+                      <Button variant="outline" size="sm" className="w-full gap-1.5 whitespace-nowrap text-xs sm:w-auto"><Edit2 className="h-3.5 w-3.5" />Edit</Button>
                     </Link>
-                    <Button variant="outline" size="sm" className="gap-1.5 text-xs whitespace-nowrap shrink-0"
+                    <Button variant="outline" size="sm" className="w-full shrink-0 gap-1.5 whitespace-nowrap text-xs sm:w-auto"
                       onClick={() => handleVisibility(c.id, !(c.is_visible !== false && c.is_visible !== 0))}>
                       {(c.is_visible === false || c.is_visible === 0)
                         ? <><Eye className="h-3.5 w-3.5" />Make visible</>
                         : <><EyeOff className="h-3.5 w-3.5" />Hide</>}
                     </Button>
-                    <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 whitespace-nowrap shrink-0"
+                    <Button variant="ghost" size="sm" className="w-full shrink-0 gap-1.5 whitespace-nowrap text-xs text-destructive hover:bg-destructive/10 hover:text-destructive sm:w-auto"
                       onClick={() => setConfirmDelete(c.id)}>
                       <Trash2 className="h-3.5 w-3.5" />Delete
                     </Button>
