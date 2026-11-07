@@ -1,16 +1,9 @@
 /**
- * SocialButtons — the Google sign-in control.
+ * Google sign-in control.
  *
- * The visible button is ours (outlined, official inline-SVG mark, one-word
- * label). A real Google button is rendered invisibly on top of it, so a tap
- * always lands on Google's own control and opens the account chooser. This is
- * reliable on mobile, where One Tap `prompt()` often does nothing.
- *
- * The flow needs a client id (VITE_GOOGLE_CLIENT_ID). With no id we render a
- * plain button that explains sign-in is not set up rather than failing silently.
- *
- * Apple is intentionally not offered: there is no Apple provider in the app or
- * backend, so a button could never do anything but apologise.
+ * Use Google's real, visible Identity Services button. Keeping the actual
+ * Google iframe visible avoids the stale/inert hidden-overlay problem that
+ * can occur after the account chooser is dismissed or the tab regains focus.
  */
 import { useEffect, useRef, useState } from 'react';
 import { GoogleMark } from './BrandIcons';
@@ -22,109 +15,136 @@ let scriptPromise = null;
 function loadGsi() {
   if (window.google?.accounts?.id) return Promise.resolve();
   if (scriptPromise) return scriptPromise;
+
   scriptPromise = new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = GSI_SRC;
-    s.async = true;
-    s.defer = true;
-    s.onload = () => resolve();
-    s.onerror = () => {
-      scriptPromise = null; // Allow a later visit to retry loading the GIS script.
-      s.remove();
+    const script = document.createElement('script');
+    script.src = GSI_SRC;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve();
+    script.onerror = () => {
+      scriptPromise = null;
+      script.remove();
       reject(new Error('Could not load Google sign-in'));
     };
-    document.head.appendChild(s);
+    document.head.appendChild(script);
   });
+
   return scriptPromise;
 }
-
-const visualBtn = cn(
-  'relative flex h-12 w-full items-center justify-center gap-2',
-  'rounded-[10px] border border-input bg-card',
-  'text-[13px] font-medium text-foreground/80',
-  'transition-[transform,background-color,border-color] duration-200',
-  'group-hover:bg-muted group-hover:border-foreground/25 group-hover:-translate-y-px',
-  'active:translate-y-0 active:scale-[0.99]',
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
-);
 
 export function SocialButtons({ onGoogle, googleClientId, disabled = false, className }) {
   const host = useRef(null);
   const onGoogleRef = useRef(onGoogle);
   const [notice, setNotice] = useState('');
-  const [pressed, setPressed] = useState(false);
 
   const googleConfigured = Boolean(googleClientId);
 
-  // Keep the latest page callback without rebuilding Google's iframe whenever
-  // the parent rerenders (for example when login loading state changes).
   useEffect(() => {
     onGoogleRef.current = onGoogle;
   }, [onGoogle]);
 
   useEffect(() => {
-    if (!googleConfigured) return;
+    if (!googleConfigured) return undefined;
+
     let cancelled = false;
+    let hadFocusLoss = false;
+    let refreshTimer = null;
+    let initialized = false;
+
+    const renderGoogleButton = () => {
+      if (cancelled || !host.current || !window.google?.accounts?.id) return;
+      const availableWidth = host.current.clientWidth || 320;
+      host.current.replaceChildren();
+      window.google.accounts.id.renderButton(host.current, {
+        type: 'standard',
+        theme: 'outline',
+        size: 'large',
+        text: 'continue_with',
+        shape: 'rectangular',
+        logo_alignment: 'left',
+        width: Math.max(200, Math.min(400, Math.floor(availableWidth))),
+      });
+    };
+
+    const scheduleButtonRefresh = () => {
+      if (cancelled || document.visibilityState === 'hidden') return;
+      window.clearTimeout(refreshTimer);
+      refreshTimer = window.setTimeout(renderGoogleButton, 250);
+    };
+
+    const handleBlur = () => {
+      hadFocusLoss = true;
+    };
+
+    const handleFocus = () => {
+      if (!hadFocusLoss) return;
+      hadFocusLoss = false;
+      scheduleButtonRefresh();
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        hadFocusLoss = true;
+      } else if (hadFocusLoss) {
+        hadFocusLoss = false;
+        scheduleButtonRefresh();
+      }
+    };
+
+    const handlePageShow = () => scheduleButtonRefresh();
+    const handleResize = () => scheduleButtonRefresh();
+
     loadGsi()
       .then(() => {
-        if (cancelled || !window.google?.accounts?.id || !host.current) return;
-        window.google.accounts.id.initialize({
-          client_id: googleClientId,
-          callback: (response) => {
-            if (response?.credential) onGoogleRef.current?.(response.credential);
-          },
-        });
-        host.current.innerHTML = '';
-        window.google.accounts.id.renderButton(host.current, {
-          type: 'standard',
-          theme: 'outline',
-          size: 'large',
-          text: 'continue_with',
-          shape: 'rectangular',
-          logo_alignment: 'left',
-          width: 400,
-        });
+        if (cancelled || !window.google?.accounts?.id) return;
+        if (!initialized) {
+          window.google.accounts.id.initialize({
+            client_id: googleClientId,
+            callback: (response) => {
+              if (response?.credential) onGoogleRef.current?.(response.credential);
+            },
+          });
+          initialized = true;
+        }
+
+        renderGoogleButton();
+        window.addEventListener('blur', handleBlur);
+        window.addEventListener('focus', handleFocus);
+        window.addEventListener('pageshow', handlePageShow);
+        window.addEventListener('resize', handleResize);
+        document.addEventListener('visibilitychange', handleVisibility);
       })
-      .catch(() => setNotice('Google sign-in could not load. Please try again.'));
-    return () => { cancelled = true; };
+      .catch(() => {
+        if (!cancelled) setNotice('Google sign-in could not load. Please try again.');
+      });
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(refreshTimer);
+      window.removeEventListener('blur', handleBlur);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('pageshow', handlePageShow);
+      window.removeEventListener('resize', handleResize);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [googleClientId, googleConfigured]);
 
   return (
     <div className={cn('w-full', className)}>
       {googleConfigured ? (
         <div
-          className="group relative w-full"
-          role="group"
+          className={cn(
+            'flex min-h-12 w-full items-center justify-center overflow-hidden rounded-[10px]',
+            'border border-border bg-card transition-colors duration-200',
+            'hover:border-foreground/25 hover:shadow-sm',
+            disabled && 'pointer-events-none opacity-60'
+          )}
           aria-label="Sign in with Google"
-          onPointerDown={() => !disabled && setPressed(true)}
-          onPointerUp={() => setPressed(false)}
-          onPointerCancel={() => setPressed(false)}
-          onPointerLeave={() => setPressed(false)}
-          onKeyDown={(event) => {
-            if (!disabled && (event.key === 'Enter' || event.key === ' ')) setPressed(true);
-          }}
-          onKeyUp={() => setPressed(false)}
-          onBlur={() => setPressed(false)}
         >
-          {/* Visual layer — theme-aware and reacts to pointer/keyboard input. */}
-          <div className={cn(
-            visualBtn,
-            'group-hover:shadow-sm',
-            pressed && 'translate-y-0 scale-[0.99] border-primary/40 bg-muted shadow-inner',
-            disabled && 'opacity-60'
-          )} aria-hidden="true">
-            <GoogleMark size={16} />
-            <span>Google</span>
-          </div>
-          {/* Real Google control, invisible, covering the visual layer so the tap
-              always reaches it. */}
           <div
             ref={host}
-            className={cn(
-              'absolute inset-0 z-10 overflow-hidden opacity-0',
-              disabled && 'pointer-events-none',
-              '[&>div]:!w-full [&>div]:!h-full [&_iframe]:!w-full'
-            )}
+            className="flex min-h-12 w-full items-center justify-center [&>div]:!mx-auto [&_iframe]:!max-w-full"
           />
         </div>
       ) : (
@@ -132,11 +152,19 @@ export function SocialButtons({ onGoogle, googleClientId, disabled = false, clas
           type="button"
           disabled={disabled}
           onClick={() => setNotice('Google sign-in is not set up yet.')}
-          className={cn(visualBtn, 'hover:bg-muted hover:border-foreground/25 hover:-translate-y-px', disabled && 'opacity-60')}
+          className={cn(
+            'flex h-12 w-full items-center justify-center gap-2 rounded-[10px]',
+            'border border-input bg-card text-[13px] font-medium text-foreground/80',
+            'transition-[transform,background-color,border-color] duration-200',
+            'hover:-translate-y-px hover:border-foreground/25 hover:bg-muted',
+            'active:translate-y-0 active:scale-[0.99]',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+            disabled && 'pointer-events-none opacity-60'
+          )}
           aria-label="Continue with Google"
         >
           <GoogleMark size={16} />
-          <span>Google</span>
+          <span>Continue with Google</span>
         </button>
       )}
 
