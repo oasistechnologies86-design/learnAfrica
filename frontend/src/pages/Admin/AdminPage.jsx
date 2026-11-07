@@ -744,30 +744,34 @@ export default function AdminPage() {
                         </div>
                         {app.bio && <p className="text-sm text-muted-foreground">{app.bio}</p>}
                         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                          {app.location && <span>📍 {app.location}</span>}
-                          {app.website && <a href={app.website} target="_blank" rel="noreferrer" className="text-primary hover:underline">🔗 Website</a>}
+                          {app.location && <span className="inline-flex min-w-0 items-start gap-1.5 break-words"><MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />{app.location}</span>}
+                          {app.website && <a href={app.website} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-primary hover:underline"><Globe className="h-3.5 w-3.5 shrink-0" />Website</a>}
                           <span>Applied: {app.applied_at?.slice(0,10)}</span>
                         </div>
                         {(app.id_number || app.ghana_card_number || app.ghana_post_gps || app.country || app.city) && (
-                          <div className="flex flex-wrap gap-3 text-xs font-medium">
+                          <div className="flex flex-wrap gap-2 text-xs font-medium">
                             {app.country && (
-                              <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1">
-                                🌍 {countryLabelOf(app.country)}
+                              <span className="inline-flex min-w-0 max-w-full items-start gap-1.5 rounded-md bg-muted px-2.5 py-1.5">
+                                <Globe className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                <span className="break-words">{countryLabelOf(app.country)}</span>
                               </span>
                             )}
                             {(app.id_number || app.ghana_card_number) && (
-                              <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1">
-                                🪪 {idTypeLabel(app.id_type)}: <span className="font-mono">{app.id_number || app.ghana_card_number}</span>
+                              <span className="inline-flex min-w-0 max-w-full items-start gap-1.5 rounded-md bg-muted px-2.5 py-1.5">
+                                <CreditCard className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                <span className="min-w-0 break-words">{idTypeLabel(app.id_type)}: <span className="font-mono">{app.id_number || app.ghana_card_number}</span></span>
                               </span>
                             )}
                             {(app.city || app.region || app.street_address || app.postal_code) && (
-                              <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1">
-                                📍 {[app.street_address, app.city, app.region, app.postal_code].filter(Boolean).join(', ')}
+                              <span className="inline-flex min-w-0 max-w-full items-start gap-1.5 rounded-md bg-muted px-2.5 py-1.5">
+                                <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                <span className="break-words">{[app.street_address, app.city, app.region, app.postal_code].filter(Boolean).join(', ')}</span>
                               </span>
                             )}
                             {(app.digital_address || app.ghana_post_gps) && (
-                              <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1">
-                                🧭 {app.digital_address || app.ghana_post_gps}
+                              <span className="inline-flex min-w-0 max-w-full items-start gap-1.5 rounded-md bg-muted px-2.5 py-1.5">
+                                <ScanLine className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                <span className="min-w-0 break-words">{app.digital_address || app.ghana_post_gps}</span>
                               </span>
                             )}
                           </div>
