@@ -26,8 +26,8 @@ export default function MobileProfileDrawer({ isOpen, onClose, user, isLoading,
       <div className="flex-1 overflow-y-auto">
         <div className="px-4 py-4">
           <Link to="/profile" onClick={onClose}
-            className="flex items-center gap-4 rounded-2xl bg-muted/20 p-3 border border-border/50 hover:bg-muted/40 transition-all">
-            <div className="h-12 w-12 overflow-hidden rounded-xl bg-background shrink-0 border border-border">
+            className="flex items-center gap-4 rounded-2xl bg-primary/10 p-3.5 border border-primary/25 hover:bg-primary/15 hover:border-primary/40 transition-all active:scale-[0.99]">
+            <div className="h-12 w-12 overflow-hidden rounded-xl bg-primary/10 shrink-0 border border-primary/30 ring-2 ring-primary/15">
               {!imgError && user?.avatar
                 ? <img src={user.avatar} className="h-full w-full object-cover" alt="" />
                 : <div className="h-full w-full flex items-center justify-center bg-primary/5 text-primary"><User className="h-6 w-6" /></div>}
@@ -38,12 +38,13 @@ export default function MobileProfileDrawer({ isOpen, onClose, user, isLoading,
                 : <>
                     <p className="font-bold text-[13px] truncate">{user?.name || 'User'}</p>
                     <p className="text-2xs text-muted-foreground truncate">{user?.email}</p>
+                    <p className="text-[10px] font-semibold text-primary mt-1">View and edit profile</p>
                     {user?.instructor_status === 'pending' && (
                       <span className="text-3xs font-bold text-warning uppercase">Pending Approval</span>
                     )}
                   </>}
             </div>
-            <ChevronRight className="h-4 w-4 text-muted-foreground/30" />
+            <ChevronRight className="h-5 w-5 text-primary/80 shrink-0" />
           </Link>
         </div>
 
