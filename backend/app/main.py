@@ -6616,13 +6616,13 @@ def create_app() -> Flask:
         ensure_transactions_table(db)
         instructors = db.execute('''
             SELECT u.id, u.name, u.email, u.avatar, u.role,
-                   (SELECT COUNT(*) FROM courses c WHERE c.instructor_id=u.id AND c.is_free=0) as course_count,
+                   (SELECT COUNT(*) FROM courses c WHERE c.instructor_id=u.id) as course_count,
                    COALESCE(SUM(t.amount), 0) as gross,
                    COALESCE(SUM(t.instructor_share), 0) as instr
             FROM users u
             LEFT JOIN transactions t
               ON t.instructor_id=u.id AND t.type IN ('purchase','quiz_extra_attempt') AND t.status='success'
-            WHERE EXISTS (SELECT 1 FROM courses c WHERE c.instructor_id=u.id AND c.is_free=0)
+            WHERE u.role IN ('instructor','admin','superadmin')
             GROUP BY u.id, u.name, u.email, u.avatar, u.role
             ORDER BY gross DESC
         ''').fetchall()
