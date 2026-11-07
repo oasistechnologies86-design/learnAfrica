@@ -453,8 +453,30 @@ delete the admin row.
 | `RESET_RESEND_COOLDOWN_SECONDS` | optional | `60` | Minimum gap between reset-link sends for the same account (the UI shows this as a countdown). |
 | `OTP_EXPIRY_MINUTES` | optional | `15` | How long an email verification code stays valid. |
 | `OTP_RESEND_COOLDOWN_SECONDS` | optional | `60` | Minimum gap between verification-code sends for the same email. |
-| `SITE_URL` | optional | Vercel URL | The site's own public URL. Used for `/api/sitemap.xml`, share/verification links and the CORS allowlist. Set it in the deployment environment so changing domain needs no code change. |
+| `SITE_URL` | optional | first non-local `ALLOWED_ORIGINS` entry | The site's own public URL. Used for `/api/sitemap.xml`, share/verification links and the CORS allowlist. Set it in the deployment environment so changing domain needs no code change. |
 | `PORT` | set by host | `5000` | Port the server binds to (Render sets this). |
+
+#### Do I need a new variable for the site URL?
+
+**No.** If you already set `ALLOWED_ORIGINS` on Render, that is enough — the
+backend uses its first non-local entry as the site's own address. The resolution
+order is:
+
+1. `SITE_URL`
+2. `FRONTEND_URL`
+3. `APP_URL`
+4. the first non-local entry in `ALLOWED_ORIGINS`
+5. the request's own host (never a hardcoded domain)
+
+So with only this on Render:
+
+```bash
+ALLOWED_ORIGINS=http://localhost:5173,https://your-site.vercel.app
+```
+
+the sitemap, reset links and CORS allowlist all use
+`https://your-site.vercel.app`. Setting `SITE_URL` as well is still recommended
+because it is explicit and does not depend on the order of the origins list.
 
 ### Frontend
 
@@ -499,7 +521,7 @@ third-party purchase to start.
 | `FORCE_SEED_GUIDE` | Optional — set to `1` to re-seed the instructor guide. |
 | `RESET_LINK_HOURS`, `RESET_RESEND_COOLDOWN_SECONDS` | Optional — **you choose** (defaults `1` hour, `60` seconds). |
 | `OTP_EXPIRY_MINUTES`, `OTP_RESEND_COOLDOWN_SECONDS` | Optional — **you choose** (defaults `15` minutes, `60` seconds). |
-| `SITE_URL` | **Your frontend URL** — e.g. `https://learn-africa-five.vercel.app`. The site's own address: drives `/api/sitemap.xml`, share/verification links and the CORS allowlist, so a domain change is an environment change only. See [SEARCH_AND_GOOGLE_SETUP.md](SEARCH_AND_GOOGLE_SETUP.md). |
+| `SITE_URL` | **Your frontend URL** — e.g. `https://learn-africa-five.vercel.app`. The site's own address: drives `/api/sitemap.xml`, share/verification links and the CORS allowlist, so a domain change is an environment change only. **Optional if `ALLOWED_ORIGINS` is already set** — its first non-local entry is used instead. See [SEARCH_AND_GOOGLE_SETUP.md](SEARCH_AND_GOOGLE_SETUP.md). |
 | `PORT` | **Set automatically** by Render. Do not set it yourself in production. |
 | `VITE_API_URL` (frontend) | **Your backend URL** — after Render deploys, e.g. `https://learnafrica-backend-xxxx.onrender.com`. |
 
@@ -1062,6 +1084,10 @@ PAYSTACK_CALLBACK_URL=https://<your-site>.vercel.app/payment/return
 
 ALLOWED_ORIGINS=https://<your-site>.vercel.app
 
+# Optional: the site's own URL, used by the sitemap and reset links. Not required
+# if ALLOWED_ORIGINS is set above — its first non-local entry is used instead.
+# SITE_URL=https://<your-site>.vercel.app
+
 # Optional (only if using email OTP)
 SENDPULSE_CLIENT_ID=<…>
 SENDPULSE_CLIENT_SECRET=<…>
@@ -1074,6 +1100,41 @@ Generate strong secrets with:
 ```bash
 python3 -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
+
+### 10.3.1 Changing your domain later
+
+The site never hardcodes its own address, so a domain change is configuration
+only. **But there are two separate systems, and each needs its own variable.**
+The backend cannot read Vercel's variables, and the frontend cannot read
+Render's.
+
+| System | Variable | Read when | After changing it |
+|---|---|---|---|
+| Render (backend) | `ALLOWED_ORIGINS` — and optionally `SITE_URL` | at request time | restart the service |
+| Vercel (frontend) | `VITE_SITE_URL` | at **build** time | **redeploy** |
+
+Checklist:
+
+1. On **Render**, update `ALLOWED_ORIGINS` to the new origin. This alone is
+   enough: it also supplies the sitemap and reset-link base URL. Restart.
+2. On **Vercel**, set `VITE_SITE_URL` to the new origin and **redeploy** —
+   `VITE_*` values are baked in at build time, so an existing build keeps the
+   old domain until it is rebuilt.
+3. If you set `SITE_URL` on Render, update it too (and remove it if you would
+   rather rely on `ALLOWED_ORIGINS`).
+4. Update `PAYSTACK_CALLBACK_URL` to `https://<new-domain>/payment/return`, and
+   add the new origin to the Google Cloud OAuth **Authorised JavaScript
+   origins**.
+5. Confirm with:
+
+   ```bash
+   curl https://<backend-host>/api/sitemap.xml | grep -o '<loc>[^<]*' | head -1
+   ```
+
+   The first `<loc>` must be the new frontend domain.
+
+> If neither `ALLOWED_ORIGINS` nor `SITE_URL` is set on Render, reset links fall
+> back to `http://localhost:5173`. Always set one of them in production.
 
 ### 10.4 Deploy and read the logs
 

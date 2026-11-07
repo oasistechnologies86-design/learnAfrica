@@ -99,6 +99,26 @@ finally:
     else:
         _os.environ.pop('SITE_URL', None)
 
+# A deployment that already sets ALLOWED_ORIGINS must not need a new variable:
+# its first non-local origin is the site's own address.
+_prev_site = _os.environ.get('SITE_URL')
+_prev_origins = _os.environ.get('ALLOWED_ORIGINS')
+try:
+    _os.environ.pop('SITE_URL', None)
+    _os.environ['ALLOWED_ORIGINS'] = 'http://localhost:5173,https://from-origins.example.net'
+    body = c.get('/api/sitemap.xml').get_data(as_text=True)
+    check('sitemap uses ALLOWED_ORIGINS when SITE_URL is unset',
+          'https://from-origins.example.net/' in body, body[:120])
+    check('sitemap does not leak a localhost origin',
+          'localhost' not in body, body[:120])
+finally:
+    if _prev_site is not None:
+        _os.environ['SITE_URL'] = _prev_site
+    if _prev_origins is not None:
+        _os.environ['ALLOWED_ORIGINS'] = _prev_origins
+    else:
+        _os.environ.pop('ALLOWED_ORIGINS', None)
+
 # ── Reset links must follow the environment, not a stale database value ───────
 # platform_settings.frontend_url may have been written under an earlier domain.
 # If it won over SITE_URL, a domain change in the deployment environment would

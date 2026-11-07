@@ -64,14 +64,26 @@ def public_site_url():
 
     Deployment environments own this value, so moving to a new domain (or a
     preview/staging host) never requires a code change. SITE_URL wins, then
-    FRONTEND_URL, then APP_URL. When none is configured we return '' so callers
-    can fall back to the request's own host instead of a baked-in domain.
+    FRONTEND_URL, then APP_URL, then the first non-local origin listed in
+    ALLOWED_ORIGINS — so a deployment that already sets ALLOWED_ORIGINS does
+    not have to add anything new. When none is configured we return '' so
+    callers fall back to the request's own host instead of a baked-in domain.
     """
     for name in ('SITE_URL', 'FRONTEND_URL', 'APP_URL'):
         value = (os.environ.get(name) or '').strip().rstrip('/')
         if value:
             return value
-    return ''
+    origins = [
+        origin.strip().rstrip('/')
+        for origin in (os.environ.get('ALLOWED_ORIGINS') or '').split(',')
+    ]
+    origins = [origin for origin in origins if origin and origin != '*']
+    # Prefer a real deployment origin over a local development one, so a list
+    # that also mentions localhost does not leak into the sitemap.
+    for origin in origins:
+        if 'localhost' not in origin and '127.0.0.1' not in origin:
+            return origin
+    return origins[0] if origins else ''
 
 
 def _normalize_ghana_card(value):
@@ -10150,16 +10162,17 @@ def create_app() -> Flask:
     def _reset_link_base():
         """Base URL for user-facing links (no trailing slash).
 
-        The deployment environment owns this value, so it is read from
-        SITE_URL/FRONTEND_URL/APP_URL FIRST. A `frontend_url` row in
-        platform_settings is only consulted when none of those is set — it may
-        have been written under an earlier domain, and letting it win would send
-        reset links to a host the operator has already moved away from.
+        The deployment environment owns this value. public_site_url() resolves
+        SITE_URL -> FRONTEND_URL -> APP_URL -> a non-local ALLOWED_ORIGINS
+        entry, so a deployment that already sets ALLOWED_ORIGINS needs nothing
+        new. A `frontend_url` row in platform_settings is only consulted when
+        none of those is set — it may have been written under an earlier
+        domain, and letting it win would send reset links to a host the
+        operator has already moved away from.
         """
-        for key in ('SITE_URL', 'FRONTEND_URL', 'APP_URL'):
-            v = (os.environ.get(key) or '').strip()
-            if v:
-                return v.rstrip('/')
+        base = public_site_url()
+        if base:
+            return base
         try:
             row = get_db().execute(
                 "SELECT value FROM platform_settings WHERE key='frontend_url'").fetchone()
@@ -10167,11 +10180,6 @@ def create_app() -> Flask:
                 return str(row['value']).strip().rstrip('/')
         except Exception:
             pass
-        origins = (os.environ.get('ALLOWED_ORIGINS') or '').strip()
-        if origins:
-            first = origins.split(',')[0].strip()
-            if first and first != '*':
-                return first.rstrip('/')
         return 'http://localhost:5173'
 
     # Reset links are single-use and time-limited. One hour keeps a leaked link
