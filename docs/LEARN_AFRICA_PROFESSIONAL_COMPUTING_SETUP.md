@@ -3,7 +3,7 @@
 The required sequence for every topic is **Video Lesson → Custom Page → Quiz Lesson**. There is no separate practical Text Lesson in this structure. Practical examples are part of the custom reading.
 
 ## Video Lesson fields and instructor workflow
-For each topic below, create a Video Lesson using the exact title, paste the lesson brief into its description/lesson-notes field, search YouTube using the search phrase, select and watch a suitable video, then paste the actual video URL into the lesson URL field. Search phrases are not video URLs. Record the real duration; do not invent a URL or duration. Prefer universities, professional bodies, educational organisations and Ghanaian regulators.
+For each topic below, create a Video Lesson using the exact title, add the short student-facing Lesson Notes highlights supplied below, search YouTube using the search phrase, select and watch a suitable video, then paste the actual video URL into the lesson URL field. Lesson Notes are brief teaching highlights for students to read alongside the video: explain the central ideas and key takeaways in a few clear sentences. They are not instructor instructions, lesson-production directions or a second full reading lesson. Keep them concise and relevant to the video. Search phrases are not video URLs. Record the real duration; do not invent a URL or duration. Prefer universities, professional bodies, educational organisations and Ghanaian regulators.
 
 ## Custom Page fields
 Immediately after the video, add a Custom Page with the exact topic title and select the matching Professional Computing component 01–11. The page is the detailed teacher-led reading: plain-language explanations, subtopics, Ghana-focused examples, worked case, learning outcomes, key terms, educational images/diagrams and recap. Keep the text left-aligned and readable; avoid narrow columns and excessive blank spacing.
@@ -16,7 +16,7 @@ Each lesson quiz has exactly 50 questions: **20 MCQ, 15 True/False and 15 Fill i
 ### Video Lesson
 - **Title:** Understanding Ethics in Computing
 - **Suggested video title:** Introduction to Computer Ethics: Making Responsible Technology Decisions
-- **Lesson notes / description:** Introduce ethics as reasoned judgement about what people ought to do. Preview morals, values, integrity, law, stakeholders, competing duties and a seven-step ethical decision process. Use the Ghanaian college examination-record example.
+- **Lesson notes (student-facing highlights):** Ethics is the reasoned study of what people ought to do. In computing, ethical decisions consider honesty, fairness, privacy, responsibility and the people affected by technology. Having technical access does not automatically mean an action is permitted.
 - **YouTube search phrase:** introduction to computer ethics university
 - **Video URL:** Instructor selects and verifies the actual video and pastes its URL in Learn Africa.
 
@@ -237,7 +237,7 @@ Each lesson quiz has exactly 50 questions: **20 MCQ, 15 True/False and 15 Fill i
 ### Video Lesson
 - **Title:** Professional Conduct and Responsibilities in IT
 - **Suggested video title:** Professional Ethics in IT: Responsibility, Confidentiality and Least Privilege
-- **Lesson notes / description:** Explain professionalism, competence, confidentiality, privileged access, least privilege, conflicts of interest, acceptable use, codes of ethics, whistleblowing and continuing professional development. Use the university student-record request example.
+- **Lesson notes (student-facing highlights):** IT professionals and users must act responsibly, protect confidential information and use systems only for authorised purposes. Least privilege means having only the access needed for a task. Conflicts of interest should be declared, and serious wrongdoing should be reported through appropriate channels.
 - **YouTube search phrase:** IT professional ethics code of conduct least privilege
 - **Video URL:** Instructor selects and verifies the actual video and pastes its URL in Learn Africa.
 
@@ -458,7 +458,7 @@ Each lesson quiz has exactly 50 questions: **20 MCQ, 15 True/False and 15 Fill i
 ### Video Lesson
 - **Title:** Understanding Cybercrime and Online Threats
 - **Suggested video title:** Computer and Internet Crime: Phishing, Malware and Incident Response
-- **Lesson notes / description:** Introduce cybercrime, unauthorised access, phishing, social engineering, malware, ransomware, identity theft and denial-of-service. Explain layered prevention and incident response: prepare, identify, contain, eradicate, recover and learn.
+- **Lesson notes (student-facing highlights):** Cybercrime includes phishing, online fraud, identity theft, malware and unauthorised access. Strong passwords, multi-factor authentication, software updates and careful checking of messages reduce risk. When an incident occurs, report it promptly, preserve evidence and follow a safe response process.
 - **YouTube search phrase:** cybercrime phishing social engineering malware incident response education
 - **Video URL:** Instructor selects and verifies the actual video and pastes its URL in Learn Africa.
 
@@ -679,7 +679,7 @@ Each lesson quiz has exactly 50 questions: **20 MCQ, 15 True/False and 15 Fill i
 ### Video Lesson
 - **Title:** Protecting Personal Information in the Digital World
 - **Suggested video title:** Data Privacy: Personal Information, Privacy Principles and Privacy by Design
-- **Lesson notes / description:** Explain personal data and identifiability, purpose specification, data minimisation, accuracy, retention, transparency, security, profiling, surveillance and breaches. Distinguish privacy from security and introduce Ghana's legal context.
+- **Lesson notes (student-facing highlights):** Privacy concerns how personal information is collected, used, stored and shared. Responsible organisations collect only what they need, explain why they need it, protect it from misuse and keep it only as long as necessary. Security protects information; privacy also asks whether its use is appropriate.
 - **YouTube search phrase:** data privacy principles personal information privacy by design
 - **Video URL:** Instructor selects and verifies the actual video and pastes its URL in Learn Africa.
 
@@ -900,7 +900,7 @@ Each lesson quiz has exactly 50 questions: **20 MCQ, 15 True/False and 15 Fill i
 ### Video Lesson
 - **Title:** Free Speech and Responsibility Online
 - **Suggested video title:** Freedom of Expression Online: Rights, Moderation and Responsible Sharing
-- **Lesson notes / description:** Explain expression, opinion versus factual claims, defamation, misinformation, disinformation, anonymity, moderation, harassment and proportionality. Use an unverified school-closure rumour case.
+- **Lesson notes (student-facing highlights):** Freedom of expression supports sharing ideas, opinions and criticism, but it does not remove responsibility for harm to others. Online users should avoid threats, harassment and exposing private information. Check information before sharing it, and apply fair and proportionate moderation.
 - **YouTube search phrase:** freedom of expression online content moderation misinformation
 - **Video URL:** Instructor selects and verifies the actual video and pastes its URL in Learn Africa.
 
@@ -1121,7 +1121,7 @@ Each lesson quiz has exactly 50 questions: **20 MCQ, 15 True/False and 15 Fill i
 ### Video Lesson
 - **Title:** Copyright and Ownership of Digital Content
 - **Suggested video title:** Copyright and Creative Commons: Using Digital Content Legally
-- **Lesson notes / description:** Introduce intellectual property, copyright, patents, trademarks, trade secrets, public domain, licences, attribution, Creative Commons BY/NC/ND/SA, CC0, copyleft and GNU GPL. Emphasise that online content is not automatically free to reuse.
+- **Lesson notes (student-facing highlights):** Intellectual property protects certain creations, including writing, images, music and software. Content being available online does not make it free to copy. Check the copyright status and licence, follow conditions such as attribution, and obtain permission where required.
 - **YouTube search phrase:** Creative Commons BY NC ND SA copyright copyleft GNU GPL explained
 - **Video URL:** Instructor selects and verifies the actual video and pastes its URL in Learn Africa.
 
@@ -1342,7 +1342,7 @@ Each lesson quiz has exactly 50 questions: **20 MCQ, 15 True/False and 15 Fill i
 ### Video Lesson
 - **Title:** Building Software Responsibly
 - **Suggested video title:** Ethical Software Development: Requirements, Testing, Privacy and Accessibility
-- **Lesson notes / description:** Walk through requirements, design, implementation, testing, deployment and maintenance. Explain accessibility, privacy and security by design, quality assurance, bias, transparency, human review and accountability. Use the scholarship screening tool example.
+- **Lesson notes (student-facing highlights):** Ethical software development considers people and possible harm throughout planning, design, coding, testing and maintenance. Good systems should be secure, accessible, reliable and respectful of privacy. Teams should test carefully, disclose serious defects and correct problems after release.
 - **YouTube search phrase:** ethical software development lifecycle privacy by design accessibility
 - **Video URL:** Instructor selects and verifies the actual video and pastes its URL in Learn Africa.
 
@@ -1563,7 +1563,7 @@ Each lesson quiz has exactly 50 questions: **20 MCQ, 15 True/False and 15 Fill i
 ### Video Lesson
 - **Title:** How Technology Changes Work and Everyday Life
 - **Suggested video title:** How Information Technology Affects Work, Education and Quality of Life
-- **Lesson notes / description:** Discuss productivity, automation, remote work, education, health, digital divide, accessibility, employment, wellbeing, energy use and e-waste. Balance benefits with unequal access and unintended consequences.
+- **Lesson notes (student-facing highlights):** Information technology can improve communication, education, healthcare and productivity, but its benefits are not shared equally. The digital divide includes differences in access to devices, affordable internet and digital skills. Responsible technology use also considers wellbeing, energy use and electronic waste.
 - **YouTube search phrase:** information technology productivity digital divide quality of life sustainability
 - **Video URL:** Instructor selects and verifies the actual video and pastes its URL in Learn Africa.
 
@@ -1784,7 +1784,7 @@ Each lesson quiz has exactly 50 questions: **20 MCQ, 15 True/False and 15 Fill i
 ### Video Lesson
 - **Title:** Responsible Behaviour on Social Media
 - **Suggested video title:** Social Networking: Digital Footprints, Privacy and Online Reputation
-- **Lesson notes / description:** Explain digital identity, digital footprints, online reputation, oversharing, privacy settings, impersonation, scams, cyberbullying, misinformation, consent and professional presence. Use the class photograph shared without consent example.
+- **Lesson notes (student-facing highlights):** Social networks help people communicate and build communities, but posts can create lasting digital footprints. Protect personal information, review privacy settings and think before sharing. Respect others, check claims and remember that content can be copied beyond its original audience.
 - **YouTube search phrase:** digital footprint online reputation social media privacy safety
 - **Video URL:** Instructor selects and verifies the actual video and pastes its URL in Learn Africa.
 
@@ -2005,7 +2005,7 @@ Each lesson quiz has exactly 50 questions: **20 MCQ, 15 True/False and 15 Fill i
 ### Video Lesson
 - **Title:** Ethics and Accountability in Technology Companies
 - **Suggested video title:** IT Organisational Ethics: Governance, Outsourcing and Accountability
-- **Lesson notes / description:** Explain governance, ethical culture, leadership, accountability, audit trails, supplier due diligence, outsourcing, monitoring, whistleblowing, corporate social responsibility and sustainability. Emphasise that outsourcing does not remove organisational responsibility.
+- **Lesson notes (student-facing highlights):** IT organisations have responsibilities to customers, employees, suppliers and the wider community. Good governance includes clear policies, accountability, risk management, privacy and security oversight. Outsourcing work does not remove an organisation's responsibility for its services and decisions.
 - **YouTube search phrase:** IT governance organisational ethics outsourcing supplier risk corporate social responsibility
 - **Video URL:** Instructor selects and verifies the actual video and pastes its URL in Learn Africa.
 
@@ -2226,7 +2226,7 @@ Each lesson quiz has exactly 50 questions: **20 MCQ, 15 True/False and 15 Fill i
 ### Video Lesson
 - **Title:** Understanding Ghana's Data Protection Act, 2012
 - **Suggested video title:** Ghana Data Protection Act 2012 (Act 843): Principles, Rights and Compliance
-- **Lesson notes / description:** Introduce the purpose of Act 843 and the Data Protection Commission. Explain data subject, controller, processor, personal data, special personal data, processing, core principles, data subject rights, controller registration, security safeguards, processors and security-compromise duties. Verify legal details against the Act and current Commission guidance.
+- **Lesson notes (student-facing highlights):** Ghana's Data Protection Act, 2012 (Act 843) establishes rules for protecting personal data. It defines responsibilities for data controllers and processors and recognises rights of individuals whose data is handled. Organisations should process information lawfully, use it for clear purposes and apply appropriate safeguards.
 - **YouTube search phrase:** Ghana Data Protection Act 2012 Act 843 Data Protection Commission
 - **Video URL:** Instructor selects and verifies the actual video and pastes its URL in Learn Africa.
 
