@@ -453,6 +453,10 @@ button:disabled,
   font-family:Arial,Helvetica,sans-serif;font-size:17px;line-height:1.78;
 }
 .custom-lesson-system > article:first-child { width:100%;max-width:none;margin:0;padding:0!important; }
+.custom-lesson-system .custom-lesson-eyebrow {
+  margin:0 0 12px!important;color:var(--lesson-green)!important;text-transform:uppercase;
+  letter-spacing:.16em!important;font-size:12px!important;font-weight:700!important;line-height:1.4!important;text-align:left!important;
+}
 .custom-lesson-system h1 {
   max-width:none;margin:0 0 18px!important;color:var(--lesson-green-dark);
   font:700 clamp(25px,3vw,34px)/1.25 Arial,Helvetica,sans-serif!important;
@@ -525,6 +529,7 @@ button:disabled,
   .custom-lesson-system { padding:30px 24px 42px;font-size:16px; }
   .custom-lesson-system .custom-lesson-intro { font-size:16px; }
   .custom-lesson-system p,.custom-lesson-system li { font-size:15.5px;line-height:1.75; }
+  .custom-lesson-system .custom-lesson-eyebrow { font-size:10px!important; }
   .custom-lesson-system h1 { font-size:25px!important; }
   .custom-lesson-system h2 { font-size:21px!important; }
   .custom-lesson-scroll-hint { bottom:max(.7rem,env(safe-area-inset-bottom));max-width:calc(100vw - 2rem);white-space:nowrap; }
