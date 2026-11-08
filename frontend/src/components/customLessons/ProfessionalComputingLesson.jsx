@@ -232,6 +232,7 @@ const expandedSections = {
 };
 
 const furtherReading = [
+  { label: 'George W. Reynolds, Ethics in Information Technology (5th ed., Cengage)', url: 'https://books.google.com/books?id=v6wIzgEACAAJ' },
   { label: 'Herman T. Tavani, Ethics and Technology (Wiley companion contents)', url: 'https://bcs.wiley.com/he-bcs/Books?action=contents&bcsId=8462&itemId=1118281721' },
   { label: 'ACM Code of Ethics and Professional Conduct', url: 'https://www.acm.org/code-of-ethics' },
   { label: 'Ghana Data Protection Commission guidance', url: 'https://dpc.gov.gh/compliance/' },
@@ -293,7 +294,7 @@ export default function ProfessionalComputingLesson({ lesson }) {
           if (number === 3 || number === 4) return /NIST|Tavani|ACM/.test(source.label);
           if (number === 6) return /Creative Commons|Tavani/.test(source.label);
           if (number === 8) return /UNESCO|Tavani/.test(source.label);
-          return /Tavani|ACM/.test(source.label);
+          return /Reynolds|Tavani|ACM/.test(source.label);
         }).map((source)=><li key={source.url}><a href={source.url} target="_blank" rel="noreferrer">{source.label}</a></li>)}</ul>
       </section>
 
