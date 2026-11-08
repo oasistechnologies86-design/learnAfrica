@@ -57,10 +57,7 @@ int main() {
   return (
     <article className="w-full max-w-none mx-0 py-6 sm:py-8 px-0 space-y-8 sm:space-y-10">
       <header className="space-y-4 pb-8 border-b border-border">
-        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
-          <Layers className="h-3.5 w-3.5" /> Lesson · Data Types
-        </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight">Fundamental Data Types</h1>
+        <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight">{lesson?.title || 'Fundamental Data Types'}</h1>
         <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
           {firstName}, every variable needs a <em>type</em>, it tells the compiler what kind of
           data to expect and how much memory to set aside. Picking the right type isn't just a
