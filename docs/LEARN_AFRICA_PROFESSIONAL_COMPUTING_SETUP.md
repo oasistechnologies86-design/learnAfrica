@@ -267,74 +267,74 @@ Each lesson quiz has exactly 50 questions: **10 MCQ, 20 True/False and 20 Fill i
 
 #### Part A — Multiple Choice (1–10)
 1. Ethics is the?
-   A. reasoned study of what people ought to do  
-   B. study of computer hardware  
-   C. legal permission  
-   D. network protocol  
+   A. reasoned study of what people ought to do    
+   B. study of computer hardware    
+   C. legal permission    
+   D. network protocol    
    **Correct answer: A**
 
 2. Morals are mainly?
-   A. personal or community beliefs about right and wrong  
-   B. court orders  
-   C. technical permissions  
-   D. software settings  
-   **Correct answer: A**
+   A. software settings    
+   B. personal or community beliefs about right and wrong    
+   C. court orders    
+   D. technical permissions    
+   **Correct answer: B**
 
 3. Integrity means?
-   A. consistency between principles and conduct  
-   B. hiding mistakes  
-   C. admin access  
-   D. profit alone  
-   **Correct answer: A**
+   A. admin access    
+   B. profit alone    
+   C. consistency between principles and conduct    
+   D. hiding mistakes    
+   **Correct answer: C**
 
 4. A stakeholder is?
-   A. a person or group affected by a decision  
-   B. only a manager  
-   C. only a vendor  
-   D. a software bug  
-   **Correct answer: A**
+   A. only a manager    
+   B. only a vendor    
+   C. a software bug    
+   D. a person or group affected by a decision    
+   **Correct answer: D**
 
 5. CSR considers?
-   A. social and environmental effects as well as profit  
-   B. profit only  
-   C. advertising only  
-   D. hardware only  
+   A. social and environmental effects as well as profit    
+   B. profit only    
+   C. advertising only    
+   D. hardware only    
    **Correct answer: A**
 
 6. The first ethical step is to?
-   A. describe the problem clearly  
-   B. delete evidence  
-   C. choose quickly  
-   D. blame someone  
-   **Correct answer: A**
+   A. blame someone    
+   B. describe the problem clearly    
+   C. delete evidence    
+   D. choose quickly    
+   **Correct answer: B**
 
 7. Normative ethics asks?
-   A. how people ought to behave  
-   B. how many users exist  
-   C. device cost  
-   D. app popularity  
-   **Correct answer: A**
+   A. device cost    
+   B. app popularity    
+   C. how people ought to behave    
+   D. how many users exist    
+   **Correct answer: C**
 
 8. Privilege is?
-   A. technical ability to access information  
-   B. automatic permission  
-   C. legal ownership  
-   D. public disclosure  
-   **Correct answer: A**
+   A. automatic permission    
+   B. legal ownership    
+   C. public disclosure    
+   D. technical ability to access information    
+   **Correct answer: D**
 
 9. An audit trail supports?
-   A. review and accountability  
-   B. concealment  
-   C. password sharing  
-   D. anonymous changes  
+   A. review and accountability    
+   B. concealment    
+   C. password sharing    
+   D. anonymous changes    
    **Correct answer: A**
 
 10. After implementation, an ethical decision should be?
-   A. reviewed for outcomes and harm  
-   B. forgotten  
-   C. hidden  
-   D. left unexamined  
-   **Correct answer: A**
+   A. left unexamined    
+   B. reviewed for outcomes and harm    
+   C. forgotten    
+   D. hidden    
+   **Correct answer: B**
 
 #### Part B — True / False (11–30)
 11. ethics means reasoned study of what people ought to do. **Correct answer: True**
@@ -439,74 +439,74 @@ Each lesson quiz has exactly 50 questions: **10 MCQ, 20 True/False and 20 Fill i
 
 #### Part A — Multiple Choice (1–10)
 1. Least privilege means?
-   A. only necessary access  
-   B. admin access for all  
-   C. no access review  
-   D. shared passwords  
+   A. only necessary access    
+   B. admin access for all    
+   C. no access review    
+   D. shared passwords    
    **Correct answer: A**
 
 2. Confidentiality requires?
-   A. protecting entrusted information  
-   B. publishing records  
-   C. sharing credentials  
-   D. using data for fun  
-   **Correct answer: A**
+   A. using data for fun    
+   B. protecting entrusted information    
+   C. publishing records    
+   D. sharing credentials    
+   **Correct answer: B**
 
 3. A conflict of interest should be?
-   A. declared and managed  
-   B. concealed  
-   C. rewarded  
-   D. ignored  
-   **Correct answer: A**
+   A. rewarded    
+   B. ignored    
+   C. declared and managed    
+   D. concealed    
+   **Correct answer: C**
 
 4. Professional competence includes?
-   A. knowing one's limits  
-   B. pretending expertise  
-   C. avoiding training  
-   D. skipping checks  
-   **Correct answer: A**
+   A. pretending expertise    
+   B. avoiding training    
+   C. skipping checks    
+   D. knowing one's limits    
+   **Correct answer: D**
 
 5. Whistleblowing is?
-   A. reporting serious wrongdoing appropriately  
-   B. spreading rumours  
-   C. deleting logs  
-   D. sharing passwords  
+   A. reporting serious wrongdoing appropriately    
+   B. spreading rumours    
+   C. deleting logs    
+   D. sharing passwords    
    **Correct answer: A**
 
 6. An acceptable-use policy explains?
-   A. permitted and prohibited system use  
-   B. office decoration  
-   C. device colour  
-   D. social popularity  
-   **Correct answer: A**
+   A. social popularity    
+   B. permitted and prohibited system use    
+   C. office decoration    
+   D. device colour    
+   **Correct answer: B**
 
 7. Privileged access should be used?
-   A. only for authorised work purposes  
-   B. for curiosity  
-   C. for friends  
-   D. for side businesses  
-   **Correct answer: A**
+   A. for friends    
+   B. for side businesses    
+   C. only for authorised work purposes    
+   D. for curiosity    
+   **Correct answer: C**
 
 8. Certification demonstrates?
-   A. a level of knowledge or skill  
-   B. perfect ethics  
-   C. immunity from discipline  
-   D. no need to learn  
-   **Correct answer: A**
+   A. perfect ethics    
+   B. immunity from discipline    
+   C. no need to learn    
+   D. a level of knowledge or skill    
+   **Correct answer: D**
 
 9. Continuing development keeps skills?
-   A. current  
-   B. secret  
-   C. unnecessary  
-   D. unchanged  
+   A. current    
+   B. secret    
+   C. unnecessary    
+   D. unchanged    
    **Correct answer: A**
 
 10. Access should be removed when?
-   A. no longer required  
-   B. a colleague asks  
-   C. a user is popular  
-   D. logs are full  
-   **Correct answer: A**
+   A. logs are full    
+   B. no longer required    
+   C. a colleague asks    
+   D. a user is popular    
+   **Correct answer: B**
 
 #### Part B — True / False (11–30)
 11. professionalism means conduct demonstrating competence responsibility and respect. **Correct answer: True**
@@ -611,74 +611,74 @@ Each lesson quiz has exactly 50 questions: **10 MCQ, 20 True/False and 20 Fill i
 
 #### Part A — Multiple Choice (1–10)
 1. Phishing attempts to?
-   A. trick users into revealing information  
-   B. repair computers  
-   C. compress data  
-   D. create backups  
+   A. trick users into revealing information    
+   B. repair computers    
+   C. compress data    
+   D. create backups    
    **Correct answer: A**
 
 2. Malware is?
-   A. software designed to harm or spy  
-   B. a privacy notice  
-   C. a legal licence  
-   D. a normal update  
-   **Correct answer: A**
+   A. a normal update    
+   B. software designed to harm or spy    
+   C. a privacy notice    
+   D. a legal licence    
+   **Correct answer: B**
 
 3. Ransomware commonly?
-   A. blocks data access and demands payment  
-   B. improves security  
-   C. creates backups  
-   D. updates drivers  
-   **Correct answer: A**
+   A. creates backups    
+   B. updates drivers    
+   C. blocks data access and demands payment    
+   D. improves security    
+   **Correct answer: C**
 
 4. Social engineering exploits?
-   A. human trust and emotion  
-   B. processor speed  
-   C. screen size  
-   D. battery life  
-   **Correct answer: A**
+   A. processor speed    
+   B. screen size    
+   C. battery life    
+   D. human trust and emotion    
+   **Correct answer: D**
 
 5. MFA uses?
-   A. more than one authentication factor  
-   B. one shared password  
-   C. no login  
-   D. public credentials  
+   A. more than one authentication factor    
+   B. one shared password    
+   C. no login    
+   D. public credentials    
    **Correct answer: A**
 
 6. Incident response begins with?
-   A. preparation  
-   B. public blame  
-   C. deleting logs  
-   D. paying immediately  
-   **Correct answer: A**
+   A. paying immediately    
+   B. preparation    
+   C. public blame    
+   D. deleting logs    
+   **Correct answer: B**
 
 7. Containment aims to?
-   A. limit incident spread or impact  
-   B. hide the incident  
-   C. erase evidence  
-   D. publish data  
-   **Correct answer: A**
+   A. erase evidence    
+   B. publish data    
+   C. limit incident spread or impact    
+   D. hide the incident    
+   **Correct answer: C**
 
 8. Backups support?
-   A. recovery after data loss  
-   B. phishing  
-   C. identity theft  
-   D. password sharing  
-   **Correct answer: A**
+   A. phishing    
+   B. identity theft    
+   C. password sharing    
+   D. recovery after data loss    
+   **Correct answer: D**
 
 9. Network segmentation can?
-   A. limit movement across a network  
-   B. remove authentication  
-   C. publish records  
-   D. disable monitoring  
+   A. limit movement across a network    
+   B. remove authentication    
+   C. publish records    
+   D. disable monitoring    
    **Correct answer: A**
 
 10. After recovery teams should?
-   A. review lessons and improve controls  
-   B. forget the incident  
-   C. delete reports  
-   D. avoid changes  
-   **Correct answer: A**
+   A. avoid changes    
+   B. review lessons and improve controls    
+   C. forget the incident    
+   D. delete reports    
+   **Correct answer: B**
 
 #### Part B — True / False (11–30)
 11. cybercrime means crime involving computers networks or digital information. **Correct answer: True**
@@ -783,74 +783,74 @@ Each lesson quiz has exactly 50 questions: **10 MCQ, 20 True/False and 20 Fill i
 
 #### Part A — Multiple Choice (1–10)
 1. Personal data?
-   A. identifies or can identify a person  
-   B. is only a name  
-   C. is always public  
-   D. cannot be digital  
+   A. identifies or can identify a person    
+   B. is only a name    
+   C. is always public    
+   D. cannot be digital    
    **Correct answer: A**
 
 2. Data minimisation means?
-   A. collect only necessary information  
-   B. collect all fields  
-   C. keep forever  
-   D. share widely  
-   **Correct answer: A**
+   A. share widely    
+   B. collect only necessary information    
+   C. collect all fields    
+   D. keep forever    
+   **Correct answer: B**
 
 3. Purpose specification defines?
-   A. why data is collected  
-   B. who owns the internet  
-   C. password length  
-   D. device speed  
-   **Correct answer: A**
+   A. password length    
+   B. device speed    
+   C. why data is collected    
+   D. who owns the internet    
+   **Correct answer: C**
 
 4. Retention limitation means?
-   A. do not keep data longer than necessary  
-   B. never delete  
-   C. publish old data  
-   D. keep backups forever  
-   **Correct answer: A**
+   A. never delete    
+   B. publish old data    
+   C. keep backups forever    
+   D. do not keep data longer than necessary    
+   **Correct answer: D**
 
 5. Profiling uses processing to?
-   A. evaluate aspects of a person  
-   B. repair a server  
-   C. compress images  
-   D. delete accounts  
+   A. evaluate aspects of a person    
+   B. repair a server    
+   C. compress images    
+   D. delete accounts    
    **Correct answer: A**
 
 6. A data breach may involve?
-   A. unauthorised disclosure or loss  
-   B. normal login  
-   C. routine update  
-   D. public weather  
-   **Correct answer: A**
+   A. public weather    
+   B. unauthorised disclosure or loss    
+   C. normal login    
+   D. routine update    
+   **Correct answer: B**
 
 7. Privacy by design begins?
-   A. at the start of a project  
-   B. after complaints  
-   C. after a breach only  
-   D. at disposal  
-   **Correct answer: A**
+   A. after a breach only    
+   B. at disposal    
+   C. at the start of a project    
+   D. after complaints    
+   **Correct answer: C**
 
 8. A privacy notice explains?
-   A. relevant data practices  
-   B. source code  
-   C. other passwords  
-   D. quiz answers  
-   **Correct answer: A**
+   A. source code    
+   B. other passwords    
+   C. quiz answers    
+   D. relevant data practices    
+   **Correct answer: D**
 
 9. Access controls restrict data to?
-   A. authorised people  
-   B. all visitors  
-   C. search engines  
-   D. social media  
+   A. authorised people    
+   B. all visitors    
+   C. search engines    
+   D. social media    
    **Correct answer: A**
 
 10. Privacy differs from security because privacy also concerns?
-   A. whether collection and use are appropriate  
-   B. only password length  
-   C. only encryption  
-   D. only backups  
-   **Correct answer: A**
+   A. only backups    
+   B. whether collection and use are appropriate    
+   C. only password length    
+   D. only encryption    
+   **Correct answer: B**
 
 #### Part B — True / False (11–30)
 11. personal data means information that identifies or can identify an individual. **Correct answer: True**
@@ -955,74 +955,74 @@ Each lesson quiz has exactly 50 questions: **10 MCQ, 20 True/False and 20 Fill i
 
 #### Part A — Multiple Choice (1–10)
 1. Misinformation is false information shared?
-   A. without necessarily intending deception  
-   B. only to deceive  
-   C. by law  
-   D. as verified facts  
+   A. without necessarily intending deception    
+   B. only to deceive    
+   C. by law    
+   D. as verified facts    
    **Correct answer: A**
 
 2. Disinformation involves?
-   A. intent to deceive  
-   B. accidental error only  
-   C. a software bug  
-   D. a licence  
-   **Correct answer: A**
+   A. a licence    
+   B. intent to deceive    
+   C. accidental error only    
+   D. a software bug    
+   **Correct answer: B**
 
 3. An opinion is?
-   A. a viewpoint  
-   B. always a provable fact  
-   C. a legal statute  
-   D. a password  
-   **Correct answer: A**
+   A. a legal statute    
+   B. a password    
+   C. a viewpoint    
+   D. always a provable fact    
+   **Correct answer: C**
 
 4. Moderation means?
-   A. reviewing and managing content  
-   B. encrypting files  
-   C. checking hardware  
-   D. issuing certificates  
-   **Correct answer: A**
+   A. encrypting files    
+   B. checking hardware    
+   C. issuing certificates    
+   D. reviewing and managing content    
+   **Correct answer: D**
 
 5. A proportionate response?
-   A. addresses harm without unnecessary restriction  
-   B. removes all criticism  
-   C. ignores threats  
-   D. publishes private data  
+   A. addresses harm without unnecessary restriction    
+   B. removes all criticism    
+   C. ignores threats    
+   D. publishes private data    
    **Correct answer: A**
 
 6. Defamation concerns?
-   A. false statements harming reputation  
-   B. a password reset  
-   C. a backup  
-   D. an update  
-   **Correct answer: A**
+   A. an update    
+   B. false statements harming reputation    
+   C. a password reset    
+   D. a backup    
+   **Correct answer: B**
 
 7. An appeal process allows?
-   A. review of a moderation decision  
-   B. unlimited access  
-   C. automatic deletion  
-   D. no rules  
-   **Correct answer: A**
+   A. automatic deletion    
+   B. no rules    
+   C. review of a moderation decision    
+   D. unlimited access    
+   **Correct answer: C**
 
 8. Before sharing alarming news, users should?
-   A. verify it using reliable sources  
-   B. forward immediately  
-   C. add rumours  
-   D. remove context  
-   **Correct answer: A**
+   A. forward immediately    
+   B. add rumours    
+   C. remove context    
+   D. verify it using reliable sources    
+   **Correct answer: D**
 
 9. Anonymity can?
-   A. protect vulnerable speakers  
-   B. guarantee truth  
-   C. remove all responsibility  
-   D. prevent every harm  
+   A. protect vulnerable speakers    
+   B. guarantee truth    
+   C. remove all responsibility    
+   D. prevent every harm    
    **Correct answer: A**
 
 10. Context matters because?
-   A. meaning and likely harm depend on circumstances  
-   B. every post is identical  
-   C. rules do not matter  
-   D. popularity proves truth  
-   **Correct answer: A**
+   A. popularity proves truth    
+   B. meaning and likely harm depend on circumstances    
+   C. every post is identical    
+   D. rules do not matter    
+   **Correct answer: B**
 
 #### Part B — True / False (11–30)
 11. freedom of expression means right to communicate ideas and information subject to applicable limits. **Correct answer: True**
@@ -1127,74 +1127,74 @@ Each lesson quiz has exactly 50 questions: **10 MCQ, 20 True/False and 20 Fill i
 
 #### Part A — Multiple Choice (1–10)
 1. Copyright protects?
-   A. original expression  
-   B. every idea  
-   C. all facts  
-   D. all hardware  
+   A. original expression    
+   B. every idea    
+   C. all facts    
+   D. all hardware    
    **Correct answer: A**
 
 2. A trademark identifies?
-   A. the source of goods or services  
-   B. a data subject  
-   C. a security patch  
-   D. a password  
-   **Correct answer: A**
+   A. a password    
+   B. the source of goods or services    
+   C. a data subject    
+   D. a security patch    
+   **Correct answer: B**
 
 3. A patent may protect?
-   A. a qualifying invention  
-   B. a private message  
-   C. an opinion  
-   D. a social profile  
-   **Correct answer: A**
+   A. an opinion    
+   B. a social profile    
+   C. a qualifying invention    
+   D. a private message    
+   **Correct answer: C**
 
 4. Public domain means?
-   A. not restricted by copyright in the relevant jurisdiction  
-   B. owned by every user  
-   C. never reusable  
-   D. always secret  
-   **Correct answer: A**
+   A. owned by every user    
+   B. never reusable    
+   C. always secret    
+   D. not restricted by copyright in the relevant jurisdiction    
+   **Correct answer: D**
 
 5. CC BY requires?
-   A. attribution  
-   B. no commercial use  
-   C. no derivatives  
-   D. same licence  
+   A. attribution    
+   B. no commercial use    
+   C. no derivatives    
+   D. same licence    
    **Correct answer: A**
 
 6. CC NC restricts?
-   A. commercial use  
-   B. credit  
-   C. all access  
-   D. study  
-   **Correct answer: A**
+   A. study    
+   B. commercial use    
+   C. credit    
+   D. all access    
+   **Correct answer: B**
 
 7. CC ND restricts?
-   A. distribution of adaptations  
-   B. attribution  
-   C. reading  
-   D. all copying  
-   **Correct answer: A**
+   A. reading    
+   B. all copying    
+   C. distribution of adaptations    
+   D. attribution    
+   **Correct answer: C**
 
 8. CC SA requires?
-   A. same or compatible licence for adaptations  
-   B. no credit  
-   C. commercial use only  
-   D. no sharing  
-   **Correct answer: A**
+   A. no credit    
+   B. commercial use only    
+   C. no sharing    
+   D. same or compatible licence for adaptations    
+   **Correct answer: D**
 
 9. CC0 is?
-   A. a public-domain dedication tool  
-   B. a trademark  
-   C. a patent  
-   D. a privacy law  
+   A. a public-domain dedication tool    
+   B. a trademark    
+   C. a patent    
+   D. a privacy law    
    **Correct answer: A**
 
 10. GNU GPL is?
-   A. a copyleft software licence  
-   B. a regulator  
-   C. a patent  
-   D. a data register  
-   **Correct answer: A**
+   A. a data register    
+   B. a copyleft software licence    
+   C. a regulator    
+   D. a patent    
+   **Correct answer: B**
 
 #### Part B — True / False (11–30)
 11. intellectual property means creations and identifiers protected by law. **Correct answer: True**
@@ -1299,74 +1299,74 @@ Each lesson quiz has exactly 50 questions: **10 MCQ, 20 True/False and 20 Fill i
 
 #### Part A — Multiple Choice (1–10)
 1. Software lifecycle includes?
-   A. requirements through maintenance  
-   B. only coding  
-   C. only marketing  
-   D. only purchase  
+   A. requirements through maintenance    
+   B. only coding    
+   C. only marketing    
+   D. only purchase    
    **Correct answer: A**
 
 2. Accessibility means?
-   A. people with varied abilities can use a system  
-   B. only experts can use it  
-   C. small text  
-   D. mouse-only design  
-   **Correct answer: A**
+   A. mouse-only design    
+   B. people with varied abilities can use a system    
+   C. only experts can use it    
+   D. small text    
+   **Correct answer: B**
 
 3. Quality assurance aims to?
-   A. support product quality  
-   B. hide defects  
-   C. avoid testing  
-   D. remove documentation  
-   **Correct answer: A**
+   A. avoid testing    
+   B. remove documentation    
+   C. support product quality    
+   D. hide defects    
+   **Correct answer: C**
 
 4. Privacy by design means?
-   A. consider privacy early  
-   B. wait for complaints  
-   C. collect everything  
-   D. hide notices  
-   **Correct answer: A**
+   A. wait for complaints    
+   B. collect everything    
+   C. hide notices    
+   D. consider privacy early    
+   **Correct answer: D**
 
 5. Algorithmic bias can arise from?
-   A. data or design choices  
-   B. monitor size  
-   C. font colour only  
-   D. electricity  
+   A. data or design choices    
+   B. monitor size    
+   C. font colour only    
+   D. electricity    
    **Correct answer: A**
 
 6. Human oversight is important for?
-   A. consequential automated decisions  
-   B. wallpaper settings  
-   C. file names  
-   D. screen brightness  
-   **Correct answer: A**
+   A. screen brightness    
+   B. consequential automated decisions    
+   C. wallpaper settings    
+   D. file names    
+   **Correct answer: B**
 
 7. Testing should cover?
-   A. expected and failure behaviour  
-   B. only one path  
-   C. no security  
-   D. no accessibility  
-   **Correct answer: A**
+   A. no security    
+   B. no accessibility    
+   C. expected and failure behaviour    
+   D. only one path    
+   **Correct answer: C**
 
 8. Maintenance includes?
-   A. updates fixes and monitoring  
-   B. only initial coding  
-   C. only purchase  
-   D. only launch  
-   **Correct answer: A**
+   A. only initial coding    
+   B. only purchase    
+   C. only launch    
+   D. updates fixes and monitoring    
+   **Correct answer: D**
 
 9. Secure defaults provide?
-   A. sensible protection initially  
-   B. public access  
-   C. shared admin  
-   D. disabled updates  
+   A. sensible protection initially    
+   B. public access    
+   C. shared admin    
+   D. disabled updates    
    **Correct answer: A**
 
 10. Known limitations should be?
-   A. documented  
-   B. hidden  
-   C. deleted  
-   D. ignored  
-   **Correct answer: A**
+   A. ignored    
+   B. documented    
+   C. hidden    
+   D. deleted    
+   **Correct answer: B**
 
 #### Part B — True / False (11–30)
 11. software lifecycle means stages from planning and requirements through maintenance. **Correct answer: True**
@@ -1471,74 +1471,74 @@ Each lesson quiz has exactly 50 questions: **10 MCQ, 20 True/False and 20 Fill i
 
 #### Part A — Multiple Choice (1–10)
 1. The digital divide means?
-   A. unequal access and skills  
-   B. a virus  
-   C. a licence  
-   D. a testing stage  
+   A. unequal access and skills    
+   B. a virus    
+   C. a licence    
+   D. a testing stage    
    **Correct answer: A**
 
 2. Automation can?
-   A. change tasks and reduce repetitive work  
-   B. remove every job  
-   C. guarantee fairness  
-   D. remove oversight  
-   **Correct answer: A**
+   A. remove oversight    
+   B. change tasks and reduce repetitive work    
+   C. remove every job    
+   D. guarantee fairness    
+   **Correct answer: B**
 
 3. E-waste is?
-   A. discarded electronic equipment  
-   B. unwanted email  
-   C. network delay  
-   D. a software patch  
-   **Correct answer: A**
+   A. network delay    
+   B. a software patch    
+   C. discarded electronic equipment    
+   D. unwanted email    
+   **Correct answer: C**
 
 4. Digital literacy is?
-   A. ability to use digital tools effectively and safely  
-   B. device ownership only  
-   C. programming only  
-   D. internet speed  
-   **Correct answer: A**
+   A. device ownership only    
+   B. programming only    
+   C. internet speed    
+   D. ability to use digital tools effectively and safely    
+   **Correct answer: D**
 
 5. Remote work uses?
-   A. technology to work away from a central workplace  
-   B. only paper records  
-   C. no communication  
-   D. shared passwords  
+   A. technology to work away from a central workplace    
+   B. only paper records    
+   C. no communication    
+   D. shared passwords    
    **Correct answer: A**
 
 6. Inclusive design considers?
-   A. a wide range of users  
-   B. only latest devices  
-   C. only urban users  
-   D. only managers  
-   **Correct answer: A**
+   A. only managers    
+   B. a wide range of users    
+   C. only latest devices    
+   D. only urban users    
+   **Correct answer: B**
 
 7. Sustainability considers?
-   A. long-term social and environmental effects  
-   B. only purchase price  
-   C. only novelty  
-   D. only advertising  
-   **Correct answer: A**
+   A. only novelty    
+   B. only advertising    
+   C. long-term social and environmental effects    
+   D. only purchase price    
+   **Correct answer: C**
 
 8. Technology assessment should consider?
-   A. economic social health and environmental effects  
-   B. only speed  
-   C. only popularity  
-   D. only screen size  
-   **Correct answer: A**
+   A. only speed    
+   B. only popularity    
+   C. only screen size    
+   D. economic social health and environmental effects    
+   **Correct answer: D**
 
 9. Assistive technology helps?
-   A. people perform tasks or access services  
-   B. restrict access  
-   C. remove accessibility  
-   D. disable devices  
+   A. people perform tasks or access services    
+   B. restrict access    
+   C. remove accessibility    
+   D. disable devices    
    **Correct answer: A**
 
 10. Offline alternatives can help learners with?
-   A. unreliable internet  
-   B. too many passwords  
-   C. copyright claims  
-   D. admin access  
-   **Correct answer: A**
+   A. admin access    
+   B. unreliable internet    
+   C. too many passwords    
+   D. copyright claims    
+   **Correct answer: B**
 
 #### Part B — True / False (11–30)
 11. productivity means relationship between outputs and resources used. **Correct answer: True**
@@ -1643,74 +1643,74 @@ Each lesson quiz has exactly 50 questions: **10 MCQ, 20 True/False and 20 Fill i
 
 #### Part A — Multiple Choice (1–10)
 1. A digital footprint is?
-   A. trace of online activity  
-   B. computer weight  
-   C. network cable  
-   D. malware  
+   A. trace of online activity    
+   B. computer weight    
+   C. network cable    
+   D. malware    
    **Correct answer: A**
 
 2. Online reputation is shaped by?
-   A. posts and information about a person  
-   B. password length only  
-   C. device brand  
-   D. private thoughts only  
-   **Correct answer: A**
+   A. private thoughts only    
+   B. posts and information about a person    
+   C. password length only    
+   D. device brand    
+   **Correct answer: B**
 
 3. Oversharing may increase?
-   A. identity theft and reputation risks  
-   B. encryption  
-   C. legal compliance  
-   D. internet speed  
-   **Correct answer: A**
+   A. legal compliance    
+   B. internet speed    
+   C. identity theft and reputation risks    
+   D. encryption    
+   **Correct answer: C**
 
 4. Impersonation means?
-   A. pretending to be another person  
-   B. changing your password  
-   C. blocking spam  
-   D. posting a photo  
-   **Correct answer: A**
+   A. changing your password    
+   B. blocking spam    
+   C. posting a photo    
+   D. pretending to be another person    
+   **Correct answer: D**
 
 5. Consent means?
-   A. permission for a particular action  
-   B. automatic sharing  
-   C. public access  
-   D. copyright expiry  
+   A. permission for a particular action    
+   B. automatic sharing    
+   C. public access    
+   D. copyright expiry    
    **Correct answer: A**
 
 6. Privacy settings control?
-   A. who can see or interact with content  
-   B. processor speed  
-   C. battery life  
-   D. software licences  
-   **Correct answer: A**
+   A. software licences    
+   B. who can see or interact with content    
+   C. processor speed    
+   D. battery life    
+   **Correct answer: B**
 
 7. A private group?
-   A. does not guarantee confidentiality  
-   B. prevents screenshots  
-   C. removes all risks  
-   D. makes all posts protected  
-   **Correct answer: A**
+   A. removes all risks    
+   B. makes all posts protected    
+   C. does not guarantee confidentiality    
+   D. prevents screenshots    
+   **Correct answer: C**
 
 8. MFA helps protect?
-   A. online accounts  
-   B. copyright  
-   C. e-waste  
-   D. data retention  
-   **Correct answer: A**
+   A. copyright    
+   B. e-waste    
+   C. data retention    
+   D. online accounts    
+   **Correct answer: D**
 
 9. A suspicious link should be?
-   A. verified before credentials are entered  
-   B. trusted by logo  
-   C. shared widely  
-   D. opened quickly  
+   A. verified before credentials are entered    
+   B. trusted by logo    
+   C. shared widely    
+   D. opened quickly    
    **Correct answer: A**
 
 10. Professional presence should avoid?
-   A. disclosing confidential work information  
-   B. respectful language  
-   C. accurate posts  
-   D. privacy controls  
-   **Correct answer: A**
+   A. privacy controls    
+   B. disclosing confidential work information    
+   C. respectful language    
+   D. accurate posts    
+   **Correct answer: B**
 
 #### Part B — True / False (11–30)
 11. social networking means online services for creating connections and sharing content. **Correct answer: True**
@@ -1815,74 +1815,74 @@ Each lesson quiz has exactly 50 questions: **10 MCQ, 20 True/False and 20 Fill i
 
 #### Part A — Multiple Choice (1–10)
 1. IT governance provides?
-   A. structures and oversight  
-   B. password sharing  
-   C. video editing  
-   D. copyright  
+   A. structures and oversight    
+   B. password sharing    
+   C. video editing    
+   D. copyright    
    **Correct answer: A**
 
 2. An audit trail records?
-   A. actions and decisions  
-   B. weather  
-   C. opinions  
-   D. advertising  
-   **Correct answer: A**
+   A. advertising    
+   B. actions and decisions    
+   C. weather    
+   D. opinions    
+   **Correct answer: B**
 
 3. Outsourcing means?
-   A. using an external provider  
-   B. ending all responsibility  
-   C. deleting policies  
-   D. public access  
-   **Correct answer: A**
+   A. deleting policies    
+   B. public access    
+   C. using an external provider    
+   D. ending all responsibility    
+   **Correct answer: C**
 
 4. Due diligence assesses?
-   A. supplier competence and risk  
-   B. logo colour  
-   C. followers  
-   D. only price  
-   **Correct answer: A**
+   A. logo colour    
+   B. followers    
+   C. only price    
+   D. supplier competence and risk    
+   **Correct answer: D**
 
 5. Ethical culture is shaped by?
-   A. leadership and daily practices  
-   B. concealment  
-   C. retaliation  
-   D. rumours  
+   A. leadership and daily practices    
+   B. concealment    
+   C. retaliation    
+   D. rumours    
    **Correct answer: A**
 
 6. Monitoring should be?
-   A. transparent and proportionate  
-   B. secret and unlimited  
-   C. unrelated  
-   D. undocumented  
-   **Correct answer: A**
+   A. undocumented    
+   B. transparent and proportionate    
+   C. secret and unlimited    
+   D. unrelated    
+   **Correct answer: B**
 
 7. CSR includes?
-   A. social and environmental impacts  
-   B. profit only  
-   C. marketing only  
-   D. hardware only  
-   **Correct answer: A**
+   A. marketing only    
+   B. hardware only    
+   C. social and environmental impacts    
+   D. profit only    
+   **Correct answer: C**
 
 8. Risk management involves?
-   A. identifying assessing and treating risk  
-   B. hiding incidents  
-   C. deleting records  
-   D. ignoring suppliers  
-   **Correct answer: A**
+   A. hiding incidents    
+   B. deleting records    
+   C. ignoring suppliers    
+   D. identifying assessing and treating risk    
+   **Correct answer: D**
 
 9. Procurement is?
-   A. acquiring goods or services  
-   B. reporting malware  
-   C. testing software  
-   D. deleting data  
+   A. acquiring goods or services    
+   B. reporting malware    
+   C. testing software    
+   D. deleting data    
    **Correct answer: A**
 
 10. Outsourcing does not remove?
-   A. organisational accountability  
-   B. need for contracts  
-   C. supplier obligations  
-   D. security risk  
-   **Correct answer: A**
+   A. security risk    
+   B. organisational accountability    
+   C. need for contracts    
+   D. supplier obligations    
+   **Correct answer: B**
 
 #### Part B — True / False (11–30)
 11. IT governance means structures and oversight for directing and controlling IT. **Correct answer: True**
@@ -1987,74 +1987,74 @@ Each lesson quiz has exactly 50 questions: **10 MCQ, 20 True/False and 20 Fill i
 
 #### Part A — Multiple Choice (1–10)
 1. Act 843 is Ghana's Data Protection Act of?
-   A. 2012  
-   B. 2001  
-   C. 2018  
-   D. 2024  
+   A. 2012    
+   B. 2001    
+   C. 2018    
+   D. 2024    
    **Correct answer: A**
 
 2. A data subject is?
-   A. the individual to whom data relates  
-   B. the processor  
-   C. the regulator  
-   D. the vendor  
-   **Correct answer: A**
+   A. the vendor    
+   B. the individual to whom data relates    
+   C. the processor    
+   D. the regulator    
+   **Correct answer: B**
 
 3. A controller determines?
-   A. purposes and means of processing  
-   B. passwords  
-   C. internet speed  
-   D. device brand  
-   **Correct answer: A**
+   A. internet speed    
+   B. device brand    
+   C. purposes and means of processing    
+   D. passwords    
+   **Correct answer: C**
 
 4. A processor acts?
-   A. on behalf of a controller  
-   B. as every data subject  
-   C. as a court  
-   D. as a regulator  
-   **Correct answer: A**
+   A. as every data subject    
+   B. as a court    
+   C. as a regulator    
+   D. on behalf of a controller    
+   **Correct answer: D**
 
 5. The Data Protection Commission?
-   A. monitors and regulates data protection compliance  
-   B. issues school grades  
-   C. runs all databases  
-   D. replaces courts  
+   A. monitors and regulates data protection compliance    
+   B. issues school grades    
+   C. runs all databases    
+   D. replaces courts    
    **Correct answer: A**
 
 6. Minimality requires?
-   A. necessary data only  
-   B. all possible data  
-   C. permanent retention  
-   D. public sharing  
-   **Correct answer: A**
+   A. public sharing    
+   B. necessary data only    
+   C. all possible data    
+   D. permanent retention    
+   **Correct answer: B**
 
 7. A data breach involves?
-   A. a security compromise affecting personal data  
-   B. normal login  
-   C. software update  
-   D. public website  
-   **Correct answer: A**
+   A. software update    
+   B. public website    
+   C. a security compromise affecting personal data    
+   D. normal login    
+   **Correct answer: C**
 
 8. The Commission maintains the Data Protection?
-   A. Register  
-   B. Browser  
-   C. Router  
-   D. Password  
-   **Correct answer: A**
+   A. Browser    
+   B. Router    
+   C. Password    
+   D. Register    
+   **Correct answer: D**
 
 9. Data subjects have rights including?
-   A. access and correction under the Act  
-   B. access to all records  
-   C. server ownership  
-   D. law-making  
+   A. access and correction under the Act    
+   B. access to all records    
+   C. server ownership    
+   D. law-making    
    **Correct answer: A**
 
 10. For current procedures consult?
-   A. the Act and official Commission guidance  
-   B. only social media  
-   C. only foreign blogs  
-   D. unverified comments  
-   **Correct answer: A**
+   A. unverified comments    
+   B. the Act and official Commission guidance    
+   C. only social media    
+   D. only foreign blogs    
+   **Correct answer: B**
 
 #### Part B — True / False (11–30)
 11. Act 843 means Ghana's Data Protection Act passed in 2012. **Correct answer: True**
@@ -2150,284 +2150,284 @@ Each lesson quiz has exactly 50 questions: **10 MCQ, 20 True/False and 20 Fill i
 
 ### Part A — Multiple Choice (1–40)
 1. Ethics asks what people?
-   A. ought to do  
-   B. can purchase  
-   C. can hide  
-   D. can automate  
+   A. ought to do    
+   B. can purchase    
+   C. can hide    
+   D. can automate    
    **Correct answer: A**
 
 2. Least privilege limits?
-   A. access to what is needed  
-   B. all users to admin  
-   C. audit logs  
-   D. training  
-   **Correct answer: A**
+   A. training    
+   B. access to what is needed    
+   C. all users to admin    
+   D. audit logs    
+   **Correct answer: B**
 
 3. Phishing attempts to?
-   A. deceive users into unsafe actions  
-   B. repair devices  
-   C. compress files  
-   D. test backups  
-   **Correct answer: A**
+   A. compress files    
+   B. test backups    
+   C. deceive users into unsafe actions    
+   D. repair devices    
+   **Correct answer: C**
 
 4. Data minimisation means?
-   A. collect only necessary data  
-   B. collect everything  
-   C. never delete data  
-   D. share by default  
-   **Correct answer: A**
+   A. collect everything    
+   B. never delete data    
+   C. share by default    
+   D. collect only necessary data    
+   **Correct answer: D**
 
 5. Disinformation is?
-   A. deliberate deception using false information  
-   B. honest correction  
-   C. every opinion  
-   D. verified data  
+   A. deliberate deception using false information    
+   B. honest correction    
+   C. every opinion    
+   D. verified data    
    **Correct answer: A**
 
 6. Creative Commons BY requires?
-   A. attribution  
-   B. no commercial use  
-   C. no derivatives  
-   D. same licence  
-   **Correct answer: A**
+   A. same licence    
+   B. attribution    
+   C. no commercial use    
+   D. no derivatives    
+   **Correct answer: B**
 
 7. Privacy by design is applied?
-   A. from the beginning  
-   B. after a breach only  
-   C. only at disposal  
-   D. only in marketing  
-   **Correct answer: A**
+   A. only at disposal    
+   B. only in marketing    
+   C. from the beginning    
+   D. after a breach only    
+   **Correct answer: C**
 
 8. The digital divide concerns?
-   A. unequal access and skills  
-   B. software licences  
-   C. malware  
-   D. copyright  
-   **Correct answer: A**
+   A. software licences    
+   B. malware    
+   C. copyright    
+   D. unequal access and skills    
+   **Correct answer: D**
 
 9. A digital footprint is?
-   A. trace of online activity  
-   B. computer weight  
-   C. network cable  
-   D. backup type  
+   A. trace of online activity    
+   B. computer weight    
+   C. network cable    
+   D. backup type    
    **Correct answer: A**
 
 10. IT governance provides?
-   A. oversight and accountability  
-   B. password sharing  
-   C. video editing  
-   D. copyright ownership  
-   **Correct answer: A**
+   A. copyright ownership    
+   B. oversight and accountability    
+   C. password sharing    
+   D. video editing    
+   **Correct answer: B**
 
 11. Under Act 843 the data subject is?
-   A. the individual the data relates to  
-   B. the processor  
-   C. the regulator  
-   D. the software vendor  
-   **Correct answer: A**
+   A. the regulator    
+   B. the software vendor    
+   C. the individual the data relates to    
+   D. the processor    
+   **Correct answer: C**
 
 12. A data controller determines?
-   A. purposes and means of processing  
-   B. the user's password  
-   C. internet speed  
-   D. device brand  
-   **Correct answer: A**
+   A. the user's password    
+   B. internet speed    
+   C. device brand    
+   D. purposes and means of processing    
+   **Correct answer: D**
 
 13. A copyleft licence example is?
-   A. GNU GPL  
-   B. trademark  
-   C. patent  
-   D. private NDA  
+   A. GNU GPL    
+   B. trademark    
+   C. patent    
+   D. private NDA    
    **Correct answer: A**
 
 14. A breach may involve?
-   A. unauthorised disclosure of personal data  
-   B. routine login  
-   C. approved update  
-   D. public weather data  
-   **Correct answer: A**
+   A. public weather data    
+   B. unauthorised disclosure of personal data    
+   C. routine login    
+   D. approved update    
+   **Correct answer: B**
 
 15. Incident response includes?
-   A. containment and recovery  
-   B. concealment  
-   C. deleting all evidence  
-   D. sharing credentials  
-   **Correct answer: A**
+   A. deleting all evidence    
+   B. sharing credentials    
+   C. containment and recovery    
+   D. concealment    
+   **Correct answer: C**
 
 16. An ethical workplace protects?
-   A. good-faith reporters  
-   B. only senior managers  
-   C. people who hide defects  
-   D. unapproved access  
-   **Correct answer: A**
+   A. only senior managers    
+   B. people who hide defects    
+   C. unapproved access    
+   D. good-faith reporters    
+   **Correct answer: D**
 
 17. A conflict of interest should be?
-   A. disclosed and managed  
-   B. concealed  
-   C. rewarded  
-   D. ignored  
+   A. disclosed and managed    
+   B. concealed    
+   C. rewarded    
+   D. ignored    
    **Correct answer: A**
 
 18. Accessibility helps?
-   A. people with varied abilities use services  
-   B. restrict participation  
-   C. remove keyboard support  
-   D. exclude mobile users  
-   **Correct answer: A**
+   A. exclude mobile users    
+   B. people with varied abilities use services    
+   C. restrict participation    
+   D. remove keyboard support    
+   **Correct answer: B**
 
 19. Outsourcing does not remove?
-   A. organisational accountability  
-   B. the need for contracts  
-   C. supplier obligations  
-   D. security risk  
-   **Correct answer: A**
+   A. supplier obligations    
+   B. security risk    
+   C. organisational accountability    
+   D. the need for contracts    
+   **Correct answer: C**
 
 20. A privacy notice explains?
-   A. data collection and use  
-   B. other users' passwords  
-   C. source code  
-   D. exam answers  
-   **Correct answer: A**
+   A. other users' passwords    
+   B. source code    
+   C. exam answers    
+   D. data collection and use    
+   **Correct answer: D**
 
 21. A proportionate moderation response?
-   A. addresses harm without unnecessary restriction  
-   B. removes all criticism  
-   C. ignores threats  
-   D. publishes private details  
+   A. addresses harm without unnecessary restriction    
+   B. removes all criticism    
+   C. ignores threats    
+   D. publishes private details    
    **Correct answer: A**
 
 22. A data processor acts?
-   A. on behalf of a controller  
-   B. as every data subject  
-   C. as a court  
-   D. as a social network user  
-   **Correct answer: A**
+   A. as a social network user    
+   B. on behalf of a controller    
+   C. as every data subject    
+   D. as a court    
+   **Correct answer: B**
 
 23. A patent may protect?
-   A. a qualifying invention  
-   B. a private password  
-   C. every opinion  
-   D. a public domain fact  
-   **Correct answer: A**
+   A. every opinion    
+   B. a public domain fact    
+   C. a qualifying invention    
+   D. a private password    
+   **Correct answer: C**
 
 24. E-waste means?
-   A. discarded electronic equipment  
-   B. unwanted email  
-   C. network delay  
-   D. software patch  
-   **Correct answer: A**
+   A. unwanted email    
+   B. network delay    
+   C. software patch    
+   D. discarded electronic equipment    
+   **Correct answer: D**
 
 25. An audit trail records?
-   A. actions and decisions  
-   B. personal opinions  
-   C. weather  
-   D. advertising reach  
+   A. actions and decisions    
+   B. personal opinions    
+   C. weather    
+   D. advertising reach    
    **Correct answer: A**
 
 26. Security awareness training helps users?
-   A. recognise threats  
-   B. share passwords  
-   C. disable updates  
-   D. avoid reporting  
-   **Correct answer: A**
+   A. avoid reporting    
+   B. recognise threats    
+   C. share passwords    
+   D. disable updates    
+   **Correct answer: B**
 
 27. A data subject may request?
-   A. access or correction under the Act  
-   B. all other users' records  
-   C. a law change  
-   D. server ownership  
-   **Correct answer: A**
+   A. a law change    
+   B. server ownership    
+   C. access or correction under the Act    
+   D. all other users' records    
+   **Correct answer: C**
 
 28. A responsible software team should?
-   A. test and document serious defects  
-   B. hide failures  
-   C. skip accessibility  
-   D. ignore bias  
-   **Correct answer: A**
+   A. hide failures    
+   B. skip accessibility    
+   C. ignore bias    
+   D. test and document serious defects    
+   **Correct answer: D**
 
 29. Social-network privacy settings should be?
-   A. reviewed regularly  
-   B. ignored  
-   C. made public  
-   D. shared with strangers  
+   A. reviewed regularly    
+   B. ignored    
+   C. made public    
+   D. shared with strangers    
    **Correct answer: A**
 
 30. A supplier assessment should consider?
-   A. security and reliability  
-   B. only logo design  
-   C. only follower count  
-   D. only price  
-   **Correct answer: A**
+   A. only price    
+   B. security and reliability    
+   C. only logo design    
+   D. only follower count    
+   **Correct answer: B**
 
 31. Act 843 was passed in?
-   A. 2012  
-   B. 2001  
-   C. 2018  
-   D. 2024  
-   **Correct answer: A**
+   A. 2018    
+   B. 2024    
+   C. 2012    
+   D. 2001    
+   **Correct answer: C**
 
 32. Corporate social responsibility considers?
-   A. social and environmental impacts  
-   B. profit only  
-   C. marketing only  
-   D. hardware only  
-   **Correct answer: A**
+   A. profit only    
+   B. marketing only    
+   C. hardware only    
+   D. social and environmental impacts    
+   **Correct answer: D**
 
 33. Misinformation may be shared?
-   A. without intent to deceive  
-   B. only by regulators  
-   C. only in private  
-   D. only for profit  
+   A. without intent to deceive    
+   B. only by regulators    
+   C. only in private    
+   D. only for profit    
    **Correct answer: A**
 
 34. A data retention schedule states?
-   A. how long records are kept  
-   B. who likes each record  
-   C. public passwords  
-   D. video length  
-   **Correct answer: A**
+   A. video length    
+   B. how long records are kept    
+   C. who likes each record    
+   D. public passwords    
+   **Correct answer: B**
 
 35. A software lifecycle includes?
-   A. maintenance  
-   B. only advertising  
-   C. only purchase  
-   D. only launch  
-   **Correct answer: A**
+   A. only purchase    
+   B. only launch    
+   C. maintenance    
+   D. only advertising    
+   **Correct answer: C**
 
 36. An online image is not automatically reusable because?
-   A. copyright and licence terms may apply  
-   B. it is visible  
-   C. it has many likes  
-   D. it is small  
-   **Correct answer: A**
+   A. it is visible    
+   B. it has many likes    
+   C. it is small    
+   D. copyright and licence terms may apply    
+   **Correct answer: D**
 
 37. A good response to an exposed student record is?
-   A. contain, preserve evidence and report  
-   B. share the link  
-   C. wait for complaints  
-   D. delete logs  
+   A. contain, preserve evidence and report    
+   B. share the link    
+   C. wait for complaints    
+   D. delete logs    
    **Correct answer: A**
 
 38. Professional competence includes?
-   A. knowing one's limits  
-   B. pretending expertise  
-   C. avoiding training  
-   D. hiding mistakes  
-   **Correct answer: A**
+   A. hiding mistakes    
+   B. knowing one's limits    
+   C. pretending expertise    
+   D. avoiding training    
+   **Correct answer: B**
 
 39. A data compromise should follow?
-   A. applicable legal and organisational requirements  
-   B. social-media trends  
-   C. personal preference  
-   D. no process  
-   **Correct answer: A**
+   A. personal preference    
+   B. no process    
+   C. applicable legal and organisational requirements    
+   D. social-media trends    
+   **Correct answer: C**
 
 40. Human oversight is important for?
-   A. consequential automated decisions  
-   B. wallpaper changes  
-   C. file compression  
-   D. font selection  
-   **Correct answer: A**
+   A. wallpaper changes    
+   B. file compression    
+   C. font selection    
+   D. consequential automated decisions    
+   **Correct answer: D**
 
 ### Part B — True / False (41–70)
 41. Ethics and law are always identical. **Correct answer: False**
