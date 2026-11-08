@@ -556,7 +556,13 @@ export function LessonPage() {
                     {(() => {
                       const Component = registryEntry.component;
                       return (
-                        <CustomLessonFrame lesson={lesson} mode="student">
+                        <CustomLessonFrame
+                          lesson={lesson}
+                          mode="student"
+                          onComplete={handleMarkComplete}
+                          isCompleted={!!currentLessonFinished}
+                          isSaving={isSaving}
+                        >
                           <Component student={user} lesson={lesson} />
                         </CustomLessonFrame>
                       );
