@@ -84,7 +84,6 @@ export default function CustomLessonFrame({ lesson, children, mode = 'student' }
       <article className="custom-lesson-system" aria-label={lesson?.title || 'Custom lesson'}>
         {children}
       </article>
-}
     </div>
   );
 }
