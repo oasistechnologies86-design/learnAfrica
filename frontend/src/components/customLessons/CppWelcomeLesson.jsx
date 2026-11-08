@@ -122,9 +122,6 @@ export default function CppProgramOverviewLesson({ student, lesson }) {
           </div>
 
           <div className="flex-1 min-w-0 p-5 sm:p-6">
-            <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary mb-3">
-              <active.icon className="h-3.5 w-3.5" /> C++ Programming
-            </div>
             <h2 className="text-2xl font-bold mb-3">{active.title}</h2>
             <div className="space-y-3">{active.body}</div>
           </div>
