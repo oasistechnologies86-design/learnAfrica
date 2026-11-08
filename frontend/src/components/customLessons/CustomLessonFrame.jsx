@@ -3,6 +3,10 @@ import { useRef } from 'react';
 export default function CustomLessonFrame({ lesson, children, mode = 'student' }) {
   const heroRef = useRef(null);
   const artRef = useRef(null);
+  const readingRef = useRef(null);
+
+  const scrollToReading = () => readingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const scrollToLessonEnd = () => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
 
   const handlePointerMove = (event) => {
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches || !heroRef.current || !artRef.current) return;
@@ -75,14 +79,19 @@ export default function CustomLessonFrame({ lesson, children, mode = 'student' }
             <g><circle cx="451" cy="211" r="25" fill="#eafff1" stroke="#9bffc0" strokeWidth="2" /><path d="M439 218 V199 H463 V218 M435 218 H467 M444 199 V191 H450 V199 M454 199 V187 H459 V199" fill="none" stroke="#087442" strokeWidth="3" strokeLinejoin="round" /></g>
           </g>
         </svg>
-        <div className="custom-lesson-scroll-cue">
-          <span>SCROLL DOWN &amp; MARK AS COMPLETE</span><span className="custom-lesson-scroll-arrow">↓</span>
-        </div>
+        <button type="button" className="custom-lesson-scroll-cue" onClick={scrollToReading} aria-label="Scroll down to the lesson reading">
+          <span>SCROLL DOWN &amp; MARK AS COMPLETE</span><span className="custom-lesson-scroll-arrow" aria-hidden="true">↓</span>
+        </button>
         <div className="custom-lesson-hero-hint">Move your cursor to explore</div>
       </section>
 
-      <article className="custom-lesson-system" aria-label={lesson?.title || 'Custom lesson'}>
+      <article ref={readingRef} className="custom-lesson-system" aria-label={lesson?.title || 'Custom lesson'}>
         {children}
+        <div className="custom-lesson-bottom-scroll">
+          <button type="button" onClick={scrollToLessonEnd}>
+            <span>SCROLL DOWN &amp; MARK AS COMPLETE</span><span aria-hidden="true">↓</span>
+          </button>
+        </div>
       </article>
     </div>
   );
