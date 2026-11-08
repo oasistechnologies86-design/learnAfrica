@@ -1,9 +1,4 @@
 import React from 'react';
-import {
-  ShieldCheck, Scale, LockKeyhole, MessageCircle, Copyright,
-  Code2, Activity, Share2, Building2, Landmark, BookOpen, Eye
-} from 'lucide-react';
-
 const lessons = {
   1: {
     title: 'An Overview of Ethics', category: 'Foundations of professional computing',
@@ -179,9 +174,8 @@ const lessons = {
   }
 };
 
-const icons = [Scale, ShieldCheck, LockKeyhole, Eye, MessageCircle, Copyright, Code2, Activity, Share2, Building2, Landmark];
 function Section({ title, children }) {
-  const paragraphs = String(children || '').split(/\\n\\s*\\n/).map((part) => part.trim()).filter(Boolean);
+  const paragraphs = String(children || '').split(/\n\s*\n/).map((part) => part.trim()).filter(Boolean);
   return (
     <section className="custom-lesson-section">
       <h2>{title}</h2>
@@ -246,12 +240,10 @@ const furtherReading = [
   { label: 'UNESCO 2023 Global Education Monitoring Report: Technology in education', url: 'https://gem-report-2023.unesco.org/' }
 ];
 
-export default function ProfessionalComputingLesson({ student, lesson }) {
+export default function ProfessionalComputingLesson({ lesson }) {
   const match = String(lesson?.component_key || lesson?.componentKey || '').match(/professional-computing-(\d{2})/);
   const number = match ? Number(match[1]) : 1;
   const data = lessons[number] || lessons[1];
-  const Icon = icons[number - 1] || BookOpen;
-  const firstName = (student?.name || '').trim().split(/\s+/)[0];
 
   return (
     <article className="w-full max-w-none mx-0 py-4 sm:py-6 px-0 space-y-5">
