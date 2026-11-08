@@ -14,12 +14,7 @@ export default function CourseWelcome({ student, lesson }) {
     <article className="w-full max-w-none mx-0 py-6 sm:py-8 px-0 space-y-8 sm:space-y-10">
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <header className="space-y-4 pb-8 border-b border-border">
-        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
-          <Sparkles className="h-3.5 w-3.5" /> Welcome
-        </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight">
-          Welcome aboard, {firstName}.
-        </h1>
+        <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight">{lesson?.title || 'Welcome'}</h1>
         <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
           You've just taken the first step in something new. Whether this course is a
           career move, a side interest, or something in between, you've shown up, and
