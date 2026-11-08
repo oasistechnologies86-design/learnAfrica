@@ -109,7 +109,7 @@ export default function CustomLessonFrame({ lesson, children, mode = 'student', 
             <p>You've reached the end of this lesson. Click below to mark it as complete and continue to your next lesson.</p>
             {isCompleted ? (
               <button type="button" className="is-completed" disabled aria-label="Lesson completed">
-                COMPLETED <span aria-hidden="true">✓</span>
+                FINISHED <span aria-hidden="true">✓</span>
               </button>
             ) : (
               <button type="button" onClick={onComplete} disabled={isSaving}>
