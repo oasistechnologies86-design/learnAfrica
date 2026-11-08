@@ -1,6 +1,6 @@
 # Learn Africa — Professional Computing Complete Instructor Guide and 650-Question Assessment Bank
 
-This expanded instructor section supersedes the earlier outline above. The required sequence for every topic is **Video Lesson → Custom Page → Quiz Lesson**. There is no separate practical Text Lesson in this structure. Practical examples are part of the custom reading.
+The required sequence for every topic is **Video Lesson → Custom Page → Quiz Lesson**. There is no separate practical Text Lesson in this structure. Practical examples are part of the custom reading.
 
 ## Video Lesson fields and instructor workflow
 For each topic below, create a Video Lesson using the exact title, paste the lesson brief into its description/lesson-notes field, search YouTube using the search phrase, select and watch a suitable video, then paste the actual video URL into the lesson URL field. Search phrases are not video URLs. Record the real duration; do not invent a URL or duration. Prefer universities, professional bodies, educational organisations and Ghanaian regulators.
@@ -14,19 +14,19 @@ Each lesson quiz has exactly 50 questions: **20 MCQ, 15 True/False and 15 Fill i
 ## Lesson 1: An Overview of Ethics
 
 ### Video Lesson
-- **Title:** Video: An Overview of Ethics
+- **Title:** Understanding Ethics in Computing
 - **Suggested video title:** Introduction to Computer Ethics: Making Responsible Technology Decisions
 - **Lesson notes / description:** Introduce ethics as reasoned judgement about what people ought to do. Preview morals, values, integrity, law, stakeholders, competing duties and a seven-step ethical decision process. Use the Ghanaian college examination-record example.
 - **YouTube search phrase:** introduction to computer ethics university
 - **Video URL:** Instructor selects and verifies the actual video and pastes its URL in Learn Africa.
 
 ### Custom Page
-- **Title:** An Overview of Ethics
+- **Title:** The Foundations of Computer Ethics
 - **Component:** Professional Computing 01
 - **Coverage:** ethics, morals, values, integrity, law, normative ethics, descriptive ethics, stakeholder, corporate social responsibility, ethical decision process, competing duties, accountability, audit trail, proportionality, transparency, conflict of interest, privilege, permission, trust, ethical workplace. Explain these areas in detail, add Ghanaian examples and a worked case, then recap.
 
 ### Quiz Lesson
-- **Title:** Lesson 1 Quiz: An Overview of Ethics
+- **Title:** Test Your Understanding of Computer Ethics
 - **Question count:** 50 (20 MCQ, 15 True/False, 15 Fill in the Blank)
 
 #### Part A — Multiple Choice (1–20)
@@ -235,19 +235,19 @@ Each lesson quiz has exactly 50 questions: **20 MCQ, 15 True/False and 15 Fill i
 ## Lesson 2: Ethics for IT Workers and IT Users
 
 ### Video Lesson
-- **Title:** Video: Ethics for IT Workers and IT Users
+- **Title:** Professional Conduct and Responsibilities in IT
 - **Suggested video title:** Professional Ethics in IT: Responsibility, Confidentiality and Least Privilege
 - **Lesson notes / description:** Explain professionalism, competence, confidentiality, privileged access, least privilege, conflicts of interest, acceptable use, codes of ethics, whistleblowing and continuing professional development. Use the university student-record request example.
 - **YouTube search phrase:** IT professional ethics code of conduct least privilege
 - **Video URL:** Instructor selects and verifies the actual video and pastes its URL in Learn Africa.
 
 ### Custom Page
-- **Title:** Ethics for IT Workers and IT Users
+- **Title:** Ethical Duties of IT Workers and Users
 - **Component:** Professional Computing 02
 - **Coverage:** professionalism, competence, confidentiality, privileged access, least privilege, conflict of interest, acceptable-use policy, code of ethics, whistleblowing, continuing professional development, certification, credential, authorisation, need to know, retaliation, insider threat, professional body, duty of care, separation of duties, access review. Explain these areas in detail, add Ghanaian examples and a worked case, then recap.
 
 ### Quiz Lesson
-- **Title:** Lesson 2 Quiz: Ethics for IT Workers and IT Users
+- **Title:** Assessing Professional Ethics in IT
 - **Question count:** 50 (20 MCQ, 15 True/False, 15 Fill in the Blank)
 
 #### Part A — Multiple Choice (1–20)
@@ -456,19 +456,19 @@ Each lesson quiz has exactly 50 questions: **20 MCQ, 15 True/False and 15 Fill i
 ## Lesson 3: Computer and Internet Crime
 
 ### Video Lesson
-- **Title:** Video: Computer and Internet Crime
+- **Title:** Understanding Cybercrime and Online Threats
 - **Suggested video title:** Computer and Internet Crime: Phishing, Malware and Incident Response
 - **Lesson notes / description:** Introduce cybercrime, unauthorised access, phishing, social engineering, malware, ransomware, identity theft and denial-of-service. Explain layered prevention and incident response: prepare, identify, contain, eradicate, recover and learn.
 - **YouTube search phrase:** cybercrime phishing social engineering malware incident response education
 - **Video URL:** Instructor selects and verifies the actual video and pastes its URL in Learn Africa.
 
 ### Custom Page
-- **Title:** Computer and Internet Crime
+- **Title:** Computer and Internet Crime: Types, Risks and Prevention
 - **Component:** Professional Computing 03
 - **Coverage:** cybercrime, phishing, social engineering, malware, ransomware, spyware, identity theft, unauthorised access, denial of service, multi-factor authentication, patch management, backup, incident response, containment, eradication, recovery, network segmentation, least privilege, evidence preservation, security awareness. Explain these areas in detail, add Ghanaian examples and a worked case, then recap.
 
 ### Quiz Lesson
-- **Title:** Lesson 3 Quiz: Computer and Internet Crime
+- **Title:** Test Your Knowledge of Cybercrime
 - **Question count:** 50 (20 MCQ, 15 True/False, 15 Fill in the Blank)
 
 #### Part A — Multiple Choice (1–20)
@@ -677,19 +677,19 @@ Each lesson quiz has exactly 50 questions: **20 MCQ, 15 True/False and 15 Fill i
 ## Lesson 4: Privacy
 
 ### Video Lesson
-- **Title:** Video: Privacy
+- **Title:** Protecting Personal Information in the Digital World
 - **Suggested video title:** Data Privacy: Personal Information, Privacy Principles and Privacy by Design
 - **Lesson notes / description:** Explain personal data and identifiability, purpose specification, data minimisation, accuracy, retention, transparency, security, profiling, surveillance and breaches. Distinguish privacy from security and introduce Ghana's legal context.
 - **YouTube search phrase:** data privacy principles personal information privacy by design
 - **Video URL:** Instructor selects and verifies the actual video and pastes its URL in Learn Africa.
 
 ### Custom Page
-- **Title:** Privacy
+- **Title:** Data Privacy, Rights and Responsible Information Handling
 - **Component:** Professional Computing 04
 - **Coverage:** personal data, identifiability, purpose specification, data minimisation, data accuracy, retention limitation, privacy notice, profiling, surveillance, data breach, privacy by design, access control, security safeguard, data subject, data controller, data processor, special personal data, re-identification, data lifecycle, data sharing. Explain these areas in detail, add Ghanaian examples and a worked case, then recap.
 
 ### Quiz Lesson
-- **Title:** Lesson 4 Quiz: Privacy
+- **Title:** Assessing Your Knowledge of Privacy
 - **Question count:** 50 (20 MCQ, 15 True/False, 15 Fill in the Blank)
 
 #### Part A — Multiple Choice (1–20)
@@ -898,19 +898,19 @@ Each lesson quiz has exactly 50 questions: **20 MCQ, 15 True/False and 15 Fill i
 ## Lesson 5: Freedom of Expression
 
 ### Video Lesson
-- **Title:** Video: Freedom of Expression
+- **Title:** Free Speech and Responsibility Online
 - **Suggested video title:** Freedom of Expression Online: Rights, Moderation and Responsible Sharing
 - **Lesson notes / description:** Explain expression, opinion versus factual claims, defamation, misinformation, disinformation, anonymity, moderation, harassment and proportionality. Use an unverified school-closure rumour case.
 - **YouTube search phrase:** freedom of expression online content moderation misinformation
 - **Video URL:** Instructor selects and verifies the actual video and pastes its URL in Learn Africa.
 
 ### Custom Page
-- **Title:** Freedom of Expression
+- **Title:** Freedom of Expression in the Digital Age
 - **Component:** Professional Computing 05
 - **Coverage:** freedom of expression, opinion, factual claim, defamation, misinformation, disinformation, content moderation, anonymity, harassment, cyberbullying, proportionality, appeal process, context, verification, incitement, censorship, digital citizenship, source credibility, correction, online harm. Explain these areas in detail, add Ghanaian examples and a worked case, then recap.
 
 ### Quiz Lesson
-- **Title:** Lesson 5 Quiz: Freedom of Expression
+- **Title:** Test Your Understanding of Online Expression
 - **Question count:** 50 (20 MCQ, 15 True/False, 15 Fill in the Blank)
 
 #### Part A — Multiple Choice (1–20)
@@ -1119,19 +1119,19 @@ Each lesson quiz has exactly 50 questions: **20 MCQ, 15 True/False and 15 Fill i
 ## Lesson 6: Intellectual Property and Copyright
 
 ### Video Lesson
-- **Title:** Video: Intellectual Property and Copyright
+- **Title:** Copyright and Ownership of Digital Content
 - **Suggested video title:** Copyright and Creative Commons: Using Digital Content Legally
 - **Lesson notes / description:** Introduce intellectual property, copyright, patents, trademarks, trade secrets, public domain, licences, attribution, Creative Commons BY/NC/ND/SA, CC0, copyleft and GNU GPL. Emphasise that online content is not automatically free to reuse.
 - **YouTube search phrase:** Creative Commons BY NC ND SA copyright copyleft GNU GPL explained
 - **Video URL:** Instructor selects and verifies the actual video and pastes its URL in Learn Africa.
 
 ### Custom Page
-- **Title:** Intellectual Property and Copyright
+- **Title:** Intellectual Property Rights in Computing
 - **Component:** Professional Computing 06
 - **Coverage:** intellectual property, copyright, patent, trademark, trade secret, public domain, licence, attribution, Creative Commons, BY, NC, ND, SA, CC0, copyleft, GNU GPL, plagiarism, infringement, adaptation, licence compatibility. Explain these areas in detail, add Ghanaian examples and a worked case, then recap.
 
 ### Quiz Lesson
-- **Title:** Lesson 6 Quiz: Intellectual Property and Copyright
+- **Title:** Assessing Copyright and Intellectual Property
 - **Question count:** 50 (20 MCQ, 15 True/False, 15 Fill in the Blank)
 
 #### Part A — Multiple Choice (1–20)
@@ -1340,19 +1340,19 @@ Each lesson quiz has exactly 50 questions: **20 MCQ, 15 True/False and 15 Fill i
 ## Lesson 7: Software Development
 
 ### Video Lesson
-- **Title:** Video: Software Development
+- **Title:** Building Software Responsibly
 - **Suggested video title:** Ethical Software Development: Requirements, Testing, Privacy and Accessibility
 - **Lesson notes / description:** Walk through requirements, design, implementation, testing, deployment and maintenance. Explain accessibility, privacy and security by design, quality assurance, bias, transparency, human review and accountability. Use the scholarship screening tool example.
 - **YouTube search phrase:** ethical software development lifecycle privacy by design accessibility
 - **Video URL:** Instructor selects and verifies the actual video and pastes its URL in Learn Africa.
 
 ### Custom Page
-- **Title:** Software Development
+- **Title:** Ethical Practices in Software Development
 - **Component:** Professional Computing 07
 - **Coverage:** software lifecycle, requirements analysis, software design, implementation, testing, quality assurance, accessibility, usability, privacy by design, security by design, algorithmic bias, human oversight, secure defaults, deployment, maintenance, defect, documentation, user testing, change management, transparency. Explain these areas in detail, add Ghanaian examples and a worked case, then recap.
 
 ### Quiz Lesson
-- **Title:** Lesson 7 Quiz: Software Development
+- **Title:** Test Your Knowledge of Software Development Ethics
 - **Question count:** 50 (20 MCQ, 15 True/False, 15 Fill in the Blank)
 
 #### Part A — Multiple Choice (1–20)
@@ -1561,19 +1561,19 @@ Each lesson quiz has exactly 50 questions: **20 MCQ, 15 True/False and 15 Fill i
 ## Lesson 8: Impact of Information Technology on Productivity and Quality of Life
 
 ### Video Lesson
-- **Title:** Video: Impact of Information Technology on Productivity and Quality of Life
+- **Title:** How Technology Changes Work and Everyday Life
 - **Suggested video title:** How Information Technology Affects Work, Education and Quality of Life
 - **Lesson notes / description:** Discuss productivity, automation, remote work, education, health, digital divide, accessibility, employment, wellbeing, energy use and e-waste. Balance benefits with unequal access and unintended consequences.
 - **YouTube search phrase:** information technology productivity digital divide quality of life sustainability
 - **Video URL:** Instructor selects and verifies the actual video and pastes its URL in Learn Africa.
 
 ### Custom Page
-- **Title:** Impact of Information Technology on Productivity and Quality of Life
+- **Title:** The Social and Economic Impact of Information Technology
 - **Component:** Professional Computing 08
 - **Coverage:** productivity, automation, digital divide, digital literacy, remote work, accessibility, e-waste, sustainability, quality of life, digital health, assistive technology, connectivity, work-life boundary, reskilling, environmental impact, inclusive design, resource efficiency, telemedicine, digital inclusion, automation impact. Explain these areas in detail, add Ghanaian examples and a worked case, then recap.
 
 ### Quiz Lesson
-- **Title:** Lesson 8 Quiz: Impact of Information Technology on Productivity and Quality of Life
+- **Title:** Assessing the Impact of Information Technology
 - **Question count:** 50 (20 MCQ, 15 True/False, 15 Fill in the Blank)
 
 #### Part A — Multiple Choice (1–20)
@@ -1782,19 +1782,19 @@ Each lesson quiz has exactly 50 questions: **20 MCQ, 15 True/False and 15 Fill i
 ## Lesson 9: Social Networking
 
 ### Video Lesson
-- **Title:** Video: Social Networking
+- **Title:** Responsible Behaviour on Social Media
 - **Suggested video title:** Social Networking: Digital Footprints, Privacy and Online Reputation
 - **Lesson notes / description:** Explain digital identity, digital footprints, online reputation, oversharing, privacy settings, impersonation, scams, cyberbullying, misinformation, consent and professional presence. Use the class photograph shared without consent example.
 - **YouTube search phrase:** digital footprint online reputation social media privacy safety
 - **Video URL:** Instructor selects and verifies the actual video and pastes its URL in Learn Africa.
 
 ### Custom Page
-- **Title:** Social Networking
+- **Title:** Digital Footprints, Online Identity and Social Networking
 - **Component:** Professional Computing 09
 - **Coverage:** social networking, digital identity, digital footprint, online reputation, privacy settings, oversharing, impersonation, consent, cyberbullying, scam, location sharing, professional presence, audience control, account security, reputation risk, misinformation, privacy breach, digital permanence, reporting tool, digital citizenship. Explain these areas in detail, add Ghanaian examples and a worked case, then recap.
 
 ### Quiz Lesson
-- **Title:** Lesson 9 Quiz: Social Networking
+- **Title:** Test Your Knowledge of Social Networking
 - **Question count:** 50 (20 MCQ, 15 True/False, 15 Fill in the Blank)
 
 #### Part A — Multiple Choice (1–20)
@@ -2003,19 +2003,19 @@ Each lesson quiz has exactly 50 questions: **20 MCQ, 15 True/False and 15 Fill i
 ## Lesson 10: Ethics of IT Organisations
 
 ### Video Lesson
-- **Title:** Video: Ethics of IT Organisations
+- **Title:** Ethics and Accountability in Technology Companies
 - **Suggested video title:** IT Organisational Ethics: Governance, Outsourcing and Accountability
 - **Lesson notes / description:** Explain governance, ethical culture, leadership, accountability, audit trails, supplier due diligence, outsourcing, monitoring, whistleblowing, corporate social responsibility and sustainability. Emphasise that outsourcing does not remove organisational responsibility.
 - **YouTube search phrase:** IT governance organisational ethics outsourcing supplier risk corporate social responsibility
 - **Video URL:** Instructor selects and verifies the actual video and pastes its URL in Learn Africa.
 
 ### Custom Page
-- **Title:** Ethics of IT Organisations
+- **Title:** Responsible Management of IT Organisations
 - **Component:** Professional Computing 10
 - **Coverage:** IT governance, organisational ethics, ethical culture, accountability, audit trail, outsourcing, supplier due diligence, processor oversight, service agreement, workplace monitoring, whistleblowing, corporate social responsibility, sustainability, procurement, conflict of interest, risk management, transparency, incident escalation, root-cause analysis, supplier risk. Explain these areas in detail, add Ghanaian examples and a worked case, then recap.
 
 ### Quiz Lesson
-- **Title:** Lesson 10 Quiz: Ethics of IT Organisations
+- **Title:** Assessing Organisational Ethics
 - **Question count:** 50 (20 MCQ, 15 True/False, 15 Fill in the Blank)
 
 #### Part A — Multiple Choice (1–20)
@@ -2224,19 +2224,19 @@ Each lesson quiz has exactly 50 questions: **20 MCQ, 15 True/False and 15 Fill i
 ## Lesson 11: Ghana Data Protection Act, 2012 (Act 843)
 
 ### Video Lesson
-- **Title:** Video: Ghana Data Protection Act, 2012 (Act 843)
+- **Title:** Understanding Ghana's Data Protection Act, 2012
 - **Suggested video title:** Ghana Data Protection Act 2012 (Act 843): Principles, Rights and Compliance
 - **Lesson notes / description:** Introduce the purpose of Act 843 and the Data Protection Commission. Explain data subject, controller, processor, personal data, special personal data, processing, core principles, data subject rights, controller registration, security safeguards, processors and security-compromise duties. Verify legal details against the Act and current Commission guidance.
 - **YouTube search phrase:** Ghana Data Protection Act 2012 Act 843 Data Protection Commission
 - **Video URL:** Instructor selects and verifies the actual video and pastes its URL in Learn Africa.
 
 ### Custom Page
-- **Title:** Ghana Data Protection Act, 2012 (Act 843)
+- **Title:** Data Protection Principles, Rights and Responsibilities in Ghana
 - **Component:** Professional Computing 11
 - **Coverage:** Act 843, Data Protection Commission, data subject, data controller, data processor, personal data, special personal data, processing, minimality, purpose, data quality, retention, data subject rights, controller registration, security safeguards, security compromise, Data Protection Register, further processing, data protection principle, official guidance. Explain these areas in detail, add Ghanaian examples and a worked case, then recap.
 
 ### Quiz Lesson
-- **Title:** Lesson 11 Quiz: Ghana Data Protection Act, 2012 (Act 843)
+- **Title:** Test Your Knowledge of Act 843
 - **Question count:** 50 (20 MCQ, 15 True/False, 15 Fill in the Blank)
 
 #### Part A — Multiple Choice (1–20)
