@@ -72,9 +72,6 @@ function Breadcrumb({ activeLabel }) {
       <div className="h-10 w-10 shrink-0 rounded-lg border-2 border-primary-foreground/80 flex items-center justify-center font-mono font-bold text-2xs">
         C++
       </div>
-      <div style={chevronClip} className="bg-primary-foreground/15 pl-4 pr-7 py-2 text-sm font-mono">
-        C++ programming
-      </div>
       <div style={chevronClip} className="bg-foreground text-background pl-4 pr-7 py-2 text-sm font-mono font-bold">
         {activeLabel}
       </div>
