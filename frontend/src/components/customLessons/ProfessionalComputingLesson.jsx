@@ -179,7 +179,11 @@ function Section({ title, children }) {
   return (
     <section className="custom-lesson-section">
       <h2>{title}</h2>
-      {paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+      {paragraphs.map((paragraph, index) => {
+        // Emphasise a clear opening definition when the reading introduces a term.
+        const definition = paragraph.match(/^(.{2,65}?)\\s+(is|are|means|refers to|describes|concerns|includes|occurs when|consists of|involves)\\b(.*)$/i);
+        return <p key={index}>{definition ? <><strong>{definition[1]}</strong> {definition[2]}{definition[3]}</> : paragraph}</p>;
+      })}
     </section>
   );
 }
@@ -279,7 +283,7 @@ export default function ProfessionalComputingLesson({ lesson }) {
       <section>
         <h2>Key terms</h2>
         <p>Use these terms accurately when explaining the topic and analysing practical situations.</p>
-        <ul>{data.terms.split(' • ').map((term,i)=><li key={i}>{term}</li>)}</ul>
+        <ul>{data.terms.split(' • ').map((term,i)=><li key={i}><strong>{term}</strong></li>)}</ul>
       </section>
       <section className="custom-lesson-sources">
         <h2>Further reading and authoritative references</h2>
