@@ -2,7 +2,7 @@ import React from 'react';
 import {
   ShieldCheck, Scale, Users, LockKeyhole, MessageCircle, Copyright,
   Code2, Activity, Share2, Building2, Landmark, BookOpen, Lightbulb,
-  CheckCircle2, ArrowRight, PlayCircle, ClipboardList, Eye, Globe2
+  CheckCircle2, ClipboardList, Eye, Globe2
 } from 'lucide-react';
 
 const lessons = {
@@ -187,33 +187,53 @@ const palettes = [
   ['#75435d','#f4e0eb'],['#3f4d63','#e0e7f0'],['#235c58','#dcefeb']
 ];
 
+const lessonImages = [
+  'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=85',
+  'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=85',
+  'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=85',
+  'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=85',
+  'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=1200&q=85',
+  'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=85',
+  'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=85',
+  'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=85',
+  'https://images.unsplash.com/photo-1526378722484-bd91ca387e72?auto=format&fit=crop&w=1200&q=85',
+  'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1200&q=85',
+  'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=85'
+];
+
 function LessonIllustration({ number, title }) {
   const Icon = icons[number - 1] || BookOpen;
   const colors = palettes[number - 1] || palettes[0];
   return (
-    <div className="relative min-h-[190px] sm:min-h-[235px] overflow-hidden rounded-2xl p-5 sm:p-7 flex items-center" style={{background: 'linear-gradient(125deg,' + colors[0] + ',#152d3b)'}}>
-      <div className="absolute -right-8 -top-12 h-52 w-52 rounded-full border-[24px] opacity-10" style={{borderColor:colors[1]}} />
-      <div className="absolute right-8 bottom-[-55px] h-40 w-40 rounded-full border-[18px] opacity-10" style={{borderColor:colors[1]}} />
-      <div className="relative z-10 max-w-[70%] text-white">
-        <span className="text-[10px] sm:text-xs uppercase tracking-[.22em] font-bold opacity-75">Professional Computing · Lesson {number}</span>
-        <h2 className="mt-3 text-2xl sm:text-3xl font-extrabold leading-tight">{title}</h2>
-        <p className="mt-3 text-xs sm:text-sm text-white/75">Learn the concepts. Explore the examples. Apply them responsibly.</p>
+    <div className="relative h-44 sm:h-56 overflow-hidden rounded-xl sm:rounded-2xl bg-slate-950">
+      <img
+        src={lessonImages[number - 1] || lessonImages[0]}
+        alt={title + ' lesson illustration'}
+        loading="eager"
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/10" />
+      <div className="relative z-10 flex h-full items-center px-4 sm:px-7">
+        <div className="max-w-[78%] text-white">
+          <span className="text-[10px] sm:text-xs uppercase tracking-[.16em] font-bold text-white/80">Professional Computing · Lesson {number}</span>
+          <h2 className="mt-2 text-xl sm:text-3xl font-extrabold leading-tight">{title}</h2>
+          <p className="mt-2 text-xs sm:text-sm text-white/80">Professional knowledge for responsible digital practice</p>
+        </div>
+        <div className="absolute right-3 sm:right-7 bottom-3 sm:bottom-5 rounded-xl p-2.5 sm:p-3 shadow-lg" style={{background:colors[1],color:colors[0]}}>
+          <Icon className="h-7 w-7 sm:h-9 sm:w-9" strokeWidth={1.6}/>
+        </div>
       </div>
-      <div className="absolute right-5 sm:right-10 top-1/2 -translate-y-1/2 h-24 w-24 sm:h-32 sm:w-32 rounded-[28px] flex items-center justify-center shadow-2xl rotate-3" style={{background:colors[1],color:colors[0]}}>
-        <Icon className="h-12 w-12 sm:h-16 sm:w-16" strokeWidth={1.5}/>
-      </div>
-      <div className="absolute bottom-3 right-4 text-[9px] tracking-widest uppercase text-white/45">LEARN AFRICA</div>
     </div>
   );
 }
 
 function Section({ title, children, index }) {
-  return <section className="rounded-2xl border border-border bg-card p-5 sm:p-7 shadow-sm">
+  return <section className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-sm">
     <div className="flex gap-3 items-start">
       <span className="shrink-0 h-8 w-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center text-xs font-extrabold">{index}</span>
       <div className="min-w-0 flex-1">
         <h3 className="text-lg sm:text-xl font-bold tracking-tight">{title}</h3>
-        <p className="mt-3 text-sm sm:text-[15px] leading-7 text-foreground/85">{children}</p>
+        <p className="mt-3 text-sm sm:text-[15px] leading-6 text-justify [text-align:justify] text-foreground/85">{children}</p>
       </div>
     </div>
   </section>;
@@ -226,14 +246,14 @@ export default function ProfessionalComputingLesson({ student, lesson }) {
   const Icon = icons[number - 1] || BookOpen;
   const firstName = (student?.name || '').trim().split(/\s+/)[0];
 
-  return <div className="mx-auto w-full max-w-5xl space-y-6 sm:space-y-8 pb-8">
+  return <div className="mx-auto w-full max-w-5xl space-y-3 sm:space-y-4 pb-5">
     <LessonIllustration number={number} title={data.title}/>
     <header className="space-y-3 px-1">
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full bg-primary/10 text-primary px-3 py-1 text-[11px] font-bold">{data.category}</span>
-        <span className="text-xs text-muted-foreground">Reading first · Video next · Practical activity</span>
+        <span className="text-xs text-muted-foreground">Lesson reading</span>
       </div>
-      <p className="text-base sm:text-lg leading-7 text-muted-foreground">{firstName ? 'Hello ' + firstName + '. ' : ''}{data.intro}</p>
+      <p className="text-sm sm:text-base leading-6 text-muted-foreground text-justify [text-align:justify]">{firstName ? 'Hello ' + firstName + '. ' : ''}{data.intro}</p>
     </header>
     <section className="rounded-2xl border border-border bg-muted/20 p-5 sm:p-7">
       <div className="flex items-center gap-2 mb-4"><BookOpen className="h-5 w-5 text-primary"/><h3 className="text-lg font-bold">What you will learn</h3></div>
@@ -245,29 +265,15 @@ export default function ProfessionalComputingLesson({ student, lesson }) {
     <div className="space-y-4">
       {data.sections.map((section,i)=><Section key={i} title={section[0]} index={i+1}>{section[1]}</Section>)}
     </div>
-    <section className="rounded-2xl border border-primary/20 bg-primary/5 p-5 sm:p-7">
+    <section className="rounded-xl border border-primary/20 bg-primary/5 p-3 sm:p-4">
       <div className="flex gap-2 items-center text-primary"><Lightbulb className="h-5 w-5"/><h3 className="font-bold text-lg">Ghana-focused example</h3></div>
-      <p className="mt-3 text-sm sm:text-[15px] leading-7">{data.case}</p>
+      <p className="mt-2 text-sm sm:text-[15px] leading-6 text-justify [text-align:justify]">{data.case}</p>
     </section>
-    <section className="rounded-2xl border border-border bg-card p-5 sm:p-7">
+    <section className="rounded-xl border border-border bg-card p-3 sm:p-4">
       <div className="flex items-center gap-2"><ClipboardList className="h-5 w-5 text-primary"/><h3 className="text-lg font-bold">Key terms</h3></div>
       <div className="mt-4 flex flex-wrap gap-2">{data.terms.split(' • ').map((term,i)=><span key={i} className="rounded-full border border-border bg-muted/40 px-3 py-1.5 text-xs font-medium">{term}</span>)}</div>
     </section>
-    <section className="rounded-2xl overflow-hidden border border-border">
-      <div className="p-5 sm:p-7 bg-slate-950 text-white">
-        <div className="flex gap-2 items-center text-cyan-300"><PlayCircle className="h-5 w-5"/><span className="text-xs font-bold uppercase tracking-wider">Next · Video learning</span></div>
-        <h3 className="mt-3 text-xl sm:text-2xl font-extrabold">Watch the lesson video</h3>
-        <p className="mt-2 text-sm leading-6 text-white/75">Use this YouTube search phrase to select a suitable educational video:</p>
-        <p className="mt-3 rounded-xl bg-white/10 p-3 text-sm font-semibold">{data.search}</p>
-        <a className="mt-4 inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-bold text-slate-950 hover:bg-slate-100" href={'https://www.youtube.com/results?search_query='+encodeURIComponent(data.search)} target="_blank" rel="noreferrer">Find a lesson video <ArrowRight className="h-4 w-4"/></a>
-        <p className="mt-3 text-xs text-white/55">The course pack provides search phrases, not verified individual video selections. Check the presenter, accuracy, date and relevance before embedding a video in the course.</p>
-      </div>
-    </section>
-    <section className="rounded-2xl border border-border bg-card p-5 sm:p-7">
-      <div className="flex items-center gap-2"><ClipboardList className="h-5 w-5 text-primary"/><h3 className="text-lg font-bold">Practical activity</h3></div>
-      <p className="mt-4 text-sm sm:text-[15px] leading-7">{data.activity}</p>
-    </section>
-    <footer className="rounded-2xl bg-muted/40 border border-border p-5 sm:p-6">
+    <footer className="rounded-xl bg-muted/40 border border-border p-3 sm:p-4">
       <div className="flex gap-3 items-start"><Icon className="h-5 w-5 mt-0.5 text-primary"/><div><h3 className="font-bold">Before you continue</h3><p className="mt-1 text-sm leading-6 text-muted-foreground">Review the key terms, complete the practical activity and then use the separate lesson assessment in the course navigation. Your assessment settings and attempt rules are managed by Learn Africa’s existing quiz system.</p></div></div>
     </footer>
   </div>;
