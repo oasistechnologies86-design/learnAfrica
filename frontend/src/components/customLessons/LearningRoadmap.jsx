@@ -48,12 +48,7 @@ export default function LearningRoadmap({ student, lesson }) {
     <article className="w-full max-w-none mx-0 py-6 sm:py-8 px-0 space-y-8 sm:space-y-10">
       {/* ── Header ─────────────────────────────────────────────────── */}
       <header className="space-y-4 pb-8 border-b border-border">
-        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
-          <Map className="h-3.5 w-3.5" /> Your Roadmap
-        </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight">
-          Here's what's ahead, {firstName}.
-        </h1>
+        <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight">{lesson?.title || 'Learning Roadmap'}</h1>
         <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
           Before you dive into the individual lessons, it helps to see the shape of
           the whole journey. This page lays out the four phases of the course, what
