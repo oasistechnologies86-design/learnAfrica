@@ -61,10 +61,7 @@ score += 10;  // score is now 17 (shorthand for score = score + 10)`;
   return (
     <article className="w-full max-w-none mx-0 py-6 sm:py-8 px-0 space-y-8 sm:space-y-10">
       <header className="space-y-4 pb-8 border-b border-border">
-        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
-          <Calculator className="h-3.5 w-3.5" /> Lesson · Operators
-        </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight">Operators</h1>
+        <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight">{lesson?.title || 'Operators'}</h1>
         <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
           {firstName}, operators are the symbols that do the actual work on your variables, math, comparisons, and quick shortcuts for common patterns. You've already seen one:
           the assignment operator, <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">=</code>.
