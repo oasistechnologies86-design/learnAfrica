@@ -650,27 +650,6 @@ export function LessonPage() {
             </Card>
           )}
 
-          {lesson.type === 'custom' && (
-            <section className="custom-lesson-finish mt-10 border-t border-border pt-8 text-center">
-              <div className="mb-4 flex justify-center">
-                <div className="custom-lesson-down-cue" aria-hidden="true">
-                  <ChevronRight className="h-7 w-7 rotate-90" />
-                </div>
-              </div>
-              <p className="text-base font-bold text-foreground">You’ve reached the end of this lesson</p>
-              <p className="mt-1 text-sm text-muted-foreground">Continue below to mark this lesson complete.</p>
-              {!currentLessonFinished ? (
-                <Button onClick={handleMarkComplete} disabled={isSaving} className="mt-5 min-w-48">
-                  <CheckCircle className="mr-2 h-4 w-4" /> {isSaving ? 'Saving...' : 'Mark lesson complete'}
-                </Button>
-              ) : (
-                <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-success/20 bg-success/10 px-4 py-2 text-sm font-semibold text-success">
-                  <CheckCircle className="h-4 w-4" /> Lesson completed
-                </div>
-              )}
-            </section>
-          )}
-
           <div className={lesson.type === 'custom' ? 'w-full max-w-none py-8' : 'max-w-4xl mx-auto py-8'}>
 
 
