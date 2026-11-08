@@ -513,6 +513,35 @@ export function LessonPage() {
             );
           })()}
 
+          {/* Video/text lesson title and details appear before the learning content. Custom
+              pages provide their own heading, and quizzes have a separate information screen. */}
+          {lesson.type !== 'custom' && !isQuizLesson && (
+            <div className="w-full max-w-4xl mx-auto mb-8">
+              <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
+                {lesson.duration && (
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="h-3.5 w-3.5" />
+                    <span>{lesson.duration}</span>
+                  </div>
+                )}
+                {lesson.is_final && (
+                  <span className="flex items-center gap-1.5 text-warning">
+                    <Flag className="h-3.5 w-3.5" /> Final Examination
+                  </span>
+                )}
+                {currentLessonFinished && (
+                  <span className="flex items-center gap-1.5 text-success">
+                    <CheckCircle className="h-3.5 w-3.5" /> Completed
+                  </span>
+                )}
+              </div>
+              <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight mb-4">{lesson.title}</h1>
+              {lesson.description && (
+                <p className="text-muted-foreground text-base sm:text-lg leading-relaxed max-w-3xl">{lesson.description}</p>
+              )}
+            </div>
+          )}
+
           {/* CUSTOM PAGE lesson - plug in a pre-built React component.
               For custom pages, we render the lesson meta (title + duration + completed
               indicator) ABOVE the custom component so students see what lesson they're
@@ -633,33 +662,6 @@ export function LessonPage() {
 
           <div className={lesson.type === 'custom' ? 'w-full max-w-none py-8' : 'max-w-4xl mx-auto py-8'}>
 
-            {/* Lesson meta - hidden for custom lessons because they show it at the top */}
-            {lesson.type !== 'custom' && !isQuizLesson && (
-            <div className="mb-10">
-              <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
-                {lesson.duration && (
-                  <div className="flex items-center gap-1.5">
-                    <Clock className="h-3.5 w-3.5" />
-                    <span>{lesson.duration}</span>
-                  </div>
-                )}
-                {lesson.is_final && (
-                  <span className="flex items-center gap-1.5 text-warning">
-                    <Flag className="h-3.5 w-3.5" /> Final Examination
-                  </span>
-                )}
-                {currentLessonFinished && !isQuizLesson && (
-                  <span className="flex items-center gap-1.5 text-success">
-                    <CheckCircle className="h-3.5 w-3.5" /> Completed
-                  </span>
-                )}
-              </div>
-              <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight mb-4">{lesson.title}</h1>
-              {lesson.description && (
-                <p className="text-muted-foreground text-base sm:text-lg leading-relaxed max-w-3xl">{lesson.description}</p>
-              )}
-            </div>
-            )}
 
             {/* Tabs (Content/Resources/Notes/Discussion) never apply to quiz
                 lessons - a quiz gets its own clean, dedicated screen below
