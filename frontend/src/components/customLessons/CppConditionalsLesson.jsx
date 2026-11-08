@@ -66,10 +66,7 @@ switch (day) {
   return (
     <article className="w-full max-w-none mx-0 py-6 sm:py-8 px-0 space-y-8 sm:space-y-10">
       <header className="space-y-4 pb-8 border-b border-border">
-        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
-          <GitBranch className="h-3.5 w-3.5" /> Lesson · Conditionals
-        </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight">Making Decisions in Code</h1>
+        <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight">{lesson?.title || 'Making Decisions in Code'}</h1>
         <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
           {firstName}, every interesting program needs to react differently depending on the
           situation. You already used this by feel in the calculator exercise, now let's make
