@@ -258,13 +258,8 @@ export default function ProfessionalComputingLesson({ lesson }) {
       <section className="space-y-2">
         <h2>Learning outcomes</h2>
         <p className="text-sm text-muted-foreground leading-relaxed">Here are the ideas and skills you should understand from this lesson:</p>
-        <ul className="custom-lesson-outcomes grid grid-cols-1 gap-2">
-          {data.outcomes.map((item,i)=>(
-            <li key={i} className="flex items-start gap-3 rounded-lg border border-border bg-card px-3 py-2.5 text-left">
-              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">{i+1}</span>
-              <span className="min-w-0 flex-1 text-left text-sm leading-6 [text-align:left] [word-spacing:normal] [letter-spacing:normal] [hyphens:none]">{item}</span>
-            </li>
-          ))}
+        <ul className="custom-lesson-outcomes">
+          {data.outcomes.map((item,i)=><li key={i}>{item}</li>)}
         </ul>
       </section>
 
@@ -298,7 +293,7 @@ export default function ProfessionalComputingLesson({ lesson }) {
         }).map((source)=><li key={source.url}><a href={source.url} target="_blank" rel="noreferrer">{source.label}</a></li>)}</ul>
       </section>
 
-      <footer className="custom-lesson-takeaways">
+      <section className="custom-lesson-takeaways">
         <h2>Key takeaways</h2>
         <ul>
           <li>Understand the central concepts and explain them in your own words.</li>
@@ -306,7 +301,7 @@ export default function ProfessionalComputingLesson({ lesson }) {
           <li>Consider the people affected, the evidence available and the responsibilities involved.</li>
           <li>Consult current primary sources whenever a legal or technical requirement may have changed.</li>
         </ul>
-      </footer>
+      </section>
     </article>
   );
 }
