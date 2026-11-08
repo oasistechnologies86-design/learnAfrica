@@ -287,7 +287,7 @@ export default function ProfessionalComputingLesson({ student, lesson }) {
           <Icon className="h-3.5 w-3.5" /> Professional Computing · Lesson {number}
         </div>
         <h1 className="text-2xl sm:text-3xl font-extrabold leading-tight">{data.title}</h1>
-        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed text-justify [text-align:justify]">
+        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed text-left [text-align:left]">
           {firstName ? 'Hello ' + firstName + '. ' : 'Welcome. '}
           {data.intro} I'll guide you through the ideas step by step, using familiar situations so you can see how they apply beyond this page. Take your time, and pause to think about the examples as we go.
         </p>
@@ -319,7 +319,7 @@ export default function ProfessionalComputingLesson({ student, lesson }) {
 
       <section className="rounded-xl border border-primary/20 bg-primary/5 p-3 sm:p-4">
         <div className="flex gap-2 items-center text-primary"><Lightbulb className="h-5 w-5"/><h2 className="font-bold text-base sm:text-lg">Let's apply what we've learned</h2></div>
-        <p className="mt-2 text-sm sm:text-[15px] leading-[1.65] text-foreground/85 text-justify [text-align:justify]">{data.case}</p>
+        <p className="mt-2 text-sm sm:text-[15px] leading-[1.65] text-foreground/85 text-left [text-align:left]">{data.case}</p>
         <p className="mt-2 text-xs text-muted-foreground">As you consider this example, ask yourself: who could be affected, what could go wrong, and what would a responsible person do next?</p>
       </section>
 
