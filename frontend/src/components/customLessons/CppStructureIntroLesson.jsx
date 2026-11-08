@@ -88,12 +88,7 @@ int main() {
     <article className="w-full max-w-none mx-0 py-6 sm:py-8 px-0 space-y-8 sm:space-y-10">
       {/* ── Header ─────────────────────────────────────────────────── */}
       <header className="space-y-4 pb-8 border-b border-border">
-        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
-          <Code2 className="h-3.5 w-3.5" /> Lesson · C++ Basics
-        </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight">
-          Anatomy of a C++ Program
-        </h1>
+        <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight">{lesson?.title || 'Anatomy of a C++ Program'}</h1>
         <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
           Hi <span className="font-semibold text-foreground">{firstName}</span>, every C++ program,
           no matter how big, is built from the same handful of moving parts. Once you can read
