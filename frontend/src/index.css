@@ -370,7 +370,10 @@ button:disabled,
   margin: 0 auto;
   background: var(--lesson-surface);
   color: var(--lesson-ink);
-  box-shadow: var(--lesson-page-shadow);
+  box-shadow: var(--lesson-page-shadow), 0 0 0 1px color-mix(in oklab, var(--primary) 18%, var(--border));
+  border: 1px solid color-mix(in oklab, var(--primary) 28%, var(--border));
+  border-radius: 22px;
+  overflow: hidden;
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -421,9 +424,9 @@ button:disabled,
   letter-spacing:.16em!important;font-size:12px!important;font-weight:700!important;
   line-height:1.4!important;text-align:left!important;
 }
-.custom-lesson-hero-copy > p:last-child {
-  margin:0!important;font-size:clamp(19px,2.5vw,27px)!important;line-height:1.35!important;
-  font-weight:600!important;max-width:390px;text-shadow:0 2px 18px rgba(0,0,0,.24);
+.custom-lesson-hero-copy > h1 {
+  margin:0!important;font-size:clamp(22px,3vw,34px)!important;line-height:1.2!important;
+  font-weight:800!important;max-width:430px;letter-spacing:-.025em;text-shadow:0 2px 18px rgba(0,0,0,.24);
   text-align:left!important;color:#fff!important;
 }
 .custom-lesson-scroll-cue {
@@ -489,6 +492,16 @@ button:disabled,
   text-align:left;hyphens:none;word-break:normal;overflow-wrap:normal;
 }
 .custom-lesson-system p { margin:0 0 15px; }
+.custom-lesson-system strong,.custom-lesson-system b {
+  color:var(--lesson-ink);font-weight:800;letter-spacing:-.01em;
+}
+.custom-lesson-system p code,.custom-lesson-system li code {
+  color:var(--lesson-ink);font-weight:700;
+}
+.custom-lesson-system ul { list-style:disc; }
+.custom-lesson-system ol { list-style:decimal; }
+.custom-lesson-system ul:has(> li.flex) { list-style:none; padding-left:0; }
+.custom-lesson-system ul.custom-lesson-outcomes { list-style:disc; padding-left:24px; }
 .custom-lesson-system .custom-lesson-intro { font-size:18px;line-height:1.75;color:var(--lesson-muted);margin:0 0 34px;text-align:justify;text-justify:auto;text-align-last:start;hyphens:none; }
 .custom-lesson-system section { margin:0 0 32px; }
 .custom-lesson-system section + section { margin-top:0; }
@@ -534,7 +547,7 @@ button:disabled,
 .custom-lesson-content-end { height:1px; }
 .custom-lesson-system { padding-bottom:112px; }
 .custom-lesson-sticky-action {
-  position:fixed;z-index:70;left:50%;bottom:max(1rem,env(safe-area-inset-bottom));
+  position:fixed;z-index:70;left:50%;bottom:calc(5.75rem + env(safe-area-inset-bottom));
   transform:translateX(-50%);width:max-content;max-width:calc(100vw - 2rem);
   display:flex;justify-content:center;pointer-events:none;
 }
@@ -554,6 +567,8 @@ button:disabled,
 .dark .custom-lesson-page {
   --lesson-surface: var(--card);
   --lesson-page-shadow: 0 8px 36px rgba(0,0,0,.28);
+  border-color: color-mix(in oklab, var(--primary) 34%, var(--border));
+  box-shadow: 0 8px 36px rgba(0,0,0,.28), 0 0 0 1px color-mix(in oklab, var(--primary) 22%, transparent), 0 0 24px color-mix(in oklab, var(--primary) 8%, transparent);
 }
 .dark .custom-lesson-system p,.dark .custom-lesson-system li { color:var(--lesson-ink); }
 .dark .custom-lesson-system .custom-lesson-intro { color:var(--lesson-muted); }
@@ -564,7 +579,7 @@ button:disabled,
   .custom-lesson-hero { height:235px; }
   .custom-lesson-hero-copy { width:54%;left:22px;top:42%; }
   .custom-lesson-eyebrow { font-size:9px!important;letter-spacing:.12em!important; }
-  .custom-lesson-hero-copy > p:last-child { font-size:17px!important; }
+  .custom-lesson-hero-copy > h1 { font-size:20px!important; }
   .custom-lesson-hero-art { width:61%;right:-10%;opacity:.94; }
   .custom-lesson-scroll-cue { bottom:10px;font-size:9px;letter-spacing:.08em;padding:7px 11px; }
   .custom-lesson-hero-hint { display:none; }
@@ -581,4 +596,13 @@ button:disabled,
 @media(prefers-reduced-motion:reduce) {
   .custom-lesson-hero-art,.custom-lesson-stars,.custom-lesson-scroll-cue,.custom-lesson-scroll-arrow,.custom-lesson-scroll-hint { animation:none!important;transition:none!important; }
   .custom-lesson-page * { scroll-behavior:auto!important; }
+}
+@media(max-width:650px) {
+  .custom-lesson-page { border-radius:16px; }
+  .custom-lesson-sticky-action { bottom:calc(5.5rem + env(safe-area-inset-bottom)); }
+  .custom-lesson-system { padding-bottom:150px; }
+  .custom-lesson-sticky-action button { min-height:46px;padding:10px 16px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .custom-lesson-page { box-shadow:0 0 0 1px color-mix(in oklab,var(--primary) 18%,var(--border)); }
 }
