@@ -348,15 +348,20 @@ export function LessonPage() {
   const isLastLesson = currentIndex === allLessons.length - 1 && allLessons.length > 0;
 
   const handleMarkComplete = async () => {
-    if (currentLessonFinished || isQuizLesson) return;
+    if (currentLessonFinished || isQuizLesson) return false;
     setIsSaving(true);
     try {
       await updateProgress(courseId, lessonId);
       setIsCompleted(true);
       setLesson(p => p ? { ...p, isCompleted: true } : p);
       syncDone(lessonId);
-    } catch (e) { console.error(e); }
-    setIsSaving(false);
+      return true;
+    } catch (e) {
+      console.error(e);
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Custom lessons are completed deliberately by the learner at the end of the page.
