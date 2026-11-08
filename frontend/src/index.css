@@ -452,7 +452,7 @@ button:disabled,
   background:#fff;color:var(--lesson-ink);
   font-family:Arial,Helvetica,sans-serif;font-size:17px;line-height:1.78;
 }
-.custom-lesson-system > article:first-child { width:100%;max-width:none;margin:0;padding:0!important; }
+.custom-lesson-system > :first-child { width:100%;max-width:none;margin:0;padding:0!important; }
 .custom-lesson-system .custom-lesson-eyebrow {
   margin:0 0 12px!important;color:var(--lesson-green)!important;text-transform:uppercase;
   letter-spacing:.16em!important;font-size:12px!important;font-weight:700!important;line-height:1.4!important;text-align:left!important;
