@@ -55,10 +55,7 @@ int student-age = 20;     // ERROR: hyphens aren't allowed`;
   return (
     <article className="w-full max-w-none mx-0 py-6 sm:py-8 px-0 space-y-8 sm:space-y-10">
       <header className="space-y-4 pb-8 border-b border-border">
-        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
-          <Database className="h-3.5 w-3.5" /> Lesson · Variables
-        </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight">Storing Data With Variables</h1>
+        <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight">{lesson?.title || 'Storing Data With Variables'}</h1>
         <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
           Hi {firstName}, a variable is just a labeled box in memory that holds a value you can
           change later. Almost nothing useful happens in a program without them, so getting
