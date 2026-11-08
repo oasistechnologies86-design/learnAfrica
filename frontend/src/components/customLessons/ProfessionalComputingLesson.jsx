@@ -1,8 +1,7 @@
 import React from 'react';
 import {
-  ShieldCheck, Scale, Users, LockKeyhole, MessageCircle, Copyright,
-  Code2, Activity, Share2, Building2, Landmark, BookOpen, Lightbulb,
-  CheckCircle2, ClipboardList, Eye, Globe2
+  ShieldCheck, Scale, LockKeyhole, MessageCircle, Copyright,
+  Code2, Activity, Share2, Building2, Landmark, BookOpen, Eye
 } from 'lucide-react';
 
 const lessons = {
@@ -181,97 +180,71 @@ const lessons = {
 };
 
 const icons = [Scale, ShieldCheck, LockKeyhole, Eye, MessageCircle, Copyright, Code2, Activity, Share2, Building2, Landmark];
-const palettes = [
-  ['#183d35','#d8eee5'],['#243c64','#dce8fb'],['#603b24','#f4e3d4'],['#274b59','#d9edf1'],
-  ['#59416d','#eee1f7'],['#744b24','#f5e8d4'],['#244c72','#dceafb'],['#28634f','#dcefe5'],
-  ['#75435d','#f4e0eb'],['#3f4d63','#e0e7f0'],['#235c58','#dcefeb']
-];
-
-const lessonImages = [
-  'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=85',
-  'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=85',
-  'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=85',
-  'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=85',
-  'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=1200&q=85',
-  'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=85',
-  'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=85',
-  'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=85',
-  'https://images.unsplash.com/photo-1526378722484-bd91ca387e72?auto=format&fit=crop&w=1200&q=85',
-  'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1200&q=85',
-  'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=85'
-];
-
-function LessonIllustration({ number, title }) {
-  const Icon = icons[number - 1] || BookOpen;
-  const colors = palettes[number - 1] || palettes[0];
+function Section({ title, children }) {
+  const paragraphs = String(children || '').split(/\\n\\s*\\n/).map((part) => part.trim()).filter(Boolean);
   return (
-    <div className="relative h-44 sm:h-56 overflow-hidden rounded-xl sm:rounded-2xl bg-slate-950">
-      <img
-        src={lessonImages[number - 1] || lessonImages[0]}
-        alt={title + ' lesson illustration'}
-        loading="eager"
-        className="absolute inset-0 h-full w-full object-cover"
-      />
-      <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/10" />
-      <div className="relative z-10 flex h-full items-center px-4 sm:px-7">
-        <div className="max-w-[78%] text-white">
-          <span className="text-[10px] sm:text-xs uppercase tracking-[.16em] font-bold text-white/80">Professional Computing · Lesson {number}</span>
-          <h2 className="mt-2 text-xl sm:text-3xl font-extrabold leading-tight">{title}</h2>
-          <p className="mt-2 text-xs sm:text-sm text-white/80">Professional knowledge for responsible digital practice</p>
-        </div>
-        <div className="absolute right-3 sm:right-7 bottom-3 sm:bottom-5 rounded-xl p-2.5 sm:p-3 shadow-lg" style={{background:colors[1],color:colors[0]}}>
-          <Icon className="h-7 w-7 sm:h-9 sm:w-9" strokeWidth={1.6}/>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Section({ title, children, index }) {
-  const openers = [
-    "Let's begin with the foundation. As you read, connect the idea to something you have seen in everyday digital life.",
-    "Now let's build on that idea and look at what it means in practice.",
-    "Think about how this could happen in a school, workplace or online service you use.",
-    "Here is where the concept becomes practical. Follow the explanation and consider the choices involved.",
-    "Let's examine the responsibilities and consequences behind this issue.",
-    "Keep the people affected in mind as we work through this part.",
-    "Let's bring the ideas together and see how they guide responsible decisions."
-  ];
-  return (
-    <section className="py-3 border-b border-border/70 last:border-b-0">
-      <div className="flex items-start gap-3">
-        <span className="mt-0.5 shrink-0 h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">{index}</span>
-        <div className="min-w-0 flex-1">
-          <h3 className="text-lg sm:text-xl font-bold tracking-tight">{title}</h3>
-          <p className="mt-1.5 text-xs sm:text-sm font-medium text-primary/90">{openers[(index - 1) % openers.length]}</p>
-          <p className="mt-2 text-sm sm:text-[15px] leading-[1.65] text-foreground/85 text-left [text-align:left]">{children}</p>
-        </div>
-      </div>
+    <section className="custom-lesson-section">
+      <h2>{title}</h2>
+      {paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
     </section>
   );
 }
 
-function SupportingImage({ number, title }) {
-  const supportingImages = [
-    'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1526378722484-bd91ca387e72?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1000&q=80'
-  ];
-  return (
-    <figure className="my-3 overflow-hidden rounded-xl border border-border">
-      <img src={supportingImages[number - 1] || supportingImages[0]} alt={title + ' in practice'} loading="lazy" className="h-36 sm:h-44 w-full object-cover" />
-      <figcaption className="bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground">A practical view of {title.toLowerCase()} in the digital world.</figcaption>
-    </figure>
-  );
-}
+const expandedSections = {
+  1: [
+    ['Ethical theories and how to use them', 'Consequentialist reasoning evaluates an action by considering its likely outcomes. A decision that produces substantial benefit while reducing avoidable harm may be preferable, but the analysis must include people who are not present in the room and harms that may occur later. A utilitarian approach asks whether overall well-being is increased; it should not be used carelessly to dismiss the rights of a smaller group.\n\nDuty-based reasoning focuses on obligations and principles, such as honesty, respect for persons, keeping promises and avoiding deception. Rights-based reasoning asks whether a decision respects legitimate claims such as privacy, autonomy and fair treatment. Virtue ethics considers the character traits a good professional should demonstrate, including honesty, courage, fairness, patience and practical wisdom. These approaches are not competing checklists with one automatic answer. Used together, they expose different dimensions of a difficult decision.'],
+    ['Critical thinking, evidence and ethical justification', 'An ethical argument should begin with a clear description of the problem and reliable evidence. Separate what is known from what is assumed, identify missing information and check whether the evidence is current and relevant. For example, a report that a student account accessed a record does not by itself prove misconduct: the access may have been authorised, mistaken or malicious. Logs, access policies, the user’s role and the purpose of the activity need to be examined.\n\nA defensible decision explains which principles apply, who may be affected, what alternatives were considered and why the selected action is proportionate. It should also identify uncertainty and provide a way to review the result. This makes ethical reasoning transparent and helps organisations learn from mistakes rather than relying on personal opinion or seniority.']
+  ],
+  2: [
+    ['Professional codes, competence and duty of care', 'Professional codes translate broad ethical values into expectations for practice. The ACM Code of Ethics, for example, emphasises the public good, avoiding harm, honesty, fairness, privacy and professional competence. A code does not replace legislation, employment policies or careful judgement; it helps professionals recognise duties that may not be obvious from a technical specification. When duties conflict, professionals should explain the conflict, seek guidance and document their reasoning.\n\nCompetence is an ethical responsibility because poor technical work can expose people to harm. IT workers should maintain relevant knowledge, test changes, understand the limits of their expertise and ask for help when a task exceeds their ability. A technician should not claim a system is secure merely because it passed a basic test. They should communicate residual risks in language decision-makers can understand.'],
+    ['Acceptable-use policies and separation of duties', 'An acceptable-use policy should explain which systems and resources may be used, for what purposes, and which activities are prohibited. It should be communicated in accessible language and applied consistently. Policies should address personal use, software installation, internet access, monitoring, storage of work files, reporting incidents and consequences for misuse. Monitoring should itself be lawful, necessary, proportionate and transparent.\n\nSeparation of duties reduces the chance that one person can make and conceal a high-impact change. For example, a staff member who enters examination results should not be the only person who approves and publishes them. Approval workflows, individual accounts, audit logs and periodic access reviews provide evidence and reduce opportunities for favouritism or fraud.']
+  ],
+  3: [
+    ['Common categories of cybercrime and their effects', 'Cybercrime includes offences in which computers or networks are the target, the instrument, or the environment in which the offence occurs. Attacks against systems include unauthorised access, interference with data, disruption of services and deployment of ransomware. Computer-enabled offences include online impersonation, payment fraud, identity theft, extortion and the distribution of deceptive material. The categories can overlap: a stolen password may be used to enter a school system and then alter records or demand money.\n\nThe impact is not limited to the cost of replacing equipment. A compromised account can expose personal information, interrupt teaching, damage an organisation’s reputation and undermine confidence in digital services. A school or small business may also face recovery costs, lost working time, investigation expenses and legal or regulatory obligations. Victims should not be blamed for being deceived; organisations need controls and reporting processes that make it easier to respond quickly.'],
+    ['Digital evidence and incident handling', 'Digital evidence may include email headers, message content, access logs, timestamps, device records, transaction references and network information. It can be altered or lost if people casually delete messages, reset devices or forward suspicious files. Preserve evidence using approved procedures, record who handled it and when, and avoid investigating beyond your authority. Staff should report what they observed without editing or embellishing the facts.\n\nA structured response normally involves preparation, identification, analysis, containment, eradication, recovery and lessons learned. Prioritise safety and continuity, isolate affected systems when authorised, reset credentials through trusted channels and restore from clean tested backups. NIST’s Cybersecurity Framework 2.0 describes coordinated response, analysis, mitigation and recovery activities; an organisation should adapt its plan to its size, legal duties and available resources.']
+  ],
+  4: [
+    ['The data lifecycle and privacy risks', 'Privacy risks arise at every stage of the data lifecycle: collection, recording, storage, access, use, sharing, retention and disposal. A spreadsheet containing student phone numbers may be harmless when held by an authorised staff member for a clear purpose, but risky when copied to a personal device, shared in a public group or retained after the purpose has ended. Combining separate datasets can also reveal information that was not obvious from either dataset alone.\n\nData minimisation means limiting collection to what is adequate, relevant and necessary for the stated purpose. Purpose limitation means not quietly reusing information for a new and incompatible purpose. Retention limits reduce the amount of information exposed if an account or device is compromised. Secure deletion should cover working copies and backups according to a documented schedule rather than relying on the belief that moving a file to a recycle bin has erased it.'],
+    ['Consent, transparency and privacy impact assessment', 'Consent can be important, but it is not a universal solution to every privacy question. A request for consent should be understandable, specific and freely made; people should not be misled about what will happen if they refuse. Depending on the context and applicable law, an organisation may rely on another lawful justification. The organisation must identify the correct basis rather than treating a pre-ticked box as proof that all processing is appropriate.\n\nA privacy impact assessment is a structured way to identify how a proposed system may affect individuals. It asks what information is collected, why it is needed, who can access it, how long it is kept, where it is transferred, what could go wrong and how risks will be reduced. The assessment should be revisited when the system, purpose, supplier or data categories change. Privacy notices should match actual practice, not simply describe an ideal policy.']
+  ],
+  5: [
+    ['Rights, limits and the public interest', 'Freedom of expression protects the ability to seek, receive and communicate ideas, criticism and information. It supports academic debate, journalism, civic participation and the ability to question institutions. Digital platforms can widen participation, but they also allow messages to spread rapidly and persist beyond their original context. A responsible discussion distinguishes criticism of an idea or public decision from targeted abuse, threats or disclosure of another person’s private information.\n\nExpression may be subject to lawful restrictions in particular circumstances, but restrictions should not be assumed merely because a statement is unpopular or uncomfortable. Assessment requires attention to the relevant jurisdiction, the exact content, context, purpose, audience, foreseeable harm and applicable law or platform rules. Students should not treat a platform’s community guidelines as identical to national law, nor assume that every moderation decision is automatically fair.'],
+    ['Misinformation, disinformation and content moderation', 'Misinformation is false or inaccurate information shared without necessarily intending to deceive. Disinformation is deliberately created or shared to mislead. Malinformation uses genuine information in a harmful context, such as exposing private details to intimidate someone. These distinctions help explain why fact-checking alone may not address harassment or privacy violations.\n\nA sound moderation process publishes clear rules, applies them consistently, considers context, explains important decisions and provides an appeal route where practical. Responses should be proportionate: a reminder or correction may be enough for a minor mistake, while a credible threat may require urgent escalation. Before sharing a claim, check the original source, date, supporting evidence and independent confirmation. Screenshots can omit context, and a high number of shares does not establish truth.']
+  ],
+  6: [
+    ['Other forms of intellectual property and software licensing', 'Copyright is only one part of intellectual property. Trademarks help distinguish the goods or services of one organisation from another. Patents may protect qualifying inventions for a limited period where statutory requirements are met. Trade secrets protect confidential business information when reasonable steps are taken to keep it secret. These rights have different purposes and rules; a logo, a source-code file and a technical invention should not automatically be analysed under the same legal category.\n\nSoftware licences define permissions and obligations for using, copying, modifying and distributing software. Proprietary licences may restrict access to source code or limit installation and redistribution. Open-source licences permit specified uses and access to source code, but they still have conditions. Some licences are permissive, while copyleft licences such as the GNU GPL require distributed derivative works to preserve specified freedoms. Read the exact licence and version before incorporating a dependency into a project.'],
+    ['Attribution, fair dealing and responsible course materials', 'Attribution identifies the creator and source, but attribution alone does not make an otherwise unauthorised use lawful. A lecturer preparing course materials should check the licence, permission, applicable exceptions and whether the proposed use is commercial or public distribution. The rules and scope of exceptions differ by jurisdiction, so a user should not assume that a practice permitted in one country is automatically permitted in Ghana.\n\nKeep a record of the creator, title, source URL, licence version, date accessed and any changes made. For software, also retain licence files and notices required by dependencies. For images and media, avoid removing watermarks or creator information. If the licence is unclear, choose a clearly licensed alternative or request permission before publishing.']
+  ],
+  7: [
+    ['Requirements, stakeholder participation and inclusive design', 'Software requirements should describe the problem to be solved, the people who will use or be affected by the system, and the conditions under which it must operate. Requirements gathering should include different user groups rather than relying only on the assumptions of the project sponsor. A system designed for a fast laptop and stable broadband may fail for a student using an older phone and limited mobile data.\n\nInclusive design considers disability, language, device capability, connectivity, age, digital confidence and different working environments. Accessibility features such as keyboard operation, readable contrast, captions, labels and screen-reader support should be built into the design and tested. Security and privacy requirements should be written as testable requirements, not vague statements such as “make it safe.”'],
+    ['Secure engineering, testing and responsible release', 'Secure software development uses threat modelling, code review, dependency management, secure configuration, secrets protection and testing throughout the lifecycle. Teams should validate input, handle errors safely, protect credentials, apply least privilege and keep third-party components updated. A vulnerability in a library can affect an application even when the organisation did not write that library itself.\n\nTesting should include normal use, unusual input, boundary conditions, accessibility, performance, recovery and security. A release decision should consider the severity and likelihood of known defects, the users who may be harmed and whether safeguards or workarounds are available. After release, teams need monitoring, patching, support, backup and a plan for retiring the system. Responsible engineering continues for as long as people depend on the software.']
+  ],
+  8: [
+    ['Measuring productivity and evaluating automation', 'Productivity is not simply the number of tasks completed per hour. A useful evaluation considers output quality, error rates, service reliability, time saved, costs, user satisfaction and the resources required to maintain the system. Automation may speed up a process while creating new work such as exception handling, data correction, supervision and staff training. A system that produces more results but introduces serious errors may reduce overall productivity.\n\nBefore automating a process, understand how it currently works and identify the causes of delay or error. Define measurable outcomes, test with realistic data and compare results after implementation. Consider who benefits from the time saved and whether workers receive training for changing responsibilities. Human review is especially important when automated outputs affect education, employment, finance, health or access to essential services.'],
+    ['Digital inclusion, wellbeing and environmental sustainability', 'The digital divide includes more than whether a household owns a computer. It also concerns reliable electricity, affordable data, network coverage, accessible devices, relevant language, digital skills and the ability to use services safely. An inclusive organisation may provide mobile-friendly pages, low-bandwidth alternatives, downloadable resources, offline support and accessible formats. These choices are particularly important when a digital service becomes the only route to an essential opportunity.\n\nTechnology can improve access and flexibility, but constant notifications, surveillance, poor ergonomics and expectations of permanent availability can affect wellbeing. Electronic devices also require materials, energy and responsible end-of-life handling. Repair, reuse, secure data wiping, certified recycling and efficient infrastructure reduce avoidable harm. UNESCO’s 2023 Global Education Monitoring report cautions that education technology should be assessed for equity, evidence, appropriateness and sustainability rather than assumed to benefit every learner automatically.']
+  ],
+  9: [
+    ['Algorithms, platform design and personal data', 'Social networks organise content through feeds, recommendations, search, advertising and moderation systems. These systems may use information such as follows, clicks, viewing time, location, contacts and inferred interests. A recommendation system can help users discover relevant material, but it can also repeatedly expose them to sensational or one-sided content. Users should understand that the order of posts is often selected by software rather than being a neutral view of everything published.\n\nPrivacy settings are useful but do not guarantee confidentiality. A recipient can take a screenshot, copy a message or share a post outside its intended audience. Platforms may also retain information under their own policies and legal obligations. Avoid sharing passwords, one-time codes, identity documents or sensitive location details through direct messages, and verify requests using a separate trusted channel.'],
+    ['Cyberbullying, safety and professional boundaries', 'Cyberbullying and online harassment can involve repeated insults, threats, impersonation, unwanted contact, coordinated humiliation or sharing private material without permission. Preserve relevant evidence, use platform reporting tools and seek help from trusted people or appropriate authorities when there is a credible threat. Do not retaliate by publishing another person’s private details; doing so can escalate harm and create further risk.\n\nProfessional identity requires care because public posts may be viewed by classmates, employers, clients and colleagues. Separate personal and work accounts where appropriate, follow workplace confidentiality rules and avoid presenting personal opinions as official organisational statements. Before posting, consider whether the content is accurate, respectful, necessary and suitable for the intended audience.']
+  ],
+  10: [
+    ['Governance, risk management and internal controls', 'IT governance connects technology decisions to an organisation’s goals, obligations and risk appetite. It clarifies who approves major changes, who owns information assets, who monitors security and who is accountable when a service fails. Policies are useful only when responsibilities, resources, training and oversight are in place. Boards and senior leaders should receive information that allows them to understand significant technology risks without relying solely on technical assurances.\n\nInternal controls include approval workflows, access reviews, separation of duties, change management, audit logs, incident exercises and independent assurance. Controls should be proportionate to the organisation’s size and the sensitivity of its systems. Too few controls invite misuse; unnecessarily complex controls can prevent staff from doing legitimate work and encourage unsafe workarounds.'],
+    ['Supplier management, transparency and social impact', 'Supplier due diligence should examine financial stability, security practices, data locations, subcontractors, service availability, support arrangements, incident notification, business continuity and the ability to return or securely delete information at the end of a contract. Contracts should identify responsibilities and service expectations, but an organisation must also monitor whether the supplier performs as promised. A backup or exit plan should be tested before a crisis.\n\nEthical organisational conduct also includes fair employment practices, accessible products, honest marketing, environmental responsibility and attention to unintended effects of automation. Leaders shape culture through the behaviour they reward and tolerate. If employees are punished for reporting defects, problems are likely to remain hidden. A safe reporting route, fair investigation and protection against retaliation help organisations identify problems early.']
+  ],
+  11: [
+    ['Applying Act 843 to real organisational processes', 'The Act’s principles should be reflected in day-to-day decisions, not treated as a paragraph in a privacy policy. A school collecting learner details should explain the purpose, collect only relevant information, keep records accurate, protect them against unauthorised access and avoid using them for unrelated activities without an appropriate basis. Staff should know which records they may access and how to handle requests from learners or their authorised representatives.\n\nA data controller determines the purposes and manner of processing, while a data processor handles personal data on behalf of a controller. The roles should be identified in contracts and operating procedures. Outsourcing hosting, email or payment processing does not remove the controller’s need to understand the processing, select suitable providers and monitor safeguards. The Data Protection Commission publishes current guidance and operates registration and compliance processes; organisations should verify current requirements directly with the Commission.'],
+    ['Rights, safeguards and responding to a suspected compromise', 'Data subject participation includes mechanisms for people to engage with organisations about personal information concerning them. Procedures should explain how requests are received, identity is verified, records are located and responses are provided while protecting the information of other people. Staff should not disclose a complete class list or another person’s record simply because a requester asks for it.\n\nIf a record is exposed, the organisation should contain the incident, preserve evidence, identify the information and people potentially affected, involve the responsible privacy and security personnel, and follow applicable notification and reporting requirements. The exact legal response depends on the facts and current law; this course is not a substitute for legal advice. Consult the full Act and current Data Protection Commission guidance before making compliance decisions.']
+  ]
+};
+
+const furtherReading = [
+  { label: 'Herman T. Tavani, Ethics and Technology (Wiley companion contents)', url: 'https://bcs.wiley.com/he-bcs/Books?action=contents&bcsId=8462&itemId=1118281721' },
+  { label: 'ACM Code of Ethics and Professional Conduct', url: 'https://www.acm.org/code-of-ethics' },
+  { label: 'Ghana Data Protection Commission guidance', url: 'https://dpc.gov.gh/compliance/' },
+  { label: 'NIST Cybersecurity Framework 2.0', url: 'https://www.nist.gov/cyberframework' },
+  { label: 'Creative Commons licence explanations', url: 'https://creativecommons.org/cc-licenses/' },
+  { label: 'UNESCO 2023 Global Education Monitoring Report: Technology in education', url: 'https://gem-report-2023.unesco.org/' }
+];
 
 export default function ProfessionalComputingLesson({ student, lesson }) {
   const match = String(lesson?.component_key || lesson?.componentKey || '').match(/professional-computing-(\d{2})/);
@@ -283,20 +256,15 @@ export default function ProfessionalComputingLesson({ student, lesson }) {
   return (
     <article className="w-full max-w-none mx-0 py-4 sm:py-6 px-0 space-y-5">
       <header className="space-y-2.5 pb-4 border-b border-border">
-        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
-          <Icon className="h-3.5 w-3.5" /> Professional Computing · Lesson {number}
-        </div>
+        <p className="custom-lesson-eyebrow">{data.category} · Lesson {number}</p>
         <h1 className="text-2xl sm:text-3xl font-extrabold leading-tight">{data.title}</h1>
-        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed text-left [text-align:left]">
-          {firstName ? 'Hello ' + firstName + '. ' : 'Welcome. '}
-          {data.intro} I'll guide you through the ideas step by step, using familiar situations so you can see how they apply beyond this page. Take your time and think about how each example relates to everyday digital life.
-        </p>
+        <p className="custom-lesson-intro">{data.intro}</p>
       </header>
 
       <section className="space-y-2">
-        <h2 className="text-lg font-bold flex items-center gap-2"><BookOpen className="h-5 w-5 text-primary" /> By the end of this lesson</h2>
+        <h2>Learning outcomes</h2>
         <p className="text-sm text-muted-foreground leading-relaxed">Here are the ideas and skills you should understand from this lesson:</p>
-        <ul className="grid grid-cols-1 gap-2">
+        <ul className="custom-lesson-outcomes grid grid-cols-1 gap-2">
           {data.outcomes.map((item,i)=>(
             <li key={i} className="flex items-start gap-3 rounded-lg border border-border bg-card px-3 py-2.5 text-left">
               <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">{i+1}</span>
@@ -306,31 +274,44 @@ export default function ProfessionalComputingLesson({ student, lesson }) {
         </ul>
       </section>
 
-      <section className="space-y-1">
-        <h2 className="text-xl sm:text-2xl font-extrabold">Let's learn together</h2>
-        <p className="text-sm text-muted-foreground leading-relaxed">Read each part in order. I'll explain the idea, connect it to real situations and help you think through why it matters.</p>
-        {data.sections.map((section,i)=>(
-          <React.Fragment key={i}>
-            <Section title={section[0]} index={i+1}>{section[1]}</Section>
-            {i === 1 || (data.sections.length > 4 && i === 4) ? <SupportingImage number={number} title={data.title}/> : null}
-          </React.Fragment>
+      <section className="custom-lesson-reading">
+        <h2>Detailed lesson reading</h2>
+        {[...data.sections, ...(expandedSections[number] || [])].map((section,i)=>(
+          <Section key={i} title={section[0]}>{section[1]}</Section>
         ))}
       </section>
 
-      <section className="rounded-xl border border-primary/20 bg-primary/5 p-3 sm:p-4">
-        <div className="flex gap-2 items-center text-primary"><Lightbulb className="h-5 w-5"/><h2 className="font-bold text-base sm:text-lg">Let's apply what we've learned</h2></div>
-        <p className="mt-2 text-sm sm:text-[15px] leading-[1.65] text-foreground/85 text-left [text-align:left]">{data.case}</p>
-        <p className="mt-2 text-xs text-muted-foreground">As you consider this example, ask yourself: who could be affected, what could go wrong, and what would a responsible person do next?</p>
+      <section className="custom-lesson-note">
+        <h2>Case study: apply the principles</h2>
+        <p>{data.case}</p>
+        <p><strong>Study task:</strong> {data.activity}</p>
       </section>
 
-      <section className="space-y-2">
-        <h2 className="text-lg font-bold">Words to remember</h2>
-        <p className="text-sm text-muted-foreground">Review these important terms and practise explaining each one in your own words.</p>
-        <div className="flex flex-wrap gap-2">{data.terms.split(' • ').map((term,i)=><span key={i} className="rounded-full border border-border bg-muted/40 px-3 py-1.5 text-xs font-medium">{term}</span>)}</div>
+      <section>
+        <h2>Key terms</h2>
+        <p>Use these terms accurately when explaining the topic and analysing practical situations.</p>
+        <ul>{data.terms.split(' • ').map((term,i)=><li key={i}>{term}</li>)}</ul>
+      </section>
+      <section className="custom-lesson-sources">
+        <h2>Further reading and authoritative references</h2>
+        <p>Use these sources to deepen your understanding. Where a topic concerns Ghanaian law, consult the current official legislation and regulator guidance rather than relying on a general textbook.</p>
+        <ul>{furtherReading.filter((source)=> {
+          if (number === 11) return /Ghana Data Protection|Tavani|ACM/.test(source.label);
+          if (number === 3 || number === 4) return /NIST|Tavani|ACM/.test(source.label);
+          if (number === 6) return /Creative Commons|Tavani/.test(source.label);
+          if (number === 8) return /UNESCO|Tavani/.test(source.label);
+          return /Tavani|ACM/.test(source.label);
+        }).map((source)=><li key={source.url}><a href={source.url} target="_blank" rel="noreferrer">{source.label}</a></li>)}</ul>
       </section>
 
-      <footer className="rounded-xl border border-border bg-muted/30 p-3 sm:p-4">
-        <div className="flex gap-3 items-start"><Icon className="h-5 w-5 mt-0.5 text-primary"/><div><h3 className="font-bold">Check your understanding</h3><p className="mt-1 text-sm leading-relaxed text-muted-foreground">Pause and summarise the main idea in your own words. Think about the examples, identify the responsibilities involved, and consider how you would apply what you have learned in a real situation.</p></div></div>
+      <footer className="custom-lesson-takeaways">
+        <h2>Key takeaways</h2>
+        <ul>
+          <li>Understand the central concepts and explain them in your own words.</li>
+          <li>Apply the principles to realistic computing situations, not only definitions.</li>
+          <li>Consider the people affected, the evidence available and the responsibilities involved.</li>
+          <li>Consult current primary sources whenever a legal or technical requirement may have changed.</li>
+        </ul>
       </footer>
     </article>
   );
