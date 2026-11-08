@@ -254,8 +254,7 @@ export default function ProfessionalComputingLesson({ lesson }) {
   return (
     <article className="w-full max-w-none mx-0 py-4 sm:py-6 px-0 space-y-5">
       <header className="space-y-2.5 pb-4 border-b border-border">
-        <p className="custom-lesson-eyebrow">{data.category} · Lesson {number}</p>
-        <h1 className="text-2xl sm:text-3xl font-extrabold leading-tight">{data.title}</h1>
+        <h1 className="text-2xl sm:text-3xl font-extrabold leading-tight">{lesson?.title || data.title}</h1>
         <p className="custom-lesson-intro">{data.intro}</p>
       </header>
 
