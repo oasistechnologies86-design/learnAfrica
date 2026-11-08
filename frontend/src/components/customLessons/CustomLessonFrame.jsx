@@ -1,27 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 
 export default function CustomLessonFrame({ lesson, children, mode = 'student' }) {
-  const [showScrollCue, setShowScrollCue] = useState(false);
   const heroRef = useRef(null);
   const artRef = useRef(null);
-
-  useEffect(() => {
-    const update = () => {
-      const root = document.documentElement;
-      const remaining = root.scrollHeight - (window.scrollY + window.innerHeight);
-      setShowScrollCue(root.scrollHeight > window.innerHeight + 180 && remaining > 150);
-    };
-    update();
-    window.addEventListener('scroll', update, { passive: true });
-    window.addEventListener('resize', update);
-    const observer = new MutationObserver(update);
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true });
-    return () => {
-      window.removeEventListener('scroll', update);
-      window.removeEventListener('resize', update);
-      observer.disconnect();
-    };
-  }, [lesson?.id]);
 
   const handlePointerMove = (event) => {
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches || !heroRef.current || !artRef.current) return;
@@ -39,12 +20,11 @@ export default function CustomLessonFrame({ lesson, children, mode = 'student' }
     ['--move-x', '--move-y', '--tilt-x', '--tilt-y'].forEach((property) => artRef.current.style.setProperty(property, '0'));
   };
 
-  const scrollFurther = () => window.scrollBy({ top: Math.max(420, window.innerHeight * 0.72), behavior: 'smooth' });
   const heroTitle = lesson?.title || 'Explore, understand and apply what you learn.';
-  const heroEyebrow = mode === 'instructor' ? 'Instructor lesson preview' : 'Learn Africa • Custom lesson';
+  const heroEyebrow = mode === 'instructor' || mode === 'preview' ? 'Instructor lesson preview' : 'Learn Africa • Custom lesson';
 
   return (
-    <main className="custom-lesson-page" data-custom-lesson-mode={mode}>
+    <div className="custom-lesson-page" data-custom-lesson-mode={mode}>
       <section
         ref={heroRef}
         className="custom-lesson-hero"
@@ -104,12 +84,7 @@ export default function CustomLessonFrame({ lesson, children, mode = 'student' }
       <article className="custom-lesson-system" aria-label={lesson?.title || 'Custom lesson'}>
         {children}
       </article>
-
-      {showScrollCue && (
-        <button type="button" className="custom-lesson-scroll-hint" onClick={scrollFurther} aria-label="Scroll down to continue reading">
-          <span>Scroll down to continue reading</span><span aria-hidden="true">↓</span>
-        </button>
-      )}
-    </main>
+}
+    </div>
   );
 }
