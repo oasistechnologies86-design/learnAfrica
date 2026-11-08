@@ -154,7 +154,6 @@ export default function CustomLessonFrame({ lesson, children, mode = 'student', 
           )}
         </div>
       )}
-      </article>
     </div>
   );
 }
