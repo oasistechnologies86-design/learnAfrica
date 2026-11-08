@@ -355,20 +355,22 @@ button:disabled,
 
 
 
-/* Custom lesson pages follow the supplied Template.html design system. */
+/* Custom lesson pages follow the supplied Template.html design system. *//* Custom lesson pages follow the supplied Template.html design system. */
 .custom-lesson-page {
-  --lesson-green: #168443;
-  --lesson-green-dark: #075b2b;
-  --lesson-green-soft: #eaf7ee;
-  --lesson-ink: #202923;
-  --lesson-muted: #536159;
-  --lesson-line: #e5eee7;
+  --lesson-green: var(--primary);
+  --lesson-green-dark: color-mix(in oklab, var(--primary) 78%, var(--foreground));
+  --lesson-green-soft: color-mix(in oklab, var(--primary) 10%, var(--background));
+  --lesson-ink: var(--foreground);
+  --lesson-muted: var(--muted-foreground);
+  --lesson-line: var(--border);
+  --lesson-surface: var(--background);
+  --lesson-page-shadow: 0 8px 36px rgba(20, 55, 30, .07);
   width: min(100%, 1050px);
   min-height: 100vh;
   margin: 0 auto;
-  background: #fff;
+  background: var(--lesson-surface);
   color: var(--lesson-ink);
-  box-shadow: 0 8px 36px rgba(20, 55, 30, .07);
+  box-shadow: var(--lesson-page-shadow);
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -449,7 +451,7 @@ button:disabled,
 .custom-lesson-system {
   width:100%;min-width:0;margin:0 auto;
   padding:44px clamp(24px,5.5vw,58px) 62px;
-  background:#fff;color:var(--lesson-ink);
+  background:var(--lesson-surface);color:var(--lesson-ink);
   font-family:Arial,Helvetica,sans-serif;font-size:17px;line-height:1.78;
 }
 .custom-lesson-system > :first-child { width:100%;max-width:none;margin:0;padding:0!important; }
@@ -478,11 +480,11 @@ button:disabled,
   font:700 18px/1.35 Arial,Helvetica,sans-serif;
 }
 .custom-lesson-system p,.custom-lesson-system li {
-  color:#28332c;font-size:17px;line-height:1.78;
-  text-align:justify;text-justify:inter-word;hyphens:auto;
+  color:var(--lesson-ink);font-size:17px;line-height:1.78;
+  text-align:justify;text-justify:inter-word;hyphens:none;word-break:normal;overflow-wrap:normal;
 }
 .custom-lesson-system p { margin:0 0 15px; }
-.custom-lesson-system .custom-lesson-intro { font-size:18px;line-height:1.75;color:#344139;margin:0 0 34px;text-align:justify;text-justify:inter-word; }
+.custom-lesson-system .custom-lesson-intro { font-size:18px;line-height:1.75;color:var(--lesson-muted);margin:0 0 34px;text-align:justify;text-justify:inter-word; }
 .custom-lesson-system section { margin:0 0 32px; }
 .custom-lesson-system section + section { margin-top:0; }
 .custom-lesson-system ul,.custom-lesson-system ol { margin:8px 0 18px;padding-left:24px; }
@@ -497,27 +499,54 @@ button:disabled,
 .custom-lesson-system th,.custom-lesson-system td { padding:10px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--lesson-line); }
 .custom-lesson-system th { font-weight:700;background:var(--lesson-green-soft); }
 .custom-lesson-system .custom-lesson-outcomes li {
-  padding:12px 14px;border:1px solid var(--lesson-line);border-left:3px solid var(--lesson-green);
-  border-radius:8px;background:#fbfdfb;text-align:left;
+  padding:0 0 0 2px;border:0;border-radius:0;background:transparent;text-align:justify;
 }
 .custom-lesson-system .custom-lesson-takeaways {
-  margin-top:34px;padding:19px 22px;border:1px solid #c8e8d1;border-left:5px solid var(--lesson-green);
-  border-radius:12px;background:linear-gradient(105deg,#f0faf2,#f8fcf8);
+  margin-top:34px;padding:0;border:0;border-radius:0;background:transparent;
 }
 .custom-lesson-system .custom-lesson-takeaways li { font-size:15px;line-height:1.5; }
 .custom-lesson-system .custom-lesson-note {
-  margin-top:22px;padding:15px 18px;border-radius:10px;background:#f0f6ff;
-  border:1px solid #d6e5fb;color:#34475d;
+  margin-top:22px;padding:0;border-radius:0;background:transparent;
+  border:0;color:var(--lesson-ink);
 }
 .custom-lesson-system .custom-lesson-sources { padding-top:20px;border-top:1px solid var(--lesson-line); }
 .custom-lesson-scroll-hint {
   position:fixed;z-index:60;left:50%;bottom:max(1rem,env(safe-area-inset-bottom));
   transform:translateX(-50%);display:inline-flex;align-items:center;gap:.45rem;
-  padding:.55rem .9rem;border:1px solid #c8e8d1;border-radius:999px;
-  color:var(--lesson-green-dark);background:#fff;box-shadow:0 4px 18px rgba(0,0,0,.13);
+  padding:.55rem .9rem;border:1px solid var(--lesson-line);border-radius:999px;
+  color:var(--lesson-green-dark);background:var(--lesson-surface);box-shadow:0 4px 18px rgba(0,0,0,.13);
   font:600 .78rem/1.2 Arial,Helvetica,sans-serif;animation:customLessonHint 1.7s ease-in-out infinite;
 }
 @keyframes customLessonHint { 0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,-4px)} }
+
+.custom-lesson-scroll-cue,.custom-lesson-bottom-scroll button {
+  cursor:pointer;font-family:Arial,Helvetica,sans-serif;
+}
+.custom-lesson-scroll-cue { appearance:none; }
+.custom-lesson-scroll-cue:focus-visible,.custom-lesson-bottom-scroll button:focus-visible {
+  outline:3px solid var(--ring);outline-offset:4px;
+}
+.custom-lesson-bottom-scroll {
+  display:flex;justify-content:center;padding:24px 0 0;margin-top:30px;border-top:1px solid var(--lesson-line);
+}
+.custom-lesson-bottom-scroll button {
+  display:inline-flex;align-items:center;gap:12px;padding:10px 17px;border:1px solid var(--lesson-line);
+  border-radius:999px;color:var(--lesson-green-dark);background:var(--lesson-surface);
+  font-size:11px;font-weight:700;letter-spacing:.1em;transition:background .2s ease,transform .2s ease;
+}
+.custom-lesson-bottom-scroll button:hover { background:var(--lesson-green-soft);transform:translateY(-2px); }
+.custom-lesson-bottom-scroll button span:last-child {
+  display:grid;place-items:center;width:23px;height:23px;border:1px solid currentColor;border-radius:50%;font-size:16px;
+}
+.dark .custom-lesson-page {
+  --lesson-surface: var(--card);
+  --lesson-page-shadow: 0 8px 36px rgba(0,0,0,.28);
+}
+.dark .custom-lesson-system p,.dark .custom-lesson-system li { color:var(--lesson-ink); }
+.dark .custom-lesson-system .custom-lesson-intro { color:var(--lesson-muted); }
+.dark .custom-lesson-system th { background:var(--lesson-green-soft);color:var(--lesson-ink); }
+.dark .custom-lesson-system .custom-lesson-sources { border-color:var(--lesson-line); }
+
 @media(max-width:650px) {
   .custom-lesson-hero { height:235px; }
   .custom-lesson-hero-copy { width:54%;left:22px;top:42%; }
@@ -525,6 +554,7 @@ button:disabled,
   .custom-lesson-hero-copy > p:last-child { font-size:17px!important; }
   .custom-lesson-hero-art { width:61%;right:-10%;opacity:.94; }
   .custom-lesson-scroll-cue { bottom:10px;font-size:9px;letter-spacing:.08em;padding:7px 11px; }
+  .custom-lesson-bottom-scroll button { font-size:10px; }
   .custom-lesson-hero-hint { display:none; }
   .custom-lesson-system { padding:30px 24px 42px;font-size:16px; }
   .custom-lesson-system .custom-lesson-intro { font-size:16px; }
