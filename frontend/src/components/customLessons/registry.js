@@ -27,6 +27,7 @@ import CppBasicIOLesson from './CppBasicIOLesson';
 import CppCalculatorExerciseLesson from './CppCalculatorExerciseLesson';
 import CppConditionalsLesson from './CppConditionalsLesson';
 import CppFinalProjectLesson from './CppFinalProjectLesson';
+import ProfessionalComputingLesson from './ProfessionalComputingLesson';
 
 
 
@@ -75,7 +76,7 @@ export const customLessonRegistry = {
     label: 'C++: Conditionals (if/else/switch)',
     component: CppConditionalsLesson,
   },
-  'cpp-final-project-guessing-game': {
+  ...Object.fromEntries(Array.from({ length: 11 }, (_, index) => {\n    const number = index + 1;\n    const suffix = String(number).padStart(2, '0');\n    const labels = [\n      'An Overview of Ethics', 'Ethics for IT Workers and IT Users', 'Computer and Internet Crime', 'Privacy', 'Freedom of Expression', 'Intellectual Property and Copyright', 'Software Development', 'Impact of Information Technology on Productivity and Quality of Life', 'Social Networking', 'Ethics of IT Organisations', 'Ghana Data Protection Act, 2012 (Act 843)'\n    ];\n    return ['professional-computing-' + suffix, { label: 'Professional Computing ' + suffix + ': ' + labels[index], component: ProfessionalComputingLesson }];\n  })),\n  'cpp-final-project-guessing-game': {
     label: 'C++: Final Project — Guessing Game',
     component: CppFinalProjectLesson,
   },
