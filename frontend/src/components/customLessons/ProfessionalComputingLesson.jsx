@@ -181,7 +181,7 @@ function Section({ title, children }) {
       <h2>{title}</h2>
       {paragraphs.map((paragraph, index) => {
         // Emphasise a clear opening definition when the reading introduces a term.
-        const definition = paragraph.match(/^(.{2,65}?)\\s+(is|are|means|refers to|describes|concerns|includes|occurs when|consists of|involves)\\b(.*)$/i);
+        const definition = paragraph.match(/^(.{2,65}?)\s+(is|are|means|refers to|describes|concerns|includes|occurs when|consists of|involves)\b(.*)$/i);
         return <p key={index}>{definition ? <><strong>{definition[1]}</strong> {definition[2]}{definition[3]}</> : paragraph}</p>;
       })}
     </section>
