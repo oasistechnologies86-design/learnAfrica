@@ -1,12 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef } from 'react';
 
 export default function CustomLessonFrame({ lesson, children, mode = 'student', onComplete, isCompleted = false, isSaving = false }) {
   const heroRef = useRef(null);
   const artRef = useRef(null);
   const readingRef = useRef(null);
 
-  const [atLessonEnd, setAtLessonEnd] = useState(false);
-  const scrollContainerRef = useRef(null);
   const canComplete = mode === 'student' && typeof onComplete === 'function';
 
   const getScrollContainer = useCallback(() => {
@@ -17,34 +15,8 @@ export default function CustomLessonFrame({ lesson, children, mode = 'student', 
     return document.scrollingElement || document.documentElement;
   }, []);
 
-  const updateEndState = useCallback(() => {
-    const container = getScrollContainer();
-    if (!container) return;
-    const atEnd = container.scrollTop + container.clientHeight >= container.scrollHeight - 48;
-    setAtLessonEnd(atEnd);
-  }, [getScrollContainer]);
-
-  useEffect(() => {
-    const container = getScrollContainer();
-    if (!container) return undefined;
-    scrollContainerRef.current = container;
-    const handleScroll = () => updateEndState();
-    container.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', handleScroll);
-    const observer = typeof ResizeObserver !== 'undefined'
-      ? new ResizeObserver(handleScroll)
-      : null;
-    if (readingRef.current && observer) observer.observe(readingRef.current);
-    handleScroll();
-    return () => {
-      container.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleScroll);
-      observer?.disconnect();
-    };
-  }, [getScrollContainer, updateEndState, children]);
-
   const advanceReading = () => {
-    const container = scrollContainerRef.current || getScrollContainer();
+    const container = getScrollContainer();
     if (!container) return;
     const step = Math.max(260, Math.round(container.clientHeight * 0.68));
     const maxScroll = container.scrollHeight - container.clientHeight;
@@ -132,25 +104,27 @@ export default function CustomLessonFrame({ lesson, children, mode = 'student', 
 
       <article ref={readingRef} className="custom-lesson-system" aria-label={lesson?.title || 'Custom lesson'}>
         {children}
+        {canComplete && (
+          <section className="custom-lesson-completion" aria-label="Complete this lesson">
+            <p>You've reached the end of this lesson. Click below to mark it as complete and continue to your next lesson.</p>
+            {isCompleted ? (
+              <button type="button" className="is-completed" disabled aria-label="Lesson completed">
+                COMPLETED <span aria-hidden="true">✓</span>
+              </button>
+            ) : (
+              <button type="button" onClick={onComplete} disabled={isSaving}>
+                {isSaving ? 'SAVING...' : 'MARK AS COMPLETE'}
+              </button>
+            )}
+          </section>
+        )}
         <div className="custom-lesson-content-end" aria-hidden="true" />
       </article>
       <div className="custom-lesson-sticky-action">
-        {isCompleted ? (
-          <button type="button" disabled aria-label="Lesson completed">
-            <span>COMPLETED</span>
-            <span aria-hidden="true">✓</span>
-          </button>
-        ) : canComplete && atLessonEnd ? (
-          <button type="button" onClick={onComplete} disabled={isSaving}>
-            <span>{isSaving ? 'SAVING...' : 'MARK AS COMPLETE'}</span>
-            <span aria-hidden="true">✓</span>
-          </button>
-        ) : (
-          <button type="button" onClick={advanceReading}>
-            <span>{mode === 'student' ? 'SCROLL DOWN & MARK AS COMPLETE' : 'SCROLL THROUGH LESSON'}</span>
-            <span aria-hidden="true">↓</span>
-          </button>
-        )}
+        <button type="button" onClick={advanceReading}>
+          <span>{mode === 'student' ? 'SCROLL DOWN AND MARK AS COMPLETE' : 'SCROLL THROUGH LESSON'}</span>
+          <span aria-hidden="true">↓</span>
+        </button>
       </div>
     </div>
   );
