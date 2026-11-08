@@ -75,7 +75,8 @@ export default function CustomLessonFrame({ lesson, children, mode = 'student', 
   };
 
   const heroTitle = lesson?.title || 'Explore, understand and apply what you learn.';
-  const heroEyebrow = mode === 'instructor' || mode === 'preview' ? 'Instructor lesson preview' : 'Learn Africa • Custom lesson';
+  // The course section is already identified in the course navigation. The hero
+  // therefore uses only the active lesson's own title.
 
   return (
     <div className="custom-lesson-page" data-custom-lesson-mode={mode}>
@@ -88,8 +89,7 @@ export default function CustomLessonFrame({ lesson, children, mode = 'student', 
       >
         <div className="custom-lesson-stars" aria-hidden="true" />
         <div className="custom-lesson-hero-copy">
-          <p className="custom-lesson-eyebrow">{heroEyebrow}</p>
-          <p>{heroTitle}</p>
+          <h1>{heroTitle}</h1>
         </div>
         <svg ref={artRef} className="custom-lesson-hero-art" viewBox="0 0 560 285" role="img" aria-label="A glowing green planet surrounded by orbiting technology icons">
           <defs>
