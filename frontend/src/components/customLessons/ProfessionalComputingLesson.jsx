@@ -274,11 +274,11 @@ function SupportingImage({ number, title }) {
 }
 
 export default function ProfessionalComputingLesson({ student, lesson }) {
-  const match = String(lesson?.component_key || lesson?.componentKey || '').match(/professional-computing-(\\d{2})/);
+  const match = String(lesson?.component_key || lesson?.componentKey || '').match(/professional-computing-(\d{2})/);
   const number = match ? Number(match[1]) : 1;
   const data = lessons[number] || lessons[1];
   const Icon = icons[number - 1] || BookOpen;
-  const firstName = (student?.name || '').trim().split(/\\s+/)[0];
+  const firstName = (student?.name || '').trim().split(/\s+/)[0];
 
   return (
     <article className="w-full max-w-none mx-0 py-4 sm:py-6 px-0 space-y-5">
