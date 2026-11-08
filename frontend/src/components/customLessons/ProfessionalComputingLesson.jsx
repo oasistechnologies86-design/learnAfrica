@@ -244,7 +244,7 @@ function Section({ title, children, index }) {
         <div className="min-w-0 flex-1">
           <h3 className="text-lg sm:text-xl font-bold tracking-tight">{title}</h3>
           <p className="mt-1.5 text-xs sm:text-sm font-medium text-primary/90">{openers[(index - 1) % openers.length]}</p>
-          <p className="mt-2 text-sm sm:text-[15px] leading-[1.65] text-foreground/85 text-justify [text-align:justify]">{children}</p>
+          <p className="mt-2 text-sm sm:text-[15px] leading-[1.65] text-foreground/85 text-left [text-align:left]">{children}</p>
         </div>
       </div>
     </section>
@@ -330,7 +330,7 @@ export default function ProfessionalComputingLesson({ student, lesson }) {
       </section>
 
       <footer className="rounded-xl border border-border bg-muted/30 p-3 sm:p-4">
-        <div className="flex gap-3 items-start"><Icon className="h-5 w-5 mt-0.5 text-primary"/><div><h3 className="font-bold">Before you move to the next lesson item</h3><p className="mt-1 text-sm leading-relaxed text-muted-foreground">Take a moment to explain the main idea in your own words. Next, open the separate Video Lesson, then complete the practical task in the Text Lesson and check your understanding in the Quiz Lesson.</p></div></div>
+        <div className="flex gap-3 items-start"><Icon className="h-5 w-5 mt-0.5 text-primary"/><div><h3 className="font-bold">Before you move to the next lesson item</h3><p className="mt-1 text-sm leading-relaxed text-muted-foreground">Take a moment to explain the main idea in your own words. You have already watched the introductory Video Lesson. Next, complete this reading, then open the separate Quiz Lesson to check your understanding.</p></div></div>
       </footer>
     </article>
   );
