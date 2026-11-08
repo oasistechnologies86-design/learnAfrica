@@ -9,7 +9,7 @@ const lessons = {
   1: {
     title: 'An Overview of Ethics', category: 'Foundations of professional computing',
     intro: 'Understand why technical ability must be guided by sound judgement, fairness and responsibility.',
-    outcomes: ['Explain ethics, morals, values, integrity and law.', 'Identify stakeholders and competing duties.', 'Apply a practical ethical decision-making process to Ghana-focused situations.'],
+    outcomes: ['Explain the difference between ethics, morals, values, integrity and law.', 'Identify the people affected by an IT decision and the duties owed to them.', 'Use a clear decision-making process to handle ethical situations in Ghana.'],
     sections: [
       ['What ethics means', 'Ethics is the reasoned study of what people ought to do. In computing, ethical decisions affect privacy, safety, fairness, access to services, employment and trust. A technical action can be possible without being responsible. An administrator at a Ghanaian college, for example, may technically be able to open a learner’s private academic record, but should do so only for an authorised work purpose and with safeguards recorded.'],
       ['Morals, ethics, values and law', 'Morals are personal or community beliefs about right and wrong. Values are priorities such as honesty, fairness, privacy, loyalty and respect. Ethics evaluates conduct through reasons and principles. Law consists of rules recognised and enforced by a legal system. Law and ethics overlap, but are not identical: an action may be legal yet unfair, or morally motivated yet unlawful. Always identify the jurisdiction before making a legal claim.'],
@@ -296,8 +296,13 @@ export default function ProfessionalComputingLesson({ student, lesson }) {
       <section className="space-y-2">
         <h2 className="text-lg font-bold flex items-center gap-2"><BookOpen className="h-5 w-5 text-primary" /> By the end of this lesson</h2>
         <p className="text-sm text-muted-foreground leading-relaxed">Here is what I want you to be comfortable explaining or doing before you move on:</p>
-        <ul className="grid gap-2 sm:grid-cols-2">
-          {data.outcomes.map((item,i)=><li key={i} className="flex gap-2 text-sm leading-5"><CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-primary"/><span>{item}</span></li>)}
+        <ul className={number === 1 ? "grid gap-2 sm:grid-cols-3" : "grid gap-2 sm:grid-cols-2"}>
+          {data.outcomes.map((item,i)=>(
+            <li key={i} className="flex items-start gap-2 rounded-lg border border-border bg-card px-3 py-3 text-sm leading-5">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">{i+1}</span>
+              <span>{item}</span>
+            </li>
+          ))}
         </ul>
       </section>
 
