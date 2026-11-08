@@ -6,7 +6,14 @@ export default function CustomLessonFrame({ lesson, children, mode = 'student' }
   const readingRef = useRef(null);
 
   const scrollToReading = () => readingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  const scrollToLessonEnd = () => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+  const scrollToLessonEnd = () => {
+    const scrollContainer = readingRef.current?.closest('main');
+    if (scrollContainer) {
+      scrollContainer.scrollTo({ top: scrollContainer.scrollHeight, behavior: 'smooth' });
+      return;
+    }
+    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+  };
 
   const handlePointerMove = (event) => {
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches || !heroRef.current || !artRef.current) return;
