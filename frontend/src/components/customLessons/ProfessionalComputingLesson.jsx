@@ -235,6 +235,7 @@ const furtherReading = [
   { label: 'Herman T. Tavani, Ethics and Technology (Wiley companion contents)', url: 'https://bcs.wiley.com/he-bcs/Books?action=contents&bcsId=8462&itemId=1118281721' },
   { label: 'ACM Code of Ethics and Professional Conduct', url: 'https://www.acm.org/code-of-ethics' },
   { label: 'Ghana Data Protection Commission guidance', url: 'https://dpc.gov.gh/compliance/' },
+  { label: 'Ghana Data Protection Act, 2012 (Act 843) — full legislation', url: 'https://ghalii.org/akn/gh/act/2012/843/eng@2012-05-18' },
   { label: 'NIST Cybersecurity Framework 2.0', url: 'https://www.nist.gov/cyberframework' },
   { label: 'Creative Commons licence explanations', url: 'https://creativecommons.org/cc-licenses/' },
   { label: 'UNESCO 2023 Global Education Monitoring Report: Technology in education', url: 'https://gem-report-2023.unesco.org/' }
@@ -288,7 +289,7 @@ export default function ProfessionalComputingLesson({ lesson }) {
         <h2>Further reading and authoritative references</h2>
         <p>Use these sources to deepen your understanding. Where a topic concerns Ghanaian law, consult the current official legislation and regulator guidance rather than relying on a general textbook.</p>
         <ul>{furtherReading.filter((source)=> {
-          if (number === 11) return /Ghana Data Protection|Tavani|ACM/.test(source.label);
+          if (number === 11) return /Ghana Data Protection|Act 843|Tavani|ACM/.test(source.label);
           if (number === 3 || number === 4) return /NIST|Tavani|ACM/.test(source.label);
           if (number === 6) return /Creative Commons|Tavani/.test(source.label);
           if (number === 8) return /UNESCO|Tavani/.test(source.label);
