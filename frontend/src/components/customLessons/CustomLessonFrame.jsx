@@ -43,8 +43,6 @@ export default function CustomLessonFrame({ lesson, children, mode = 'student', 
     };
   }, [getScrollContainer, updateEndState, children]);
 
-  const scrollToReading = () => readingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
   const advanceReading = () => {
     const container = scrollContainerRef.current || getScrollContainer();
     if (!container) return;
@@ -129,9 +127,6 @@ export default function CustomLessonFrame({ lesson, children, mode = 'student', 
             <g><circle cx="451" cy="211" r="25" fill="#eafff1" stroke="#9bffc0" strokeWidth="2" /><path d="M439 218 V199 H463 V218 M435 218 H467 M444 199 V191 H450 V199 M454 199 V187 H459 V199" fill="none" stroke="#087442" strokeWidth="3" strokeLinejoin="round" /></g>
           </g>
         </svg>
-        <button type="button" className="custom-lesson-scroll-cue" onClick={scrollToReading} aria-label="Scroll down to the lesson reading">
-          <span>SCROLL DOWN &amp; MARK AS COMPLETE</span><span className="custom-lesson-scroll-arrow" aria-hidden="true">↓</span>
-        </button>
         <div className="custom-lesson-hero-hint">Move your cursor to explore</div>
       </section>
 
@@ -139,21 +134,24 @@ export default function CustomLessonFrame({ lesson, children, mode = 'student', 
         {children}
         <div className="custom-lesson-content-end" aria-hidden="true" />
       </article>
-      {!isCompleted && (
-        <div className="custom-lesson-sticky-action">
-          {canComplete && atLessonEnd ? (
-            <button type="button" onClick={onComplete} disabled={isSaving}>
-              <span>{isSaving ? 'SAVING...' : 'MARK AS COMPLETE'}</span>
-              <span aria-hidden="true">✓</span>
-            </button>
-          ) : (
-            <button type="button" onClick={advanceReading}>
-              <span>{mode === 'student' ? 'SCROLL DOWN' : 'SCROLL THROUGH LESSON'}</span>
-              <span aria-hidden="true">↓</span>
-            </button>
-          )}
-        </div>
-      )}
+      <div className="custom-lesson-sticky-action">
+        {isCompleted ? (
+          <button type="button" disabled aria-label="Lesson completed">
+            <span>COMPLETED</span>
+            <span aria-hidden="true">✓</span>
+          </button>
+        ) : canComplete && atLessonEnd ? (
+          <button type="button" onClick={onComplete} disabled={isSaving}>
+            <span>{isSaving ? 'SAVING...' : 'MARK AS COMPLETE'}</span>
+            <span aria-hidden="true">✓</span>
+          </button>
+        ) : (
+          <button type="button" onClick={advanceReading}>
+            <span>{mode === 'student' ? 'SCROLL DOWN & MARK AS COMPLETE' : 'SCROLL THROUGH LESSON'}</span>
+            <span aria-hidden="true">↓</span>
+          </button>
+        )}
+      </div>
     </div>
   );
 }
