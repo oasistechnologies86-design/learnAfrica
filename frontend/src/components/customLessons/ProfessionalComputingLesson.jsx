@@ -233,7 +233,7 @@ function Section({ title, children, index }) {
     "Now let's build on that idea and look at what it means in practice.",
     "Think about how this could happen in a school, workplace or online service you use.",
     "Here is where the concept becomes practical. Follow the explanation and consider the choices involved.",
-    "Before moving on, let's examine the responsibilities and consequences behind this issue.",
+    "Let's examine the responsibilities and consequences behind this issue.",
     "Keep the people affected in mind as we work through this part.",
     "Let's bring the ideas together and see how they guide responsible decisions."
   ];
@@ -289,13 +289,13 @@ export default function ProfessionalComputingLesson({ student, lesson }) {
         <h1 className="text-2xl sm:text-3xl font-extrabold leading-tight">{data.title}</h1>
         <p className="text-sm sm:text-base text-muted-foreground leading-relaxed text-left [text-align:left]">
           {firstName ? 'Hello ' + firstName + '. ' : 'Welcome. '}
-          {data.intro} I'll guide you through the ideas step by step, using familiar situations so you can see how they apply beyond this page. Take your time, and pause to think about the examples as we go.
+          {data.intro} I'll guide you through the ideas step by step, using familiar situations so you can see how they apply beyond this page. Take your time and think about how each example relates to everyday digital life.
         </p>
       </header>
 
       <section className="space-y-2">
         <h2 className="text-lg font-bold flex items-center gap-2"><BookOpen className="h-5 w-5 text-primary" /> By the end of this lesson</h2>
-        <p className="text-sm text-muted-foreground leading-relaxed">Here is what I want you to be comfortable explaining or doing before you move on:</p>
+        <p className="text-sm text-muted-foreground leading-relaxed">Here are the ideas and skills you should understand from this lesson:</p>
         <ul className="grid grid-cols-1 gap-2">
           {data.outcomes.map((item,i)=>(
             <li key={i} className="flex items-start gap-3 rounded-lg border border-border bg-card px-3 py-2.5 text-left">
@@ -325,12 +325,12 @@ export default function ProfessionalComputingLesson({ student, lesson }) {
 
       <section className="space-y-2">
         <h2 className="text-lg font-bold">Words to remember</h2>
-        <p className="text-sm text-muted-foreground">Make sure these terms are familiar before you continue. Try explaining each one in your own words.</p>
+        <p className="text-sm text-muted-foreground">Review these important terms and practise explaining each one in your own words.</p>
         <div className="flex flex-wrap gap-2">{data.terms.split(' • ').map((term,i)=><span key={i} className="rounded-full border border-border bg-muted/40 px-3 py-1.5 text-xs font-medium">{term}</span>)}</div>
       </section>
 
       <footer className="rounded-xl border border-border bg-muted/30 p-3 sm:p-4">
-        <div className="flex gap-3 items-start"><Icon className="h-5 w-5 mt-0.5 text-primary"/><div><h3 className="font-bold">Before you move to the next lesson item</h3><p className="mt-1 text-sm leading-relaxed text-muted-foreground">Take a moment to explain the main idea in your own words. You have already watched the introductory Video Lesson. Next, complete this reading, then open the separate Quiz Lesson to check your understanding.</p></div></div>
+        <div className="flex gap-3 items-start"><Icon className="h-5 w-5 mt-0.5 text-primary"/><div><h3 className="font-bold">Check your understanding</h3><p className="mt-1 text-sm leading-relaxed text-muted-foreground">Pause and summarise the main idea in your own words. Think about the examples, identify the responsibilities involved, and consider how you would apply what you have learned in a real situation.</p></div></div>
       </footer>
     </article>
   );
