@@ -228,55 +228,107 @@ function LessonIllustration({ number, title }) {
 }
 
 function Section({ title, children, index }) {
-  return <section className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-sm">
-    <div className="flex gap-3 items-start">
-      <span className="shrink-0 h-8 w-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center text-xs font-extrabold">{index}</span>
-      <div className="min-w-0 flex-1">
-        <h3 className="text-lg sm:text-xl font-bold tracking-tight">{title}</h3>
-        <p className="mt-3 text-sm sm:text-[15px] leading-6 text-justify [text-align:justify] text-foreground/85">{children}</p>
+  const openers = [
+    "Let's begin with the foundation. As you read, connect the idea to something you have seen in everyday digital life.",
+    "Now let's build on that idea and look at what it means in practice.",
+    "Think about how this could happen in a school, workplace or online service you use.",
+    "Here is where the concept becomes practical. Follow the explanation and consider the choices involved.",
+    "Before moving on, let's examine the responsibilities and consequences behind this issue.",
+    "Keep the people affected in mind as we work through this part.",
+    "Let's bring the ideas together and see how they guide responsible decisions."
+  ];
+  return (
+    <section className="py-3 border-b border-border/70 last:border-b-0">
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 shrink-0 h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">{index}</span>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-lg sm:text-xl font-bold tracking-tight">{title}</h3>
+          <p className="mt-1.5 text-xs sm:text-sm font-medium text-primary/90">{openers[(index - 1) % openers.length]}</p>
+          <p className="mt-2 text-sm sm:text-[15px] leading-[1.65] text-foreground/85 text-justify [text-align:justify]">{children}</p>
+        </div>
       </div>
-    </div>
-  </section>;
+    </section>
+  );
+}
+
+function SupportingImage({ number, title }) {
+  const supportingImages = [
+    'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1000&q=80',
+    'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1000&q=80',
+    'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1000&q=80',
+    'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1000&q=80',
+    'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1000&q=80',
+    'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1000&q=80',
+    'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1000&q=80',
+    'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80',
+    'https://images.unsplash.com/photo-1526378722484-bd91ca387e72?auto=format&fit=crop&w=1000&q=80',
+    'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1000&q=80',
+    'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1000&q=80'
+  ];
+  return (
+    <figure className="my-3 overflow-hidden rounded-xl border border-border">
+      <img src={supportingImages[number - 1] || supportingImages[0]} alt={title + ' in practice'} loading="lazy" className="h-36 sm:h-44 w-full object-cover" />
+      <figcaption className="bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground">A practical view of {title.toLowerCase()} in the digital world.</figcaption>
+    </figure>
+  );
 }
 
 export default function ProfessionalComputingLesson({ student, lesson }) {
-  const match = String(lesson?.component_key || lesson?.componentKey || '').match(/professional-computing-(\d{2})/);
+  const match = String(lesson?.component_key || lesson?.componentKey || '').match(/professional-computing-(\\d{2})/);
   const number = match ? Number(match[1]) : 1;
   const data = lessons[number] || lessons[1];
   const Icon = icons[number - 1] || BookOpen;
-  const firstName = (student?.name || '').trim().split(/\s+/)[0];
+  const firstName = (student?.name || '').trim().split(/\\s+/)[0];
 
-  return <div className="mx-auto w-full max-w-5xl space-y-3 sm:space-y-4 pb-5">
-    <LessonIllustration number={number} title={data.title}/>
-    <header className="space-y-3 px-1">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded-full bg-primary/10 text-primary px-3 py-1 text-[11px] font-bold">{data.category}</span>
-        <span className="text-xs text-muted-foreground">Lesson reading</span>
-      </div>
-      <p className="text-sm sm:text-base leading-6 text-muted-foreground text-justify [text-align:justify]">{firstName ? 'Hello ' + firstName + '. ' : ''}{data.intro}</p>
-    </header>
-    <section className="rounded-2xl border border-border bg-muted/20 p-5 sm:p-7">
-      <div className="flex items-center gap-2 mb-4"><BookOpen className="h-5 w-5 text-primary"/><h3 className="text-lg font-bold">What you will learn</h3></div>
-      <ul className="grid gap-3 sm:grid-cols-2">
-        {data.outcomes.map((item,i)=><li key={i} className="flex gap-2 text-sm leading-6"><CheckCircle2 className="h-4 w-4 mt-1 shrink-0 text-primary"/><span>{item}</span></li>)}
-      </ul>
-    </section>
-    <div className="flex items-center gap-3 px-1"><span className="h-8 w-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center"><BookOpen className="h-4 w-4"/></span><div><h2 className="text-xl sm:text-2xl font-extrabold">Lesson reading</h2><p className="text-xs text-muted-foreground">Work through each section before moving to the video</p></div></div>
-    <div className="space-y-4">
-      {data.sections.map((section,i)=><Section key={i} title={section[0]} index={i+1}>{section[1]}</Section>)}
-    </div>
-    <section className="rounded-xl border border-primary/20 bg-primary/5 p-3 sm:p-4">
-      <div className="flex gap-2 items-center text-primary"><Lightbulb className="h-5 w-5"/><h3 className="font-bold text-lg">Ghana-focused example</h3></div>
-      <p className="mt-2 text-sm sm:text-[15px] leading-6 text-justify [text-align:justify]">{data.case}</p>
-    </section>
-    <section className="rounded-xl border border-border bg-card p-3 sm:p-4">
-      <div className="flex items-center gap-2"><ClipboardList className="h-5 w-5 text-primary"/><h3 className="text-lg font-bold">Key terms</h3></div>
-      <div className="mt-4 flex flex-wrap gap-2">{data.terms.split(' • ').map((term,i)=><span key={i} className="rounded-full border border-border bg-muted/40 px-3 py-1.5 text-xs font-medium">{term}</span>)}</div>
-    </section>
-    <footer className="rounded-xl bg-muted/40 border border-border p-3 sm:p-4">
-      <div className="flex gap-3 items-start"><Icon className="h-5 w-5 mt-0.5 text-primary"/><div><h3 className="font-bold">Before you continue</h3><p className="mt-1 text-sm leading-6 text-muted-foreground">Review the key terms, complete the practical activity and then use the separate lesson assessment in the course navigation. Your assessment settings and attempt rules are managed by Learn Africa’s existing quiz system.</p></div></div>
-    </footer>
-  </div>;
+  return (
+    <article className="w-full max-w-none mx-0 py-4 sm:py-6 px-0 space-y-5">
+      <header className="space-y-2.5 pb-4 border-b border-border">
+        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+          <Icon className="h-3.5 w-3.5" /> Professional Computing · Lesson {number}
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-extrabold leading-tight">{data.title}</h1>
+        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed text-justify [text-align:justify]">
+          {firstName ? 'Hello ' + firstName + '. ' : 'Welcome. '}
+          {data.intro} I'll guide you through the ideas step by step, using familiar situations so you can see how they apply beyond this page. Take your time, and pause to think about the examples as we go.
+        </p>
+      </header>
+
+      <section className="space-y-2">
+        <h2 className="text-lg font-bold flex items-center gap-2"><BookOpen className="h-5 w-5 text-primary" /> By the end of this lesson</h2>
+        <p className="text-sm text-muted-foreground leading-relaxed">Here is what I want you to be comfortable explaining or doing before you move on:</p>
+        <ul className="grid gap-2 sm:grid-cols-2">
+          {data.outcomes.map((item,i)=><li key={i} className="flex gap-2 text-sm leading-5"><CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-primary"/><span>{item}</span></li>)}
+        </ul>
+      </section>
+
+      <section className="space-y-1">
+        <h2 className="text-xl sm:text-2xl font-extrabold">Let's learn together</h2>
+        <p className="text-sm text-muted-foreground leading-relaxed">Read each part in order. I'll explain the idea, connect it to real situations and help you think through why it matters.</p>
+        {data.sections.map((section,i)=>(
+          <React.Fragment key={i}>
+            <Section title={section[0]} index={i+1}>{section[1]}</Section>
+            {i === 1 || (data.sections.length > 4 && i === 4) ? <SupportingImage number={number} title={data.title}/> : null}
+          </React.Fragment>
+        ))}
+      </section>
+
+      <section className="rounded-xl border border-primary/20 bg-primary/5 p-3 sm:p-4">
+        <div className="flex gap-2 items-center text-primary"><Lightbulb className="h-5 w-5"/><h2 className="font-bold text-base sm:text-lg">Let's apply what we've learned</h2></div>
+        <p className="mt-2 text-sm sm:text-[15px] leading-[1.65] text-foreground/85 text-justify [text-align:justify]">{data.case}</p>
+        <p className="mt-2 text-xs text-muted-foreground">As you consider this example, ask yourself: who could be affected, what could go wrong, and what would a responsible person do next?</p>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-lg font-bold">Words to remember</h2>
+        <p className="text-sm text-muted-foreground">Make sure these terms are familiar before you continue. Try explaining each one in your own words.</p>
+        <div className="flex flex-wrap gap-2">{data.terms.split(' • ').map((term,i)=><span key={i} className="rounded-full border border-border bg-muted/40 px-3 py-1.5 text-xs font-medium">{term}</span>)}</div>
+      </section>
+
+      <footer className="rounded-xl border border-border bg-muted/30 p-3 sm:p-4">
+        <div className="flex gap-3 items-start"><Icon className="h-5 w-5 mt-0.5 text-primary"/><div><h3 className="font-bold">Before you move to the next lesson item</h3><p className="mt-1 text-sm leading-relaxed text-muted-foreground">Take a moment to explain the main idea in your own words. Next, open the separate Video Lesson, then complete the practical task in the Text Lesson and check your understanding in the Quiz Lesson.</p></div></div>
+      </footer>
+    </article>
+  );
 }
 
 export { lessons as professionalComputingLessons };
