@@ -478,6 +478,7 @@ button:disabled,
   text-align:justify;text-justify:inter-word;hyphens:auto;
 }
 .custom-lesson-system p { margin:0 0 15px; }
+.custom-lesson-system .custom-lesson-intro { font-size:18px;line-height:1.75;color:#344139;margin:0 0 34px;text-align:justify;text-justify:inter-word; }
 .custom-lesson-system section { margin:0 0 32px; }
 .custom-lesson-system section + section { margin-top:0; }
 .custom-lesson-system ul,.custom-lesson-system ol { margin:8px 0 18px;padding-left:24px; }
@@ -522,6 +523,7 @@ button:disabled,
   .custom-lesson-scroll-cue { bottom:10px;font-size:9px;letter-spacing:.08em;padding:7px 11px; }
   .custom-lesson-hero-hint { display:none; }
   .custom-lesson-system { padding:30px 24px 42px;font-size:16px; }
+  .custom-lesson-system .custom-lesson-intro { font-size:16px; }
   .custom-lesson-system p,.custom-lesson-system li { font-size:15.5px;line-height:1.75; }
   .custom-lesson-system h1 { font-size:25px!important; }
   .custom-lesson-system h2 { font-size:21px!important; }
