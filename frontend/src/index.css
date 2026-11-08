@@ -544,6 +544,40 @@ button:disabled,
 .custom-lesson-scroll-cue:focus-visible,.custom-lesson-sticky-action button:focus-visible {
   outline:3px solid var(--ring);outline-offset:4px;
 }
+
+.custom-lesson-completion {
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+  margin:38px 0 18px;padding:25px 18px 22px;
+  border:1px solid color-mix(in oklab,var(--lesson-green) 30%,var(--lesson-line));
+  border-radius:16px;background:var(--lesson-green-soft);
+  text-align:center;scroll-margin-bottom:10rem;
+}
+.custom-lesson-completion p {
+  max-width:620px;margin:0!important;color:var(--lesson-ink);
+  font-size:15px!important;line-height:1.55!important;text-align:center!important;
+}
+.custom-lesson-completion button {
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  min-height:48px;padding:12px 25px;border:1px solid var(--lesson-green-dark);
+  border-radius:999px;background:var(--lesson-green-dark);color:#fff;
+  font:800 12px/1.2 Arial,Helvetica,sans-serif;letter-spacing:.07em;
+  box-shadow:0 5px 16px rgba(0,0,0,.13);
+  transition:background .2s ease,transform .2s ease,opacity .2s ease;
+}
+.custom-lesson-completion button:hover:not(:disabled) {
+  background:var(--lesson-green);transform:translateY(-1px);
+}
+.custom-lesson-completion button:focus-visible {
+  outline:3px solid var(--ring);outline-offset:4px;
+}
+.custom-lesson-completion button:disabled { opacity:.88;cursor:default; }
+.custom-lesson-completion button.is-completed {
+  border-color:#16834c;background:#16834c;
+}
+.custom-lesson-sticky-action button {
+  white-space:normal;text-align:center;line-height:1.3;
+}
+
 .custom-lesson-content-end { height:1px; }
 .custom-lesson-system { padding-bottom:112px; }
 .custom-lesson-sticky-action {
