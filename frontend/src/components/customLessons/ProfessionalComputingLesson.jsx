@@ -296,11 +296,11 @@ export default function ProfessionalComputingLesson({ student, lesson }) {
       <section className="space-y-2">
         <h2 className="text-lg font-bold flex items-center gap-2"><BookOpen className="h-5 w-5 text-primary" /> By the end of this lesson</h2>
         <p className="text-sm text-muted-foreground leading-relaxed">Here is what I want you to be comfortable explaining or doing before you move on:</p>
-        <ul className={number === 1 ? "grid gap-2 sm:grid-cols-3" : "grid gap-2 sm:grid-cols-2"}>
+        <ul className="grid grid-cols-1 gap-2">
           {data.outcomes.map((item,i)=>(
-            <li key={i} className="flex items-start gap-2 rounded-lg border border-border bg-card px-3 py-3 text-sm leading-5">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">{i+1}</span>
-              <span>{item}</span>
+            <li key={i} className="flex items-start gap-3 rounded-lg border border-border bg-card px-3 py-2.5 text-left">
+              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">{i+1}</span>
+              <span className="min-w-0 flex-1 text-left text-sm leading-6 [text-align:left] [word-spacing:normal] [letter-spacing:normal] [hyphens:none]">{item}</span>
             </li>
           ))}
         </ul>
