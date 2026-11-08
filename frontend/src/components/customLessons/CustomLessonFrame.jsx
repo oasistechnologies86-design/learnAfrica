@@ -1,18 +1,61 @@
-import { useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-export default function CustomLessonFrame({ lesson, children, mode = 'student' }) {
+export default function CustomLessonFrame({ lesson, children, mode = 'student', onComplete, isCompleted = false, isSaving = false }) {
   const heroRef = useRef(null);
   const artRef = useRef(null);
   const readingRef = useRef(null);
 
+  const [atLessonEnd, setAtLessonEnd] = useState(false);
+  const scrollContainerRef = useRef(null);
+  const canComplete = mode === 'student' && typeof onComplete === 'function';
+
+  const getScrollContainer = useCallback(() => {
+    const article = readingRef.current;
+    if (!article) return null;
+    const main = article.closest('main');
+    if (main && main.scrollHeight > main.clientHeight) return main;
+    return document.scrollingElement || document.documentElement;
+  }, []);
+
+  const updateEndState = useCallback(() => {
+    const container = getScrollContainer();
+    if (!container) return;
+    const atEnd = container.scrollTop + container.clientHeight >= container.scrollHeight - 48;
+    setAtLessonEnd(atEnd);
+  }, [getScrollContainer]);
+
+  useEffect(() => {
+    const container = getScrollContainer();
+    if (!container) return undefined;
+    scrollContainerRef.current = container;
+    const handleScroll = () => updateEndState();
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll);
+    const observer = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(handleScroll)
+      : null;
+    if (readingRef.current && observer) observer.observe(readingRef.current);
+    handleScroll();
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+      observer?.disconnect();
+    };
+  }, [getScrollContainer, updateEndState, children]);
+
   const scrollToReading = () => readingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  const scrollToLessonEnd = () => {
-    const scrollContainer = readingRef.current?.closest('main');
-    if (scrollContainer) {
-      scrollContainer.scrollTo({ top: scrollContainer.scrollHeight, behavior: 'smooth' });
-      return;
+
+  const advanceReading = () => {
+    const container = scrollContainerRef.current || getScrollContainer();
+    if (!container) return;
+    const step = Math.max(260, Math.round(container.clientHeight * 0.68));
+    const maxScroll = container.scrollHeight - container.clientHeight;
+    const nextTop = Math.min(maxScroll, container.scrollTop + step);
+    if (container === document.scrollingElement || container === document.documentElement) {
+      window.scrollTo({ top: nextTop, behavior: 'smooth' });
+    } else {
+      container.scrollTo({ top: nextTop, behavior: 'smooth' });
     }
-    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
   };
 
   const handlePointerMove = (event) => {
@@ -94,11 +137,23 @@ export default function CustomLessonFrame({ lesson, children, mode = 'student' }
 
       <article ref={readingRef} className="custom-lesson-system" aria-label={lesson?.title || 'Custom lesson'}>
         {children}
-        <div className="custom-lesson-bottom-scroll">
-          <button type="button" onClick={scrollToLessonEnd}>
-            <span>SCROLL DOWN &amp; MARK AS COMPLETE</span><span aria-hidden="true">↓</span>
-          </button>
+        <div className="custom-lesson-content-end" aria-hidden="true" />
+      </article>
+      {!isCompleted && (
+        <div className="custom-lesson-sticky-action">
+          {canComplete && atLessonEnd ? (
+            <button type="button" onClick={onComplete} disabled={isSaving}>
+              <span>{isSaving ? 'SAVING...' : 'MARK AS COMPLETE'}</span>
+              <span aria-hidden="true">✓</span>
+            </button>
+          ) : (
+            <button type="button" onClick={advanceReading}>
+              <span>{mode === 'student' ? 'SCROLL DOWN' : 'SCROLL THROUGH LESSON'}</span>
+              <span aria-hidden="true">↓</span>
+            </button>
+          )}
         </div>
+      )}
       </article>
     </div>
   );
