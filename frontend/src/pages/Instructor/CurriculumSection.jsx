@@ -917,7 +917,7 @@ export function CurriculumSection({
       const payload = JSON.parse(await file.text());
       const imported = parseQuizImport(payload, sections);
       importQuizzes(imported);
-      setQuizImportMessage(`Successfully added ${imported.length} quiz${imported.length === 1 ? '' : 'zes'} to the curriculum. Save the course to apply the changes.`);
+      setQuizImportMessage(`Successfully added ${imported.length} ${imported.length === 1 ? 'quiz' : 'quizzes'} to the curriculum. Save the course to apply the changes.`);
     } catch (error) {
       setQuizImportMessage(error.message || 'Could not import this JSON file.');
     } finally {
