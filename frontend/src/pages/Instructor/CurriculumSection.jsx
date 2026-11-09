@@ -310,6 +310,7 @@ function QuizEditor({ item, onUpdate }) {
                         {selectedCorrect
                           ? <CheckCircle2 className="h-5 w-5 text-success shrink-0" />
                           : <Circle className="h-5 w-5 text-muted-foreground/30 shrink-0" />}
+                      </button>
                       <input value={opt}
                         onChange={e => {
                           const o = [...(q.options || [])];
