@@ -100,7 +100,11 @@ export function parseQuizImport(payload, existingSections = []) {
     const quiz_duration_seconds = quiz_timer_enabled
       ? Math.max(1, Number(settings.duration_seconds ?? settings.quiz_duration_seconds) || 600)
       : 0;
-    const questions_per_attempt = Math.max(0, Number(settings.questions_per_attempt) || 0);
+    const rawQuestionsPerAttempt = Number(settings.questions_per_attempt) || 0;
+    if (!Number.isInteger(rawQuestionsPerAttempt) || rawQuestionsPerAttempt < 0) {
+      throw new Error(`Quiz "${title}" questions_per_attempt must be a non-negative whole number.`);
+    }
+    const questions_per_attempt = rawQuestionsPerAttempt;
 
     if (!Number.isInteger(pass_score) || pass_score < 1 || pass_score > 100) {
       throw new Error(`Quiz "${title}" pass_score must be a whole number from 1 to 100.`);
