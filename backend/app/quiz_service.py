@@ -77,10 +77,13 @@ def build_served_questions(quiz, question_rows):
             new_correct = [idx.index(value) for value in correct if value in idx]
         else:
             new_correct = idx.index(correct) if correct in idx else 0
-        served.append({
+        served_question = {
             'id': r['id'], 'question': r['question_text'], 'question_type': qtype,
             'options': ordered, 'correct_answer': new_correct,
-        })
+        }
+        if qtype == 'mcq_multi':
+            served_question['required_answers'] = len(new_correct)
+        served.append(served_question)
     return served
 
 
