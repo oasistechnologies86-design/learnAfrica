@@ -74,6 +74,14 @@ export function EditCoursePage() {
     setSections(p => p.filter(s => s.id !== id));
   const updateSectionTitle = (id, t) =>
     setSections(p => p.map(s => s.id === id ? { ...s, title: t } : s));
+  const moveSection = (id, direction) => setSections(p => {
+    const index = p.findIndex(section => section.id === id);
+    const target = index + direction;
+    if (index < 0 || target < 0 || target >= p.length) return p;
+    const next = [...p];
+    [next[index], next[target]] = [next[target], next[index]];
+    return next;
+  });
   const addLesson = (sId, type = 'video') =>
     setSections(p => p.map(s => s.id === sId
       ? { ...s, lessons: [...s.lessons, {
@@ -470,6 +478,7 @@ export function EditCoursePage() {
           addLesson={addLesson}
           removeSection={removeSection}
           updateSectionTitle={updateSectionTitle}
+          moveSection={moveSection}
           updateLesson={updateLesson}
           removeLesson={removeLesson}
           onBack={() => setTab('basics')}
