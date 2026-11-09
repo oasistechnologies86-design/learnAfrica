@@ -3475,7 +3475,15 @@ def create_app() -> Flask:
             'lifetimeAccess':  bool(perks['lifetime_access']) if perks else bool(cd.get('has_lifetime_access')),
             'hasResources':    bool(perks['has_resources'])   if perks else bool(cd.get('has_resources')),
         }
-    
+        # Include course-level resources in the instructor editor response so
+        # existing and seeded courses reopen with the same resource list.
+        cd['course_resources'] = [
+            dict(resource) for resource in db.execute(
+                'SELECT * FROM course_resources WHERE course_id=? ORDER BY title',
+                (cid,)
+            ).fetchall()
+        ]
+
         # Load sections with lessons
         sections = []
         for sec in db.execute('SELECT * FROM curriculum_sections WHERE course_id=? ORDER BY "order"', (cid,)).fetchall():
