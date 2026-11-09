@@ -1,5 +1,5 @@
 """Regression tests for single-answer and multiple-answer quiz grading."""
-from app.quiz_service import grade_served
+from app.quiz_service import build_served_questions, grade_served, public_questions
 
 
 def test_multiple_answer_requires_exact_set():
@@ -37,7 +37,27 @@ def test_single_answer_grading_remains_unchanged():
     assert passed is True
 
 
+
+def test_served_multiple_answer_question_hides_keys_but_shows_required_count():
+    quiz = {"shuffle_questions": False, "shuffle_options": False, "questions_per_attempt": 0}
+    rows = [{
+        "id": "q3",
+        "question_text": "Choose two.",
+        "question_type": "mcq_multi",
+        "options": '["A", "B", "C"]',
+        "correct_answer": 0,
+        "correct_answers": "[0, 2]",
+    }]
+    served = build_served_questions(quiz, rows)
+    assert served[0]["correct_answer"] == [0, 2]
+    assert served[0]["required_answers"] == 2
+    public = public_questions(served)
+    assert "correct_answer" not in public[0]
+    assert public[0]["required_answers"] == 2
+
+
 if __name__ == "__main__":
     test_multiple_answer_requires_exact_set()
     test_single_answer_grading_remains_unchanged()
+    test_served_multiple_answer_question_hides_keys_but_shows_required_count()
     print("ALL MULTIPLE-ANSWER QUIZ CHECKS PASSED")
