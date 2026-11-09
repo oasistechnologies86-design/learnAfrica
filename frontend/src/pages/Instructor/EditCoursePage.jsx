@@ -82,6 +82,20 @@ export function EditCoursePage() {
     [next[index], next[target]] = [next[target], next[index]];
     return next;
   });
+  const importQuizzes = (quizzes) => setSections(prev => {
+    const next = [...prev];
+    for (const imported of quizzes) {
+      const sectionTitle = String(imported.section_title || 'Imported Quizzes').trim();
+      let index = next.findIndex(section => String(section.title || '').trim().toLowerCase() === sectionTitle.toLowerCase());
+      if (index < 0) {
+        next.push({ id: crypto.randomUUID(), title: sectionTitle, lessons: [] });
+        index = next.length - 1;
+      }
+      const { section_title, ...lesson } = imported;
+      next[index] = { ...next[index], lessons: [...(next[index].lessons || []), lesson] };
+    }
+    return next;
+  });
   const addLesson = (sId, type = 'video') =>
     setSections(p => p.map(s => s.id === sId
       ? { ...s, lessons: [...s.lessons, {
@@ -479,6 +493,7 @@ export function EditCoursePage() {
           removeSection={removeSection}
           updateSectionTitle={updateSectionTitle}
           moveSection={moveSection}
+          importQuizzes={importQuizzes}
           updateLesson={updateLesson}
           removeLesson={removeLesson}
           onBack={() => setTab('basics')}
