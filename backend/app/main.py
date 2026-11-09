@@ -11408,22 +11408,44 @@ def create_app() -> Flask:
             tables_data = backup.get('tables', {})
             if not isinstance(tables_data, dict):
                 return jsonify({'error': 'Backup tables section is invalid.'}), 400
-            if backup.get('errors'):
+            if int(backup.get('format_version') or 1) >= 2 and backup.get('errors'):
                 return jsonify({'error': 'This backup reports failed exports and cannot be restored safely.'}), 400
+            if not isinstance(tables_data.get('users'), list) or not tables_data.get('users'):
+                return jsonify({'error': 'This backup does not contain user records and cannot be restored safely.'}), 400
             available_tables = set(current_tables)
             requested_order = backup.get('table_order') or BACKUP_TABLES
             restore_tables = []
             unavailable_tables = []
-            for table in list(requested_order) + list(tables_data.keys()):
-                if table in restore_tables:
-                    continue
-                _safe_ident(table)
-                if table not in tables_data:
+            skipped_invalid_rows = []
+            safe_tables_data = {}
+            for table, rows in tables_data.items():
+                try:
+                    _safe_ident(table)
+                except ValueError as ex:
+                    skipped_invalid_rows.append({'table': str(table)[:80], 'reason': str(ex)})
                     continue
                 if table not in available_tables:
                     unavailable_tables.append(table)
                     continue
-                restore_tables.append(table)
+                safe_rows = []
+                for row in rows if isinstance(rows, list) else []:
+                    if not isinstance(row, dict):
+                        skipped_invalid_rows.append({'table': table, 'reason': 'Row is not a JSON object.'})
+                        continue
+                    try:
+                        for column in row.keys():
+                            _safe_ident(column)
+                    except ValueError as ex:
+                        skipped_invalid_rows.append({'table': table, 'reason': str(ex)})
+                        continue
+                    safe_rows.append(row)
+                safe_tables_data[table] = safe_rows
+
+            for table in list(requested_order) + list(safe_tables_data.keys()):
+                if table in restore_tables or table not in safe_tables_data:
+                    continue
+                if table in available_tables:
+                    restore_tables.append(table)
 
             errors_delete = []
             for table in reversed(restore_tables):
@@ -11447,7 +11469,7 @@ def create_app() -> Flask:
             rows_inserted = 0
             skipped_protected = []
             for table in restore_tables:
-                rows = tables_data.get(table, []) or []
+                rows = safe_tables_data.get(table, []) or []
                 if not rows: continue
                 for row in rows:
                     if not isinstance(row, dict): continue
@@ -11484,6 +11506,7 @@ def create_app() -> Flask:
                 'pre_restore_snapshot_path': snapshot_path,
                 'skipped_protected_users': skipped_protected[:20],
                 'unavailable_tables': unavailable_tables,
+                'skipped_invalid_rows': skipped_invalid_rows[:50],
                 'errors_delete': [],
                 'errors_insert': [],
             })
