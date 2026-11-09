@@ -11299,7 +11299,7 @@ def create_app() -> Flask:
             # Never return a seemingly successful partial backup. The admin
             # must fix the reported table failure and retry the export.
             if errors:
-                app.logger.error('database_export incomplete: ' + _json.dumps(errors))
+                app.logger.error('database_export incomplete: ' + str(errors))
                 return jsonify({
                     'error': 'Backup incomplete. No download was created.',
                     'failed_tables': errors,
@@ -11378,7 +11378,9 @@ def create_app() -> Flask:
                     _json.dump(pre_restore, f, indent=2, default=str)
                 app.logger.info(f'Pre-restore snapshot saved to {snapshot_path}')
             except Exception as ex:
-                app.logger.warning(f'Failed to save pre-restore snapshot: {ex}')
+                app.logger.error(f'Failed to save pre-restore snapshot; restore cancelled: {ex}')
+                return jsonify({'error': 'Restore cancelled because a fresh pre-restore snapshot could not be created.',
+                                'detail': str(ex)}), 500
 
             # 2. Delete existing data (in reverse dependency order).
             #    The live superadmin row is never deleted — the env-configured
