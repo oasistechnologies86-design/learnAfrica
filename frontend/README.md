@@ -1,4 +1,4 @@
-# LearnAfrica Lite — Frontend
+# LearnAfrica — Frontend
 
 React + Vite application. The website that students, instructors, and admins see.
 
@@ -69,6 +69,8 @@ This creates a `dist/` folder with the compiled app. Vercel runs this automatica
 | Variable | Required | Description |
 |----------|----------|-------------|
 | VITE_API_URL | Production only | Your Render backend URL |
-| VITE_SUPABASE_URL | Optional | Supabase project URL |
-| VITE_SUPABASE_ANON_KEY | Optional | Supabase public key |
+| VITE_SITE_URL | Recommended | Public frontend URL used for generated site links and metadata |
+| VITE_GOOGLE_CLIENT_ID | Optional | Public Google OAuth client ID for the frontend sign-in button |
+
+Supabase is accessed by the backend. Do not add Supabase service credentials or database keys to the frontend.
 
