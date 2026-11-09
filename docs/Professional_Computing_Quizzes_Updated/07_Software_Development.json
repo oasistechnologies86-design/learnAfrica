@@ -1,0 +1,458 @@
+{
+  "quizzes": [
+    {
+      "title": "Test Your Knowledge of Software Development Ethics",
+      "description": "Professional Computing assessment: Test Your Knowledge of Software Development Ethics.",
+      "is_final": false,
+      "settings": {
+        "attempts_enabled": false,
+        "max_attempts": 0,
+        "extra_attempt_price": 0,
+        "pass_score": 70,
+        "timer_enabled": false,
+        "duration_seconds": 0,
+        "questions_per_attempt": 0,
+        "shuffle_questions": true,
+        "shuffle_options": true
+      },
+      "questions": [
+        {
+          "text": "security by design means the opposite of building safeguards into system architecture.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Building software according to its design is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "implementation"
+        },
+        {
+          "text": "Which term describes Updates fixes monitoring and improvement after release?",
+          "type": "mcq",
+          "options": [
+            "defect",
+            "secure defaults",
+            "maintenance",
+            "deployment"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Releasing software for use is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "hidden",
+            "data or design choices",
+            "software design",
+            "deployment"
+          ]
+        },
+        {
+          "text": "Maintenance includes",
+          "type": "mcq",
+          "options": [
+            "only initial coding",
+            "only purchase",
+            "only launch",
+            "updates fixes and monitoring"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Designing so people with varied abilities can use a service is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "sensible protection initially",
+            "screen brightness",
+            "accessibility",
+            "file names"
+          ]
+        },
+        {
+          "text": "Quality assurance aims to",
+          "type": "mcq",
+          "options": [
+            "hide defects",
+            "avoid testing",
+            "support product quality",
+            "remove documentation"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Updates fixes monitoring and improvement after release is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "maintenance"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Building safeguards into system architecture is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "software design",
+            "screen brightness",
+            "security by design",
+            "consequential automated decisions"
+          ]
+        },
+        {
+          "text": "Meaningful human review of important automated decisions is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "human oversight"
+        },
+        {
+          "text": "Privacy by design means",
+          "type": "mcq",
+          "options": [
+            "consider privacy early",
+            "collect everything",
+            "hide notices",
+            "wait for complaints"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Human oversight is important for",
+          "type": "mcq",
+          "options": [
+            "file names",
+            "screen brightness",
+            "consequential automated decisions",
+            "wallpaper settings"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "requirements analysis means the opposite of identifying and documenting user and stakeholder needs.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "secure defaults means initial settings providing sensible protection.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "usability means the opposite of how effectively and easily people use a system.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Which term describes Unfair outcomes caused by data design or decision rules?",
+          "type": "mcq",
+          "options": [
+            "algorithmic bias",
+            "software design",
+            "software lifecycle",
+            "requirements analysis"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Testing should cover",
+          "type": "mcq",
+          "options": [
+            "no accessibility",
+            "expected and failure behaviour",
+            "only one path",
+            "no security"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "Accessibility means",
+          "type": "mcq",
+          "options": [
+            "mouse-only design",
+            "people with varied abilities can use a system",
+            "only experts can use it",
+            "small text"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Unfair outcomes caused by data design or decision rules is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "hide notices",
+            "change management",
+            "algorithmic bias",
+            "secure defaults"
+          ]
+        },
+        {
+          "text": "software lifecycle means stages from planning and requirements through maintenance.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Which term describes Releasing software for use?",
+          "type": "mcq",
+          "options": [
+            "algorithmic bias",
+            "security by design",
+            "human oversight",
+            "deployment"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "algorithmic bias means unfair outcomes caused by data design or decision rules.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Which term describes Meaningful human review of important automated decisions?",
+          "type": "mcq",
+          "options": [
+            "implementation",
+            "quality assurance",
+            "testing",
+            "human oversight"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Which term describes Fault or weakness in software?",
+          "type": "mcq",
+          "options": [
+            "defect",
+            "requirements analysis",
+            "software design",
+            "software lifecycle"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "maintenance means updates fixes monitoring and improvement after release.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Planning system structure behaviour and interaction is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 1,
+          "options": [
+            "small text",
+            "software design",
+            "shared admin",
+            "change management"
+          ]
+        },
+        {
+          "text": "human oversight means the opposite of meaningful human review of important automated decisions.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Known limitations should be",
+          "type": "mcq",
+          "options": [
+            "ignored",
+            "deleted",
+            "hidden",
+            "documented"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Which term describes Controlled review and release of system changes?",
+          "type": "mcq",
+          "options": [
+            "change management",
+            "security by design",
+            "algorithmic bias",
+            "human oversight"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Initial settings providing sensible protection is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "only marketing",
+            "no accessibility",
+            "secure defaults",
+            "defect"
+          ]
+        },
+        {
+          "text": "Secure defaults provide",
+          "type": "mcq",
+          "options": [
+            "public access",
+            "shared admin",
+            "sensible protection initially",
+            "disabled updates"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Checking software behaviour and failure handling is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 1,
+          "options": [
+            "no accessibility",
+            "testing",
+            "hide defects",
+            "defect"
+          ]
+        },
+        {
+          "text": "accessibility means designing so people with varied abilities can use a service.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Stages from planning and requirements through maintenance is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "defect",
+            "only purchase",
+            "no security",
+            "software lifecycle"
+          ]
+        },
+        {
+          "text": "Which term describes Initial settings providing sensible protection?",
+          "type": "mcq",
+          "options": [
+            "accessibility",
+            "usability",
+            "privacy by design",
+            "secure defaults"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "implementation means the opposite of building software according to its design.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "privacy by design means building privacy into early design decisions.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Identifying and documenting user and stakeholder needs is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "requirements analysis"
+        },
+        {
+          "text": "Software lifecycle includes",
+          "type": "mcq",
+          "options": [
+            "requirements through maintenance",
+            "only coding",
+            "only marketing",
+            "only purchase"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "software design means planning system structure behaviour and interaction.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "testing means checking software behaviour and failure handling.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "deployment means the opposite of releasing software for use.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Activities supporting product quality is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 1,
+          "options": [
+            "updates fixes and monitoring",
+            "quality assurance",
+            "transparency",
+            "secure defaults"
+          ]
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Building privacy into early design decisions is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 1,
+          "options": [
+            "user testing",
+            "privacy by design",
+            "only one path",
+            "screen brightness"
+          ]
+        },
+        {
+          "text": "Which term describes Explaining relevant system behaviour and limitations?",
+          "type": "mcq",
+          "options": [
+            "maintenance",
+            "secure defaults",
+            "transparency",
+            "deployment"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "quality assurance means the opposite of activities supporting product quality.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Algorithmic bias can arise from",
+          "type": "mcq",
+          "options": [
+            "data or design choices",
+            "electricity",
+            "monitor size",
+            "font colour only"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Which term describes Records explaining requirements decisions tests and limitations?",
+          "type": "mcq",
+          "options": [
+            "implementation",
+            "documentation",
+            "testing",
+            "quality assurance"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "Choose the correct term to complete the statement: How effectively and easily people use a system is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "only launch",
+            "human oversight",
+            "usability",
+            "remove documentation"
+          ]
+        },
+        {
+          "text": "Which term describes Evaluating a system with representative users?",
+          "type": "mcq",
+          "options": [
+            "accessibility",
+            "usability",
+            "user testing",
+            "privacy by design"
+          ],
+          "correct_answer": 2
+        }
+      ]
+    }
+  ]
+}
