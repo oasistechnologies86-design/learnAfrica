@@ -895,6 +895,7 @@ export function CurriculumSection({
   addLesson = () => {},
   removeSection = () => {},
   updateSectionTitle = () => {},
+  moveSection = () => {},
   updateLesson = () => {},
   removeLesson = () => {},
   onBack = () => {},
@@ -933,10 +934,24 @@ export function CurriculumSection({
                 className="bg-transparent border-none text-sm font-bold focus:ring-0 p-0 w-full outline-none"
                 placeholder="e.g. Module 1: Introduction" />
             </div>
-            <Button variant="ghost" size="sm" onClick={() => removeSection(section.id)}
-              className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive ml-2 shrink-0">
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="ml-2 flex shrink-0 items-center gap-1">
+              <Button type="button" variant="ghost" size="sm" disabled={index === 0}
+                aria-label={`Move Section ${index + 1} up`}
+                onClick={() => moveSection(section.id, -1)}
+                className="h-8 w-8 p-0 text-muted-foreground disabled:opacity-30">
+                <ChevronUp className="h-4 w-4" />
+              </Button>
+              <Button type="button" variant="ghost" size="sm" disabled={index === sections.length - 1}
+                aria-label={`Move Section ${index + 1} down`}
+                onClick={() => moveSection(section.id, 1)}
+                className="h-8 w-8 p-0 text-muted-foreground disabled:opacity-30">
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => removeSection(section.id)}
+                className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="p-4 space-y-3">
             {(section.lessons || []).map((item, iIdx) => (
