@@ -1,0 +1,458 @@
+{
+  "quizzes": [
+    {
+      "title": "Test Your Knowledge of Social Networking",
+      "description": "Professional Computing assessment: Test Your Knowledge of Social Networking.",
+      "is_final": false,
+      "settings": {
+        "attempts_enabled": false,
+        "max_attempts": 0,
+        "extra_attempt_price": 0,
+        "pass_score": 70,
+        "timer_enabled": false,
+        "duration_seconds": 0,
+        "questions_per_attempt": 0,
+        "shuffle_questions": true,
+        "shuffle_options": true
+      },
+      "questions": [
+        {
+          "text": "social networking means online services for creating connections and sharing content.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "privacy settings means controls over who can view or interact with content.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "consent means the opposite of permission given for a particular action.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Pretending to be another person or organisation online is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "impersonation"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Possibility that content harms trust or public perception is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 1,
+          "options": [
+            "copyright expiry",
+            "reputation risk",
+            "reporting tool",
+            "internet speed"
+          ]
+        },
+        {
+          "text": "Which term describes Unauthorised exposure or use of personal information?",
+          "type": "mcq",
+          "options": [
+            "oversharing",
+            "privacy settings",
+            "privacy breach",
+            "online reputation"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Online representation of a person is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "digital identity"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: How a person is perceived based on online information is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "malware",
+            "shared widely",
+            "online reputation",
+            "pretending to be another person"
+          ]
+        },
+        {
+          "text": "Which term describes Settings determining who can see a post?",
+          "type": "mcq",
+          "options": [
+            "cyberbullying",
+            "impersonation",
+            "audience control",
+            "consent"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "A private group",
+          "type": "mcq",
+          "options": [
+            "removes all risks",
+            "does not guarantee confidentiality",
+            "prevents screenshots",
+            "makes all posts protected"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "Which term describes Responsible participation in online spaces?",
+          "type": "mcq",
+          "options": [
+            "audience control",
+            "account security",
+            "reputation risk",
+            "digital citizenship"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Consent means",
+          "type": "mcq",
+          "options": [
+            "permission for a particular action",
+            "automatic sharing",
+            "public access",
+            "copyright expiry"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "audience control means settings determining who can see a post.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Professional presence should avoid",
+          "type": "mcq",
+          "options": [
+            "disclosing confidential work information",
+            "privacy controls",
+            "accurate posts",
+            "respectful language"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "scam means the opposite of deceptive scheme to obtain money information or access.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Disclosing geographic location is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "opened quickly",
+            "device brand",
+            "e-waste",
+            "location sharing"
+          ]
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Controls over who can view or interact with content is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "copyright",
+            "encryption",
+            "privacy settings",
+            "public access"
+          ]
+        },
+        {
+          "text": "Which term describes Possibility that content harms trust or public perception?",
+          "type": "mcq",
+          "options": [
+            "reputation risk",
+            "misinformation",
+            "audience control",
+            "account security"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Measures protecting an online account is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "changing your password",
+            "encryption",
+            "data retention",
+            "account security"
+          ]
+        },
+        {
+          "text": "online reputation means the opposite of how a person is perceived based on online information.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Bullying or harassment through digital communication is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 1,
+          "options": [
+            "posts and information about a person",
+            "cyberbullying",
+            "digital citizenship",
+            "device brand"
+          ]
+        },
+        {
+          "text": "Which term describes Feature for flagging harmful content or accounts?",
+          "type": "mcq",
+          "options": [
+            "scam",
+            "reporting tool",
+            "location sharing",
+            "professional presence"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "A digital footprint is",
+          "type": "mcq",
+          "options": [
+            "computer weight",
+            "malware",
+            "network cable",
+            "trace of online activity"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Which term describes Possibility online content remains or is copied?",
+          "type": "mcq",
+          "options": [
+            "digital permanence",
+            "consent",
+            "cyberbullying",
+            "impersonation"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Which term describes Disclosing geographic location?",
+          "type": "mcq",
+          "options": [
+            "digital footprint",
+            "digital identity",
+            "location sharing",
+            "social networking"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "reputation risk means possibility that content harms trust or public perception.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Online reputation is shaped by",
+          "type": "mcq",
+          "options": [
+            "private thoughts only",
+            "device brand",
+            "posts and information about a person",
+            "password length only"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "cyberbullying means bullying or harassment through digital communication.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "impersonation means pretending to be another person or organisation online.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Online services for creating connections and sharing content is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "private thoughts only",
+            "privacy breach",
+            "trusted by logo",
+            "social networking"
+          ]
+        },
+        {
+          "text": "professional presence means the opposite of online conduct appropriate to work or a profession.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Which term describes Online conduct appropriate to work or a profession?",
+          "type": "mcq",
+          "options": [
+            "professional presence",
+            "online reputation",
+            "oversharing",
+            "privacy settings"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Oversharing may increase",
+          "type": "mcq",
+          "options": [
+            "internet speed",
+            "encryption",
+            "legal compliance",
+            "identity theft and reputation risks"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Trace of information and activity left online is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "digital footprint"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Deceptive scheme to obtain money information or access is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "verified before credentials are entered",
+            "respectful language",
+            "scam",
+            "privacy settings"
+          ]
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Settings determining who can see a post is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "audience control",
+            "malware",
+            "oversharing",
+            "private thoughts only"
+          ]
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Permission given for a particular action is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "device brand",
+            "account security",
+            "accurate posts",
+            "consent"
+          ]
+        },
+        {
+          "text": "oversharing means the opposite of disclosing more personal information than is appropriate or safe.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Impersonation means",
+          "type": "mcq",
+          "options": [
+            "posting a photo",
+            "changing your password",
+            "pretending to be another person",
+            "blocking spam"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "account security means the opposite of measures protecting an online account.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Which term describes False information shared without intent to deceive?",
+          "type": "mcq",
+          "options": [
+            "social networking",
+            "misinformation",
+            "digital footprint",
+            "digital identity"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "Disclosing more personal information than is appropriate or safe is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "oversharing"
+        },
+        {
+          "text": "A suspicious link should be",
+          "type": "mcq",
+          "options": [
+            "trusted by logo",
+            "verified before credentials are entered",
+            "shared widely",
+            "opened quickly"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "MFA helps protect",
+          "type": "mcq",
+          "options": [
+            "e-waste",
+            "data retention",
+            "online accounts",
+            "copyright"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "location sharing means disclosing geographic location.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Online conduct appropriate to work or a profession is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "professional presence",
+            "device brand",
+            "online reputation",
+            "consent"
+          ]
+        },
+        {
+          "text": "digital identity means the opposite of online representation of a person.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Which term describes Measures protecting an online account?",
+          "type": "mcq",
+          "options": [
+            "location sharing",
+            "scam",
+            "account security",
+            "professional presence"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Privacy settings control",
+          "type": "mcq",
+          "options": [
+            "who can see or interact with content",
+            "processor speed",
+            "battery life",
+            "software licences"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "digital footprint means trace of information and activity left online.",
+          "type": "true_false",
+          "correct_answer": "true"
+        }
+      ]
+    }
+  ]
+}
