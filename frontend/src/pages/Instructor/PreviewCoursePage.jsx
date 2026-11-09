@@ -182,6 +182,27 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
   }, [courseId, lessonId]);
 
   const passScore = Number(quiz?.pass_score ?? 70);
+  const isPreviewAnswerComplete = (index) => {
+    const question = quiz?.questions?.[index];
+    const answer = answers[index];
+    if (!question) return false;
+    if (question.question_type === 'mcq_multi') {
+      const required = Number(question.required_answers || 0);
+      return Array.isArray(answer) && (required > 0 ? answer.length === required : answer.length > 0);
+    }
+    return answer !== undefined && answer !== '';
+  };
+  const selectPreviewAnswer = (value) => setAnswers(previous => {
+    const question = quiz?.questions?.[current];
+    if (question?.question_type === 'mcq_multi') {
+      const selected = Array.isArray(previous[current]) ? previous[current] : [];
+      if (selected.includes(value)) return { ...previous, [current]: selected.filter(index => index !== value) };
+      const required = Number(question.required_answers || 0);
+      if (required > 0 && selected.length >= required) return previous;
+      return { ...previous, [current]: [...selected, value] };
+    }
+    return { ...previous, [current]: value };
+  });
   const submitPreview = useCallback(() => {
     if (!quiz?.questions?.length) return;
     let correct = 0;
@@ -189,6 +210,10 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
       const answer = answers[i];
       if (q.question_type === 'fill_blank') {
         if (String(answer || '').trim().toLowerCase() === String(q.correct_answer || '').trim().toLowerCase()) correct++;
+      } else if (q.question_type === 'mcq_multi') {
+        const selected = Array.isArray(answer) ? [...new Set(answer.map(Number))].sort((a,b) => a-b) : [];
+        const expected = Array.isArray(q.correct_answer) ? [...new Set(q.correct_answer.map(Number))].sort((a,b) => a-b) : [];
+        if (selected.length === expected.length && selected.every((value, index) => value === expected[index])) correct++;
       } else if (Number(answer) === Number(q.correct_answer)) {
         correct++;
       }
@@ -313,7 +338,7 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
               <button key={index} type="button" onClick={() => setCurrent(index)}
                 className={cn("h-8 w-8 rounded-lg border text-xs font-bold transition-colors",
                   current === index ? "bg-primary text-primary-foreground border-primary" :
-                  answers[index] !== undefined && answers[index] !== "" ? "bg-success/10 text-success border-success/30" :
+                  isPreviewAnswerComplete(index) ? "bg-success/10 text-success border-success/30" :
                   "bg-card border-border")}>
                 {index + 1}
               </button>
@@ -325,15 +350,15 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
               questionNumber={current + 1}
               totalQuestions={quiz.questions.length}
               selectedAnswer={answers[current]}
-              onSelectAnswer={value => setAnswers(previous => ({ ...previous, [current]: value }))}
+              onSelectAnswer={selectPreviewAnswer}
             />
           </div>
           <div className="flex gap-3">
             {current > 0 && <Button variant="outline" onClick={() => setCurrent(v => v - 1)} className="flex-1">← Previous</Button>}
             {current < quiz.questions.length - 1 ? (
-              <Button onClick={() => setCurrent(v => v + 1)} className="flex-1" disabled={answers[current] === undefined || answers[current] === ''}>Next →</Button>
+              <Button onClick={() => setCurrent(v => v + 1)} className="flex-1" disabled={!isPreviewAnswerComplete(current)}>Next →</Button>
             ) : (
-              <Button onClick={submitPreview} className="flex-1" disabled={Object.keys(answers).length < quiz.questions.length || quiz.questions.some((question, i) => answers[i] === undefined || answers[i] === '')}>
+              <Button onClick={submitPreview} className="flex-1" disabled={quiz.questions.some((question, i) => !isPreviewAnswerComplete(i))}>
                 Submit {assessmentName} Preview
               </Button>
             )}
