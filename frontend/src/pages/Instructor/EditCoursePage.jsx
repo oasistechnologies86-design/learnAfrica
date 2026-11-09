@@ -51,6 +51,7 @@ export function EditCoursePage() {
   const [tagInput, setTagInput] = useState('');
   const [outcomes, setOutcomes] = useState(['']);
   const [sections, setSections] = useState([]);
+  const [courseResources, setCourseResources] = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [saving,   setSaving]   = useState(false);
   const [error,    setError]    = useState('');
@@ -135,6 +136,13 @@ export function EditCoursePage() {
           courseCode: c.course_code || c.courseCode || '',
         });
         setTags(c.tags || []);
+        setCourseResources((c.course_resources || []).map(resource => ({
+          id: resource.id || crypto.randomUUID(),
+          title: resource.title || '',
+          url: resource.url || '',
+          file_type: resource.file_type || 'file',
+          file_size: resource.file_size || '',
+        })));
         setOutcomes((c.learningOutcomes || []).length ? c.learningOutcomes : ['']);
         if (c.perks) setPerks(c.perks);
         setMinTimeSeconds(Number(c.min_time_seconds || 0));
@@ -229,6 +237,9 @@ export function EditCoursePage() {
           lifetimeAccess: perks.lifetimeAccess,
           hasResources: perks.hasResources,
         },
+        course_resources: courseResources
+          .filter(resource => resource.title && resource.url && !String(resource.url).startsWith('blob:'))
+          .map(resource => ({ title: resource.title, url: resource.url, file_type: resource.file_type || 'file' })),
         curriculum: sections.map((s, si) => ({
           title: s.title || `Section ${si + 1}`,
           order: si,
@@ -490,6 +501,8 @@ export function EditCoursePage() {
           sections={sections}
           coursePerks={perks}
           updateCoursePerks={setPerks}
+          courseResources={courseResources}
+          updateCourseResources={setCourseResources}
           addSection={addSection}
           addLesson={addLesson}
           removeSection={removeSection}
