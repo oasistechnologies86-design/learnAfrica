@@ -133,6 +133,7 @@ export function CreateCoursePage() {
           order:   si,
           lessons: (s.lessons || []).map((l, li) => ({
             title:     l.title  || `Lesson ${li + 1}`,
+            description: l.description || '',
             type:      l.type   || 'video',
             content:   l.content  || '',
             videoUrl:  l.videoUrl || '',
