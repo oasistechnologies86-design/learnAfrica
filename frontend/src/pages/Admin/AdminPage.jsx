@@ -2695,16 +2695,28 @@ function DatabaseBackupCard() {
       const r = await fetch(`${base}/api/admin/database/export`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!r.ok) throw new Error('Export failed');
+      if (!r.ok) {
+        const details = await r.json().catch(() => ({}));
+        const failed = Array.isArray(details.failed_tables)
+          ? ` Failed tables: ${details.failed_tables.map(item => item.table).join(', ')}.`
+          : '';
+        throw new Error((details.error || details.detail || `Export failed (${r.status})`) + failed);
+      }
+      const contentType = r.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) throw new Error('The server did not return a JSON backup file.');
       const blob = await r.blob();
+      if (!blob.size) throw new Error('The backup file is empty.');
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
+      const disposition = r.headers.get('content-disposition') || '';
+      const serverName = disposition.match(/filename="?([^";]+)"?/i)?.[1];
       a.href = url;
-      a.download = `learnafrica-backup-${new Date().toISOString().slice(0,10)}.json`;
+      a.download = serverName || `learnafrica-backup-${new Date().toISOString().slice(0,10)}.json`;
       document.body.appendChild(a);
       a.click();
       a.remove();
-      URL.revokeObjectURL(url);
+      // Keep the object URL alive long enough for the browser to begin saving it.
+      window.setTimeout(() => URL.revokeObjectURL(url), 1500);
     } catch (e) {
       alert('Backup download failed: ' + e.message);
     } finally { setExporting(false); }
