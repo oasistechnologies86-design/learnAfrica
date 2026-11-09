@@ -1,0 +1,458 @@
+{
+  "quizzes": [
+    {
+      "title": "Assessing Professional Ethics in IT",
+      "description": "Professional Computing assessment: Assessing Professional Ethics in IT.",
+      "is_final": false,
+      "settings": {
+        "attempts_enabled": false,
+        "max_attempts": 0,
+        "extra_attempt_price": 0,
+        "pass_score": 70,
+        "timer_enabled": false,
+        "duration_seconds": 0,
+        "questions_per_attempt": 0,
+        "shuffle_questions": true,
+        "shuffle_options": true
+      },
+      "questions": [
+        {
+          "text": "credential means the opposite of information used to authenticate a user.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Access limited to information required for duties is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "perfect ethics",
+            "privileged access",
+            "deleting logs",
+            "need to know"
+          ]
+        },
+        {
+          "text": "Which term describes Organisation supporting standards in a profession?",
+          "type": "mcq",
+          "options": [
+            "privileged access",
+            "professional body",
+            "conflict of interest",
+            "least privilege"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "retaliation means punishment for raising a concern.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Which term describes Dividing sensitive tasks among different people?",
+          "type": "mcq",
+          "options": [
+            "separation of duties",
+            "continuing professional development",
+            "certification",
+            "credential"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Personal interests that may improperly influence judgement is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "only for authorised work purposes",
+            "for side businesses",
+            "conflict of interest",
+            "sharing credentials"
+          ]
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Formal recognition of demonstrated knowledge or skill is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "reporting serious wrongdoing appropriately",
+            "only for authorised work purposes",
+            "certification",
+            "for friends"
+          ]
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Elevated access to systems or sensitive information is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "privileged access",
+            "acceptable-use policy",
+            "skipping checks",
+            "need to know"
+          ]
+        },
+        {
+          "text": "Information used to authenticate a user is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "credential"
+        },
+        {
+          "text": "Ongoing learning to keep knowledge current is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "continuing professional development"
+        },
+        {
+          "text": "Which term describes Formal permission to perform an action?",
+          "type": "mcq",
+          "options": [
+            "whistleblowing",
+            "authorisation",
+            "acceptable-use policy",
+            "code of ethics"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "need to know means the opposite of access limited to information required for duties.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "continuing professional development means the opposite of ongoing learning to keep knowledge current.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Certification demonstrates",
+          "type": "mcq",
+          "options": [
+            "a level of knowledge or skill",
+            "immunity from discipline",
+            "perfect ethics",
+            "no need to learn"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "certification means formal recognition of demonstrated knowledge or skill.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Continuing development keeps skills",
+          "type": "mcq",
+          "options": [
+            "unnecessary",
+            "current",
+            "unchanged",
+            "secret"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "whistleblowing means reporting illegal unethical or dangerous practices.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Giving only access required for legitimate tasks is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "concealed",
+            "declared and managed",
+            "publishing records",
+            "least privilege"
+          ]
+        },
+        {
+          "text": "acceptable-use policy means rules describing permitted and prohibited system use.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "An acceptable-use policy explains",
+          "type": "mcq",
+          "options": [
+            "permitted and prohibited system use",
+            "office decoration",
+            "device colour",
+            "social popularity"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Professional principles guiding conduct and judgement is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "code of ethics"
+        },
+        {
+          "text": "Access should be removed when",
+          "type": "mcq",
+          "options": [
+            "a colleague asks",
+            "no longer required",
+            "logs are full",
+            "a user is popular"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Rules describing permitted and prohibited system use is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "acceptable-use policy",
+            "shared passwords",
+            "skipping checks",
+            "competence"
+          ]
+        },
+        {
+          "text": "code of ethics means the opposite of professional principles guiding conduct and judgement.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Which term describes Formal recognition of demonstrated knowledge or skill?",
+          "type": "mcq",
+          "options": [
+            "certification",
+            "competence",
+            "confidentiality",
+            "professionalism"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "confidentiality means protecting information entrusted to you.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Punishment for raising a concern is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "credential",
+            "a level of knowledge or skill",
+            "rewarded",
+            "retaliation"
+          ]
+        },
+        {
+          "text": "Which term describes Information used to authenticate a user?",
+          "type": "mcq",
+          "options": [
+            "conflict of interest",
+            "privileged access",
+            "credential",
+            "least privilege"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "professionalism means conduct demonstrating competence responsibility and respect.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Which term describes Punishment for raising a concern?",
+          "type": "mcq",
+          "options": [
+            "authorisation",
+            "retaliation",
+            "insider threat",
+            "need to know"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "Conduct demonstrating competence responsibility and respect is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "professionalism"
+        },
+        {
+          "text": "A conflict of interest should be",
+          "type": "mcq",
+          "options": [
+            "rewarded",
+            "ignored",
+            "declared and managed",
+            "concealed"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "competence means the opposite of knowledge and skill needed for a task.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Least privilege means",
+          "type": "mcq",
+          "options": [
+            "no access review",
+            "only necessary access",
+            "admin access for all",
+            "shared passwords"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "authorisation means formal permission to perform an action.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Confidentiality requires",
+          "type": "mcq",
+          "options": [
+            "publishing records",
+            "protecting entrusted information",
+            "sharing credentials",
+            "using data for fun"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "Professional competence includes",
+          "type": "mcq",
+          "options": [
+            "skipping checks",
+            "pretending expertise",
+            "avoiding training",
+            "knowing one's limits"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Reporting illegal unethical or dangerous practices is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "continuing professional development",
+            "ignored",
+            "professionalism",
+            "whistleblowing"
+          ]
+        },
+        {
+          "text": "Which term describes Risk from someone with legitimate access?",
+          "type": "mcq",
+          "options": [
+            "insider threat",
+            "confidentiality",
+            "professionalism",
+            "competence"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Which term describes Responsibility to take reasonable steps to avoid harm?",
+          "type": "mcq",
+          "options": [
+            "whistleblowing",
+            "acceptable-use policy",
+            "code of ethics",
+            "duty of care"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "conflict of interest means the opposite of personal interests that may improperly influence judgement.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Which term describes Access limited to information required for duties?",
+          "type": "mcq",
+          "options": [
+            "need to know",
+            "continuing professional development",
+            "credential",
+            "certification"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Whistleblowing is",
+          "type": "mcq",
+          "options": [
+            "deleting logs",
+            "spreading rumours",
+            "sharing passwords",
+            "reporting serious wrongdoing appropriately"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Knowledge and skill needed for a task is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 1,
+          "options": [
+            "unnecessary",
+            "competence",
+            "access review",
+            "a user is popular"
+          ]
+        },
+        {
+          "text": "privileged access means the opposite of elevated access to systems or sensitive information.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Protecting information entrusted to you is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "a colleague asks",
+            "insider threat",
+            "confidentiality",
+            "sharing credentials"
+          ]
+        },
+        {
+          "text": "Privileged access should be used",
+          "type": "mcq",
+          "options": [
+            "for side businesses",
+            "only for authorised work purposes",
+            "for friends",
+            "for curiosity"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "least privilege means giving only access required for legitimate tasks.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Formal permission to perform an action is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "authorisation",
+            "admin access for all",
+            "no need to learn",
+            "publishing records"
+          ]
+        },
+        {
+          "text": "Which term describes Checking whether permissions remain necessary?",
+          "type": "mcq",
+          "options": [
+            "access review",
+            "authorisation",
+            "need to know",
+            "retaliation"
+          ],
+          "correct_answer": 0
+        }
+      ]
+    }
+  ]
+}
