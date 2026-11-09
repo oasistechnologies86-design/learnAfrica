@@ -1,0 +1,458 @@
+{
+  "quizzes": [
+    {
+      "title": "Test Your Knowledge of Act 843",
+      "description": "Professional Computing assessment: Test Your Knowledge of Act 843.",
+      "is_final": false,
+      "settings": {
+        "attempts_enabled": false,
+        "max_attempts": 0,
+        "extra_attempt_price": 0,
+        "pass_score": 70,
+        "timer_enabled": false,
+        "duration_seconds": 0,
+        "questions_per_attempt": 0,
+        "shuffle_questions": true,
+        "shuffle_options": true
+      },
+      "questions": [
+        {
+          "text": "Choose the correct term to complete the statement: Ghana's Data Protection Act passed in 2012 is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "Act 843",
+            "data controller",
+            "server ownership",
+            "access and correction under the Act"
+          ]
+        },
+        {
+          "text": "Person or organisation processing personal data on behalf of a controller is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "data processor"
+        },
+        {
+          "text": "Act 843 is Ghana's Data Protection Act of",
+          "type": "mcq",
+          "options": [
+            "2001",
+            "2024",
+            "2012",
+            "2018"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "data processor means person or organisation processing personal data on behalf of a controller.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Which term describes Rule guiding lawful and responsible personal-data processing?",
+          "type": "mcq",
+          "options": [
+            "data quality",
+            "retention",
+            "purpose",
+            "data protection principle"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "minimality means collecting personal data necessary for the purpose.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Specific reason for collecting or using personal data is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 1,
+          "options": [
+            "monitors and regulates data protection compliance",
+            "purpose",
+            "the Act and official Commission guidance",
+            "2012"
+          ]
+        },
+        {
+          "text": "Minimality requires",
+          "type": "mcq",
+          "options": [
+            "public sharing",
+            "all possible data",
+            "necessary data only",
+            "permanent retention"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "A controller determines",
+          "type": "mcq",
+          "options": [
+            "device brand",
+            "passwords",
+            "internet speed",
+            "purposes and means of processing"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "data quality means keeping personal information accurate complete and up to date.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Which term describes Keeping personal information accurate complete and up to date?",
+          "type": "mcq",
+          "options": [
+            "Act 843",
+            "data subject",
+            "data quality",
+            "Data Protection Commission"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Which term describes Rights including access and correction under the Act?",
+          "type": "mcq",
+          "options": [
+            "special personal data",
+            "minimality",
+            "data subject rights",
+            "processing"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "data subject rights means rights including access and correction under the Act.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Registration obligations applying to data controllers under the Act is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "permanent retention",
+            "the individual to whom data relates",
+            "controller registration",
+            "all possible data"
+          ]
+        },
+        {
+          "text": "The Commission maintains the Data Protection",
+          "type": "mcq",
+          "options": [
+            "Register",
+            "Password",
+            "Router",
+            "Browser"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Which term describes Register maintained by the Data Protection Commission?",
+          "type": "mcq",
+          "options": [
+            "Data Protection Register",
+            "data controller",
+            "personal data",
+            "data processor"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Keeping personal data no longer than necessary is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 1,
+          "options": [
+            "Password",
+            "retention",
+            "public website",
+            "Data Protection Commission"
+          ]
+        },
+        {
+          "text": "Which term describes Additional use of personal data after initial collection?",
+          "type": "mcq",
+          "options": [
+            "further processing",
+            "special personal data",
+            "minimality",
+            "processing"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "controller registration means the opposite of registration obligations applying to data controllers under the Act.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Keeping personal information accurate complete and up to date is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "data quality"
+        },
+        {
+          "text": "Which term describes Event affecting the security of personal data?",
+          "type": "mcq",
+          "options": [
+            "data subject",
+            "security compromise",
+            "Act 843",
+            "Data Protection Commission"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "retention means the opposite of keeping personal data no longer than necessary.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "personal data means the opposite of information relating to an identified or identifiable individual.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Which term describes Measures protecting personal data from loss damage or unauthorised access?",
+          "type": "mcq",
+          "options": [
+            "controller registration",
+            "security compromise",
+            "security safeguards",
+            "data subject rights"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "A data subject is",
+          "type": "mcq",
+          "options": [
+            "the individual to whom data relates",
+            "the regulator",
+            "the vendor",
+            "the processor"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Data Protection Commission means the opposite of Ghanaian body established to regulate and monitor personal-data protection.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "processing means the opposite of operation performed on personal data such as collection storage use or disclosure.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "A processor acts",
+          "type": "mcq",
+          "options": [
+            "as every data subject",
+            "as a regulator",
+            "on behalf of a controller",
+            "as a court"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "The Data Protection Commission",
+          "type": "mcq",
+          "options": [
+            "replaces courts",
+            "runs all databases",
+            "monitors and regulates data protection compliance",
+            "issues school grades"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "For current procedures consult",
+          "type": "mcq",
+          "options": [
+            "only foreign blogs",
+            "only social media",
+            "the Act and official Commission guidance",
+            "unverified comments"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "purpose means the opposite of specific reason for collecting or using personal data.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Person or organisation determining purposes and means of processing is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "data controller"
+        },
+        {
+          "text": "A data breach involves",
+          "type": "mcq",
+          "options": [
+            "public website",
+            "a security compromise affecting personal data",
+            "normal login",
+            "software update"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Individual to whom personal data relates is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 1,
+          "options": [
+            "2018",
+            "data subject",
+            "Router",
+            "passwords"
+          ]
+        },
+        {
+          "text": "Sensitive personal information receiving additional protection is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "special personal data"
+        },
+        {
+          "text": "Data subjects have rights including",
+          "type": "mcq",
+          "options": [
+            "server ownership",
+            "access to all records",
+            "law-making",
+            "access and correction under the Act"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Which term describes Keeping personal data no longer than necessary?",
+          "type": "mcq",
+          "options": [
+            "data controller",
+            "data processor",
+            "retention",
+            "personal data"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Rights including access and correction under the Act is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "public website",
+            "unverified comments",
+            "data subject rights",
+            "as every data subject"
+          ]
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Information relating to an identified or identifiable individual is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "necessary data only",
+            "the processor",
+            "personal data",
+            "official guidance"
+          ]
+        },
+        {
+          "text": "data subject means individual to whom personal data relates.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "security safeguards means measures protecting personal data from loss damage or unauthorised access.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Measures protecting personal data from loss damage or unauthorised access is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "public website",
+            "personal data",
+            "necessary data only",
+            "security safeguards"
+          ]
+        },
+        {
+          "text": "data controller means the opposite of person or organisation determining purposes and means of processing.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Which term describes Registration obligations applying to data controllers under the Act?",
+          "type": "mcq",
+          "options": [
+            "purpose",
+            "retention",
+            "controller registration",
+            "data quality"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Operation performed on personal data such as collection storage use or disclosure is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "server ownership",
+            "access and correction under the Act",
+            "official guidance",
+            "processing"
+          ]
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Ghanaian body established to regulate and monitor personal-data protection is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "Data Protection Commission",
+            "security compromise",
+            "processing",
+            "Browser"
+          ]
+        },
+        {
+          "text": "special personal data means sensitive personal information receiving additional protection.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Which term describes Current instructions and explanations published by the Commission?",
+          "type": "mcq",
+          "options": [
+            "data subject rights",
+            "controller registration",
+            "security safeguards",
+            "official guidance"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Act 843 means Ghana's Data Protection Act passed in 2012.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Collecting personal data necessary for the purpose is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "minimality",
+            "public website",
+            "data subject rights",
+            "on behalf of a controller"
+          ]
+        }
+      ]
+    }
+  ]
+}
