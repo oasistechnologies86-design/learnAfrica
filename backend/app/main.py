@@ -11408,6 +11408,8 @@ def create_app() -> Flask:
             tables_data = backup.get('tables', {})
             if not isinstance(tables_data, dict):
                 return jsonify({'error': 'Backup tables section is invalid.'}), 400
+            if any(not isinstance(rows, list) for rows in tables_data.values()):
+                return jsonify({'error': 'Backup table rows must be JSON arrays.'}), 400
             if int(backup.get('format_version') or 1) >= 2 and backup.get('errors'):
                 return jsonify({'error': 'This backup reports failed exports and cannot be restored safely.'}), 400
             if not isinstance(tables_data.get('users'), list) or not tables_data.get('users'):
