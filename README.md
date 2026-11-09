@@ -10,9 +10,7 @@ quizzes, certificates, payments, payouts, live sessions, and a real-time communi
 - **Payments:** **Paystack** (Ghana MoMo, cards, GHIPSS) with a mock mode for local dev
 - **Email OTP:** **SendPulse** (optional signup verification)
 
-> This is the single, complete README. It replaces every other README/guide file in
-> the repo — see [Cleaning up the old READMEs](#cleaning-up-the-old-readmes) for the
-> list of files you can delete once you have this one in place.
+> This is the main project guide. The frontend folder also contains a short frontend-specific README.
 
 ---
 
@@ -259,8 +257,8 @@ No cloud accounts are needed to run the app locally. Local dev uses **SQLite** a
 ### Step 1 — Get the code
 
 ```bash
-git clone https://github.com/kotoorich/learnafrica-lite.git
-cd learnafrica-lite
+git clone https://github.com/oasistechnologies86-design/learnAfrica.git
+cd learnAfrica
 ```
 
 You should see `backend/` and `frontend/` side by side.
@@ -1533,3 +1531,27 @@ and troubleshooting — all updated to your current code and your **Supabase** s
 ---
 
 Built for African learners. 🌍
+
+
+---
+
+## Current course builder and demo courses
+
+The three courses automatically seeded on a fresh database are:
+
+- Introduction to Web Development
+- Python for Data Science
+- UI/UX Design Fundamentals
+
+They use the same instructor course editor and shared curriculum builder as courses created through **Create New Course**. The curriculum editor includes video, text, custom-page and quiz lessons; section and lesson ordering; quiz JSON import; quiz timing, attempts, pass score and shuffle controls; course perks; and course-level downloadable resources. Changes to an existing seeded course are saved through the normal course update endpoint. Seed upgrades must remain additive and must not replace course IDs, lesson IDs, student progress, quiz attempts or instructor edits.
+
+### Professional Computing quiz files
+
+The maintained quiz JSON files are in `docs/Professional_Computing_Quizzes_Updated/`. The downloadable archive is `docs/Professional_Computing_Quizzes.zip`.
+
+- 11 lesson quizzes and one final examination.
+- 50 questions in each file.
+- 31 multiple-choice, 15 true/false and 4 fill-in-the-blank questions per quiz.
+- The JSON import files are separate so each lesson quiz can be imported into its matching curriculum lesson and the final exam into the course's final-exam lesson.
+
+Import through the instructor course editor's **Import quizzes from JSON** control and choose the destination section before selecting the file. Review quiz settings after import and save the course.
