@@ -1,0 +1,458 @@
+{
+  "quizzes": [
+    {
+      "title": "Professional Computing — Final Examination",
+      "description": "Professional Computing course final examination.",
+      "is_final": true,
+      "settings": {
+        "attempts_enabled": false,
+        "max_attempts": 0,
+        "extra_attempt_price": 0,
+        "pass_score": 70,
+        "timer_enabled": false,
+        "duration_seconds": 0,
+        "questions_per_attempt": 0,
+        "shuffle_questions": true,
+        "shuffle_options": true
+      },
+      "questions": [
+        {
+          "text": "Choose the correct term to complete the statement: A process for managing online content is content ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "moderation",
+            "footprint",
+            "actions and decisions",
+            "on behalf of a controller"
+          ]
+        },
+        {
+          "text": "An ethical decision should consider indirect stakeholders.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "A successful software launch ends ethical responsibility.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Misinformation may be shared?",
+          "type": "mcq",
+          "options": [
+            "only for profit",
+            "only in private",
+            "without intent to deceive",
+            "only by regulators"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "A private social-media group guarantees confidentiality.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Collecting only necessary personal data is data ________.",
+          "type": "fill_blank",
+          "correct_answer": "minimisation"
+        },
+        {
+          "text": "A person who reports serious wrongdoing may be a ________.",
+          "type": "fill_blank",
+          "correct_answer": "whistleblower"
+        },
+        {
+          "text": "A data subject may request?",
+          "type": "mcq",
+          "options": [
+            "server ownership",
+            "a law change",
+            "all other users' records",
+            "access or correction under the Act"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Disinformation is?",
+          "type": "mcq",
+          "options": [
+            "honest correction",
+            "verified data",
+            "deliberate deception using false information",
+            "every opinion"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Phishing can use fake websites to collect passwords.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "A conflict of interest should be?",
+          "type": "mcq",
+          "options": [
+            "ignored",
+            "concealed",
+            "rewarded",
+            "disclosed and managed"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "A conflict of interest should be declared.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "The public-domain dedication tool is ________.",
+          "type": "fill_blank",
+          "correct_answer": "CC0"
+        },
+        {
+          "text": "A data breach may involve unauthorised disclosure.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Ghana's Data Protection Act is Act ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "all other users' records",
+            "CC0",
+            "843",
+            "NC"
+          ]
+        },
+        {
+          "text": "The digital divide includes unequal access and digital skills.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: The element requiring the same licence for adaptations is ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "SA",
+            "whistleblower",
+            "share passwords",
+            "training"
+          ]
+        },
+        {
+          "text": "An audit trail records?",
+          "type": "mcq",
+          "options": [
+            "personal opinions",
+            "advertising reach",
+            "actions and decisions",
+            "weather"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "A patent may protect?",
+          "type": "mcq",
+          "options": [
+            "every opinion",
+            "a public domain fact",
+            "a private password",
+            "a qualifying invention"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Ransomware is a type of backup software.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: A software product's ongoing updates are part of ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "maintenance",
+            "pretending expertise",
+            "all users to admin",
+            "recognise threats"
+          ]
+        },
+        {
+          "text": "Choose the correct term to complete the statement: The Creative Commons element restricting commercial use is ________.",
+          "type": "mcq",
+          "correct_answer": 1,
+          "options": [
+            "the processor",
+            "NC",
+            "moderation",
+            "the software vendor"
+          ]
+        },
+        {
+          "text": "Social-network privacy settings should be?",
+          "type": "mcq",
+          "options": [
+            "ignored",
+            "made public",
+            "reviewed regularly",
+            "shared with strangers"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Data minimisation means?",
+          "type": "mcq",
+          "options": [
+            "never delete data",
+            "share by default",
+            "collect everything",
+            "collect only necessary data"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Privilege is the same as permission.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: A person's online record is a digital ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "audit logs",
+            "advertising reach",
+            "2001",
+            "footprint"
+          ]
+        },
+        {
+          "text": "Choose the correct term to complete the statement: The Creative Commons element requiring credit is ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "whistleblower",
+            "rewarded",
+            "NC",
+            "BY"
+          ]
+        },
+        {
+          "text": "Least privilege gives all users administrator access.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Personal interests affecting professional judgement create a conflict of ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "wallpaper changes",
+            "CC0",
+            "interest",
+            "maintenance"
+          ]
+        },
+        {
+          "text": "CC BY requires attribution.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "A privacy notice explains?",
+          "type": "mcq",
+          "options": [
+            "other users' passwords",
+            "source code",
+            "data collection and use",
+            "exam answers"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Professional competence includes?",
+          "type": "mcq",
+          "options": [
+            "hiding mistakes",
+            "avoiding training",
+            "pretending expertise",
+            "knowing one's limits"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Choose the correct term to complete the statement: The Data Protection Commission maintains the Data Protection ________.",
+          "type": "mcq",
+          "correct_answer": 1,
+          "options": [
+            "compress files",
+            "Register",
+            "concealed",
+            "the individual the data relates to"
+          ]
+        },
+        {
+          "text": "A software lifecycle includes?",
+          "type": "mcq",
+          "options": [
+            "only purchase",
+            "maintenance",
+            "only advertising",
+            "only launch"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "Phishing attempts to?",
+          "type": "mcq",
+          "options": [
+            "test backups",
+            "compress files",
+            "repair devices",
+            "deceive users into unsafe actions"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "A false statement harming reputation may be ________.",
+          "type": "fill_blank",
+          "correct_answer": "defamation"
+        },
+        {
+          "text": "An online image is not automatically reusable because?",
+          "type": "mcq",
+          "options": [
+            "it is small",
+            "copyright and licence terms may apply",
+            "it has many likes",
+            "it is visible"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "Freedom of expression makes every online threat acceptable.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Security awareness training helps users?",
+          "type": "mcq",
+          "options": [
+            "avoid reporting",
+            "disable updates",
+            "recognise threats",
+            "share passwords"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Human oversight is important for?",
+          "type": "mcq",
+          "options": [
+            "font selection",
+            "consequential automated decisions",
+            "wallpaper changes",
+            "file compression"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "A data processor acts?",
+          "type": "mcq",
+          "options": [
+            "as a court",
+            "as every data subject",
+            "as a social network user",
+            "on behalf of a controller"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Moderation decisions should be proportionate and reviewable.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Human review may be needed for consequential automated decisions.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: False information shared without intent to deceive is ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "the software vendor",
+            "never delete data",
+            "misinformation",
+            "shared with strangers"
+          ]
+        },
+        {
+          "text": "A supplier assessment should consider?",
+          "type": "mcq",
+          "options": [
+            "only logo design",
+            "only follower count",
+            "security and reliability",
+            "only price"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Privacy and security are identical concepts.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Under Act 843 the data subject is?",
+          "type": "mcq",
+          "options": [
+            "the individual the data relates to",
+            "the software vendor",
+            "the processor",
+            "the regulator"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Act 843 was passed in?",
+          "type": "mcq",
+          "options": [
+            "2018",
+            "2024",
+            "2012",
+            "2001"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Choose the correct term to complete the statement: The ability to access a system is technical ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "moderation",
+            "wallpaper changes",
+            "avoid reporting",
+            "privilege"
+          ]
+        },
+        {
+          "text": "Least privilege limits?",
+          "type": "mcq",
+          "options": [
+            "training",
+            "access to what is needed",
+            "audit logs",
+            "all users to admin"
+          ],
+          "correct_answer": 1
+        }
+      ]
+    }
+  ]
+}
