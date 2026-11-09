@@ -2831,6 +2831,16 @@ function DatabaseBackupCard() {
                 ? <>❌ {importResult.message}</>
                 : <>
                     ✓ Restore complete: {importResult.rows_inserted} rows inserted.
+                    {!!importResult.skipped_invalid_rows?.length && (
+                      <p className="mt-1 text-amber-600">
+                        {importResult.skipped_invalid_rows.length} invalid backup row(s) were skipped. Review the warnings before relying on this restored data.
+                      </p>
+                    )}
+                    {!!importResult.unavailable_tables?.length && (
+                      <p className="mt-1 text-amber-600">
+                        Tables unavailable in this database: {importResult.unavailable_tables.join(', ')}.
+                      </p>
+                    )}
                     {importResult.pre_restore_snapshot_path && (
                       <p className="mt-1 opacity-80">Rollback snapshot saved on server at: {importResult.pre_restore_snapshot_path}</p>
                     )}
