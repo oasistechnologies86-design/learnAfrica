@@ -1163,6 +1163,22 @@ export function CurriculumSection({
         </div>
       </Card>
 
+      {/* Course-level downloadable resources */}
+      <Card className="overflow-hidden border-border">
+        <div className="p-4 border-b border-border bg-muted/10">
+          <h3 className="text-sm font-bold">Course Resources</h3>
+          <p className="text-2xs text-muted-foreground mt-0.5">
+            Add downloadable files or useful external links that belong to the whole course.
+          </p>
+        </div>
+        <div className="p-4">
+          <CourseResourcesManager
+            resources={courseResources}
+            onChange={updateCourseResources}
+          />
+        </div>
+      </Card>
+
       {/* Navigation */}
       <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border">
         <Button variant="ghost" onClick={onBack} className="flex-1 h-12 text-xs font-bold uppercase">
