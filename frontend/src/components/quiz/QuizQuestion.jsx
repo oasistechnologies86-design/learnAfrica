@@ -34,8 +34,9 @@ export function QuizQuestion({
           qType === 'true_false' ? 'bg-blue-500/10 text-blue-600' :
                                    'bg-orange-500/10 text-orange-600'
         )}>
-          {qType === 'mcq'        ? 'Multiple Choice' :
-           qType === 'true_false' ? 'True or False'   :
+          {qType === 'mcq_multi'  ? 'Multiple Answer' :
+           qType === 'mcq'        ? 'Single Answer' :
+           qType === 'true_false' ? 'True or False' :
                                     'Fill in the Blank'}
         </span>
         <h2 className="mt-2 text-lg font-bold leading-relaxed tracking-tight text-foreground sm:text-xl">{question.question}</h2>
@@ -75,6 +76,41 @@ export function QuizQuestion({
                   <span className="flex-1 text-sm">{option}</span>
                   {showResult && isCorrect  && <span className="text-success text-xs font-bold">✓ Correct</span>}
                   {showResult && isSelected && !isCorrect && <span className="text-destructive text-xs font-bold">✗ Wrong</span>}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── Multiple-answer MCQ ── */}
+      {qType === 'mcq_multi' && (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-primary">Select all correct answers</p>
+          {options.map((option, index) => {
+            const selected = Array.isArray(selectedAnswer) && selectedAnswer.includes(index);
+            const correct = Array.isArray(correctAnswer) && correctAnswer.includes(index);
+            return (
+              <button key={index} type="button"
+                onClick={() => !showResult && onSelectAnswer(index)}
+                disabled={showResult}
+                className={cn(
+                  'w-full rounded-xl border p-3 text-left transition-colors duration-200 sm:p-3.5',
+                  showResult
+                    ? correct ? 'border-success bg-success/10'
+                    : selected ? 'border-destructive bg-destructive/10'
+                    : 'border-border opacity-50'
+                    : selected ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-primary/50 hover:bg-muted/30'
+                )}>
+                <div className="flex items-center gap-3">
+                  <div className={cn('flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 text-xs font-bold',
+                    selected ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/30 text-muted-foreground')}>
+                    {selected ? '✓' : String.fromCharCode(65 + index)}
+                  </div>
+                  <span className="flex-1 text-sm">{option}</span>
+                  {showResult && correct && <span className="text-success text-xs font-bold">✓ Correct</span>}
+                  {showResult && selected && !correct && <span className="text-destructive text-xs font-bold">✗ Wrong</span>}
                 </div>
               </button>
             );
