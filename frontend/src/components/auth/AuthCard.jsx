@@ -64,11 +64,11 @@ export function AuthCard({ view, onSwitch, children }) {
         {/* Top-aligned on phones (no dead space above the card); centred on
             large screens where the split card has a fixed height. */}
         <div className="flex flex-1 items-start justify-center lg:items-center">
-          <div className="w-full max-w-5xl">
+          <div className="w-full max-w-4xl">
             {/* One layout at a time — rendering both would duplicate ids and
                 put two copies of every control in the accessibility tree. */}
             {isDesktop ? (
-              <div className="relative overflow-hidden rounded-[20px] bg-card shadow-[0_30px_80px_-30px_rgba(0,0,0,0.35)] ring-1 ring-black/5 dark:ring-white/10 lg:h-[640px]">
+              <div className="relative overflow-hidden rounded-[20px] bg-card shadow-[0_30px_80px_-30px_rgba(0,0,0,0.35)] ring-1 ring-black/5 dark:ring-white/10 lg:h-[590px]">
                 {/* Green panel — fixed on the left; content cross-fades. */}
                 <div className="absolute inset-y-0 left-0 z-10 w-1/2">
                   <div key={view} className={cn('h-full', fade)}>
@@ -77,7 +77,7 @@ export function AuthCard({ view, onSwitch, children }) {
                 </div>
 
                 {/* Form half — fixed on the right; content cross-fades. */}
-                <div className="absolute inset-y-0 right-0 z-20 w-1/2 overflow-y-auto bg-card px-10 py-10 xl:px-14">
+                <div className="absolute inset-y-0 right-0 z-20 w-1/2 overflow-y-auto bg-card px-7 py-7 xl:px-9">
                   <div className="flex min-h-full flex-col justify-center">
                     <div key={`form-${view}`} className={fade}>{children}</div>
                   </div>
@@ -89,7 +89,7 @@ export function AuthCard({ view, onSwitch, children }) {
                   <div key={`banner-${view}`} className={cn('h-32 sm:h-36', fade)}>
                     {compactPanel}
                   </div>
-                  <div className="p-5 sm:p-7">
+                  <div className="p-4 sm:p-5">
                     <div key={`form-${view}`} className={fade}>{children}</div>
                   </div>
                 </div>

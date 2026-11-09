@@ -29,22 +29,20 @@ export function useCurriculum(initialData = []) {
     });
   };
 
-  const importQuizzes = (quizzes) => {
-    setSections(prev => {
-      const next = [...prev];
-      for (const imported of quizzes) {
-        const sectionTitle = String(imported.section_title || 'Imported Quizzes').trim();
-        let index = next.findIndex(section => String(section.title || '').trim().toLowerCase() === sectionTitle.toLowerCase());
-        if (index < 0) {
-          next.push({ id: uid(), title: sectionTitle, lessons: [] });
-          index = next.length - 1;
-        }
-        const { section_title, ...lesson } = imported;
-        next[index] = { ...next[index], lessons: [...(next[index].lessons || []), lesson] };
-      }
-      return next;
-    });
+  const importQuizzes = (quizzes, sectionId) => {
+    if (!sectionId || !Array.isArray(quizzes) || !quizzes.length) return;
+    setSections(prev => prev.map(section => section.id === sectionId
+      ? { ...section, lessons: [...(section.lessons || []), ...quizzes] } : section));
   };
+  const moveLesson = (sectionId, lessonId, direction) => setSections(prev => prev.map(section => {
+    if (section.id !== sectionId) return section;
+    const lessons = [...(section.lessons || [])];
+    const index = lessons.findIndex(lesson => lesson.id === lessonId);
+    const target = index + direction;
+    if (index < 0 || target < 0 || target >= lessons.length) return section;
+    [lessons[index], lessons[target]] = [lessons[target], lessons[index]];
+    return { ...section, lessons };
+  }));
 
   const addLesson = (sectionId, type = 'video', title = '') => {
     const newLesson = {
@@ -90,5 +88,5 @@ export function useCurriculum(initialData = []) {
     ));
   };
 
-  return { sections, addSection, removeSection, updateSectionTitle, moveSection, importQuizzes, addLesson, updateLesson, removeLesson };
+  return { sections, addSection, removeSection, updateSectionTitle, moveSection, importQuizzes, addLesson, updateLesson, removeLesson, moveLesson };
 }
