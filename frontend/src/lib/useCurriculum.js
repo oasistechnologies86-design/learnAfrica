@@ -18,6 +18,17 @@ export function useCurriculum(initialData = []) {
     setSections(prev => prev.map(s => s.id === sectionId ? { ...s, title: newTitle } : s));
   };
 
+  const moveSection = (sectionId, direction) => {
+    setSections(prev => {
+      const index = prev.findIndex(section => section.id === sectionId);
+      const target = index + direction;
+      if (index < 0 || target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  };
+
   const addLesson = (sectionId, type = 'video', title = '') => {
     const newLesson = {
       id: uid(),
@@ -62,5 +73,5 @@ export function useCurriculum(initialData = []) {
     ));
   };
 
-  return { sections, addSection, removeSection, updateSectionTitle, addLesson, updateLesson, removeLesson };
+  return { sections, addSection, removeSection, updateSectionTitle, moveSection, addLesson, updateLesson, removeLesson };
 }
