@@ -1,0 +1,458 @@
+{
+  "quizzes": [
+    {
+      "title": "Test Your Understanding of Computer Ethics",
+      "description": "Professional Computing assessment: Test Your Understanding of Computer Ethics.",
+      "is_final": false,
+      "settings": {
+        "attempts_enabled": false,
+        "max_attempts": 0,
+        "extra_attempt_price": 0,
+        "pass_score": 70,
+        "timer_enabled": false,
+        "duration_seconds": 0,
+        "questions_per_attempt": 0,
+        "shuffle_questions": true,
+        "shuffle_options": true
+      },
+      "questions": [
+        {
+          "text": "accountability means the opposite of being answerable for decisions and actions.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Structured method for identifying facts stakeholders options and consequences is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "stakeholder",
+            "describe the problem clearly",
+            "profit alone",
+            "ethical decision process"
+          ]
+        },
+        {
+          "text": "After implementation, an ethical decision should be",
+          "type": "mcq",
+          "options": [
+            "reviewed for outcomes and harm",
+            "forgotten",
+            "left unexamined",
+            "hidden"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Consistency between stated principles and actual behaviour is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 1,
+          "options": [
+            "social and environmental effects as well as profit",
+            "integrity",
+            "left unexamined",
+            "morals"
+          ]
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Record of actions and decisions for later review is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 1,
+          "options": [
+            "corporate social responsibility",
+            "audit trail",
+            "legal permission",
+            "competing duties"
+          ]
+        },
+        {
+          "text": "morals means the opposite of personal or community beliefs about right and wrong.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "descriptive ethics means study of what people actually do.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "ethics means reasoned study of what people ought to do.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Being answerable for decisions and actions is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "integrity",
+            "admin access",
+            "competing duties",
+            "accountability"
+          ]
+        },
+        {
+          "text": "A stakeholder is",
+          "type": "mcq",
+          "options": [
+            "only a vendor",
+            "only a manager",
+            "a person or group affected by a decision",
+            "a software bug"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Study of what people actually do is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "descriptive ethics"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Personal or community beliefs about right and wrong is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "left unexamined",
+            "choose quickly",
+            "network protocol",
+            "morals"
+          ]
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Person or group affected by a decision is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "password sharing",
+            "choose quickly",
+            "stakeholder",
+            "forgotten"
+          ]
+        },
+        {
+          "text": "Privilege is",
+          "type": "mcq",
+          "options": [
+            "automatic permission",
+            "public disclosure",
+            "technical ability to access information",
+            "legal ownership"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Priorities such as honesty fairness privacy and respect is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "software settings",
+            "automatic permission",
+            "describe the problem clearly",
+            "values"
+          ]
+        },
+        {
+          "text": "law means rules recognised and enforced by a legal system.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "stakeholder means the opposite of person or group affected by a decision.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "The first ethical step is to",
+          "type": "mcq",
+          "options": [
+            "choose quickly",
+            "blame someone",
+            "describe the problem clearly",
+            "delete evidence"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Which term describes Authorisation to perform a particular action?",
+          "type": "mcq",
+          "options": [
+            "stakeholder",
+            "permission",
+            "descriptive ethics",
+            "corporate social responsibility"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "values means priorities such as honesty fairness privacy and respect.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "CSR considers",
+          "type": "mcq",
+          "options": [
+            "advertising only",
+            "social and environmental effects as well as profit",
+            "hardware only",
+            "profit only"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "Integrity means",
+          "type": "mcq",
+          "options": [
+            "hiding mistakes",
+            "consistency between principles and conduct",
+            "admin access",
+            "profit alone"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "Morals are mainly",
+          "type": "mcq",
+          "options": [
+            "court orders",
+            "personal or community beliefs about right and wrong",
+            "technical permissions",
+            "software settings"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "Responsibilities or interests that conflict is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "competing duties"
+        },
+        {
+          "text": "An audit trail supports",
+          "type": "mcq",
+          "options": [
+            "review and accountability",
+            "anonymous changes",
+            "password sharing",
+            "concealment"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Which term describes Responsibilities or interests that conflict?",
+          "type": "mcq",
+          "options": [
+            "morals",
+            "competing duties",
+            "values",
+            "ethics"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "Normative ethics asks",
+          "type": "mcq",
+          "options": [
+            "how people ought to behave",
+            "device cost",
+            "app popularity",
+            "how many users exist"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Which term describes Technical ability to access a system or information?",
+          "type": "mcq",
+          "options": [
+            "privilege",
+            "normative ethics",
+            "law",
+            "integrity"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "corporate social responsibility means consideration of social and environmental effects as well as profit.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "proportionality means the opposite of matching a response to seriousness and context.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Rules recognised and enforced by a legal system is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 1,
+          "options": [
+            "describe the problem clearly",
+            "law",
+            "automatic permission",
+            "legal ownership"
+          ]
+        },
+        {
+          "text": "Which term describes Confidence that people and organisations will act responsibly?",
+          "type": "mcq",
+          "options": [
+            "accountability",
+            "ethical decision process",
+            "competing duties",
+            "trust"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Which term describes Record of actions and decisions for later review?",
+          "type": "mcq",
+          "options": [
+            "audit trail",
+            "descriptive ethics",
+            "corporate social responsibility",
+            "stakeholder"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Ethics is the",
+          "type": "mcq",
+          "options": [
+            "reasoned study of what people ought to do",
+            "legal permission",
+            "study of computer hardware",
+            "network protocol"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Study of how people ought to behave is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "study of computer hardware",
+            "how many users exist",
+            "technical ability to access information",
+            "normative ethics"
+          ]
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Reasoned study of what people ought to do is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "hidden",
+            "technical ability to access information",
+            "ethics",
+            "competing duties"
+          ]
+        },
+        {
+          "text": "Which term describes Matching a response to seriousness and context?",
+          "type": "mcq",
+          "options": [
+            "competing duties",
+            "proportionality",
+            "ethical decision process",
+            "accountability"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "audit trail means record of actions and decisions for later review.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "transparency means openness about relevant decisions and practices.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "ethical decision process means the opposite of structured method for identifying facts stakeholders options and consequences.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "normative ethics means the opposite of study of how people ought to behave.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Consideration of social and environmental effects as well as profit is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "corporate social responsibility",
+            "admin access",
+            "app popularity",
+            "automatic permission"
+          ]
+        },
+        {
+          "text": "competing duties means responsibilities or interests that conflict.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Which term describes Openness about relevant decisions and practices?",
+          "type": "mcq",
+          "options": [
+            "transparency",
+            "conflict of interest",
+            "proportionality",
+            "audit trail"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Matching a response to seriousness and context is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "proportionality"
+        },
+        {
+          "text": "Openness about relevant decisions and practices is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "transparency"
+        },
+        {
+          "text": "Which term describes Situation where personal interests may improperly affect judgement?",
+          "type": "mcq",
+          "options": [
+            "ethics",
+            "morals",
+            "values",
+            "conflict of interest"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Which term describes Being answerable for decisions and actions?",
+          "type": "mcq",
+          "options": [
+            "normative ethics",
+            "integrity",
+            "accountability",
+            "law"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Which term describes Workplace with clear standards fair procedures and safe reporting?",
+          "type": "mcq",
+          "options": [
+            "audit trail",
+            "proportionality",
+            "ethical workplace",
+            "transparency"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "integrity means the opposite of consistency between stated principles and actual behaviour.",
+          "type": "true_false",
+          "correct_answer": "false"
+        }
+      ]
+    }
+  ]
+}
