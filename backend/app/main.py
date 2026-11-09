@@ -2740,6 +2740,20 @@ def create_app() -> Flask:
                         if user_ans is not None:
                             if str(user_ans).strip().lower() == correct_text.strip().lower():
                                 correct_count += 1
+                    elif q_type == 'mcq_multi':
+                        try:
+                            expected = json.loads(q['correct_answer']) if isinstance(q['correct_answer'], str) else q['correct_answer']
+                            expected = sorted(set(int(v) for v in (expected or [])))
+                        except (ValueError, TypeError):
+                            expected = []
+                        correct_map[i] = expected
+                        if isinstance(user_ans, list):
+                            try:
+                                selected = sorted(set(int(v) for v in user_ans))
+                                if selected == expected:
+                                    correct_count += 1
+                            except (ValueError, TypeError):
+                                pass
                     else:
                         correct_map[i] = q['correct_answer']
                         if user_ans is not None:
