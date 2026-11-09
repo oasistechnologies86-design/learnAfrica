@@ -2452,6 +2452,7 @@ def create_app() -> Flask:
             if r['question_type'] == 'fill_blank':
                 r['options'] = []
             r.pop('correct_answer', None)
+            r.pop('correct_answers', None)
             questions.append(r)
         qd['questions'] = questions
         qd['timer_enabled'] = bool(qd.get('timer_enabled'))
@@ -2742,7 +2743,8 @@ def create_app() -> Flask:
                                 correct_count += 1
                     elif q_type == 'mcq_multi':
                         try:
-                            expected = json.loads(q['correct_answer']) if isinstance(q['correct_answer'], str) else q['correct_answer']
+                            raw_correct = q.get('correct_answers') or q['correct_answer']
+                            expected = json.loads(raw_correct) if isinstance(raw_correct, str) and raw_correct.startswith('[') else raw_correct
                             expected = sorted(set(int(v) for v in (expected or [])))
                         except (ValueError, TypeError):
                             expected = []
@@ -3278,20 +3280,23 @@ def create_app() -> Flask:
                                    'questions_per_attempt,shuffle_questions,shuffle_options,attempts_enabled,extra_attempt_price,pass_score) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
                                    (qzid, cid, leid, les.get('title','Quiz'), q_dur_text, q_dur_sec, q_timer_enabled, q_max_att,
                                     q_per_att, q_shuf_q, q_shuf_o, q_attempts_enabled, q_extra_price, q_pass_score))
+                        ensure_column(db, 'quiz_questions', 'correct_answers', 'TEXT')
                         for qi, q in enumerate(les['questions']):
                             question_type = q.get('question_type', 'mcq')
                             correct_value = q.get('correctAnswer', 0)
+                            correct_values = None
                             if question_type == 'mcq_multi':
                                 options = q.get('options', []) or []
                                 if not isinstance(correct_value, list) or len(set(correct_value)) < 2:
                                     return jsonify({'error': f'Question {qi + 1} must have at least two correct options.'}), 400
                                 if any(not isinstance(index, int) or index < 0 or index >= len(options) for index in correct_value):
                                     return jsonify({'error': f'Question {qi + 1} contains an invalid correct option.'}), 400
-                                correct_value = json.dumps(sorted(set(correct_value)))
-                            db.execute('''INSERT INTO quiz_questions (id,quiz_id,question_text,options,correct_answer,question_type,"order")
-                                          VALUES(?,?,?,?,?,?,?)''',
+                                correct_values = json.dumps(sorted(set(correct_value)))
+                                correct_value = 0
+                            db.execute('''INSERT INTO quiz_questions (id,quiz_id,question_text,options,correct_answer,correct_answers,question_type,"order")
+                                          VALUES(?,?,?,?,?,?,?,?)''',
                                        (str(uuid.uuid4()), qzid, q.get('text',''),
-                                        json.dumps(q.get('options',[])), correct_value,
+                                        json.dumps(q.get('options',[])), correct_value, correct_values,
                                         question_type, qi))
             db.commit()
             return jsonify({'message': 'Course created', 'course_id': cid}), 201
@@ -3799,20 +3804,23 @@ def create_app() -> Flask:
                             # preserves historical attempts, active session IDs,
                             # and payment credits while applying the instructor's edits.
                             db.execute('DELETE FROM quiz_questions WHERE quiz_id=?', (qzid,))
+                            ensure_column(db, 'quiz_questions', 'correct_answers', 'TEXT')
                             for qi, q in enumerate(les.get('questions') or []):
                                 question_type = q.get('question_type', 'mcq')
                                 correct_value = q.get('correctAnswer', 0)
+                                correct_values = None
                                 if question_type == 'mcq_multi':
                                     options = q.get('options', []) or []
                                     if not isinstance(correct_value, list) or len(set(correct_value)) < 2:
                                         return jsonify({'error': f'Question {qi + 1} must have at least two correct options.'}), 400
                                     if any(not isinstance(index, int) or index < 0 or index >= len(options) for index in correct_value):
                                         return jsonify({'error': f'Question {qi + 1} contains an invalid correct option.'}), 400
-                                    correct_value = json.dumps(sorted(set(correct_value)))
-                                db.execute('''INSERT INTO quiz_questions (id,quiz_id,question_text,options,correct_answer,question_type,"order")
-                                              VALUES(?,?,?,?,?,?,?)''',
+                                    correct_values = json.dumps(sorted(set(correct_value)))
+                                    correct_value = 0
+                                db.execute('''INSERT INTO quiz_questions (id,quiz_id,question_text,options,correct_answer,correct_answers,question_type,"order")
+                                              VALUES(?,?,?,?,?,?,?,?)''',
                                            (str(uuid.uuid4()), qzid, q.get('text',''),
-                                            json.dumps(q.get('options',[])), correct_value,
+                                            json.dumps(q.get('options',[])), correct_value, correct_values,
                                             question_type, qi))
     
             db.commit()
