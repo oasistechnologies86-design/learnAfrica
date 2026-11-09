@@ -167,8 +167,8 @@ when you already know the app runs on your own machine.
 | Email | SendPulse |
 
 > ⚠ **Do not upgrade gunicorn past 23.x.** gunicorn 26 removed the built-in eventlet
-> worker (`--worker-class eventlet`), which is exactly what `render.yaml` and the
-> Procfile start the app with. Migrating off eventlet (to gevent or a threaded
+> worker (`--worker-class eventlet`), which is exactly what the
+> Procfile starts the app with. Migrating off eventlet (to gevent or a threaded
 > worker) is a separate project — do that first if you ever want a newer gunicorn.
 
 ---
@@ -176,7 +176,7 @@ when you already know the app runs on your own machine.
 ## Repository layout
 
 ```
-learnafrica-lite/
+learnAfrica/
 ├── backend/                          # Flask API (deploys to Render)
 │   ├── app/
 │   │   ├── __init__.py               # Exports create_app
@@ -192,7 +192,7 @@ learnafrica-lite/
 │   ├── wsgi.py                       # Production entry (gunicorn imports this)
 │   ├── run.py                        # Development entry (python run.py)
 │   ├── requirements.txt
-│   ├── render.yaml                   # Render blueprint
+│   ├── render.yaml                   # Legacy config file; deploy using a Render Web Service
 │   ├── Procfile                      # Alternate start command
 │   ├── env.example                   # Local env template → copy to .env
 │   └── check_sendpulse.py             # Standalone SendPulse credential tester
@@ -282,12 +282,14 @@ pip install -r requirements.txt
 cp env.example .env
 ```
 
-Now open `backend/.env` and set at least the secrets. For local dev you can leave
-the database and Paystack blank — the app falls back to SQLite and mock payments.
+Now open `backend/.env` and set the local admin credentials and a secret. Leave
+the database and Paystack blank for local SQLite and mock-payment development.
 
 ```env
 # Required locally (any random strings are fine for dev)
 SECRET_KEY=change-me-to-a-long-random-string
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=choose-a-strong-local-password
 
 # Comma-separated list of allowed frontend origins
 ALLOWED_ORIGINS=http://localhost:5173
@@ -326,7 +328,7 @@ You will see:
 📖 API Docs: http://localhost:5000/api/health
 ============================================================
 ✅ Database ready
-✅ Default admin created: admin@learnafrica.com
+✅ Default admin created: the email configured in ADMIN_EMAIL
 ✅ Seeded 3 demo courses with sections and lessons
 ```
 
@@ -399,7 +401,7 @@ cd frontend && npm run build      # outputs frontend/dist/
 
 | Environment | Email | Password | How it is set |
 |---|---|---|---|
-| Local | `admin@learnafrica.com` | `Admin@LearnAfrica2024!` | Built-in dev defaults |
+| Local | The value you set in `ADMIN_EMAIL` | The value you set in `ADMIN_PASSWORD` | `backend/.env` |
 | Production | you choose | you choose | `ADMIN_EMAIL` / `ADMIN_PASSWORD` env vars |
 
 The admin account is created on first startup if it does not exist. After that,
@@ -427,8 +429,8 @@ delete the admin row.
 | `FLASK_ENV` | ✅ prod | unset | Set to `production` on Render. Enables the startup secret/payment checks. |
 | `ALLOWED_ORIGINS` | ✅ prod | localhost list | Comma-separated exact frontend origins allowed by CORS; set this on Render. |
 | `FRONTEND_URL` | optional | unset | Optional single primary frontend origin; added to the CORS allowlist if set. |
-| `ADMIN_EMAIL` | ✅ prod | `admin@learnafrica.com` | Admin account email. On every boot this account is forced to superadmin/active. |
-| `ADMIN_PASSWORD` | ✅ prod | `Admin@LearnAfrica2024!` | When set, the admin password is re-asserted from this value on every boot. |
+| `ADMIN_EMAIL` | required to seed admin | unset | Admin account email. Configure it locally and in production. On every boot this account is forced to superadmin/active. |
+| `ADMIN_PASSWORD` | required to seed admin | unset | Set a strong password locally and in production. When set, it is re-asserted on every boot. |
 | `DATABASE_URL` | ✅ prod | unset → SQLite | Supabase Postgres connection string. |
 | `DATABASE_PATH` | optional | `backend/instance/learnafrica.db` | SQLite file location (dev). |
 | `PASS_MIN_LENGTH` | optional | `8` | Minimum signup password length. |
@@ -1056,8 +1058,7 @@ Make sure the latest code is on `main` of your GitHub repo.
 | **Health Check Path** | `/api/health` |
 | **Instance Type** | Free to start; upgrade if cold starts bother you |
 
-> `render.yaml` in `backend/` already encodes this service, so you can also deploy
-> with **New + → Blueprint** and let Render read it.
+Use **New + → Web Service** for this project. Do not create a Blueprint from the legacy `render.yaml` file.
 
 ### 10.3 Environment variables
 
