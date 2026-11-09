@@ -93,6 +93,8 @@ export function CreateCoursePage() {
 
   const handleSubmit = async () => {
     if (!validateBasics()) { setTab('basics'); return; }
+    const invalidMultiAnswer = sections.flatMap(s => s.lessons || []).flatMap(l => l.questions || []).find(q => q.question_type === 'mcq_multi' && (!Array.isArray(q.correctAnswer) || new Set(q.correctAnswer).size < 2));
+    if (invalidMultiAnswer) { setSubmitError('Each multiple-answer question must have at least two correct options.'); setTab('curriculum'); return; }
     const invalidAttemptQuiz = sections.flatMap(s => s.lessons || []).find(l => l.type === 'quiz' && l.attempts_enabled && (!(Number(l.max_attempts) >= 1 && Number(l.max_attempts) <= 50) || !(Number(l.extra_attempt_price) > 0)));
     if (invalidAttemptQuiz) { setSubmitError('For every quiz with attempt limits enabled, set 1-50 included attempts and a price greater than GHS 0.'); setTab('curriculum'); return; }
     setIsSubmitting(true);
