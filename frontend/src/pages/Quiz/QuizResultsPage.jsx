@@ -146,6 +146,11 @@ export function QuizResultsPage() {
       const correctText = String(serverCorrect ?? '').trim().toLowerCase();
       return String(userAns ?? '').trim().toLowerCase() === correctText;
     }
+    if (qType === 'mcq_multi') {
+      const selected = Array.isArray(userAns) ? [...new Set(userAns.map(Number))].sort((a,b) => a-b) : [];
+      const expected = Array.isArray(serverCorrect) ? [...new Set(serverCorrect.map(Number))].sort((a,b) => a-b) : [];
+      return selected.length === expected.length && selected.every((value, index) => value === expected[index]);
+    }
     return Number(userAns) === Number(serverCorrect);
   };
 
@@ -302,7 +307,9 @@ export function QuizResultsPage() {
         {answerKeyAvailable && (questions || []).map((q, idx) => {
           const qType = q.question_type || 'mcq';
           const correct = isCorrectForQuestion(q, idx);
-          const serverCorrect = answerKeyAvailable ? Number(correctAnswers[idx]) : null;
+          const serverCorrect = answerKeyAvailable
+            ? (qType === 'mcq_multi' && Array.isArray(correctAnswers[idx]) ? correctAnswers[idx].map(Number) : Number(correctAnswers[idx]))
+            : null;
           const userAns = answers[idx];
           const opts = Array.isArray(q.options) ? q.options : [];
 
@@ -320,20 +327,24 @@ export function QuizResultsPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className={cn(
                       'text-3xs font-bold uppercase px-1.5 py-0.5 rounded',
-                      qType === 'mcq'        ? 'bg-primary/10 text-primary'
+                      (qType === 'mcq' || qType === 'mcq_multi') ? 'bg-primary/10 text-primary'
                         : qType === 'true_false' ? 'bg-blue-500/10 text-blue-600'
                         : 'bg-orange-500/10 text-orange-600'
                     )}>
-                      {qType === 'mcq' ? 'MCQ' : qType === 'true_false' ? 'True/False' : 'Fill in Blank'}
+                      {qType === 'mcq_multi' ? 'Multiple Answer' : qType === 'mcq' ? 'Single Answer' : qType === 'true_false' ? 'True/False' : 'Fill in Blank'}
                     </span>
                     <p className="font-semibold text-sm">Q{idx + 1}: {q.question || q.question_text}</p>
                   </div>
 
-                  {(qType === 'mcq' || qType === 'true_false') && (
+                  {(qType === 'mcq' || qType === 'mcq_multi' || qType === 'true_false') && (
                     <div className="space-y-1.5">
                       {opts.map((opt, oIdx) => {
-                        const isCorrectOpt = oIdx === serverCorrect;
-                        const isUserOpt    = oIdx === Number(userAns);
+                        const isCorrectOpt = qType === 'mcq_multi'
+                          ? Array.isArray(serverCorrect) && serverCorrect.includes(oIdx)
+                          : oIdx === serverCorrect;
+                        const isUserOpt = qType === 'mcq_multi'
+                          ? Array.isArray(userAns) && userAns.map(Number).includes(oIdx)
+                          : oIdx === Number(userAns);
                         return (
                           <div key={oIdx} className={cn(
                             'flex items-center gap-2 p-2.5 rounded-lg text-xs border',
