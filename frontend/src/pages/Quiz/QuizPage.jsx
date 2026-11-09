@@ -280,7 +280,16 @@ export function QuizPage() {
     return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
   };
 
-  const handleSelectAnswer = (val) => setAnswers(prev => ({ ...prev, [currentQuestion]: val }));
+  const handleSelectAnswer = (val) => setAnswers(prev => {
+    const current = questions[currentQuestion];
+    if ((current?.question_type || 'mcq') === 'mcq_multi') {
+      const selected = Array.isArray(prev[currentQuestion]) ? prev[currentQuestion] : [];
+      return { ...prev, [currentQuestion]: selected.includes(val)
+        ? selected.filter(index => index !== val)
+        : [...selected, val] };
+    }
+    return { ...prev, [currentQuestion]: val };
+  });
   const handleNext = () => currentQuestion < questions.length - 1 && setCurrentQuestion(p => p + 1);
   const handlePrev = () => currentQuestion > 0 && setCurrentQuestion(p => p - 1);
 
@@ -290,6 +299,7 @@ export function QuizPage() {
     const ans = answers[idx];
     if (ans === undefined || ans === null) return false;
     if ((q.question_type || 'mcq') === 'fill_blank') return String(ans).trim().length > 0;
+    if (q.question_type === 'mcq_multi') return Array.isArray(ans) && ans.length > 0;
     return true;
   });
 
@@ -356,7 +366,7 @@ export function QuizPage() {
             <div className="min-w-0 flex-1">
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">{isFinalQuiz ? 'Final Examination in progress' : 'Lesson Test in progress'}</p>
               <h1 className="mt-1 text-lg font-bold tracking-tight text-foreground sm:text-xl">{quiz.title}</h1>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Read each question carefully and choose your answer. Your answers stay on this page until you submit your {isFinalQuiz ? 'final exam' : 'test'}.</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Read each question carefully. Some questions may ask you to select more than one answer. Your answers stay on this page until you submit your {isFinalQuiz ? 'final exam' : 'test'}.</p>
             </div>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
