@@ -29,6 +29,23 @@ export function useCurriculum(initialData = []) {
     });
   };
 
+  const importQuizzes = (quizzes) => {
+    setSections(prev => {
+      const next = [...prev];
+      for (const imported of quizzes) {
+        const sectionTitle = String(imported.section_title || 'Imported Quizzes').trim();
+        let index = next.findIndex(section => String(section.title || '').trim().toLowerCase() === sectionTitle.toLowerCase());
+        if (index < 0) {
+          next.push({ id: uid(), title: sectionTitle, lessons: [] });
+          index = next.length - 1;
+        }
+        const { section_title, ...lesson } = imported;
+        next[index] = { ...next[index], lessons: [...(next[index].lessons || []), lesson] };
+      }
+      return next;
+    });
+  };
+
   const addLesson = (sectionId, type = 'video', title = '') => {
     const newLesson = {
       id: uid(),
@@ -73,5 +90,5 @@ export function useCurriculum(initialData = []) {
     ));
   };
 
-  return { sections, addSection, removeSection, updateSectionTitle, moveSection, addLesson, updateLesson, removeLesson };
+  return { sections, addSection, removeSection, updateSectionTitle, moveSection, importQuizzes, addLesson, updateLesson, removeLesson };
 }
