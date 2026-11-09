@@ -49,7 +49,7 @@ def build_served_questions(quiz, question_rows):
     for r in pool:
         qtype = qtype_of(r)
         opts = _parse_options(r['options'])
-        raw_correct = r['correct_answer']
+        raw_correct = r.get('correct_answers') or r['correct_answer']
         if qtype == 'mcq_multi':
             try:
                 correct = json.loads(raw_correct) if isinstance(raw_correct, str) else raw_correct
