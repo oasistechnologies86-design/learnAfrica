@@ -223,7 +223,8 @@ function CourseResourcesManager({ resources = [], onChange }) {
 
 // ── Question Type Selector ──────────────────────────────────────────────────
 const Q_TYPES = [
-  { value: 'mcq',        label: 'MCQ',           icon: Type,       desc: 'Multiple choice' },
+  { value: 'mcq',        label: 'Single choice', icon: Type,       desc: 'Choose one answer' },
+  { value: 'mcq_multi',  label: 'Choose many',   icon: CheckCircle2, desc: 'Choose all correct answers' },
   { value: 'true_false', label: 'True / False',  icon: ToggleLeft, desc: '2 options' },
   { value: 'fill_blank', label: 'Fill in Blank', icon: AlignLeft,  desc: 'Type the answer' },
 ];
@@ -232,7 +233,7 @@ function QuizEditor({ item, onUpdate }) {
   const questions = item.questions || [];
 
   const addQuestion = (qType = 'mcq') => {
-    const base = { id: `q_${Date.now()}`, text: '', correctAnswer: 0, question_type: qType };
+    const base = { id: `q_${Date.now()}`, text: '', correctAnswer: qType === 'mcq_multi' ? [] : 0, question_type: qType };
     if (qType === 'mcq')        return onUpdate({ questions: [...questions, { ...base, options: ['', '', '', ''] }] });
     if (qType === 'true_false') return onUpdate({ questions: [...questions, { ...base, options: ['True', 'False'] }] });
     if (qType === 'fill_blank') return onUpdate({ questions: [...questions, { ...base, options: [''] }] });
@@ -262,7 +263,7 @@ function QuizEditor({ item, onUpdate }) {
                         const opts = t.value === 'true_false' ? ['True','False']
                                    : t.value === 'fill_blank' ? ['']
                                    : ['','','',''];
-                        updateQ(q.id, { question_type: t.value, options: opts, correctAnswer: 0 });
+                        updateQ(q.id, { question_type: t.value, options: opts, correctAnswer: t.value === 'mcq_multi' ? [] : 0 });
                       }}
                       className={cn(
                         'px-2.5 py-1 text-2xs font-bold transition-colors flex items-center gap-1',
@@ -291,18 +292,24 @@ function QuizEditor({ item, onUpdate }) {
                 className="w-full bg-muted/10 border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" />
 
               {/* ── MCQ options ── */}
-              {qType === 'mcq' && (
+              {(qType === 'mcq' || qType === 'mcq_multi') && (
                 <div className="space-y-2">
                   <p className="text-3xs font-bold uppercase text-muted-foreground">
-                    Options — click ○ to mark correct
+                    {qType === 'mcq_multi' ? 'Options — select every correct answer' : 'Options — select the one correct answer'}
                   </p>
-                  {(q.options || ['','','','']).map((opt, oIdx) => (
+                  {(q.options || ['','','','']).map((opt, oIdx) => {
+                    const selectedCorrect = qType === 'mcq_multi'
+                      ? (Array.isArray(q.correctAnswer) ? q.correctAnswer : []).includes(oIdx)
+                      : q.correctAnswer === oIdx;
+                    return (
                     <div key={oIdx} className="flex items-center gap-2">
-                      <button type="button" onClick={() => updateQ(q.id, { correctAnswer: oIdx })}>
-                        {q.correctAnswer === oIdx
+                      <button type="button" aria-label={selectedCorrect ? 'Remove correct answer' : 'Mark as correct answer'}
+                        onClick={() => updateQ(q.id, { correctAnswer: qType === 'mcq_multi'
+                          ? (selectedCorrect ? (q.correctAnswer || []).filter(v => v !== oIdx) : [...(Array.isArray(q.correctAnswer) ? q.correctAnswer : []), oIdx])
+                          : oIdx })}>
+                        {selectedCorrect
                           ? <CheckCircle2 className="h-5 w-5 text-success shrink-0" />
                           : <Circle className="h-5 w-5 text-muted-foreground/30 shrink-0" />}
-                      </button>
                       <input value={opt}
                         onChange={e => {
                           const o = [...(q.options || [])];
@@ -312,7 +319,11 @@ function QuizEditor({ item, onUpdate }) {
                         placeholder={`Option ${oIdx + 1}`}
                         className="flex-1 bg-muted/10 border border-border rounded-lg px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-primary" />
                     </div>
-                  ))}
+                    );
+                  })}
+                  {qType === 'mcq_multi' && (
+                    <p className="text-2xs text-muted-foreground">Students will be told to select all correct answers. Mark at least two options as correct.</p>
+                  )}
                 </div>
               )}
 
