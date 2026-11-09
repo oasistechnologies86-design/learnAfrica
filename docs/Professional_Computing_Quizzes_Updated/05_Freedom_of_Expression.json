@@ -1,0 +1,458 @@
+{
+  "quizzes": [
+    {
+      "title": "Test Your Understanding of Online Expression",
+      "description": "Professional Computing assessment: Test Your Understanding of Online Expression.",
+      "is_final": false,
+      "settings": {
+        "attempts_enabled": false,
+        "max_attempts": 0,
+        "extra_attempt_price": 0,
+        "pass_score": 70,
+        "timer_enabled": false,
+        "duration_seconds": 0,
+        "questions_per_attempt": 0,
+        "shuffle_questions": true,
+        "shuffle_options": true
+      },
+      "questions": [
+        {
+          "text": "Choose the correct term to complete the statement: Way to request review of a moderation decision is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 1,
+          "options": [
+            "accidental error only",
+            "appeal process",
+            "no rules",
+            "content moderation"
+          ]
+        },
+        {
+          "text": "Which term describes Restricting or suppressing expression?",
+          "type": "mcq",
+          "options": [
+            "freedom of expression",
+            "censorship",
+            "factual claim",
+            "opinion"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Statement that can be checked against evidence is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "factual claim",
+            "an update",
+            "popularity proves truth",
+            "a backup"
+          ]
+        },
+        {
+          "text": "factual claim means statement that can be checked against evidence.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "appeal process means the opposite of way to request review of a moderation decision.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Checking a claim against reliable evidence is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "rules do not matter",
+            "ignores threats",
+            "no rules",
+            "verification"
+          ]
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Right to communicate ideas and information subject to applicable limits is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "freedom of expression",
+            "source credibility",
+            "incitement",
+            "harassment"
+          ]
+        },
+        {
+          "text": "defamation means the opposite of false statement that harms a person's reputation.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: False statement that harms a person's reputation is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "add rumours",
+            "a password",
+            "as verified facts",
+            "defamation"
+          ]
+        },
+        {
+          "text": "Harmful bullying through digital communication is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "cyberbullying"
+        },
+        {
+          "text": "Misinformation is false information shared",
+          "type": "mcq",
+          "options": [
+            "without necessarily intending deception",
+            "as verified facts",
+            "by law",
+            "only to deceive"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "An opinion is",
+          "type": "mcq",
+          "options": [
+            "a viewpoint",
+            "a password",
+            "a legal statute",
+            "always a provable fact"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Context matters because",
+          "type": "mcq",
+          "options": [
+            "rules do not matter",
+            "meaning and likely harm depend on circumstances",
+            "popularity proves truth",
+            "every post is identical"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "anonymity means the opposite of communicating without publicly revealing identity.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Which term describes Update addressing previously shared inaccurate information?",
+          "type": "mcq",
+          "options": [
+            "proportionality",
+            "cyberbullying",
+            "appeal process",
+            "correction"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "cyberbullying means the opposite of harmful bullying through digital communication.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "False information shared without intent to deceive is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "misinformation"
+        },
+        {
+          "text": "verification means the opposite of checking a claim against reliable evidence.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "An appeal process allows",
+          "type": "mcq",
+          "options": [
+            "review of a moderation decision",
+            "no rules",
+            "unlimited access",
+            "automatic deletion"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Choose the correct term to complete the statement: A viewpoint or judgement is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "removes all criticism",
+            "verification",
+            "a legal statute",
+            "opinion"
+          ]
+        },
+        {
+          "text": "Which term describes Circumstances surrounding a statement or post?",
+          "type": "mcq",
+          "options": [
+            "anonymity",
+            "content moderation",
+            "harassment",
+            "context"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Which term describes Encouraging others to commit harmful or unlawful acts?",
+          "type": "mcq",
+          "options": [
+            "incitement",
+            "censorship",
+            "verification",
+            "context"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Communicating without publicly revealing identity is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "anonymity",
+            "forward immediately",
+            "no rules",
+            "factual claim"
+          ]
+        },
+        {
+          "text": "context means circumstances surrounding a statement or post.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "A proportionate response",
+          "type": "mcq",
+          "options": [
+            "removes all criticism",
+            "publishes private data",
+            "ignores threats",
+            "addresses harm without unnecessary restriction"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Conduct that intimidates or targets another person is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "harassment",
+            "context",
+            "forward immediately",
+            "a viewpoint"
+          ]
+        },
+        {
+          "text": "incitement means encouraging others to commit harmful or unlawful acts.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Anonymity can",
+          "type": "mcq",
+          "options": [
+            "prevent every harm",
+            "protect vulnerable speakers",
+            "remove all responsibility",
+            "guarantee truth"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "misinformation means false information shared without intent to deceive.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Which term describes Checking a claim against reliable evidence?",
+          "type": "mcq",
+          "options": [
+            "verification",
+            "proportionality",
+            "cyberbullying",
+            "appeal process"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Which term describes Way to request review of a moderation decision?",
+          "type": "mcq",
+          "options": [
+            "defamation",
+            "misinformation",
+            "appeal process",
+            "disinformation"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "disinformation means the opposite of false information deliberately shared to deceive.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Encouraging others to commit harmful or unlawful acts is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "incitement"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Response no more restrictive than needed is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "an update",
+            "online harm",
+            "ignores threats",
+            "proportionality"
+          ]
+        },
+        {
+          "text": "Defamation concerns",
+          "type": "mcq",
+          "options": [
+            "a password reset",
+            "false statements harming reputation",
+            "a backup",
+            "an update"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "opinion means the opposite of a viewpoint or judgement.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Which term describes Response no more restrictive than needed?",
+          "type": "mcq",
+          "options": [
+            "opinion",
+            "proportionality",
+            "factual claim",
+            "freedom of expression"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "Choose the correct term to complete the statement: False information deliberately shared to deceive is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "an update",
+            "forward immediately",
+            "addresses harm without unnecessary restriction",
+            "disinformation"
+          ]
+        },
+        {
+          "text": "Which term describes Damage or risk caused through digital communication?",
+          "type": "mcq",
+          "options": [
+            "context",
+            "verification",
+            "online harm",
+            "incitement"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Which term describes Responsible participation in online communities?",
+          "type": "mcq",
+          "options": [
+            "digital citizenship",
+            "misinformation",
+            "disinformation",
+            "defamation"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Circumstances surrounding a statement or post is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "harassment",
+            "a backup",
+            "context",
+            "a software bug"
+          ]
+        },
+        {
+          "text": "Reviewing and managing content under rules is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "content moderation"
+        },
+        {
+          "text": "freedom of expression means right to communicate ideas and information subject to applicable limits.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Before sharing alarming news, users should",
+          "type": "mcq",
+          "options": [
+            "forward immediately",
+            "remove context",
+            "add rumours",
+            "verify it using reliable sources"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "content moderation means reviewing and managing content under rules.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "proportionality means response no more restrictive than needed.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Moderation means",
+          "type": "mcq",
+          "options": [
+            "encrypting files",
+            "checking hardware",
+            "issuing certificates",
+            "reviewing and managing content"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Which term describes Trustworthiness of an information source?",
+          "type": "mcq",
+          "options": [
+            "content moderation",
+            "source credibility",
+            "harassment",
+            "anonymity"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "Disinformation involves",
+          "type": "mcq",
+          "options": [
+            "intent to deceive",
+            "a software bug",
+            "accidental error only",
+            "a licence"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "harassment means conduct that intimidates or targets another person.",
+          "type": "true_false",
+          "correct_answer": "true"
+        }
+      ]
+    }
+  ]
+}
