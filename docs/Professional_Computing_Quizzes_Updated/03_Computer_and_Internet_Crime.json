@@ -1,0 +1,458 @@
+{
+  "quizzes": [
+    {
+      "title": "Test Your Knowledge of Cybercrime",
+      "description": "Professional Computing assessment: Test Your Knowledge of Cybercrime.",
+      "is_final": false,
+      "settings": {
+        "attempts_enabled": false,
+        "max_attempts": 0,
+        "extra_attempt_price": 0,
+        "pass_score": 70,
+        "timer_enabled": false,
+        "duration_seconds": 0,
+        "questions_per_attempt": 0,
+        "shuffle_questions": true,
+        "shuffle_options": true
+      },
+      "questions": [
+        {
+          "text": "MFA uses",
+          "type": "mcq",
+          "options": [
+            "more than one authentication factor",
+            "one shared password",
+            "no login",
+            "public credentials"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "After recovery teams should",
+          "type": "mcq",
+          "options": [
+            "delete reports",
+            "review lessons and improve controls",
+            "forget the incident",
+            "avoid changes"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "eradication means removing the cause of an incident.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Network segmentation can",
+          "type": "mcq",
+          "options": [
+            "disable monitoring",
+            "remove authentication",
+            "limit movement across a network",
+            "publish records"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "containment means the opposite of limiting the spread or impact of an incident.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Attack that makes a service unavailable is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "denial of service"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Planned actions for handling a security event is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "incident response",
+            "forget the incident",
+            "recovery",
+            "avoid changes"
+          ]
+        },
+        {
+          "text": "malware means the opposite of software designed to damage spy on or control systems.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Malware is",
+          "type": "mcq",
+          "options": [
+            "a privacy notice",
+            "a legal licence",
+            "software designed to harm or spy",
+            "a normal update"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Which term describes Protecting logs and records for investigation?",
+          "type": "mcq",
+          "options": [
+            "multi-factor authentication",
+            "evidence preservation",
+            "patch management",
+            "backup"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "incident response means planned actions for handling a security event.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Which term describes Training people to recognise threats and act safely?",
+          "type": "mcq",
+          "options": [
+            "security awareness",
+            "containment",
+            "incident response",
+            "eradication"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Entering or using a system without proper permission is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "unauthorised access"
+        },
+        {
+          "text": "Which term describes Limiting accounts to the access they need?",
+          "type": "mcq",
+          "options": [
+            "identity theft",
+            "unauthorised access",
+            "denial of service",
+            "least privilege"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Which term describes Limiting the spread or impact of an incident?",
+          "type": "mcq",
+          "options": [
+            "patch management",
+            "containment",
+            "multi-factor authentication",
+            "backup"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "patch management means process of applying software fixes and security updates.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "denial of service means attack that makes a service unavailable.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "identity theft means fraudulent use of another person's identifying information.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "social engineering means manipulating people through trust fear urgency or curiosity.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Ransomware commonly",
+          "type": "mcq",
+          "options": [
+            "blocks data access and demands payment",
+            "improves security",
+            "creates backups",
+            "updates drivers"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Process of applying software fixes and security updates is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "patch management",
+            "screen size",
+            "improves security",
+            "ransomware"
+          ]
+        },
+        {
+          "text": "Deceptive messages or websites used to steal information is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "phishing"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Crime involving computers networks or digital information is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "screen size",
+            "social engineering",
+            "cybercrime",
+            "a legal licence"
+          ]
+        },
+        {
+          "text": "backup means the opposite of separate copy used to restore information after loss.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Social engineering exploits",
+          "type": "mcq",
+          "options": [
+            "human trust and emotion",
+            "screen size",
+            "battery life",
+            "processor speed"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Incident response begins with",
+          "type": "mcq",
+          "options": [
+            "deleting logs",
+            "paying immediately",
+            "public blame",
+            "preparation"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "phishing means the opposite of deceptive messages or websites used to steal information.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "cybercrime means crime involving computers networks or digital information.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "unauthorised access means the opposite of entering or using a system without proper permission.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Which term describes Dividing a network to limit access and movement?",
+          "type": "mcq",
+          "options": [
+            "malware",
+            "ransomware",
+            "spyware",
+            "network segmentation"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "spyware means the opposite of software that secretly monitors activity or collects information.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "ransomware means malware that blocks data access and demands payment.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Which term describes Restoring systems and services safely?",
+          "type": "mcq",
+          "options": [
+            "recovery",
+            "phishing",
+            "cybercrime",
+            "social engineering"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Identity verification using more than one factor is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 1,
+          "options": [
+            "hide the incident",
+            "multi-factor authentication",
+            "unauthorised access",
+            "battery life"
+          ]
+        },
+        {
+          "text": "Which term describes Process of applying software fixes and security updates?",
+          "type": "mcq",
+          "options": [
+            "patch management",
+            "social engineering",
+            "phishing",
+            "cybercrime"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Separate copy used to restore information after loss is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "backup",
+            "disable monitoring",
+            "publish data",
+            "public blame"
+          ]
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Malware that blocks data access and demands payment is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "ransomware",
+            "preparation",
+            "malware",
+            "eradication"
+          ]
+        },
+        {
+          "text": "Which term describes Planned actions for handling a security event?",
+          "type": "mcq",
+          "options": [
+            "identity theft",
+            "incident response",
+            "unauthorised access",
+            "denial of service"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Software that secretly monitors activity or collects information is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "no login",
+            "social engineering",
+            "spyware",
+            "more than one authentication factor"
+          ]
+        },
+        {
+          "text": "Backups support",
+          "type": "mcq",
+          "options": [
+            "phishing",
+            "recovery after data loss",
+            "password sharing",
+            "identity theft"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "multi-factor authentication means the opposite of identity verification using more than one factor.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Manipulating people through trust fear urgency or curiosity is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "social engineering"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Fraudulent use of another person's identifying information is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "updates drivers",
+            "incident response",
+            "limit movement across a network",
+            "identity theft"
+          ]
+        },
+        {
+          "text": "Which term describes Separate copy used to restore information after loss?",
+          "type": "mcq",
+          "options": [
+            "malware",
+            "ransomware",
+            "spyware",
+            "backup"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Limiting the spread or impact of an incident is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "repair computers",
+            "eradication",
+            "containment",
+            "creates backups"
+          ]
+        },
+        {
+          "text": "Which term describes Removing the cause of an incident?",
+          "type": "mcq",
+          "options": [
+            "incident response",
+            "containment",
+            "eradication",
+            "recovery"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Containment aims to",
+          "type": "mcq",
+          "options": [
+            "erase evidence",
+            "publish data",
+            "hide the incident",
+            "limit incident spread or impact"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Removing the cause of an incident is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 1,
+          "options": [
+            "one shared password",
+            "eradication",
+            "processor speed",
+            "recovery after data loss"
+          ]
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Software designed to damage spy on or control systems is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "public blame",
+            "disable monitoring",
+            "containment",
+            "malware"
+          ]
+        },
+        {
+          "text": "Phishing attempts to",
+          "type": "mcq",
+          "options": [
+            "compress data",
+            "create backups",
+            "repair computers",
+            "trick users into revealing information"
+          ],
+          "correct_answer": 3
+        }
+      ]
+    }
+  ]
+}
