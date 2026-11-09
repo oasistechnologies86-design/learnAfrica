@@ -11413,7 +11413,10 @@ def create_app() -> Flask:
             if not isinstance(tables_data.get('users'), list) or not tables_data.get('users'):
                 return jsonify({'error': 'This backup does not contain user records and cannot be restored safely.'}), 400
             available_tables = set(current_tables)
-            requested_order = backup.get('table_order') or BACKUP_TABLES
+            backup_version = int(backup.get('format_version') or 1)
+            requested_order = backup.get('table_order') or (
+                BACKUP_TABLES if backup_version >= 2 else list(tables_data.keys())
+            )
             restore_tables = []
             unavailable_tables = []
             skipped_invalid_rows = []
@@ -11449,7 +11452,7 @@ def create_app() -> Flask:
             # schema has tables that did not exist at export time, clear those
             # tables too. Legacy V1 files only restore tables they actually
             # contain, preserving compatibility with older/manual test files.
-            if int(backup.get('format_version') or 1) >= 2:
+            if backup_version >= 2:
                 restore_sequence += list(current_tables)
             for table in restore_sequence:
                 if table in restore_tables or table not in available_tables:
