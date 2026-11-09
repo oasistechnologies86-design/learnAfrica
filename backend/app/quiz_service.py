@@ -49,7 +49,17 @@ def build_served_questions(quiz, question_rows):
     for r in pool:
         qtype = qtype_of(r)
         opts = _parse_options(r['options'])
-        correct = int(r['correct_answer'] or 0)
+        raw_correct = r['correct_answer']
+        if qtype == 'mcq_multi':
+            try:
+                correct = json.loads(raw_correct) if isinstance(raw_correct, str) else raw_correct
+            except Exception:
+                correct = []
+            if not isinstance(correct, list):
+                correct = [correct] if correct is not None else []
+            correct = [int(value) for value in correct if str(value).lstrip('-').isdigit()]
+        else:
+            correct = int(raw_correct or 0)
         if qtype == 'fill_blank':
             # options holds the correct answer itself. Keep the correct text
             # server-side; send nothing to the client.
@@ -63,8 +73,10 @@ def build_served_questions(quiz, question_rows):
         if shuffle_o:
             random.shuffle(idx)
         ordered = [opts[i] for i in idx]
-        # Where did the correct option land in the new order?
-        new_correct = idx.index(correct) if correct in idx else 0
+        if qtype == 'mcq_multi':
+            new_correct = [idx.index(value) for value in correct if value in idx]
+        else:
+            new_correct = idx.index(correct) if correct in idx else 0
         served.append({
             'id': r['id'], 'question': r['question_text'], 'question_type': qtype,
             'options': ordered, 'correct_answer': new_correct,
@@ -96,6 +108,16 @@ def grade_served(served, answers, pass_score):
             correct_map[i] = s['correct_answer']
             if user_ans is not None and str(user_ans).strip().lower() == str(s['correct_answer']).strip().lower():
                 correct_count += 1
+        elif s['question_type'] == 'mcq_multi':
+            expected = sorted(set(int(v) for v in (s.get('correct_answer') or [])))
+            correct_map[i] = expected
+            if isinstance(user_ans, list):
+                try:
+                    selected = sorted(set(int(v) for v in user_ans))
+                    if selected == expected:
+                        correct_count += 1
+                except (ValueError, TypeError):
+                    pass
         else:
             correct_map[i] = s['correct_answer']
             if user_ans is not None:
