@@ -284,9 +284,12 @@ export function QuizPage() {
     const current = questions[currentQuestion];
     if ((current?.question_type || 'mcq') === 'mcq_multi') {
       const selected = Array.isArray(prev[currentQuestion]) ? prev[currentQuestion] : [];
-      return { ...prev, [currentQuestion]: selected.includes(val)
-        ? selected.filter(index => index !== val)
-        : [...selected, val] };
+      if (selected.includes(val)) {
+        return { ...prev, [currentQuestion]: selected.filter(index => index !== val) };
+      }
+      const required = Number(current?.required_answers || 0);
+      if (required > 0 && selected.length >= required) return prev;
+      return { ...prev, [currentQuestion]: [...selected, val] };
     }
     return { ...prev, [currentQuestion]: val };
   });
@@ -299,7 +302,11 @@ export function QuizPage() {
     const ans = answers[idx];
     if (ans === undefined || ans === null) return false;
     if ((q.question_type || 'mcq') === 'fill_blank') return String(ans).trim().length > 0;
-    if (q.question_type === 'mcq_multi') return Array.isArray(ans) && ans.length > 0;
+    if (q.question_type === 'mcq_multi') {
+      if (!Array.isArray(ans) || ans.length === 0) return false;
+      const required = Number(q.required_answers || 0);
+      return required > 0 ? ans.length === required : true;
+    }
     return true;
   });
 
