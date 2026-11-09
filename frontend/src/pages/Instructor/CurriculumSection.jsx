@@ -235,7 +235,9 @@ function QuizEditor({ item, onUpdate }) {
 
   const addQuestion = (qType = 'mcq') => {
     const base = { id: `q_${Date.now()}`, text: '', correctAnswer: qType === 'mcq_multi' ? [] : 0, question_type: qType };
-    if (qType === 'mcq')        return onUpdate({ questions: [...questions, { ...base, options: ['', '', '', ''] }] });
+    if (qType === 'mcq' || qType === 'mcq_multi') {
+      return onUpdate({ questions: [...questions, { ...base, options: ['', '', '', ''] }] });
+    }
     if (qType === 'true_false') return onUpdate({ questions: [...questions, { ...base, options: ['True', 'False'] }] });
     if (qType === 'fill_blank') return onUpdate({ questions: [...questions, { ...base, options: [''] }] });
   };
