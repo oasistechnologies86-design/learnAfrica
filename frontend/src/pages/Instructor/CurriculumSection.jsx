@@ -13,6 +13,7 @@ import { Switch } from '@/components/common/Switch';
 import { RichTextEditor } from '@/components/common/RichTextEditor';
 import { TimePicker, formatDuration } from '@/components/common/TimePicker';
 import { cn } from '@/lib/utils';
+import { parseQuizImport } from '@/lib/quizImport';
 
 // ── Video URL input (replaces upload) ────────────────────────────────────
 function VideoUrlInput({ currentUrl, onChanged }) {
@@ -896,12 +897,71 @@ export function CurriculumSection({
   removeSection = () => {},
   updateSectionTitle = () => {},
   moveSection = () => {},
+  importQuizzes = () => {},
   updateLesson = () => {},
   removeLesson = () => {},
   onBack = () => {},
   onNext = () => {},
 }) {
   const perks = coursePerks || {};
+  const [quizImportMessage, setQuizImportMessage] = useState('');
+  const [importingQuizzes, setImportingQuizzes] = useState(false);
+  const quizImportInputRef = useRef(null);
+
+  const handleQuizImport = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setImportingQuizzes(true);
+    setQuizImportMessage('');
+    try {
+      const payload = JSON.parse(await file.text());
+      const imported = parseQuizImport(payload, sections);
+      importQuizzes(imported);
+      setQuizImportMessage(`Successfully added ${imported.length} quiz${imported.length === 1 ? '' : 'zes'} to the curriculum. Save the course to apply the changes.`);
+    } catch (error) {
+      setQuizImportMessage(error.message || 'Could not import this JSON file.');
+    } finally {
+      setImportingQuizzes(false);
+      event.target.value = '';
+    }
+  };
+
+  const downloadQuizTemplate = () => {
+    const template = {
+      version: 1,
+      quizzes: [{
+        title: 'Example Quiz',
+        section_title: sections[0]?.title || 'Section 1',
+        settings: {
+          timer_enabled: false,
+          duration_seconds: 600,
+          attempts_enabled: false,
+          max_attempts: 0,
+          extra_attempt_price: 0,
+          pass_score: 70,
+          questions_per_attempt: 0,
+          shuffle_questions: false,
+          shuffle_options: false
+        },
+        questions: [
+          { type: 'single_choice', text: 'Which city is the capital of Ghana?', options: ['Accra', 'Kumasi', 'Tamale'], correct_answer: 0 },
+          { type: 'multiple_answer', text: 'Select TWO correct answers.', options: ['Python', 'Java', 'Microsoft Word'], correct_answers: [0, 1] },
+          { type: 'true_false', text: 'Accra is in Ghana.', correct_answer: true },
+          { type: 'fill_blank', text: 'The capital of Ghana is ___', correct_answer: 'Accra' }
+        ]
+      }]
+    };
+    const blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'learnafrica-quiz-import-template.json';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1500);
+  };
+
   const totalLessons = sections.reduce((a, s) => a + (s.lessons?.length || 0), 0);
   const videoCount   = sections.reduce((a, s) => a + (s.lessons?.filter(l => l.type === 'video').length || 0), 0);
   const hasExam = sections.some(s => s.lessons?.some(l => l.is_final));
@@ -914,6 +974,32 @@ export function CurriculumSection({
         <StatCard icon={Video}    label="Videos"   value={videoCount} />
         <StatCard icon={Layout}   label="Sections" value={sections.length} />
       </div>
+
+      <div className="flex flex-col gap-3 rounded-xl border border-primary/20 bg-primary/[0.035] p-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-sm font-bold">Import quizzes from JSON</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">Add several quizzes and all their questions to this course in one upload.</p>
+        </div>
+        <div className="flex shrink-0 flex-wrap gap-2">
+          <input ref={quizImportInputRef} type="file" accept="application/json,.json" className="hidden"
+            onChange={handleQuizImport} />
+          <Button type="button" variant="outline" size="sm" disabled={importingQuizzes}
+            onClick={() => quizImportInputRef.current?.click()}>
+            {importingQuizzes ? 'Importing…' : 'Import JSON'}
+          </Button>
+          <Button type="button" variant="ghost" size="sm" onClick={downloadQuizTemplate}>
+            Download template
+          </Button>
+        </div>
+      </div>
+      {quizImportMessage && (
+        <p role="status" className={cn('rounded-lg border p-3 text-xs',
+          quizImportMessage.startsWith('Successfully')
+            ? 'border-success/30 bg-success/5 text-success'
+            : 'border-destructive/30 bg-destructive/5 text-destructive')}>
+          {quizImportMessage}
+        </p>
+      )}
 
       {/* Final exam warning */}
       {perks.hasCertificate && !hasExam && totalLessons > 0 && (
