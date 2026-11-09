@@ -187,7 +187,7 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
     const answer = answers[index];
     if (!question) return false;
     if (question.question_type === 'mcq_multi') {
-      const required = Number(question.required_answers || 0);
+      const required = Number(question.required_answers || (Array.isArray(question.correctAnswer) ? question.correctAnswer.length : 0));
       return Array.isArray(answer) && (required > 0 ? answer.length === required : answer.length > 0);
     }
     return answer !== undefined && answer !== '';
@@ -346,7 +346,7 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
           </div>
           <div className="p-4 rounded-lg border border-border bg-card">
             <QuizQuestion
-              question={{ ...q, question: q.question_text || q.question || q.text }}
+              question={{ ...q, required_answers: q.required_answers || (Array.isArray(q.correctAnswer) ? q.correctAnswer.length : 0), question: q.question_text || q.question || q.text }}
               questionNumber={current + 1}
               totalQuestions={quiz.questions.length}
               selectedAnswer={answers[current]}
