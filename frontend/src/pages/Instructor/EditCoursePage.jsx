@@ -154,7 +154,11 @@ export function EditCoursePage() {
                 id: q.id || (Date.now() + Math.random()),
                 text: q.text || q.question_text || '',
                 options: Array.isArray(q.options) ? q.options : ['', '', '', ''],
-                correctAnswer: q.correctAnswer ?? q.correct_answer ?? 0,
+                correctAnswer: q.question_type === 'mcq_multi'
+                  ? (Array.isArray(q.correct_answers) ? q.correct_answers : (() => {
+                      try { return JSON.parse(q.correct_answers || '[]'); } catch { return []; }
+                    })())
+                  : (q.correctAnswer ?? q.correct_answer ?? 0),
                 question_type: q.question_type || 'mcq',
               })),
             })),
@@ -174,6 +178,8 @@ export function EditCoursePage() {
   };
 
   const handleSave = async () => {
+    const invalidMultiAnswer = sections.flatMap(s => s.lessons || []).flatMap(l => l.questions || []).find(q => q.question_type === 'mcq_multi' && (!Array.isArray(q.correctAnswer) || new Set(q.correctAnswer).size < 2));
+    if (invalidMultiAnswer) { setError('Each multiple-answer question must have at least two correct options.'); setTab('curriculum'); return; }
     const invalidAttemptQuiz = sections.flatMap(s => s.lessons || []).find(l => l.type === 'quiz' && l.attempts_enabled && (!(Number(l.max_attempts) >= 1 && Number(l.max_attempts) <= 50) || !(Number(l.extra_attempt_price) > 0)));
     if (invalidAttemptQuiz) { setError('For every quiz with attempt limits enabled, set 1-50 included attempts and a price greater than GHS 0.'); setTab('curriculum'); return; }
     if (!form.title || !form.description || !form.category || !form.difficulty) {
