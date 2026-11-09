@@ -2755,7 +2755,7 @@ function DatabaseBackupCard() {
         <div>
           <h4 className="text-sm font-bold mb-2">Export</h4>
           <p className="text-xs text-muted-foreground mb-3">
-            Downloads a JSON file with all users, courses, lessons, enrolments, transactions, and settings. Uploaded files on Supabase are NOT included — back those up separately in the Supabase dashboard.
+            Downloads every database table, including quiz questions and attempt history, student progress, certificates, payment records, community messages, discussions, notifications, and platform settings. Uploaded media and files stored in Supabase are not part of the database export and must be backed up separately.
           </p>
           <Button onClick={download} disabled={exporting}>
             {exporting ? 'Preparing download…' : 'Download full backup'}
