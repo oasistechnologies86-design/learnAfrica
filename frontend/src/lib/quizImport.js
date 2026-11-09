@@ -23,6 +23,7 @@ function normaliseQuestion(raw, quizIndex, questionIndex) {
   const text = asText(raw.text ?? raw.question ?? raw.question_text);
   if (!text) throw new Error(`Quiz ${quizIndex + 1}, question ${questionIndex + 1} is missing its question text.`);
 
+  const metadata = { ...(raw.marks != null && Number.isFinite(Number(raw.marks)) ? { marks: Number(raw.marks) } : {}), ...(raw.explanation ? { explanation: asText(raw.explanation) } : {}) };
   const rawType = asText(raw.type ?? raw.question_type ?? 'mcq').toLowerCase().replace(/[ -]/g, '_');
   const question_type = QUESTION_TYPES[rawType];
   if (!question_type) {
@@ -32,7 +33,7 @@ function normaliseQuestion(raw, quizIndex, questionIndex) {
   if (question_type === 'fill_blank') {
     const answer = asText(raw.correct_answer ?? raw.correctAnswer ?? raw.answer);
     if (!answer) throw new Error(`Quiz ${quizIndex + 1}, question ${questionIndex + 1} needs a correct_answer.`);
-    return { text, question_type, options: [answer], correctAnswer: 0 };
+    return { text, question_type, options: [answer], correctAnswer: 0, ...metadata };
   }
 
   if (question_type === 'true_false') {
@@ -45,7 +46,7 @@ function normaliseQuestion(raw, quizIndex, questionIndex) {
     if (![0, 1].includes(correctAnswer)) {
       throw new Error(`Quiz ${quizIndex + 1}, question ${questionIndex + 1} true/false correct_answer must be true, false, 0 or 1.`);
     }
-    return { text, question_type, options: ['True', 'False'], correctAnswer };
+    return { text, question_type, options: ['True', 'False'], correctAnswer, ...metadata };
   }
 
   const options = Array.isArray(raw.options) ? raw.options.map(asText) : [];
@@ -62,17 +63,17 @@ function normaliseQuestion(raw, quizIndex, questionIndex) {
     if (correctAnswer.length < 2 || correctAnswer.some(index => !Number.isInteger(index) || index < 0 || index >= options.length)) {
       throw new Error(`Quiz ${quizIndex + 1}, question ${questionIndex + 1} must mark at least two valid option indexes as correct.`);
     }
-    return { text, question_type, options, correctAnswer };
+    return { text, question_type, options, correctAnswer, ...metadata };
   }
 
   const correctAnswer = Number(raw.correct_answer ?? raw.correctAnswer ?? raw.answer_index ?? 0);
   if (!Number.isInteger(correctAnswer) || correctAnswer < 0 || correctAnswer >= options.length) {
     throw new Error(`Quiz ${quizIndex + 1}, question ${questionIndex + 1} has an invalid correct_answer option index.`);
   }
-  return { text, question_type, options, correctAnswer };
+  return { text, question_type, options, correctAnswer, ...metadata };
 }
 
-export function parseQuizImport(payload, existingSections = []) {
+export function parseQuizImport(payload) {
   const entries = Array.isArray(payload) ? payload : payload?.quizzes;
   if (!Array.isArray(entries) || entries.length === 0) {
     throw new Error('The JSON file must contain a non-empty quizzes array.');
@@ -116,23 +117,11 @@ export function parseQuizImport(payload, existingSections = []) {
       throw new Error(`Quiz "${title}" questions_per_attempt cannot exceed its question count.`);
     }
 
-    const requestedSectionIndex = raw.section_index;
-    let section_title = asText(raw.section_title ?? raw.section);
-    if (requestedSectionIndex !== undefined && requestedSectionIndex !== null && requestedSectionIndex !== '') {
-      const index = Number(requestedSectionIndex);
-      if (!Number.isInteger(index) || index < 0 || index >= existingSections.length) {
-        throw new Error(`Quiz "${title}" has an invalid section_index. Section indexes start at 0.`);
-      }
-      section_title = asText(existingSections[index]?.title) || `Section ${index + 1}`;
-    }
-    if (!section_title) section_title = asText(existingSections[0]?.title) || 'Imported Quizzes';
-
     return {
       id: crypto.randomUUID(),
       title,
       description: asText(raw.description),
       type: 'quiz',
-      section_title,
       is_final: Boolean(raw.is_final ?? settings.is_final),
       attempts_enabled,
       max_attempts,

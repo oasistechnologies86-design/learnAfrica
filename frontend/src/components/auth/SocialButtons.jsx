@@ -90,12 +90,8 @@ export function SocialButtons({ onGoogle, googleClientId, disabled = false, clas
         if (!host.current.querySelector('iframe')) {
           const availableWidth = host.current.clientWidth || 320;
           window.google.accounts.id.renderButton(host.current, {
-            type: 'standard',
-            theme: 'filled_blue',
-            size: 'large',
-            text: 'continue_with',
-            shape: 'pill',
-            logo_alignment: 'left',
+            type: 'standard', theme: 'outline', size: 'large',
+            text: 'continue_with', shape: 'rect', logo_alignment: 'left',
             width: Math.max(200, Math.min(400, Math.floor(availableWidth))),
           });
         }
@@ -144,36 +140,10 @@ export function SocialButtons({ onGoogle, googleClientId, disabled = false, clas
   return (
     <div className={cn('w-full', className)}>
       {googleConfigured ? (
-        <div
-          className={cn(
-            'relative isolate w-full overflow-hidden rounded-2xl border border-primary/20',
-            'bg-gradient-to-br from-primary/[0.08] via-card to-accent/[0.08]',
-            'p-2 shadow-[0_14px_34px_-26px_var(--primary)]',
-            'transition-colors duration-300',
-            disabled && 'pointer-events-none opacity-60'
-          )}
-          aria-label="Sign in with Google"
-        >
-          <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-          <div className="relative flex min-h-[58px] w-full items-center justify-center overflow-hidden rounded-xl border border-border/80 bg-background/80 px-1 shadow-sm backdrop-blur-sm">
-            {!buttonReady && (
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center gap-3 rounded-full bg-[#1a73e8] text-sm font-semibold text-white shadow-sm">
-                <GoogleMark size={19} />
-                <span>Preparing secure sign-in…</span>
-              </div>
-            )}
-            <div
-              ref={host}
-              className={cn(
-                'flex min-h-[48px] w-full items-center justify-center',
-                '[&>div]:!mx-auto [&_iframe]:!max-w-full',
-                !buttonReady && 'opacity-0'
-              )}
-            />
-          </div>
-          <p className="mt-2 text-center text-[10px] font-medium tracking-[0.12em] text-muted-foreground">
-            SECURE ACCESS · POWERED BY GOOGLE
-          </p>
+        <div className={cn('relative w-full rounded-xl border border-border bg-background p-1', disabled && 'pointer-events-none opacity-60')}
+          aria-label="Sign in with Google">
+          {!buttonReady && <div className="pointer-events-none absolute inset-0 flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground"><GoogleMark size={18} /><span>Loading Google sign-in…</span></div>}
+          <div ref={host} className={cn('flex min-h-[44px] w-full items-center justify-center [&>div]:!mx-auto [&_iframe]:!max-w-full', !buttonReady && 'opacity-0')} />
         </div>
       ) : (
         <button
