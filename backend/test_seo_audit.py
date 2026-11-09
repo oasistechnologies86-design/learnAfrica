@@ -343,3 +343,24 @@ if failures:
     print(f'{len(failures)} FAILURE(S): {failures}')
     sys.exit(1)
 print('All checks passed.')
+
+
+# ── Full database backup must export every real table ───────────────────────
+r = c.get('/api/admin/database/export', headers=sa_hdr)
+backup_json = r.get_json() if r.is_json else None
+check('database backup export returns JSON successfully',
+      r.status_code == 200 and isinstance(backup_json, dict), r.status_code)
+if isinstance(backup_json, dict):
+    exported_tables = backup_json.get('tables', {})
+    table_order = backup_json.get('table_order', [])
+    check('backup includes quiz attempt history',
+          'quiz_attempts' in exported_tables and 'quiz_attempt_sessions' in exported_tables,
+          sorted(exported_tables.keys()))
+    check('backup includes certificates and messages',
+          'issued_certificates' in exported_tables and 'community_messages' in exported_tables,
+          sorted(exported_tables.keys()))
+    check('backup table order covers every exported table',
+          set(table_order) == set(exported_tables.keys()),
+          {'ordered': len(table_order), 'exported': len(exported_tables)})
+    check('backup reports no failed table exports',
+          backup_json.get('errors') == [], backup_json.get('errors'))
