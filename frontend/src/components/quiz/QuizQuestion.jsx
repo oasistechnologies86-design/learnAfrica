@@ -86,7 +86,9 @@ export function QuizQuestion({
       {/* ── Multiple-answer MCQ ── */}
       {qType === 'mcq_multi' && (
         <div className="space-y-2">
-          <p className="text-xs font-semibold text-primary">Select all correct answers</p>
+          <p className="text-xs font-semibold text-primary">
+            Select exactly {question.required_answers || 'all'} answer{question.required_answers === 1 ? '' : 's'}.
+          </p>
           {options.map((option, index) => {
             const selected = Array.isArray(selectedAnswer) && selectedAnswer.includes(index);
             const correct = Array.isArray(correctAnswer) && correctAnswer.includes(index);
