@@ -118,6 +118,21 @@ def score_quiz(questions, answers, pass_score=70):
             user_text    = str(user_ans or '').strip().lower()
             if user_text == correct_text:
                 correct_count += 1
+        elif qtype == 'mcq_multi':
+            if isinstance(correct, str):
+                try:
+                    correct = json.loads(correct)
+                except Exception:
+                    correct = []
+            expected = sorted(set(int(value) for value in (correct or [])))
+            correct_answers[i] = expected
+            if isinstance(user_ans, list):
+                try:
+                    selected = sorted(set(int(value) for value in user_ans))
+                    if selected == expected:
+                        correct_count += 1
+                except (TypeError, ValueError):
+                    pass
         else:
             if str(user_ans) == str(correct):
                 correct_count += 1
