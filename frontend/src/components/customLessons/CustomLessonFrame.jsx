@@ -16,10 +16,12 @@ export default function CustomLessonFrame({ lesson, children, mode = 'student', 
     const container = getScrollContainer();
     if (!container) return;
     const completion = readingRef.current?.querySelector('.custom-lesson-completion');
-    const currentTop = container === document.scrollingElement || container === document.documentElement ? window.scrollY : container.scrollTop;
+    const isDocumentScroll = container === document.scrollingElement || container === document.documentElement;
+    const currentTop = isDocumentScroll ? window.scrollY : container.scrollTop;
+    const containerTop = isDocumentScroll ? 0 : container.getBoundingClientRect().top;
     const viewportHeight = container.clientHeight || window.innerHeight;
     const nextTop = completion
-      ? Math.max(0, completion.getBoundingClientRect().top + currentTop - viewportHeight * 0.42)
+      ? Math.max(0, completion.getBoundingClientRect().top - containerTop + currentTop - viewportHeight * 0.42)
       : currentTop + Math.max(260, Math.round(viewportHeight * 0.68));
     if (container === document.scrollingElement || container === document.documentElement) window.scrollTo({ top: nextTop, behavior: 'smooth' });
     else container.scrollTo({ top: nextTop, behavior: 'smooth' });
