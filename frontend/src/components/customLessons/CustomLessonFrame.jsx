@@ -32,8 +32,8 @@ export default function CustomLessonFrame({ lesson, children, mode = 'student', 
   return (
     <div className="custom-lesson-page" data-custom-lesson-mode={mode}>
       <section className="custom-lesson-hero" aria-label="Lesson introduction">
-        <img className="custom-lesson-hero-photo" src="/feature-student.jpg"
-          alt="A student studying with a laptop in a learning environment" loading="eager" />
+        <img className="custom-lesson-hero-photo" src="https://images.pexels.com/photos/5965650/pexels-photo-5965650.jpeg?auto=compress&cs=tinysrgb&w=2000"
+          alt="A student studying outdoors on a laptop with a notebook beside her" loading="eager" />
         <div className="custom-lesson-hero-copy"><h1>{heroTitle}</h1></div>
       </section>
       <article ref={readingRef} className="custom-lesson-system" aria-label={lesson?.title || 'Custom lesson'}>
