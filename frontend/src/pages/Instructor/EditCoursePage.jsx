@@ -148,6 +148,7 @@ export function EditCoursePage() {
             lessons: (sec.lessons || []).map(les => ({
               id: les.id || crypto.randomUUID(),
               title: les.title || '',
+              description: les.description || '',
               type: les.type || 'video',
               content: les.content || '',
               videoUrl: les.videoUrl || les.video_url || '',
