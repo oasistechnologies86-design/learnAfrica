@@ -1,0 +1,458 @@
+{
+  "quizzes": [
+    {
+      "title": "Assessing the Impact of Information Technology",
+      "description": "Professional Computing assessment: Assessing the Impact of Information Technology.",
+      "is_final": false,
+      "settings": {
+        "attempts_enabled": false,
+        "max_attempts": 0,
+        "extra_attempt_price": 0,
+        "pass_score": 70,
+        "timer_enabled": false,
+        "duration_seconds": 0,
+        "questions_per_attempt": 0,
+        "shuffle_questions": true,
+        "shuffle_options": true
+      },
+      "questions": [
+        {
+          "text": "remote work means working away from a central workplace using technology.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Unequal access to devices connectivity skills and services is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "digital divide",
+            "disable devices",
+            "too many passwords",
+            "only purchase price"
+          ]
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Discarded electrical and electronic equipment is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "e-waste",
+            "ability to use digital tools effectively and safely",
+            "unwanted email",
+            "digital divide"
+          ]
+        },
+        {
+          "text": "Which term describes Providing health-related services remotely?",
+          "type": "mcq",
+          "options": [
+            "quality of life",
+            "e-waste",
+            "telemedicine",
+            "sustainability"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Ability to use digital tools effectively and safely is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 1,
+          "options": [
+            "economic social health and environmental effects",
+            "digital literacy",
+            "unwanted email",
+            "long-term social and environmental effects"
+          ]
+        },
+        {
+          "text": "Learning new skills for changing work requirements is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "reskilling"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Relationship between outputs and resources used is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "productivity",
+            "unreliable internet",
+            "shared passwords",
+            "device ownership only"
+          ]
+        },
+        {
+          "text": "E-waste is",
+          "type": "mcq",
+          "options": [
+            "a software patch",
+            "discarded electronic equipment",
+            "unwanted email",
+            "network delay"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "Separation between work and personal time is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "work-life boundary"
+        },
+        {
+          "text": "Availability and quality of network access is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "connectivity"
+        },
+        {
+          "text": "Inclusive design considers",
+          "type": "mcq",
+          "options": [
+            "only latest devices",
+            "only managers",
+            "a wide range of users",
+            "only urban users"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Which term describes Design considering a wide range of users?",
+          "type": "mcq",
+          "options": [
+            "productivity",
+            "digital divide",
+            "inclusive design",
+            "automation"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Overall wellbeing opportunities health safety and participation is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "network delay",
+            "shared passwords",
+            "change tasks and reduce repetitive work",
+            "quality of life"
+          ]
+        },
+        {
+          "text": "digital literacy means the opposite of ability to use digital tools effectively and safely.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "e-waste means discarded electrical and electronic equipment.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "automation means the opposite of technology performing tasks with reduced human intervention.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "digital divide means unequal access to devices connectivity skills and services.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Offline alternatives can help learners with",
+          "type": "mcq",
+          "options": [
+            "copyright claims",
+            "too many passwords",
+            "admin access",
+            "unreliable internet"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Effects of technology on energy materials and ecosystems is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "digital literacy",
+            "people perform tasks or access services",
+            "environmental impact",
+            "disable devices"
+          ]
+        },
+        {
+          "text": "Tools helping people perform tasks or access services is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "assistive technology"
+        },
+        {
+          "text": "Assistive technology helps",
+          "type": "mcq",
+          "options": [
+            "restrict access",
+            "remove accessibility",
+            "people perform tasks or access services",
+            "disable devices"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Which term describes Helping people access and benefit from digital services?",
+          "type": "mcq",
+          "options": [
+            "digital inclusion",
+            "connectivity",
+            "assistive technology",
+            "digital health"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Sustainability considers",
+          "type": "mcq",
+          "options": [
+            "only purchase price",
+            "long-term social and environmental effects",
+            "only advertising",
+            "only novelty"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "Which term describes Learning new skills for changing work requirements?",
+          "type": "mcq",
+          "options": [
+            "digital health",
+            "assistive technology",
+            "reskilling",
+            "connectivity"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Which term describes Tools helping people perform tasks or access services?",
+          "type": "mcq",
+          "options": [
+            "digital divide",
+            "productivity",
+            "assistive technology",
+            "automation"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Use of digital technologies to support health services is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "digital inclusion",
+            "reskilling",
+            "digital health",
+            "digital literacy"
+          ]
+        },
+        {
+          "text": "Automation can",
+          "type": "mcq",
+          "options": [
+            "guarantee fairness",
+            "remove oversight",
+            "change tasks and reduce repetitive work",
+            "remove every job"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Digital literacy is",
+          "type": "mcq",
+          "options": [
+            "internet speed",
+            "ability to use digital tools effectively and safely",
+            "device ownership only",
+            "programming only"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "Technology assessment should consider",
+          "type": "mcq",
+          "options": [
+            "economic social health and environmental effects",
+            "only speed",
+            "only screen size",
+            "only popularity"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "Which term describes Separation between work and personal time?",
+          "type": "mcq",
+          "options": [
+            "quality of life",
+            "sustainability",
+            "work-life boundary",
+            "e-waste"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "productivity means relationship between outputs and resources used.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Remote work uses",
+          "type": "mcq",
+          "options": [
+            "only paper records",
+            "technology to work away from a central workplace",
+            "shared passwords",
+            "no communication"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "Which term describes Availability and quality of network access?",
+          "type": "mcq",
+          "options": [
+            "accessibility",
+            "digital literacy",
+            "remote work",
+            "connectivity"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "assistive technology means tools helping people perform tasks or access services.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Which term describes Changes to tasks employment and required skills?",
+          "type": "mcq",
+          "options": [
+            "reskilling",
+            "environmental impact",
+            "automation impact",
+            "work-life boundary"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Designing services for people with different abilities is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 1,
+          "options": [
+            "resource efficiency",
+            "accessibility",
+            "only paper records",
+            "quality of life"
+          ]
+        },
+        {
+          "text": "accessibility means the opposite of designing services for people with different abilities.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "sustainability means the opposite of considering long-term environmental and social effects.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "connectivity means the opposite of availability and quality of network access.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "work-life boundary means separation between work and personal time.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Technology performing tasks with reduced human intervention is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "automation",
+            "assistive technology",
+            "only urban users",
+            "disable devices"
+          ]
+        },
+        {
+          "text": "quality of life means overall wellbeing opportunities health safety and participation.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Working away from a central workplace using technology is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "e-waste",
+            "a software patch",
+            "only paper records",
+            "remote work"
+          ]
+        },
+        {
+          "text": "Which term describes Effects of technology on energy materials and ecosystems?",
+          "type": "mcq",
+          "options": [
+            "inclusive design",
+            "work-life boundary",
+            "reskilling",
+            "environmental impact"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "The digital divide means",
+          "type": "mcq",
+          "options": [
+            "unequal access and skills",
+            "a virus",
+            "a testing stage",
+            "a licence"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "environmental impact means effects of technology on energy materials and ecosystems.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Which term describes Achieving results while using fewer resources?",
+          "type": "mcq",
+          "options": [
+            "accessibility",
+            "remote work",
+            "resource efficiency",
+            "digital literacy"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Considering long-term environmental and social effects is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 1,
+          "options": [
+            "unequal access and skills",
+            "sustainability",
+            "digital health",
+            "a testing stage"
+          ]
+        },
+        {
+          "text": "digital health means the opposite of use of digital technologies to support health services.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "reskilling means the opposite of learning new skills for changing work requirements.",
+          "type": "true_false",
+          "correct_answer": "false"
+        }
+      ]
+    }
+  ]
+}
