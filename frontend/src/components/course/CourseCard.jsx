@@ -54,17 +54,24 @@ export default function CourseCard({ course, enrolled = false, searchQuery = '' 
       <div className="p-4 flex flex-col flex-1">
         <div className="flex-1 space-y-3">
           <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant={difficultyColors[difficulty] || 'secondary'} className="text-2xs px-2">{difficulty}</Badge>
+            <Badge variant={difficultyColors[difficulty] || 'secondary'} className="text-2xs px-2">
+              {difficulty}
+            </Badge>
+            <span className="text-3xs font-bold uppercase tracking-wider text-muted-foreground">
+              {category}
+            </span>
             {(course.course_code || course.courseCode) && (
               <span className="text-2xs font-mono font-semibold text-muted-foreground/80 bg-muted/50 rounded px-1.5 py-0.5">
                 {course.course_code || course.courseCode}
               </span>
             )}
           </div>
+
           <Link to={`/courses/${course.id}`} className="block">
-            <h3 className="font-bold text-lg leading-snug transition-colors duration-300 line-clamp-2 min-h-[2.75rem] group-hover:text-primary">{title}</h3>
+            <h3 className="font-bold text-base leading-tight transition-colors duration-300 line-clamp-2 min-h-[2.5rem] group-hover:text-primary">
+              {title}
+            </h3>
           </Link>
-          {category && <span className="inline-flex max-w-full w-fit truncate rounded-md bg-muted/60 px-2 py-0.5 text-[10px] font-medium tracking-wide text-muted-foreground">{category}</span>}
 
           <p className="text-xs text-muted-foreground line-clamp-2 min-h-[2rem]">
             {description}

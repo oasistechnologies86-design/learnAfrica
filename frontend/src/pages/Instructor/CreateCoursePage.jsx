@@ -52,7 +52,7 @@ export function CreateCoursePage() {
   const [fieldErrors, setFieldErrors] = useState({});
 
   const { sections, addSection, removeSection, updateSectionTitle, moveSection, importQuizzes,
-          addLesson, updateLesson, removeLesson } = useCurriculum([]);
+          addLesson, updateLesson, removeLesson, moveLesson } = useCurriculum([]);
   const computedHoursSeconds = useMemo(() =>
     sections.reduce((tot, sec) =>
       tot + (sec.lessons || []).reduce((s, l) => s + Number(l.duration_seconds || 0), 0), 0
@@ -490,6 +490,7 @@ export function CreateCoursePage() {
           updateSectionTitle={updateSectionTitle}
           moveSection={moveSection}
           importQuizzes={importQuizzes}
+          moveLesson={moveLesson}
           updateLesson={updateLesson}
           removeLesson={removeLesson}
           onBack={() => setTab('basics')}

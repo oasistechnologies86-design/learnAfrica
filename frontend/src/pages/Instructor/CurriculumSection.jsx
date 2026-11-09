@@ -492,7 +492,7 @@ function LessonResourcesEditor({ resources = [], onChange }) {
 }
 
 // ── Lesson Item Editor ──────────────────────────────────────────────────────
-function CurriculumItemEditor({ item, index, onUpdate, onRemove, hasResources = false }) {
+function CurriculumItemEditor({ item, index, onUpdate, onRemove, onMoveUp, onMoveDown, isFirst, isLast, hasResources = false }) {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <div className={cn('rounded-xl border overflow-hidden shadow-sm transition-all',
@@ -533,6 +533,12 @@ function CurriculumItemEditor({ item, index, onUpdate, onRemove, hasResources = 
             : 'bg-primary/10 text-primary')}>
             {item.type === 'custom' ? 'custom page' : item.type}
           </span>
+        </div>
+        <div className="flex items-center gap-0.5 shrink-0" onClick={e => e.stopPropagation()}>
+          <button type="button" onClick={onMoveUp} disabled={isFirst} aria-label={`Move ${item.title || 'item'} up`}
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted disabled:opacity-25 disabled:cursor-not-allowed"><ChevronUp className="h-4 w-4" /></button>
+          <button type="button" onClick={onMoveDown} disabled={isLast} aria-label={`Move ${item.title || 'item'} down`}
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted disabled:opacity-25 disabled:cursor-not-allowed"><ChevronDown className="h-4 w-4" /></button>
         </div>
         <button
           onClick={(e) => {
@@ -839,9 +845,38 @@ function CurriculumItemEditor({ item, index, onUpdate, onRemove, hasResources = 
             </>
           )}
 
-          <div className="pt-2 flex justify-end">
-            <Button variant="ghost" size="sm" onClick={onRemove}
-              className="text-xs text-destructive hover:bg-destructive/10">
+          <div className="pt-2 flex flex-wrap justify-between gap-2">
+            {item.type === 'quiz' && (
+              <Button type="button" variant="outline" size="sm" onClick={() => {
+                const payload = { version: 1, quizzes: [{
+                  title: item.title || 'Untitled Quiz', description: item.description || '', is_final: !!item.is_final,
+                  settings: {
+                    timer_enabled: !!item.quiz_timer_enabled, duration_seconds: Number(item.quiz_duration_seconds || 600),
+                    attempts_enabled: !!item.attempts_enabled, max_attempts: Number(item.max_attempts || 0),
+                    extra_attempt_price: Number(item.extra_attempt_price || 0), pass_score: Number(item.pass_score || 70),
+                    questions_per_attempt: Number(item.questions_per_attempt || 0),
+                    shuffle_questions: !!item.shuffle_questions, shuffle_options: !!item.shuffle_options
+                  },
+                  questions: (item.questions || []).map(q => {
+                    const type = q.question_type || q.type || 'mcq';
+                    const base = { type, text: q.text || '', options: q.options || [],
+                      ...(q.marks != null ? { marks: q.marks } : {}),
+                      ...(q.explanation ? { explanation: q.explanation } : {}) };
+                    if (type === 'mcq_multi') return { ...base, correct_answers: Array.isArray(q.correctAnswer) ? q.correctAnswer : [] };
+                    if (type === 'fill_blank') return { type, text: q.text || '', correct_answer: q.options?.[0] || q.correctAnswer || '' };
+                    return { ...base, correct_answer: q.correctAnswer ?? 0 };
+                  })
+                }]};
+                const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${(item.title || 'quiz').trim().replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'quiz'}.json`;
+                document.body.appendChild(link); link.click(); link.remove();
+                window.setTimeout(() => URL.revokeObjectURL(url), 1500);
+              }}><Download className="h-3.5 w-3.5 mr-1.5" /> Export quiz JSON</Button>
+            )}
+            <Button variant="ghost" size="sm" onClick={onRemove} className="text-xs text-destructive hover:bg-destructive/10">
               <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Remove
             </Button>
           </div>
@@ -900,6 +935,7 @@ export function CurriculumSection({
   updateSectionTitle = () => {},
   moveSection = () => {},
   importQuizzes = () => {},
+  moveLesson = () => {},
   updateLesson = () => {},
   removeLesson = () => {},
   onBack = () => {},
@@ -908,17 +944,23 @@ export function CurriculumSection({
   const perks = coursePerks || {};
   const [quizImportMessage, setQuizImportMessage] = useState('');
   const [importingQuizzes, setImportingQuizzes] = useState(false);
+  const [selectedImportSectionId, setSelectedImportSectionId] = useState('');
   const quizImportInputRef = useRef(null);
 
   const handleQuizImport = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    if (!selectedImportSectionId || !sections.some(section => section.id === selectedImportSectionId)) {
+      setQuizImportMessage('Please select the session where these quizzes should be added.');
+      event.target.value = '';
+      return;
+    }
     setImportingQuizzes(true);
     setQuizImportMessage('');
     try {
       const payload = JSON.parse(await file.text());
-      const imported = parseQuizImport(payload, sections);
-      importQuizzes(imported);
+      const imported = parseQuizImport(payload);
+      importQuizzes(imported, selectedImportSectionId);
       setQuizImportMessage(`Successfully added ${imported.length} ${imported.length === 1 ? 'quiz' : 'quizzes'} to the curriculum. Save the course to apply the changes.`);
     } catch (error) {
       setQuizImportMessage(error.message || 'Could not import this JSON file.');
@@ -933,7 +975,6 @@ export function CurriculumSection({
       version: 1,
       quizzes: [{
         title: 'Example Quiz',
-        section_title: sections[0]?.title || 'Section 1',
         settings: {
           timer_enabled: false,
           duration_seconds: 600,
@@ -982,10 +1023,17 @@ export function CurriculumSection({
           <p className="text-sm font-bold">Import quizzes from JSON</p>
           <p className="mt-0.5 text-xs text-muted-foreground">Add several quizzes and all their questions to this course in one upload.</p>
         </div>
-        <div className="flex shrink-0 flex-wrap gap-2">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 sm:justify-end">
+          <select value={selectedImportSectionId} onChange={event => setSelectedImportSectionId(event.target.value)}
+            disabled={importingQuizzes || sections.length === 0}
+            aria-label="Choose destination session for imported quizzes"
+            className="h-9 min-w-[190px] flex-1 rounded-lg border border-input bg-background px-3 text-xs sm:flex-none">
+            <option value="">Choose destination session</option>
+            {sections.map((section, index) => <option key={section.id} value={section.id}>{section.title?.trim() || `Session ${index + 1}`}</option>)}
+          </select>
           <input ref={quizImportInputRef} type="file" accept="application/json,.json" className="hidden"
             onChange={handleQuizImport} />
-          <Button type="button" variant="outline" size="sm" disabled={importingQuizzes}
+          <Button type="button" variant="outline" size="sm" disabled={importingQuizzes || !selectedImportSectionId || sections.length === 0}
             onClick={() => quizImportInputRef.current?.click()}>
             {importingQuizzes ? 'Importing…' : 'Import JSON'}
           </Button>
@@ -1042,10 +1090,13 @@ export function CurriculumSection({
             </div>
           </CardHeader>
           <CardContent className="p-4 space-y-3">
-            {(section.lessons || []).map((item, iIdx) => (
+            {(section.lessons || []).map((item, iIdx, items) => (
               <CurriculumItemEditor key={item.id} item={item} index={iIdx}
                 onUpdate={data => updateLesson(section.id, item.id, data)}
                 onRemove={() => removeLesson(section.id, item.id)}
+                onMoveUp={() => moveLesson(section.id, item.id, -1)}
+                onMoveDown={() => moveLesson(section.id, item.id, 1)}
+                isFirst={iIdx === 0} isLast={iIdx === items.length - 1}
                 hasResources={!!perks.hasResources} />
             ))}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
