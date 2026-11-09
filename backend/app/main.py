@@ -11441,11 +11441,14 @@ def create_app() -> Flask:
                     safe_rows.append(row)
                 safe_tables_data[table] = safe_rows
 
-            for table in list(requested_order) + list(safe_tables_data.keys()):
-                if table in restore_tables or table not in safe_tables_data:
+            # A restore is a full database replacement: tables present in
+            # the current schema but absent from an older backup are cleared too,
+            # rather than silently retaining newer records.
+            for table in list(requested_order) + list(safe_tables_data.keys()) + list(current_tables):
+                if table in restore_tables or table not in available_tables:
                     continue
-                if table in available_tables:
-                    restore_tables.append(table)
+                restore_tables.append(table)
+                safe_tables_data.setdefault(table, [])
 
             errors_delete = []
             for table in reversed(restore_tables):
