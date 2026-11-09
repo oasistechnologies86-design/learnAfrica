@@ -11444,7 +11444,14 @@ def create_app() -> Flask:
             # A restore is a full database replacement: tables present in
             # the current schema but absent from an older backup are cleared too,
             # rather than silently retaining newer records.
-            for table in list(requested_order) + list(safe_tables_data.keys()) + list(current_tables):
+            restore_sequence = list(requested_order) + list(safe_tables_data.keys())
+            # Version 2 backups are complete database snapshots. If a newer
+            # schema has tables that did not exist at export time, clear those
+            # tables too. Legacy V1 files only restore tables they actually
+            # contain, preserving compatibility with older/manual test files.
+            if int(backup.get('format_version') or 1) >= 2:
+                restore_sequence += list(current_tables)
+            for table in restore_sequence:
                 if table in restore_tables or table not in available_tables:
                     continue
                 restore_tables.append(table)
@@ -11511,7 +11518,7 @@ def create_app() -> Flask:
                 'unavailable_tables': unavailable_tables,
                 'skipped_invalid_rows': skipped_invalid_rows[:50],
                 'errors_delete': [],
-                'errors_insert': [],
+                'errors_insert': [f"{item['table']}: {item['reason']}" for item in skipped_invalid_rows[:20]],
             })
         except Exception as e:
             import traceback
