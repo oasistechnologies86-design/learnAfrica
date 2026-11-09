@@ -11410,12 +11410,17 @@ def create_app() -> Flask:
                 return jsonify({'error': 'Backup tables section is invalid.'}), 400
             if any(not isinstance(rows, list) for rows in tables_data.values()):
                 return jsonify({'error': 'Backup table rows must be JSON arrays.'}), 400
-            if int(backup.get('format_version') or 1) >= 2 and backup.get('errors'):
+            try:
+                backup_version = int(backup.get('format_version') or 1)
+            except (TypeError, ValueError):
+                return jsonify({'error': 'Backup format_version must be a supported whole number.'}), 400
+            if backup_version not in (1, 2):
+                return jsonify({'error': f'Unsupported backup format version: {backup_version}.'}), 400
+            if backup_version >= 2 and backup.get('errors'):
                 return jsonify({'error': 'This backup reports failed exports and cannot be restored safely.'}), 400
             if not isinstance(tables_data.get('users'), list) or not tables_data.get('users'):
                 return jsonify({'error': 'This backup does not contain user records and cannot be restored safely.'}), 400
             available_tables = set(current_tables)
-            backup_version = int(backup.get('format_version') or 1)
             requested_order = backup.get('table_order') or (
                 BACKUP_TABLES if backup_version >= 2 else list(tables_data.keys())
             )
