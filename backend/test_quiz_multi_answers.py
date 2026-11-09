@@ -35,3 +35,9 @@ def test_single_answer_grading_remains_unchanged():
     assert correct_count == 1
     assert correct_map == {0: 1}
     assert passed is True
+
+
+if __name__ == "__main__":
+    test_multiple_answer_requires_exact_set()
+    test_single_answer_grading_remains_unchanged()
+    print("ALL MULTIPLE-ANSWER QUIZ CHECKS PASSED")
