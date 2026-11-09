@@ -11204,18 +11204,29 @@ def create_app() -> Flask:
 
     # Tables to include in backup — order matters for restore (dependencies first)
     BACKUP_TABLES = [
-        'users', 'user_stats',
+        # Identity and account data
+        'users', 'user_stats', 'user_badges', 'issued_badges',
+        'user_notifications', 'user_settings', 'email_verification_codes',
+        'password_reset_requests', 'password_reset_tokens',
+        'instructor_applications',
+        # Courses and learning content
         'courses', 'course_tags', 'course_outcomes', 'course_perks',
         'course_resources', 'curriculum_sections', 'section_lessons',
-        'lessons', 'lesson_resources',
-        'quizzes', 'quiz_questions',
-        'user_enrollments', 'user_progress', 'time_tracking',
-        'transactions', 'payments',
-        'issued_badges', 'notifications',
-        'course_reviews', 'community_messages',
-        'lesson_discussions', 'instructor_guide',
-        'coupons', 'live_sessions', 'live_session_rsvps',
-        'platform_settings', 'email_verification_codes',
+        'lessons', 'lesson_resources', 'quizzes', 'quiz_questions',
+        'quiz_attempt_sessions', 'quiz_attempts', 'quiz_attempt_credits',
+        'course_quiz_attempt_resets', 'user_enrollments', 'user_progress',
+        'time_tracking', 'issued_certificates',
+        # Payments, payouts and financial statements
+        'transactions', 'payments', 'statement', 'payout_requests',
+        'instructor_revenue_splits',
+        # Messages, community and engagement
+        'community_messages', 'lesson_discussions', 'discussion_upvotes',
+        'homepage_comments', 'homepage_comment_likes', 'notifications',
+        'course_reviews', 'reviews', 'live_sessions', 'live_session_rsvps',
+        # Platform content, settings, email and audit
+        'instructor_guide', 'instructor_guide_steps', 'coupons',
+        'platform_settings', 'platform_config', 'email_usage', 'audit_log',
+        'blog_posts',
     ]
 
     # Columns that must never be written by a restore. The superadmin is the
@@ -11238,6 +11249,26 @@ def create_app() -> Flask:
         """Double-quote a validated identifier for interpolation."""
         return '"' + _safe_ident(name) + '"'
 
+    def _discover_backup_tables(db):
+        """Return every real application table in the active database."""
+        if app.config.get('USE_POSTGRES'):
+            rows = db.execute(
+                "SELECT table_name FROM information_schema.tables "
+                "WHERE table_schema='public' AND table_type='BASE TABLE' ORDER BY table_name"
+            ).fetchall()
+            return [dict(row)['table_name'] for row in rows]
+        rows = db.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' "
+            "AND name NOT LIKE 'sqlite_%' ORDER BY name"
+        ).fetchall()
+        return [dict(row)['name'] for row in rows]
+
+    def _ordered_backup_tables(db):
+        available = set(_discover_backup_tables(db))
+        preferred = [name for name in BACKUP_TABLES if name in available]
+        extras = sorted(available.difference(preferred))
+        return preferred + extras
+
     @app.route('/api/admin/database/export', methods=['GET'])
     @admin_required
     def admin_database_export():
@@ -11245,25 +11276,35 @@ def create_app() -> Flask:
         try:
             db = get_db()
             from datetime import datetime as _dt
+            table_order = _ordered_backup_tables(db)
             export = {
                 'signature': BACKUP_SIGNATURE,
+                'format_version': 2,
                 'exported_at': _dt.utcnow().isoformat() + 'Z',
                 'exported_by': g.current_user.get('user_id'),
+                'table_order': table_order,
+                'missing_expected_tables': [name for name in BACKUP_TABLES if name not in table_order],
                 'tables': {},
             }
             errors = []
-            for table in BACKUP_TABLES:
+            for table in table_order:
                 try:
                     rows = db.execute(f'SELECT * FROM {_q_ident(table)}').fetchall()
                     export['tables'][table] = [dict(r) for r in rows]
                 except Exception as ex:
-                    # Some tables may not exist on older schemas; skip them
-                    errors.append(f'{table}: {ex}')
+                    errors.append({'table': table, 'error': str(ex)})
                     try:
                         if hasattr(db, '_conn'): db._conn.rollback()
                     except Exception: pass
-                    export['tables'][table] = []
-            export['errors'] = errors
+            # Never return a seemingly successful partial backup. The admin
+            # must fix the reported table failure and retry the export.
+            if errors:
+                app.logger.error('database_export incomplete: ' + _json.dumps(errors))
+                return jsonify({
+                    'error': 'Backup incomplete. No download was created.',
+                    'failed_tables': errors,
+                }), 500
+            export['errors'] = []
 
             # Convert Python datetime/etc to JSON-serializable strings
             def _json_safe(obj):
@@ -11324,14 +11365,10 @@ def create_app() -> Flask:
             from datetime import datetime as _dt
             import json as _json, tempfile, os as _os
             pre_restore = {}
-            for table in BACKUP_TABLES:
-                try:
-                    rows = db.execute(f'SELECT * FROM {_q_ident(table)}').fetchall()
-                    pre_restore[table] = [dict(r) for r in rows]
-                except Exception:
-                    try:
-                        if hasattr(db, '_conn'): db._conn.rollback()
-                    except Exception: pass
+            current_tables = _ordered_backup_tables(db)
+            for table in current_tables:
+                rows = db.execute(f'SELECT * FROM {_q_ident(table)}').fetchall()
+                pre_restore[table] = [dict(r) for r in rows]
             snapshot_path = _os.path.join(
                 tempfile.gettempdir(),
                 f'learnafrica-pre-restore-{_dt.utcnow().strftime("%Y%m%d-%H%M%S")}.json'
@@ -11366,26 +11403,48 @@ def create_app() -> Flask:
             if admin_email_env:
                 protected_user_emails.add(admin_email_env)
 
+            tables_data = backup.get('tables', {})
+            if not isinstance(tables_data, dict):
+                return jsonify({'error': 'Backup tables section is invalid.'}), 400
+            if backup.get('errors'):
+                return jsonify({'error': 'This backup reports failed exports and cannot be restored safely.'}), 400
+            available_tables = set(current_tables)
+            requested_order = backup.get('table_order') or BACKUP_TABLES
+            restore_tables = []
+            unavailable_tables = []
+            for table in list(requested_order) + list(tables_data.keys()):
+                if table in restore_tables:
+                    continue
+                _safe_ident(table)
+                if table not in tables_data:
+                    continue
+                if table not in available_tables:
+                    unavailable_tables.append(table)
+                    continue
+                restore_tables.append(table)
+
             errors_delete = []
-            for table in reversed(BACKUP_TABLES):
+            for table in reversed(restore_tables):
                 try:
                     if table == 'users':
-                        db.execute("DELETE FROM users WHERE role <> 'superadmin'")
+                        db.execute("DELETE FROM users WHERE role <> 'superadmin' AND LOWER(email) <> ?",
+                                   (admin_email_env,))
                     else:
                         db.execute(f'DELETE FROM {_q_ident(table)}')
-                    db.commit()
                 except Exception as ex:
                     errors_delete.append(f'{table}: {ex}')
-                    try:
-                        if hasattr(db, '_conn'): db._conn.rollback()
-                    except Exception: pass
+                    break
+            if errors_delete:
+                db.rollback()
+                return jsonify({'error': 'Restore cancelled because one or more tables could not be cleared.',
+                                'errors_delete': errors_delete, 'rows_inserted': 0}), 500
 
-            # 3. Insert backup data (in dependency order)
+            # 3. Insert backup data in the recorded dependency order. Commit only
+            # once, so any insert failure rolls the entire restore back.
             errors_insert = []
             rows_inserted = 0
             skipped_protected = []
-            tables_data = backup.get('tables', {})
-            for table in BACKUP_TABLES:
+            for table in restore_tables:
                 rows = tables_data.get(table, []) or []
                 if not rows: continue
                 for row in rows:
@@ -11410,20 +11469,21 @@ def create_app() -> Flask:
                         rows_inserted += 1
                     except Exception as ex:
                         errors_insert.append(f'{table}: {ex}')
-                        try:
-                            if hasattr(db, '_conn'): db._conn.rollback()
-                        except Exception: pass
-                try:
-                    db.commit()
-                except Exception: pass
+                        break
+            if errors_insert:
+                db.rollback()
+                return jsonify({'error': 'Restore rolled back because one or more records could not be restored.',
+                                'rows_inserted': 0, 'errors_insert': errors_insert[:20]}), 500
+            db.commit()
 
             return jsonify({
                 'message': 'Database restore complete',
                 'rows_inserted': rows_inserted,
                 'pre_restore_snapshot_path': snapshot_path,
                 'skipped_protected_users': skipped_protected[:20],
-                'errors_delete': errors_delete[:10],
-                'errors_insert': errors_insert[:20],
+                'unavailable_tables': unavailable_tables,
+                'errors_delete': [],
+                'errors_insert': [],
             })
         except Exception as e:
             import traceback
