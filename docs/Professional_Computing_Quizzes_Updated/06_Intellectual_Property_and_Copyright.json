@@ -1,0 +1,458 @@
+{
+  "quizzes": [
+    {
+      "title": "Assessing Copyright and Intellectual Property",
+      "description": "Professional Computing assessment: Assessing Copyright and Intellectual Property.",
+      "is_final": false,
+      "settings": {
+        "attempts_enabled": false,
+        "max_attempts": 0,
+        "extra_attempt_price": 0,
+        "pass_score": 70,
+        "timer_enabled": false,
+        "duration_seconds": 0,
+        "questions_per_attempt": 0,
+        "shuffle_questions": true,
+        "shuffle_options": true
+      },
+      "questions": [
+        {
+          "text": "Condition restricting commercial use is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "NC"
+        },
+        {
+          "text": "Which term describes Whether different licences can legally be used together?",
+          "type": "mcq",
+          "options": [
+            "copyleft",
+            "SA",
+            "CC0",
+            "licence compatibility"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Credit given to the creator or source is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "attribution"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Creations and identifiers protected by law is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 1,
+          "options": [
+            "trade secret",
+            "intellectual property",
+            "a social profile",
+            "patent"
+          ]
+        },
+        {
+          "text": "copyright means the opposite of protection for original expression such as writing music images and software.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Sign identifying the source of goods or services is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 3,
+          "options": [
+            "trade secret",
+            "attribution",
+            "intellectual property",
+            "trademark"
+          ]
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Permission to use a work under stated conditions is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 1,
+          "options": [
+            "adaptation",
+            "licence",
+            "intellectual property",
+            "reading"
+          ]
+        },
+        {
+          "text": "Which term describes Well-known software copyleft licence?",
+          "type": "mcq",
+          "options": [
+            "GNU GPL",
+            "copyright",
+            "intellectual property",
+            "patent"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "SA means condition requiring adaptations to use the same or compatible licence.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Which term describes Tool for dedicating a work to public domain as far as legally possible?",
+          "type": "mcq",
+          "options": [
+            "BY",
+            "NC",
+            "ND",
+            "CC0"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Which term describes Condition restricting commercial use?",
+          "type": "mcq",
+          "options": [
+            "intellectual property",
+            "copyright",
+            "patent",
+            "NC"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "public domain means the opposite of works not restricted by copyright in the relevant jurisdiction.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Valuable business information protected through confidentiality is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "a privacy law",
+            "attribution",
+            "trade secret",
+            "a qualifying invention"
+          ]
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Legal right that may protect a qualifying invention is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 1,
+          "options": [
+            "licence",
+            "patent",
+            "distribution of adaptations",
+            "no commercial use"
+          ]
+        },
+        {
+          "text": "Public domain means",
+          "type": "mcq",
+          "options": [
+            "not restricted by copyright in the relevant jurisdiction",
+            "always secret",
+            "never reusable",
+            "owned by every user"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "CC0 means the opposite of tool for dedicating a work to public domain as far as legally possible.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Tool for dedicating a work to public domain as far as legally possible is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "CC0"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Works not restricted by copyright in the relevant jurisdiction is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 1,
+          "options": [
+            "same licence",
+            "public domain",
+            "no derivatives",
+            "a copyleft software licence"
+          ]
+        },
+        {
+          "text": "Which term describes Licensing approach preserving specified freedoms in redistributed versions?",
+          "type": "mcq",
+          "options": [
+            "SA",
+            "CC0",
+            "copyleft",
+            "GNU GPL"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "CC NC restricts",
+          "type": "mcq",
+          "options": [
+            "credit",
+            "all access",
+            "study",
+            "commercial use"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "Creative Commons means family of standard licences for sharing creative works.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Copyright protects",
+          "type": "mcq",
+          "options": [
+            "all facts",
+            "original expression",
+            "every idea",
+            "all hardware"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Protection for original expression such as writing music images and software is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "copyright",
+            "never reusable",
+            "no credit",
+            "study"
+          ]
+        },
+        {
+          "text": "Which term describes Modified or transformed version of an existing work?",
+          "type": "mcq",
+          "options": [
+            "adaptation",
+            "BY",
+            "NC",
+            "ND"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "NC means condition restricting commercial use.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Family of standard licences for sharing creative works is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "Creative Commons",
+            "a private message",
+            "adaptation",
+            "GNU GPL"
+          ]
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Condition requiring attribution is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 0,
+          "options": [
+            "BY",
+            "GNU GPL",
+            "infringement",
+            "always secret"
+          ]
+        },
+        {
+          "text": "copyleft means licensing approach preserving specified freedoms in redistributed versions.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Which term describes Unauthorised use violating an intellectual-property right?",
+          "type": "mcq",
+          "options": [
+            "licence",
+            "Creative Commons",
+            "attribution",
+            "infringement"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "trade secret means valuable business information protected through confidentiality.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "patent means legal right that may protect a qualifying invention.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "A trademark identifies",
+          "type": "mcq",
+          "options": [
+            "the source of goods or services",
+            "a data subject",
+            "a password",
+            "a security patch"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "trademark means the opposite of sign identifying the source of goods or services.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Condition requiring adaptations to use the same or compatible licence is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 1,
+          "options": [
+            "licence compatibility",
+            "SA",
+            "no credit",
+            "not restricted by copyright in the relevant jurisdiction"
+          ]
+        },
+        {
+          "text": "Which term describes Condition restricting distribution of adaptations?",
+          "type": "mcq",
+          "options": [
+            "trademark",
+            "ND",
+            "trade secret",
+            "public domain"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "Condition restricting distribution of adaptations is the definition of ________.",
+          "type": "fill_blank",
+          "correct_answer": "ND"
+        },
+        {
+          "text": "Which term describes Presenting another person's work or ideas as one's own?",
+          "type": "mcq",
+          "options": [
+            "public domain",
+            "plagiarism",
+            "trade secret",
+            "trademark"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "intellectual property means creations and identifiers protected by law.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "A patent may protect",
+          "type": "mcq",
+          "options": [
+            "a social profile",
+            "a qualifying invention",
+            "an opinion",
+            "a private message"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "ND means the opposite of condition restricting distribution of adaptations.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "BY means the opposite of condition requiring attribution.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "licence means permission to use a work under stated conditions.",
+          "type": "true_false",
+          "correct_answer": "true"
+        },
+        {
+          "text": "Which term describes Condition requiring adaptations to use the same or compatible licence?",
+          "type": "mcq",
+          "options": [
+            "SA",
+            "attribution",
+            "licence",
+            "Creative Commons"
+          ],
+          "correct_answer": 0
+        },
+        {
+          "text": "CC BY requires",
+          "type": "mcq",
+          "options": [
+            "same licence",
+            "attribution",
+            "no commercial use",
+            "no derivatives"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "CC0 is",
+          "type": "mcq",
+          "options": [
+            "a patent",
+            "a privacy law",
+            "a public-domain dedication tool",
+            "a trademark"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "attribution means the opposite of credit given to the creator or source.",
+          "type": "true_false",
+          "correct_answer": "false"
+        },
+        {
+          "text": "GNU GPL is",
+          "type": "mcq",
+          "options": [
+            "a patent",
+            "a regulator",
+            "a copyleft software licence",
+            "a data register"
+          ],
+          "correct_answer": 2
+        },
+        {
+          "text": "CC ND restricts",
+          "type": "mcq",
+          "options": [
+            "all copying",
+            "reading",
+            "attribution",
+            "distribution of adaptations"
+          ],
+          "correct_answer": 3
+        },
+        {
+          "text": "CC SA requires",
+          "type": "mcq",
+          "options": [
+            "commercial use only",
+            "same or compatible licence for adaptations",
+            "no credit",
+            "no sharing"
+          ],
+          "correct_answer": 1
+        },
+        {
+          "text": "Choose the correct term to complete the statement: Licensing approach preserving specified freedoms in redistributed versions is the definition of ________.",
+          "type": "mcq",
+          "correct_answer": 2,
+          "options": [
+            "original expression",
+            "a privacy law",
+            "copyleft",
+            "an opinion"
+          ]
+        }
+      ]
+    }
+  ]
+}
