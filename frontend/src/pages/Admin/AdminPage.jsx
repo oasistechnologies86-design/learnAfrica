@@ -2691,7 +2691,7 @@ function DatabaseBackupCard() {
     setExporting(true);
     try {
       const token = sessionStorage.getItem('auth_token');
-      const base = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+      const base = (API_BASE || '').replace(/\/+$/, '');
       const r = await fetch(`${base}/api/admin/database/export`, {
         headers: { Authorization: `Bearer ${token}` },
       });
