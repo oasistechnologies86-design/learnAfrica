@@ -235,6 +235,7 @@ export function EditCoursePage() {
           lessons: (s.lessons || []).map((l, li) => ({
             id: l.id || undefined,
             title: l.title || `Lesson ${li + 1}`,
+            description: l.description || '',
             type: l.type || 'video',
             content: l.content || '',
             videoUrl: l.videoUrl || '',
