@@ -3328,6 +3328,8 @@ def create_app() -> Flask:
         """Instructors can preview any course they own (or admins any course)."""
         try:
             db = get_db()
+            ensure_column(db, 'lessons', 'video_start_seconds', 'INTEGER DEFAULT 0')
+            ensure_column(db, 'lessons', 'video_end_seconds', 'INTEGER DEFAULT 0')
             course = db.execute('SELECT * FROM courses WHERE id=?', (cid,)).fetchone()
             if not course:
                 return jsonify({'error': 'Course not found'}), 404
@@ -3377,6 +3379,8 @@ def create_app() -> Flask:
         """Preview any lesson without enrollment - instructor/admin only."""
         try:
             db = get_db()
+            ensure_column(db, 'lessons', 'video_start_seconds', 'INTEGER DEFAULT 0')
+            ensure_column(db, 'lessons', 'video_end_seconds', 'INTEGER DEFAULT 0')
             course = db.execute('SELECT * FROM courses WHERE id=?', (cid,)).fetchone()
             if not course:
                 return jsonify({'error': 'Course not found'}), 404
