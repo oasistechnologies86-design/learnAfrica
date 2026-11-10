@@ -2004,6 +2004,8 @@ def create_app() -> Flask:
     @app.route('/api/courses/<cid>', methods=['GET'])
     def get_course(cid):
         db = get_db()
+        ensure_column(db, 'lessons', 'video_start_seconds', 'INTEGER DEFAULT 0')
+        ensure_column(db, 'lessons', 'video_end_seconds', 'INTEGER DEFAULT 0')
         c = db.execute('SELECT * FROM courses WHERE id=?',(cid,)).fetchone()
         if not c: return jsonify({'error': 'Course not found'}), 404
         cd = safe_dict(c)
@@ -3154,6 +3156,8 @@ def create_app() -> Flask:
             ensure_column(db, 'courses', 'min_time_seconds', 'INTEGER DEFAULT 0')
             ensure_column(db, 'courses', 'enforce_min_time', 'INTEGER DEFAULT 0')
             ensure_column(db, 'lessons', 'text_content', 'TEXT')
+            ensure_column(db, 'lessons', 'video_start_seconds', 'INTEGER DEFAULT 0')
+            ensure_column(db, 'lessons', 'video_end_seconds', 'INTEGER DEFAULT 0')
             ensure_column(db, 'quizzes', 'duration_seconds', 'INTEGER DEFAULT 0')
             ensure_column(db, 'quizzes', 'timer_enabled', 'INTEGER DEFAULT 0')
             ensure_column(db, 'quizzes', 'max_attempts', 'INTEGER DEFAULT 0')
@@ -3242,16 +3246,21 @@ def create_app() -> Flask:
                 db.execute('INSERT INTO curriculum_sections (id,course_id,title,"order") VALUES(?,?,?,?)',
                            (sid, cid, sec.get('title','Section'), si))
                 for li, les in enumerate(sec.get('lessons', [])):
+                    video_start = max(0, int(les.get('video_start_seconds') or 0))
+                    video_end = max(0, int(les.get('video_end_seconds') or 0))
+                    if video_end and video_end <= video_start:
+                        return jsonify({'error': 'Video end time must be later than its start time.'}), 400
                     leid = str(uuid.uuid4())
-                    db.execute('''INSERT INTO lessons (id,course_id,title,description,duration,video_url,content,type,is_final,"order",text_content,duration_seconds,component_key)
-                                  VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                    db.execute('''INSERT INTO lessons (id,course_id,title,description,duration,video_url,content,type,is_final,"order",text_content,duration_seconds,component_key,video_start_seconds,video_end_seconds)
+                                  VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
                                (leid, cid, les.get('title','Lesson'), les.get('description',''),
                                 les.get('duration','30 min'), les.get('videoUrl','') or les.get('video_url',''),
                                 sanitize_html(les.get('content','')), les.get('type','video'),
                                 1 if les.get('is_final') else 0, li,
                                 les.get('text_content') or les.get('textContent') or '',
                                 int(les.get('duration_seconds') or 0),
-                                les.get('component_key') or les.get('componentKey') or None))
+                                les.get('component_key') or les.get('componentKey') or None,
+                                video_start, video_end))
                     # Per-lesson resources (skip blob: URLs - those are unuploaded files)
                     for res in les.get('resources', []):
                         if res.get('title') and res.get('url') and not res['url'].startswith('blob:'):
@@ -3448,6 +3457,8 @@ def create_app() -> Flask:
         ensure_column(db, 'courses', 'min_time_seconds', 'INTEGER DEFAULT 0')
         ensure_column(db, 'courses', 'enforce_min_time', 'INTEGER DEFAULT 0')
         ensure_column(db, 'lessons', 'text_content', 'TEXT')
+        ensure_column(db, 'lessons', 'video_start_seconds', 'INTEGER DEFAULT 0')
+        ensure_column(db, 'lessons', 'video_end_seconds', 'INTEGER DEFAULT 0')
         ensure_column(db, 'quizzes', 'duration_seconds', 'INTEGER DEFAULT 0')
         ensure_column(db, 'quizzes', 'timer_enabled', 'INTEGER DEFAULT 0')
         ensure_column(db, 'quizzes', 'max_attempts', 'INTEGER DEFAULT 0')
@@ -3597,6 +3608,8 @@ def create_app() -> Flask:
             ]:
                 ensure_column(db, 'courses', col, sql_type)
             ensure_column(db, 'lessons', 'text_content', 'TEXT')
+            ensure_column(db, 'lessons', 'video_start_seconds', 'INTEGER DEFAULT 0')
+            ensure_column(db, 'lessons', 'video_end_seconds', 'INTEGER DEFAULT 0')
             ensure_column(db, 'lessons', 'duration_seconds', 'INTEGER DEFAULT 0')
             ensure_column(db, 'quizzes', 'duration_seconds', 'INTEGER DEFAULT 0')
             ensure_column(db, 'quizzes', 'timer_enabled', 'INTEGER DEFAULT 0')
@@ -3743,6 +3756,10 @@ def create_app() -> Flask:
                     db.execute('INSERT INTO curriculum_sections (id,course_id,title,"order") VALUES(?,?,?,?)',
                                (sid, cid, sec.get('title','Section'), si))
                     for li, les in enumerate(sec.get('lessons',[])):
+                        video_start = max(0, int(les.get('video_start_seconds') or 0))
+                        video_end = max(0, int(les.get('video_end_seconds') or 0))
+                        if video_end and video_end <= video_start:
+                            return jsonify({'error': 'Video end time must be later than its start time.'}), 400
                         incoming_id = les.get('id') if les.get('id') and les['id'] in existing_lessons else None
                         leid = incoming_id or str(uuid.uuid4())
                         text_content_val = les.get('text_content') or les.get('textContent') or ''
@@ -3750,20 +3767,21 @@ def create_app() -> Flask:
                         component_key_val = les.get('component_key') or les.get('componentKey') or None
                         if incoming_id:
                             db.execute('''UPDATE lessons SET title=?,description=?,duration=?,video_url=?,
-                                           content=?,type=?,is_final=?,"order"=?,text_content=?,duration_seconds=?,component_key=? WHERE id=?''',
+                                           content=?,type=?,is_final=?,"order"=?,text_content=?,duration_seconds=?,component_key=?,
+                                           video_start_seconds=?,video_end_seconds=? WHERE id=?''',
                                        (les.get('title','Lesson'), les.get('description',''),
                                         les.get('duration','30 min'), les.get('videoUrl','') or les.get('video_url',''),
                                         sanitize_html(les.get('content','')), les.get('type','video'),
                                         1 if les.get('is_final') else 0, li, text_content_val,
-                                        lesson_duration_seconds, component_key_val, leid))
+                                        lesson_duration_seconds, component_key_val, video_start, video_end, leid))
                         else:
-                            db.execute('''INSERT INTO lessons (id,course_id,title,description,duration,video_url,content,type,is_final,"order",text_content,duration_seconds,component_key)
-                                          VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                            db.execute('''INSERT INTO lessons (id,course_id,title,description,duration,video_url,content,type,is_final,"order",text_content,duration_seconds,component_key,video_start_seconds,video_end_seconds)
+                                          VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
                                        (leid, cid, les.get('title','Lesson'), les.get('description',''),
                                         les.get('duration','30 min'), les.get('videoUrl','') or les.get('video_url',''),
                                         sanitize_html(les.get('content','')), les.get('type','video'),
                                         1 if les.get('is_final') else 0, li, text_content_val,
-                                        lesson_duration_seconds, component_key_val))
+                                        lesson_duration_seconds, component_key_val, video_start, video_end))
                         db.execute('INSERT INTO section_lessons (section_id,lesson_id,"order") VALUES(?,?,?)', (sid,leid,li))
                         # Re-save resources (always replace so edits take effect)
                         db.execute('DELETE FROM lesson_resources WHERE lesson_id=?', (leid,))
