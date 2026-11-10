@@ -89,7 +89,11 @@ function VideoUrlInput({ item, onChanged }) {
         <LinkIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
         <input
           value={currentUrl}
-          onChange={e => onChanged({ videoUrl: e.target.value })}
+          onChange={e => onChanged({
+            videoUrl: e.target.value,
+            video_start_seconds: 0,
+            video_end_seconds: 0,
+          })}
           className="w-full bg-background border border-border rounded-xl pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary transition-all"
           placeholder="https://youtube.com/watch?v=… or any video link"
         />
