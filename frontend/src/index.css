@@ -511,10 +511,11 @@ button:disabled,
 }
 .custom-lesson-sticky-action button:active { transform:translateY(0) scale(.985); }
 .custom-lesson-scroll-label { white-space:nowrap; }
-.custom-lesson-scroll-arrows { display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:0;line-height:.65;font-size:15px;font-weight:900; }
-.custom-lesson-scroll-arrows i { display:block;font-style:normal;animation:customLessonArrow 1.25s ease-in-out infinite; }
-.custom-lesson-scroll-arrows i + i { margin-top:-2px;animation-delay:.18s;opacity:.65; }
-@keyframes customLessonArrow { 0%,100% { transform:translateY(-2px);opacity:.55; } 50% { transform:translateY(3px);opacity:1; } }
+.custom-lesson-scroll-hand { position:relative;display:inline-flex;align-items:center;justify-content:center;width:25px;height:30px;flex:0 0 25px;animation:customLessonHandSwipe 1.45s ease-in-out infinite; }
+.custom-lesson-scroll-hand svg { display:block;width:23px;height:28px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round; }
+.custom-lesson-scroll-ripple { position:absolute;left:50%;bottom:-1px;width:9px;height:4px;border:1px solid currentColor;border-top:0;border-radius:0 0 9px 9px;opacity:0;transform:translateX(-50%) scale(.65);animation:customLessonTouchRipple 1.45s ease-out infinite; }
+@keyframes customLessonHandSwipe { 0%,18% { transform:translateY(-3px); } 58% { transform:translateY(4px); } 78%,100% { transform:translateY(-3px); } }
+@keyframes customLessonTouchRipple { 0%,48% { opacity:0;transform:translateX(-50%) scale(.65); } 62% { opacity:.75;transform:translateX(-50%) scale(1.15); } 82%,100% { opacity:0;transform:translateX(-50%) scale(1.45); } }
 @keyframes customLessonHintFloat { 0%,100% { translate:0 0; } 50% { translate:0 -3px; } }
 .dark .custom-lesson-sticky-action button {
   color:var(--foreground);background:color-mix(in oklab,var(--card) 88%,var(--primary) 12%);
@@ -548,7 +549,7 @@ button:disabled,
   .custom-lesson-scroll-hint { bottom:max(.7rem,env(safe-area-inset-bottom));max-width:calc(100vw - 2rem);white-space:nowrap; }
 }
 @media(prefers-reduced-motion:reduce) {
-  .custom-lesson-hero-photo,.custom-lesson-sticky-action button,.custom-lesson-scroll-arrows i { animation:none!important;transition:none!important; }
+  .custom-lesson-hero-photo,.custom-lesson-sticky-action button,.custom-lesson-scroll-hand,.custom-lesson-scroll-ripple { animation:none!important;transition:none!important; }
   .custom-lesson-page * { scroll-behavior:auto!important; }
 }
 @media(max-width:650px) {
