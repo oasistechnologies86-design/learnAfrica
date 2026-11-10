@@ -137,6 +137,8 @@ export function CreateCoursePage() {
             type:      l.type   || 'video',
             content:   l.content  || '',
             videoUrl:  l.videoUrl || '',
+            video_start_seconds: Math.max(0, Number(l.video_start_seconds) || 0),
+            video_end_seconds: Math.max(0, Number(l.video_end_seconds) || 0),
             duration: l.type === 'quiz' ? (l.quiz_timer_enabled ? formatDuration(l.quiz_duration_seconds) : 'No limit') : (l.duration || '30 min'),
             text_content: l.text_content || l.textContent || '',
             duration_seconds: Number(l.duration_seconds || 0),
