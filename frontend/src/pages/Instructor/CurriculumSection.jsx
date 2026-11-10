@@ -48,6 +48,10 @@ const getVideoPreviewUrl = (url, startSeconds = 0, endSeconds = 0) => {
       if (endSeconds > 0) params.set('end', String(Math.floor(endSeconds)));
       return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
     }
+    if (parsed.hostname.includes('vimeo.com')) {
+      const videoId = parsed.pathname.split('/').filter(Boolean).pop();
+      if (videoId) return `https://player.vimeo.com/video/${videoId}`;
+    }
   } catch {}
   return url;
 };
@@ -81,6 +85,7 @@ function VideoUrlInput({ item, onChanged }) {
   };
 
   const isYouTube = /youtube\.com|youtu\.be/i.test(currentUrl);
+  const isVimeo = /vimeo\.com/i.test(currentUrl);
   const previewUrl = getVideoPreviewUrl(currentUrl, item.video_start_seconds, item.video_end_seconds);
 
   return (
@@ -100,7 +105,7 @@ function VideoUrlInput({ item, onChanged }) {
       </div>
       {currentUrl && (
         <div className="rounded-xl overflow-hidden border border-border bg-slate-950">
-          {isYouTube ? (
+          {isYouTube || isVimeo ? (
             <div className="aspect-video">
               <iframe src={previewUrl} className="w-full h-full" allowFullScreen title="Video preview"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" />
@@ -126,10 +131,12 @@ function VideoUrlInput({ item, onChanged }) {
               <p className="text-2xs text-muted-foreground">
                 {item.video_start_seconds || item.video_end_seconds
                   ? `Students see ${formatVideoTimestamp(item.video_start_seconds)} to ${item.video_end_seconds ? formatVideoTimestamp(item.video_end_seconds) : 'the end'}.`
-                  : 'Full video selected. Students will watch from beginning to end.'}
+                  : isVimeo
+                    ? 'Vimeo videos play in full. Optional range editing is available for YouTube and direct video files.'
+                    : 'Full video selected. Students will watch from beginning to end.'}
               </p>
             </div>
-            {!editingRange && (
+            {!editingRange && !isVimeo && (
               <button type="button" onClick={() => setEditingRange(true)}
                 className="rounded-lg border border-primary/30 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/5">
                 Edit video range
