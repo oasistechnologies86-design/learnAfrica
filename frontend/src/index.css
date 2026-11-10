@@ -488,11 +488,39 @@ button:disabled,
 .custom-lesson-sticky-action button:focus-visible { outline:2px solid var(--ring);outline-offset:4px; }
 .custom-lesson-content-end { height:1px; }
 .custom-lesson-system { padding-bottom:112px; }
-.custom-lesson-sticky-action { position:fixed;z-index:70;left:50%;bottom:calc(4.9rem + env(safe-area-inset-bottom));transform:translateX(-50%);width:max-content;max-width:calc(100vw - 2rem);display:flex;justify-content:center;pointer-events:none; }
-.custom-lesson-sticky-action button { pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:0;padding:7px 10px;border:0;border-radius:0;color:var(--lesson-green-dark);background:transparent;box-shadow:none;font-size:12px;font-weight:650;letter-spacing:.015em;text-shadow:0 1px 5px rgba(255,255,255,.75);transition:color .2s ease,transform .2s ease,opacity .2s ease;animation:customLessonHintFloat 2.6s ease-in-out infinite; }
-.custom-lesson-sticky-action button:hover { color:var(--lesson-green);background:transparent;transform:translateY(-2px); }
-.custom-lesson-sticky-action button span:last-child { display:inline-block;width:auto;height:auto;border:0;border-radius:0;font-size:16px;line-height:1; }
+.custom-lesson-sticky-action {
+  position:fixed;z-index:70;left:50%;bottom:calc(4.9rem + env(safe-area-inset-bottom));
+  transform:translateX(-50%);width:max-content;max-width:calc(100vw - 2rem);
+  display:flex;justify-content:center;pointer-events:none;
+}
+.custom-lesson-sticky-action button {
+  pointer-events:auto;position:relative;display:inline-flex;align-items:center;justify-content:center;
+  gap:10px;min-height:46px;padding:10px 18px;border:1px solid color-mix(in oklab,var(--lesson-green) 58%,var(--lesson-line));
+  border-radius:999px;color:var(--lesson-green-dark);
+  background:color-mix(in oklab,var(--lesson-surface) 92%,var(--lesson-green));
+  box-shadow:0 7px 24px rgba(0,0,0,.16),0 0 0 3px color-mix(in oklab,var(--lesson-green) 10%,transparent);
+  font-size:11px;font-weight:800;letter-spacing:.075em;text-shadow:none;
+  transition:transform .22s ease,box-shadow .22s ease,background .22s ease,border-color .22s ease;
+  animation:customLessonHintFloat 3s ease-in-out infinite;
+}
+.custom-lesson-sticky-action button:hover {
+  transform:translateY(-3px) scale(1.035);
+  border-color:var(--lesson-green);
+  background:var(--lesson-surface);
+  box-shadow:0 10px 30px rgba(0,0,0,.2),0 0 0 5px color-mix(in oklab,var(--lesson-green) 13%,transparent);
+}
+.custom-lesson-sticky-action button:active { transform:translateY(0) scale(.985); }
+.custom-lesson-scroll-label { white-space:nowrap; }
+.custom-lesson-scroll-arrows { display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:0;line-height:.65;font-size:15px;font-weight:900; }
+.custom-lesson-scroll-arrows i { display:block;font-style:normal;animation:customLessonArrow 1.25s ease-in-out infinite; }
+.custom-lesson-scroll-arrows i + i { margin-top:-2px;animation-delay:.18s;opacity:.65; }
+@keyframes customLessonArrow { 0%,100% { transform:translateY(-2px);opacity:.55; } 50% { transform:translateY(3px);opacity:1; } }
 @keyframes customLessonHintFloat { 0%,100% { translate:0 0; } 50% { translate:0 -3px; } }
+.dark .custom-lesson-sticky-action button {
+  color:var(--foreground);background:color-mix(in oklab,var(--card) 88%,var(--primary) 12%);
+  border-color:color-mix(in oklab,var(--primary) 62%,var(--border));
+  box-shadow:0 8px 26px rgba(0,0,0,.42),0 0 0 3px color-mix(in oklab,var(--primary) 14%,transparent);
+}
 .dark .custom-lesson-page {
   --lesson-surface: var(--card);
   --lesson-page-shadow: 0 8px 36px rgba(0,0,0,.28);
@@ -520,14 +548,14 @@ button:disabled,
   .custom-lesson-scroll-hint { bottom:max(.7rem,env(safe-area-inset-bottom));max-width:calc(100vw - 2rem);white-space:nowrap; }
 }
 @media(prefers-reduced-motion:reduce) {
-  .custom-lesson-hero-photo,.custom-lesson-sticky-action button { animation:none!important;transition:none!important; }
+  .custom-lesson-hero-photo,.custom-lesson-sticky-action button,.custom-lesson-scroll-arrows i { animation:none!important;transition:none!important; }
   .custom-lesson-page * { scroll-behavior:auto!important; }
 }
 @media(max-width:650px) {
   .custom-lesson-page { border-radius:16px; }
   .custom-lesson-sticky-action { bottom:calc(4.9rem + env(safe-area-inset-bottom)); }
   .custom-lesson-system { padding-bottom:150px; }
-  .custom-lesson-sticky-action button { min-height:0;padding:7px 10px; }
+  .custom-lesson-sticky-action button { min-height:44px;padding:9px 13px;gap:8px;font-size:10px; }
 }
 @media(prefers-reduced-motion:reduce) {
   .custom-lesson-page { box-shadow:0 0 0 1px color-mix(in oklab,var(--primary) 18%,var(--border)); }
