@@ -15,32 +15,151 @@ import { TimePicker, formatDuration } from '@/components/common/TimePicker';
 import { cn } from '@/lib/utils';
 import { parseQuizImport } from '@/lib/quizImport';
 
-// ── Video URL input (replaces upload) ────────────────────────────────────
-function VideoUrlInput({ currentUrl, onChanged }) {
+// ── Video URL and optional playback-range editor ─────────────────────────
+const parseVideoTimestamp = (value) => {
+  const parts = String(value || '').trim().split(':').map(Number);
+  if (!parts.length || parts.some(part => !Number.isFinite(part) || part < 0)) return null;
+  if (parts.length === 1) return Math.floor(parts[0]);
+  if (parts.length === 2) return Math.floor(parts[0] * 60 + parts[1]);
+  if (parts.length === 3) return Math.floor(parts[0] * 3600 + parts[1] * 60 + parts[2]);
+  return null;
+};
+
+const formatVideoTimestamp = (seconds) => {
+  const total = Math.max(0, Number(seconds) || 0);
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const secs = Math.floor(total % 60);
+  return hours
+    ? `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+    : `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+};
+
+const getVideoPreviewUrl = (url, startSeconds = 0, endSeconds = 0) => {
+  if (!url) return '';
+  try {
+    const parsed = new URL(url);
+    let videoId = '';
+    if (parsed.hostname.includes('youtu.be')) videoId = parsed.pathname.split('/').filter(Boolean)[0] || '';
+    else if (parsed.hostname.includes('youtube.com')) videoId = parsed.searchParams.get('v') || parsed.pathname.split('/').filter(Boolean).pop() || '';
+    if (videoId) {
+      const params = new URLSearchParams({ rel: '0' });
+      if (startSeconds > 0) params.set('start', String(Math.floor(startSeconds)));
+      if (endSeconds > 0) params.set('end', String(Math.floor(endSeconds)));
+      return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
+    }
+  } catch {}
+  return url;
+};
+
+function VideoUrlInput({ item, onChanged }) {
+  const currentUrl = item.videoUrl || '';
+  const [editingRange, setEditingRange] = useState(false);
+  const [draftStart, setDraftStart] = useState(formatVideoTimestamp(item.video_start_seconds));
+  const [draftEnd, setDraftEnd] = useState(item.video_end_seconds ? formatVideoTimestamp(item.video_end_seconds) : '');
+  const [rangeError, setRangeError] = useState('');
+
+  useEffect(() => {
+    setDraftStart(formatVideoTimestamp(item.video_start_seconds));
+    setDraftEnd(item.video_end_seconds ? formatVideoTimestamp(item.video_end_seconds) : '');
+  }, [item.video_start_seconds, item.video_end_seconds]);
+
+  const saveRange = () => {
+    const start = parseVideoTimestamp(draftStart);
+    const end = draftEnd.trim() ? parseVideoTimestamp(draftEnd) : 0;
+    if (start === null || end === null) {
+      setRangeError('Enter time as minutes:seconds or hours:minutes:seconds.');
+      return;
+    }
+    if (end > 0 && end <= start) {
+      setRangeError('The end time must be later than the start time.');
+      return;
+    }
+    onChanged({ video_start_seconds: start, video_end_seconds: end });
+    setRangeError('');
+    setEditingRange(false);
+  };
+
+  const isYouTube = /youtube\.com|youtu\.be/i.test(currentUrl);
+  const previewUrl = getVideoPreviewUrl(currentUrl, item.video_start_seconds, item.video_end_seconds);
+
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-3">
       <div className="relative">
         <LinkIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
         <input
-          value={currentUrl || ''}
-          onChange={e => onChanged(e.target.value)}
+          value={currentUrl}
+          onChange={e => onChanged({ videoUrl: e.target.value })}
           className="w-full bg-background border border-border rounded-xl pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary transition-all"
           placeholder="https://youtube.com/watch?v=… or any video link"
         />
       </div>
-      {currentUrl && (currentUrl.includes('youtube') || currentUrl.includes('youtu.be')) && (
-        <div className="rounded-xl overflow-hidden border border-border aspect-video">
-          <iframe
-            src={currentUrl.replace('watch?v=','embed/').replace('youtu.be/','www.youtube.com/embed/')}
-            className="w-full h-full"
-            allowFullScreen
-            title="Video preview"
-          />
+      {currentUrl && (
+        <div className="rounded-xl overflow-hidden border border-border bg-slate-950">
+          {isYouTube ? (
+            <div className="aspect-video">
+              <iframe src={previewUrl} className="w-full h-full" allowFullScreen title="Video preview"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" />
+            </div>
+          ) : (
+            <video key={`${currentUrl}-${item.video_start_seconds}-${item.video_end_seconds}`}
+              src={currentUrl} controls className="w-full max-h-56" preload="metadata"
+              onLoadedMetadata={e => { if (item.video_start_seconds > 0) e.currentTarget.currentTime = item.video_start_seconds; }}
+              onTimeUpdate={e => {
+                if (item.video_end_seconds > 0 && e.currentTarget.currentTime >= item.video_end_seconds) {
+                  e.currentTarget.pause();
+                  e.currentTarget.currentTime = item.video_end_seconds;
+                }
+              }} />
+          )}
         </div>
       )}
-      {currentUrl && !currentUrl.includes('youtube') && !currentUrl.includes('youtu.be') && (
-        <div className="rounded-xl overflow-hidden border border-border bg-slate-950">
-          <video src={currentUrl} controls className="w-full max-h-48" preload="metadata" />
+      {currentUrl && (
+        <div className="rounded-xl border border-border bg-muted/20 p-3 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="text-xs font-semibold">Video playback range</p>
+              <p className="text-2xs text-muted-foreground">
+                {item.video_start_seconds || item.video_end_seconds
+                  ? `Students see ${formatVideoTimestamp(item.video_start_seconds)} to ${item.video_end_seconds ? formatVideoTimestamp(item.video_end_seconds) : 'the end'}.`
+                  : 'Full video selected. Students will watch from beginning to end.'}
+              </p>
+            </div>
+            {!editingRange && (
+              <button type="button" onClick={() => setEditingRange(true)}
+                className="rounded-lg border border-primary/30 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/5">
+                Edit video range
+              </button>
+            )}
+          </div>
+          {editingRange && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label className="space-y-1 text-xs font-medium">
+                  Start time
+                  <input value={draftStart} onChange={e => setDraftStart(e.target.value)}
+                    placeholder="00:00" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+                </label>
+                <label className="space-y-1 text-xs font-medium">
+                  End time <span className="font-normal text-muted-foreground">(leave blank for video end)</span>
+                  <input value={draftEnd} onChange={e => setDraftEnd(e.target.value)}
+                    placeholder="Full video" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+                </label>
+              </div>
+              <p className="text-2xs text-muted-foreground">Use MM:SS or HH:MM:SS. Leave the end time empty to play through to the end.</p>
+              {rangeError && <p className="text-xs text-destructive">{rangeError}</p>}
+              <div className="flex justify-end gap-2">
+                <button type="button" onClick={() => {
+                  setDraftStart(formatVideoTimestamp(item.video_start_seconds));
+                  setDraftEnd(item.video_end_seconds ? formatVideoTimestamp(item.video_end_seconds) : '');
+                  setRangeError('');
+                  setEditingRange(false);
+                }} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold">Cancel</button>
+                <button type="button" onClick={saveRange}
+                  className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">Save changes</button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -571,7 +690,7 @@ function CurriculumItemEditor({ item, index, onUpdate, onRemove, onMoveUp, onMov
             <>
               <div className="space-y-1">
                 <label className="text-3xs font-bold uppercase text-muted-foreground">Video URL</label>
-                <VideoUrlInput currentUrl={item.videoUrl || ''} onChanged={(url) => onUpdate({ videoUrl: url })} />
+                <VideoUrlInput item={item} onChanged={onUpdate} />
               </div>
               <div className="space-y-1.5">
                 <label className="text-3xs font-bold uppercase text-muted-foreground flex items-center gap-1.5">
