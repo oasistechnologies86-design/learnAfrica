@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   BookOpen, Layout, X, ChevronRight, Plus, GripVertical, Video,
   HelpCircle, Link as LinkIcon, Trash2, ChevronDown, ChevronUp,
