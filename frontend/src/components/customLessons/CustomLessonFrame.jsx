@@ -12,18 +12,17 @@ export default function CustomLessonFrame({ lesson, children, mode = 'student', 
     return document.scrollingElement || document.documentElement;
   };
 
+  // Move through the lesson in comfortable increments instead of jumping
+  // straight to the completion panel.
   const advanceReading = () => {
     const container = getScrollContainer();
     if (!container) return;
-    const completion = readingRef.current?.querySelector('.custom-lesson-completion');
     const isDocumentScroll = container === document.scrollingElement || container === document.documentElement;
     const currentTop = isDocumentScroll ? window.scrollY : container.scrollTop;
-    const containerTop = isDocumentScroll ? 0 : container.getBoundingClientRect().top;
     const viewportHeight = container.clientHeight || window.innerHeight;
-    const nextTop = completion
-      ? Math.max(0, completion.getBoundingClientRect().top - containerTop + currentTop - viewportHeight * 0.42)
-      : currentTop + Math.max(260, Math.round(viewportHeight * 0.68));
-    if (container === document.scrollingElement || container === document.documentElement) window.scrollTo({ top: nextTop, behavior: 'smooth' });
+    const step = Math.min(420, Math.max(220, Math.round(viewportHeight * 0.48)));
+    const nextTop = currentTop + step;
+    if (isDocumentScroll) window.scrollTo({ top: nextTop, behavior: 'smooth' });
     else container.scrollTo({ top: nextTop, behavior: 'smooth' });
   };
 
@@ -51,9 +50,9 @@ export default function CustomLessonFrame({ lesson, children, mode = 'student', 
         <div className="custom-lesson-content-end" aria-hidden="true" />
       </article>
       <div className="custom-lesson-sticky-action">
-        <button type="button" onClick={advanceReading} aria-label="Scroll to the lesson completion section">
-          <span>{mode === 'student' ? 'Scroll down to mark as complete' : 'Scroll through lesson'}</span>
-          <span aria-hidden="true">↓</span>
+        <button type="button" onClick={advanceReading} aria-label="Scroll down through the lesson in small steps">
+          <span className="custom-lesson-scroll-label">{mode === 'student' ? 'SCROLL DOWN AND MARK AS COMPLETE' : 'SCROLL THROUGH LESSON'}</span>
+          <span className="custom-lesson-scroll-arrows" aria-hidden="true"><i>↓</i><i>↓</i></span>
         </button>
       </div>
     </div>
