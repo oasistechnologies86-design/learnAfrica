@@ -885,6 +885,9 @@ def seed_demo_courses(app, db):
              ],
              sections=[
                  dict(title='Python Fundamentals', lessons=[
+                     dict(title='Welcome to the Course', type='custom',
+                          component_key='course-welcome', duration='5 min',
+                          description='A friendly orientation before you dive in.'),
                      dict(title='Variables and Data Types', type='video',
                           video_url='https://www.youtube.com/watch?v=rfscVS0vtbw',
                           duration='25 min', description='Learn Python basics.'),
@@ -922,6 +925,9 @@ def seed_demo_courses(app, db):
              ],
              sections=[
                  dict(title='Design Principles', lessons=[
+                     dict(title='Welcome to the Course', type='custom',
+                          component_key='course-welcome', duration='5 min',
+                          description='A friendly orientation before you dive in.'),
                      dict(title='Introduction to UI Design', type='video',
                           video_url='https://www.youtube.com/watch?v=c9Wg6Cb_YlU',
                           duration='20 min', description='What is UI/UX design?'),
