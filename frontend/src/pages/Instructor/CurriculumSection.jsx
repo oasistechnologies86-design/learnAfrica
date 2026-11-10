@@ -94,11 +94,15 @@ function VideoUrlInput({ item, onChanged }) {
         <LinkIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
         <input
           value={currentUrl}
-          onChange={e => onChanged({
-            videoUrl: e.target.value,
-            video_start_seconds: 0,
-            video_end_seconds: 0,
-          })}
+          onChange={e => {
+            onChanged({
+              videoUrl: e.target.value,
+              video_start_seconds: 0,
+              video_end_seconds: 0,
+            });
+            setEditingRange(false);
+            setRangeError('');
+          }}
           className="w-full bg-background border border-border rounded-xl pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary transition-all"
           placeholder="https://youtube.com/watch?v=… or any video link"
         />
@@ -129,10 +133,10 @@ function VideoUrlInput({ item, onChanged }) {
             <div>
               <p className="text-xs font-semibold">Video playback range</p>
               <p className="text-2xs text-muted-foreground">
-                {item.video_start_seconds || item.video_end_seconds
-                  ? `Students see ${formatVideoTimestamp(item.video_start_seconds)} to ${item.video_end_seconds ? formatVideoTimestamp(item.video_end_seconds) : 'the end'}.`
-                  : isVimeo
-                    ? 'Vimeo videos play in full. Optional range editing is available for YouTube and direct video files.'
+                {isVimeo
+                  ? 'Vimeo videos play in full. Optional range editing is available for YouTube and direct video files.'
+                  : item.video_start_seconds || item.video_end_seconds
+                    ? `Students see ${formatVideoTimestamp(item.video_start_seconds)} to ${item.video_end_seconds ? formatVideoTimestamp(item.video_end_seconds) : 'the end'}.`
                     : 'Full video selected. Students will watch from beginning to end.'}
               </p>
             </div>
@@ -143,7 +147,7 @@ function VideoUrlInput({ item, onChanged }) {
               </button>
             )}
           </div>
-          {editingRange && (
+          {editingRange && !isVimeo && (
             <div className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <label className="space-y-1 text-xs font-medium">
