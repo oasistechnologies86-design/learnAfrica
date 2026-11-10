@@ -22,16 +22,26 @@ import { getCustomLesson } from '@/components/customLessons/registry';
 import CustomLessonFrame from '@/components/customLessons/CustomLessonFrame';
 
 // ── helpers ───────────────────────────────────────────────────────────────
-const getEmbedUrl = (url) => {
+const getEmbedUrl = (url, startSeconds = 0, endSeconds = 0) => {
   if (!url) return null;
   try {
     if (url.includes('youtube.com/watch')) {
       const id = new URL(url).searchParams.get('v');
-      return id ? `https://www.youtube.com/embed/${id}` : null;
+      if (!id) return null;
+      const params = new URLSearchParams();
+      if (startSeconds > 0) params.set('start', String(Math.floor(startSeconds)));
+      if (endSeconds > 0) params.set('end', String(Math.floor(endSeconds)));
+      const query = params.toString();
+      return `https://www.youtube.com/embed/${id}${query ? `?${query}` : ''}`;
     }
     if (url.includes('youtu.be/')) {
       const id = url.split('/').pop().split('?')[0];
-      return `https://www.youtube.com/embed/${id}`;
+      if (!id) return null;
+      const params = new URLSearchParams();
+      if (startSeconds > 0) params.set('start', String(Math.floor(startSeconds)));
+      if (endSeconds > 0) params.set('end', String(Math.floor(endSeconds)));
+      const query = params.toString();
+      return `https://www.youtube.com/embed/${id}${query ? `?${query}` : ''}`;
     }
     if (url.includes('vimeo.com/')) {
       const id = url.split('/').pop().split('?')[0];
@@ -413,7 +423,9 @@ export function LessonPage() {
     </div>
   );
 
-  const embedUrl   = getEmbedUrl(lesson.videoUrl || lesson.video_url || '');
+  const videoStartSeconds = Math.max(0, Number(lesson.video_start_seconds) || 0);
+  const videoEndSeconds = Math.max(0, Number(lesson.video_end_seconds) || 0);
+  const embedUrl = getEmbedUrl(lesson.videoUrl || lesson.video_url || '', videoStartSeconds, videoEndSeconds);
   const isIframe   = embedUrl && (embedUrl.includes('youtube.com/embed') || embedUrl.includes('vimeo.com'));
   const resources  = lesson.resources || [];
 
@@ -610,7 +622,24 @@ export function LessonPage() {
                       title={lesson.title}
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" />
                   ) : (
-                    <video controls className="w-full h-full object-cover" preload="metadata">
+                    <video
+                      controls
+                      className="w-full h-full object-cover"
+                      preload="metadata"
+                      onLoadedMetadata={e => {
+                        if (videoStartSeconds > 0) e.currentTarget.currentTime = videoStartSeconds;
+                      }}
+                      onTimeUpdate={e => {
+                        if (videoEndSeconds > 0 && e.currentTarget.currentTime >= videoEndSeconds) {
+                          e.currentTarget.pause();
+                          e.currentTarget.currentTime = videoEndSeconds;
+                        }
+                      }}
+                      onSeeking={e => {
+                        if (e.currentTarget.currentTime < videoStartSeconds) e.currentTarget.currentTime = videoStartSeconds;
+                        if (videoEndSeconds > 0 && e.currentTarget.currentTime > videoEndSeconds) e.currentTarget.currentTime = videoEndSeconds;
+                      }}
+                    >
                       <source src={embedUrl} type="video/mp4" />
                     </video>
                   )}
