@@ -52,7 +52,14 @@ export default function CustomLessonFrame({ lesson, children, mode = 'student', 
       <div className="custom-lesson-sticky-action">
         <button type="button" onClick={advanceReading} aria-label="Scroll down through the lesson in small steps">
           <span className="custom-lesson-scroll-label">{mode === 'student' ? 'SCROLL DOWN AND MARK AS COMPLETE' : 'SCROLL THROUGH LESSON'}</span>
-          <span className="custom-lesson-scroll-arrows" aria-hidden="true"><i>↓</i><i>↓</i></span>
+          <span className="custom-lesson-scroll-hand" aria-hidden="true">
+            <svg viewBox="0 0 32 38" role="presentation" focusable="false">
+              <path d="M13.1 3.8c0-1.6 1.2-2.8 2.7-2.8s2.7 1.2 2.7 2.8v14.1l1.1-2.2c.7-1.4 2.4-2 3.8-1.3 1.3.7 1.8 2.2 1.2 3.6l-3.4 8.2c-1.3 3.2-4.3 5.3-7.7 5.3h-1.2c-2.8 0-5.4-1.5-6.8-3.9L2.2 20.2c-.8-1.3-.4-3 .9-3.8 1.2-.8 2.8-.4 3.7.8l2.7 3.6V8.1c0-1.5 1.1-2.7 2.5-2.7.5 0 .9.1 1.3.4" />
+              <path d="M10.7 8.2V5.9c0-1.5 1.2-2.7 2.7-2.7" />
+              <path d="M18.5 17.9h2.1" />
+            </svg>
+            <span className="custom-lesson-scroll-ripple"></span>
+          </span>
         </button>
       </div>
     </div>
