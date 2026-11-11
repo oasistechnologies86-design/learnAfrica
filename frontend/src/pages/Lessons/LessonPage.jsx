@@ -888,7 +888,7 @@ export function LessonPage() {
                         <p className="text-xs text-muted-foreground mb-1">Passing score</p>
                         <p className="text-sm font-bold">{Number(quizMeta.pass_score ?? 70)}%</p>
                       </div>
-                      {quizMeta.attempts_enabled && Number(quizMeta.extra_attempt_price) > 0 && (
+                      {quizMeta.attempts_enabled && Number(quizMeta.max_attempts) > 0 && Number(quizMeta.extra_attempt_price) > 0 && (
                         <div className="rounded-lg bg-muted/60 p-3">
                           <p className="text-xs text-muted-foreground mb-1">Extra attempt fee</p>
                           <p className="text-sm font-bold">GHS {Number(quizMeta.extra_attempt_price).toFixed(2)}</p>
