@@ -32,3 +32,19 @@ Import each JSON file separately through the instructor quiz JSON import flow. T
 10. [10_Ethics_of_IT_Organisations.json](./10_Ethics_of_IT_Organisations.json)
 11. [11_Ghana_Data_Protection_Act_2012_Act_843.json](./11_Ghana_Data_Protection_Act_2012_Act_843.json)
 12. [12_Final_Examination.json](./12_Final_Examination.json)
+
+
+## Supported LearnAfrica question formats
+
+The LearnAfrica quiz importer supports single choice (`single_choice`), multiple selection (`multiple_answer`), True/False (`true_false`), fill in the blank (`fill_blank`), and dropdown (`dropdown`). Dropdown example:
+
+```json
+{
+  "type": "dropdown",
+  "text": "Which city is the capital of Ghana?",
+  "options": ["Accra", "Kumasi", "Tamale"],
+  "correct_answer": 0
+}
+```
+
+The correct-answer index is zero-based. Use at least two non-empty options. Multiple-selection questions instead use `correct_answers` with an array of at least two correct option indexes.
