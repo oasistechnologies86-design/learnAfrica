@@ -425,7 +425,6 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false, hasCertificate = fal
       </div>
     </div>
   );
-  );
 }
 
 // ── Main Preview Page ─────────────────────────────────────────────────────
