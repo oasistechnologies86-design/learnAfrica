@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
 import { cn } from '../../lib/utils';
-import { CheckCircle2, PlayCircle, Clock, Sparkles } from 'lucide-react';
+import { CheckCircle2, PlayCircle, Clock } from 'lucide-react';
 import { courseThumbnail } from '../../lib/courseThumbnail';
 
 export default function ProgressCard({ course }) {
