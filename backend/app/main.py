@@ -3391,6 +3391,45 @@ def create_app() -> Flask:
             ld['videoUrl']     = ld.get('video_url') or ''
             ld['isCompleted']  = False
             ld['is_completed'] = False
+            # Read existing discussion threads for the instructor's preview.
+            # This deliberately does not call ensure_discussions_table: preview
+            # GET requests must never create or migrate database tables.
+            try:
+                try:
+                    discussion_rows = db.execute(
+                        'SELECT * FROM lesson_discussions'
+                        ' WHERE course_id=? AND lesson_id=? AND parent_id IS NULL'
+                        ' ORDER BY COALESCE(is_pinned, 0) DESC, created_at DESC',
+                        (cid, lid)
+                    ).fetchall()
+                except Exception:
+                    try:
+                        if db and hasattr(db, '_conn'): db._conn.rollback()
+                    except Exception: pass
+                    discussion_rows = db.execute(
+                        'SELECT * FROM lesson_discussions'
+                        ' WHERE course_id=? AND lesson_id=? AND parent_id IS NULL'
+                        ' ORDER BY created_at DESC',
+                        (cid, lid)
+                    ).fetchall()
+                discussions = []
+                for discussion_row in discussion_rows:
+                    post = safe_dict(discussion_row)
+                    try:
+                        replies = db.execute(
+                            'SELECT * FROM lesson_discussions WHERE parent_id=? ORDER BY created_at ASC',
+                            (discussion_row['id'],)
+                        ).fetchall()
+                        post['replies'] = safe_list(replies)
+                    except Exception:
+                        post['replies'] = []
+                    discussions.append(post)
+                ld['discussions'] = discussions
+            except Exception:
+                try:
+                    if db and hasattr(db, '_conn'): db._conn.rollback()
+                except Exception: pass
+                ld['discussions'] = []
             ld['is_preview']   = True
             return jsonify({'lesson': ld})
         except Exception as e:
