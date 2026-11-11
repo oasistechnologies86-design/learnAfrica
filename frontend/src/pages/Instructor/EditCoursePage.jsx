@@ -13,7 +13,7 @@ import { API_BASE } from '@/lib/api';
 import { PRESET_CATEGORIES, DIFFICULTIES } from '@/lib/categories';
 import { formatPrice } from '@/lib/money';
 import { safeStringify } from '@/lib/safeStringify';
-import { createCurriculumLesson } from '@/lib/useCurriculum';
+import { createCurriculumLesson, createCurriculumSection } from '@/lib/useCurriculum';
 
 
 const inputCls = "flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary";
@@ -71,7 +71,7 @@ export function EditCoursePage() {
 
   // Section/lesson helpers
   const addSection = () =>
-    setSections(p => [...p, { id: crypto.randomUUID(), title: '', lessons: [] }]);
+    setSections(p => [...p, createCurriculumSection()]);
   const removeSection = (id) =>
     setSections(p => p.filter(s => s.id !== id));
   const updateSectionTitle = (id, t) =>
