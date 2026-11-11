@@ -45,12 +45,14 @@ export function getYouTubeVideoId(url) {
   return null;
 }
 
-export default function BoundedYouTubePlayer({ url, startSeconds = 0, endSeconds = 0, title = 'YouTube video', className = 'w-full h-full' }) {
+export default function BoundedYouTubePlayer({ url, startSeconds = 0, endSeconds = 0, title = 'YouTube video', className = 'w-full h-full', onCurrentTimeChange, enforceRange = true }) {
   const mountRef = useRef(null);
   const playerRef = useRef(null);
   const intervalRef = useRef(null);
   const [error, setError] = useState('');
+  const onCurrentTimeChangeRef = useRef(onCurrentTimeChange);
   const videoId = getYouTubeVideoId(url);
+  useEffect(() => { onCurrentTimeChangeRef.current = onCurrentTimeChange; }, [onCurrentTimeChange]);
   const start = Math.max(0, Number(startSeconds) || 0);
   const end = Math.max(0, Number(endSeconds) || 0);
 
@@ -65,6 +67,9 @@ export default function BoundedYouTubePlayer({ url, startSeconds = 0, endSeconds
       if (!player || typeof player.getCurrentTime !== 'function') return;
       try {
         const current = player.getCurrentTime();
+        const duration = typeof player.getDuration === 'function' ? player.getDuration() : 0;
+        onCurrentTimeChangeRef.current?.(current, duration);
+        if (!enforceRange) return;
         if (current < start - 0.35) {
           player.seekTo(start, true);
           return;
@@ -95,24 +100,22 @@ export default function BoundedYouTubePlayer({ url, startSeconds = 0, endSeconds
           origin: window.location.origin,
           playsinline: 1,
           rel: 0,
-          start: Math.floor(start),
-          ...(end > 0 ? { end: Math.floor(end) } : {}),
+          ...(enforceRange && start > 0 ? { start: Math.floor(start) } : {}),
+          ...(enforceRange && end > 0 ? { end: Math.floor(end) } : {}),
         },
         events: {
           onReady: event => {
-            if (start > 0) {
+            if (enforceRange && start > 0) {
               try { event.target.seekTo(start, true); } catch {}
             }
+            enforceRange();
+            clearMonitor();
+            intervalRef.current = window.setInterval(enforceRange, 200);
           },
           onStateChange: event => {
-            if (event.data === YT.PlayerState.PLAYING) {
-              clearMonitor();
-              intervalRef.current = window.setInterval(enforceRange, 100);
-            } else {
-              clearMonitor();
-              if (event.data === YT.PlayerState.ENDED && end > 0) {
-                try { event.target.seekTo(end, true); } catch {}
-              }
+            enforceRange();
+            if (event.data === YT.PlayerState.ENDED && enforceRange && end > 0) {
+              try { event.target.seekTo(end, true); } catch {}
             }
           },
           onError: () => setError('YouTube cannot play this video here. Check that its owner allows embedding.'),
@@ -131,7 +134,12 @@ export default function BoundedYouTubePlayer({ url, startSeconds = 0, endSeconds
   }, [videoId, start, end]);
 
   if (error) {
-    return <div className={className + ' flex items-center justify-center bg-slate-950 p-4 text-center text-sm text-white'}>{error}</div>;
+    const fallbackUrl = videoId
+      ? `https://www.youtube.com/embed/${videoId}?${new URLSearchParams({ rel: '0', ...(enforceRange && start > 0 ? { start: String(Math.floor(start)) } : {}), ...(enforceRange && end > 0 ? { end: String(Math.floor(end)) } : {}) }).toString()}`
+      : '';
+    return fallbackUrl
+      ? <iframe className={className} src={fallbackUrl} title={title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen />
+      : <div className={className + ' flex items-center justify-center bg-slate-950 p-4 text-center text-sm text-white'}>{error}</div>;
   }
   return <div className={className} aria-label={title}><div ref={mountRef} className="h-full w-full" /></div>;
 }
