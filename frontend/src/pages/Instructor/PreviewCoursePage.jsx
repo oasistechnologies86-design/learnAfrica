@@ -286,7 +286,7 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false, hasCertificate = fal
             <p className="text-xs text-muted-foreground mb-1">Passing score</p>
             <p className="text-sm font-bold">{passScore}%</p>
           </div>
-          {quiz.attempts_enabled && Number(quiz.extra_attempt_price) > 0 && (
+          {quiz.attempts_enabled && Number(quiz.max_attempts) > 0 && Number(quiz.extra_attempt_price) > 0 && (
             <div className="rounded-lg bg-muted/60 p-3 sm:col-span-2">
               <p className="text-xs text-muted-foreground mb-1">Extra attempt fee</p>
               <p className="text-sm font-bold">GHS {Number(quiz.extra_attempt_price).toFixed(2)}</p>
@@ -294,20 +294,26 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false, hasCertificate = fal
           )}
         </div>
         <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
-          This preview uses the configured question selection and shuffling. Starting it will not create a real attempt, start a student timer, or save a score.
+          Starting this preview runs only on this page. It does not create a student attempt, process a payment, record course progress, or save a result.
         </div>
-        <div className="mt-3 rounded-lg border border-success/20 bg-success/5 p-3 text-xs text-muted-foreground">
-          <p className="font-semibold text-foreground">{isFinal ? 'Course attempt allowance' : 'About extra attempts'}</p>
-          {isFinal ? (
-            <>
-              <p>The first time a student passes this Final Examination, including with a paid extra attempt, the attempt limits for quizzes in this course reset to the original included-attempt amounts set by the instructor. Previous attempts and payment receipts remain in history.</p>
-              <p className="mt-2">{hasCertificate ? 'Passing contributes to course completion and certificate eligibility when all course requirements are met.' : 'Passing contributes to course completion. This course does not offer a certificate.'}</p>
-              {timeEnforce && timeRequired > 0 && <p className="mt-2">Students must meet the course minimum learning time before the Final Examination. This instructor preview does not enforce or record that time.</p>}
-            </>
-          ) : (
-            <p>When included attempts are used, the fee shown above buys one additional attempt. The course-wide attempt allowance resets only when the student passes the course Final Examination for the first time. Previous attempts and payment receipts remain in history.</p>
-          )}
-        </div>
+        {isFinal && (
+          <div className="mt-3 rounded-lg border border-success/20 bg-success/5 p-3 text-xs text-muted-foreground space-y-2">
+            <p className="font-semibold text-foreground">Final Examination information</p>
+            {quiz.attempts_enabled && Number(quiz.max_attempts) > 0 && (
+              <p>The first time a student passes this Final Examination, including with an additional paid attempt where configured, the attempt allowances for quizzes in this course reset to the original included amounts set by the instructor. Previous attempts and payment records remain in history.</p>
+            )}
+            <p>{hasCertificate ? 'Passing contributes to course completion and certificate eligibility when all course requirements are met.' : 'Passing contributes to course completion. This course does not offer a certificate.'}</p>
+            {timeEnforce && timeRequired > 0 && <p>Students must meet the course minimum learning time before the Final Examination. This instructor preview does not enforce or record that time.</p>}
+          </div>
+        )}
+        {!isFinal && quiz.attempts_enabled && Number(quiz.max_attempts) > 0 && (
+          <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
+            <p className="font-semibold text-foreground">{Number(quiz.extra_attempt_price) > 0 ? 'About extra attempts' : 'When included attempts are used'}</p>
+            {Number(quiz.extra_attempt_price) > 0
+              ? <p>A verified payment of GHS {Number(quiz.extra_attempt_price).toFixed(2)} adds one attempt after the included attempts are used. The course-wide allowance resets the first time the student passes the course Final Examination, if the course has one.</p>
+              : <p>When included attempts are used, students should contact the instructor to ask about another attempt.</p>}
+          </div>
+        )}
         <Button className="w-full mt-5" onClick={() => setConfirmStart(true)}>Start {assessmentName} Preview</Button>
       </Card>
       {confirmStart && (
