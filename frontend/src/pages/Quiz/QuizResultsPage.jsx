@@ -324,19 +324,9 @@ export function QuizResultsPage() {
                     : <XCircle    className="h-4 w-4 text-destructive" />}
                 </div>
                 <div className="flex-1 space-y-3">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className={cn(
-                      'text-3xs font-bold uppercase px-1.5 py-0.5 rounded',
-                      (qType === 'mcq' || qType === 'mcq_multi') ? 'bg-primary/10 text-primary'
-                        : qType === 'true_false' ? 'bg-blue-500/10 text-blue-600'
-                        : 'bg-orange-500/10 text-orange-600'
-                    )}>
-                      {qType === 'mcq_multi' ? 'Multiple Answer' : qType === 'mcq' ? 'Single Answer' : qType === 'true_false' ? 'True/False' : 'Fill in Blank'}
-                    </span>
-                    <p className="font-semibold text-sm">Q{idx + 1}: {q.question || q.question_text}</p>
-                  </div>
+                  <p className="font-semibold text-sm">Q{idx + 1}: {q.question || q.question_text}</p>
 
-                  {(qType === 'mcq' || qType === 'mcq_multi' || qType === 'true_false') && (
+                  {(qType === 'mcq' || qType === 'mcq_multi' || qType === 'true_false' || qType === 'dropdown') && (
                     <div className="space-y-1.5">
                       {opts.map((opt, oIdx) => {
                         const isCorrectOpt = qType === 'mcq_multi'
