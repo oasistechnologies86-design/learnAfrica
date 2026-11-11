@@ -3328,8 +3328,6 @@ def create_app() -> Flask:
         """Instructors can preview any course they own (or admins any course)."""
         try:
             db = get_db()
-            ensure_column(db, 'lessons', 'video_start_seconds', 'INTEGER DEFAULT 0')
-            ensure_column(db, 'lessons', 'video_end_seconds', 'INTEGER DEFAULT 0')
             course = db.execute('SELECT * FROM courses WHERE id=?', (cid,)).fetchone()
             if not course:
                 return jsonify({'error': 'Course not found'}), 404
@@ -3379,8 +3377,6 @@ def create_app() -> Flask:
         """Preview any lesson without enrollment - instructor/admin only."""
         try:
             db = get_db()
-            ensure_column(db, 'lessons', 'video_start_seconds', 'INTEGER DEFAULT 0')
-            ensure_column(db, 'lessons', 'video_end_seconds', 'INTEGER DEFAULT 0')
             course = db.execute('SELECT * FROM courses WHERE id=?', (cid,)).fetchone()
             if not course:
                 return jsonify({'error': 'Course not found'}), 404
@@ -3409,15 +3405,6 @@ def create_app() -> Flask:
         """Return instructor-owned quiz settings and answer key for a non-persistent preview."""
         try:
             db = get_db()
-            ensure_column(db, 'quizzes', 'pass_score', 'INTEGER DEFAULT 70')
-            ensure_column(db, 'quizzes', 'timer_enabled', 'INTEGER DEFAULT 0')
-            ensure_column(db, 'quizzes', 'duration_seconds', 'INTEGER DEFAULT 0')
-            ensure_column(db, 'quizzes', 'max_attempts', 'INTEGER DEFAULT 0')
-            ensure_column(db, 'quizzes', 'attempts_enabled', 'INTEGER')
-            ensure_column(db, 'quizzes', 'extra_attempt_price', 'REAL DEFAULT 0')
-            ensure_column(db, 'quizzes', 'questions_per_attempt', 'INTEGER DEFAULT 0')
-            ensure_column(db, 'quizzes', 'shuffle_questions', 'INTEGER DEFAULT 0')
-            ensure_column(db, 'quizzes', 'shuffle_options', 'INTEGER DEFAULT 0')
             course = db.execute('SELECT instructor_id FROM courses WHERE id=?', (cid,)).fetchone()
             if not course:
                 return jsonify({'error': 'Course not found'}), 404
