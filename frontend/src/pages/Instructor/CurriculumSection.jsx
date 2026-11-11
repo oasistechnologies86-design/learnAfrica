@@ -64,10 +64,12 @@ function VideoUrlInput({ item, onChanged }) {
   const [rangeError, setRangeError] = useState('');
   const [playheadSeconds, setPlayheadSeconds] = useState(0);
   const [videoDurationSeconds, setVideoDurationSeconds] = useState(0);
+  const [youtubePlayerReady, setYoutubePlayerReady] = useState(false);
   const handleCurrentTimeChange = (seconds, duration) => {
     if (Number.isFinite(seconds)) setPlayheadSeconds(Math.max(0, seconds));
     if (Number.isFinite(duration) && duration > 0) setVideoDurationSeconds(duration);
   };
+  const canCapturePosition = isYouTube ? youtubePlayerReady : videoDurationSeconds > 0;
 
   useEffect(() => {
     setDraftStart(formatVideoTimestamp(item.video_start_seconds));
@@ -83,6 +85,10 @@ function VideoUrlInput({ item, onChanged }) {
     }
     if (end > 0 && end <= start) {
       setRangeError('The end time must be later than the start time.');
+      return;
+    }
+    if (videoDurationSeconds > 0 && (start >= videoDurationSeconds || (end > 0 && end > videoDurationSeconds))) {
+      setRangeError('The selected range must fit within the video duration.');
       return;
     }
     onChanged({ video_start_seconds: start, video_end_seconds: end });
@@ -122,6 +128,7 @@ function VideoUrlInput({ item, onChanged }) {
                 startSeconds={editingRange ? 0 : item.video_start_seconds}
                 endSeconds={editingRange ? 0 : item.video_end_seconds}
                 onCurrentTimeChange={handleCurrentTimeChange}
+                onPlayerReady={setYoutubePlayerReady}
                 enforceRange={!editingRange}
                 title="Video preview"
               />
@@ -166,7 +173,7 @@ function VideoUrlInput({ item, onChanged }) {
               </p>
             </div>
             {!editingRange && !isVimeo && (
-              <button type="button" onClick={() => setEditingRange(true)}
+              <button type="button" onClick={() => { setYoutubePlayerReady(false); setEditingRange(true); }}
                 className="rounded-lg border border-primary/30 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/5">
                 Edit video range
               </button>
@@ -192,17 +199,18 @@ function VideoUrlInput({ item, onChanged }) {
                   <span className="text-muted-foreground">{videoDurationSeconds > 0 ? `of ${formatVideoTimestamp(videoDurationSeconds)}` : 'Play or move the video timeline to choose a point'}</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <button type="button" onClick={() => { setDraftStart(formatVideoTimestamp(playheadSeconds)); setRangeError(''); }}
-                    className="rounded-lg border border-primary/30 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/5">
+                  <button type="button" disabled={!canCapturePosition} onClick={() => { setDraftStart(formatVideoTimestamp(playheadSeconds)); setRangeError(''); }}
+                    className="rounded-lg border border-primary/30 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-40">
                     Set start here
                   </button>
-                  <button type="button" onClick={() => { setDraftEnd(formatVideoTimestamp(playheadSeconds)); setRangeError(''); }}
-                    className="rounded-lg border border-primary/30 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/5">
+                  <button type="button" disabled={!canCapturePosition} onClick={() => { setDraftEnd(formatVideoTimestamp(playheadSeconds)); setRangeError(''); }}
+                    className="rounded-lg border border-primary/30 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-40">
                     Set end here
                   </button>
                 </div>
               </div>
               <p className="text-2xs text-muted-foreground">Play the video or move its timeline, then use the buttons above. You can still type MM:SS or HH:MM:SS if needed. Leave the end time empty to play through to the end.</p>
+              {isYouTube && !youtubePlayerReady && <p className="text-2xs text-warning">The interactive YouTube timeline is not ready yet. Wait for the player to load before capturing timestamps. Standard video playback remains available as a fallback.</p>}
               {rangeError && <p className="text-xs text-destructive">{rangeError}</p>}
               <div className="flex justify-end gap-2">
                 <button type="button" onClick={() => {
