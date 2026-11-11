@@ -749,31 +749,31 @@ export function PreviewCoursePage() {
                 </div>
               )}
 
-              {/* Navigation footer */}
-              <div className="mt-16 pt-8 border-t border-border">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex-1 flex justify-start">
-                    {prevLesson && (
-                      <Button variant="outline" className={navBtnClass} onClick={() => loadLesson(prevLesson.id)}>
-                        <ChevronLeft className="h-5 w-5" />
-                        <span className="hidden sm:inline">Previous</span>
-                      </Button>
-                    )}
-                  </div>
-                  {/* Centre - preview mode message instead of Mark Complete */}
-                  <div className="flex-1 flex justify-center">
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30">
-                      <Eye className="h-3.5 w-3.5 text-amber-600" />
-                      <span className="text-3xs font-black uppercase tracking-tighter text-amber-600">Preview Mode</span>
+              {/* Reserve space for the same fixed bottom navigation used by students. */}
+              <div className="h-24" aria-hidden="true" />
+              <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur-md shadow-[0_-2px_12px_rgba(0,0,0,0.08)]">
+                <div className="max-w-4xl mx-auto px-4 py-3">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1 flex justify-start">
+                      {prevLesson && (
+                        <Button variant="outline" className={navBtnClass} onClick={() => loadLesson(prevLesson.id)}>
+                          <ChevronLeft className="h-5 w-5" /><span className="hidden sm:inline">Previous</span>
+                        </Button>
+                      )}
                     </div>
-                  </div>
-                  <div className="flex-1 flex justify-end">
-                    {nextLesson && (
-                      <Button variant="outline" className={navBtnClass} onClick={() => loadLesson(nextLesson.id)}>
-                        <span className="hidden sm:inline">Next</span>
-                        <ChevronRight className="h-5 w-5" />
-                      </Button>
-                    )}
+                    <div className="flex-1 flex justify-center">
+                      <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30">
+                        <Eye className="h-3.5 w-3.5 text-amber-600" />
+                        <span className="text-3xs font-black uppercase tracking-tighter text-amber-600">Preview Mode</span>
+                      </div>
+                    </div>
+                    <div className="flex-1 flex justify-end">
+                      {nextLesson && (
+                        <Button variant="outline" className={navBtnClass} onClick={() => loadLesson(nextLesson.id)}>
+                          <span className="hidden sm:inline">Next</span><ChevronRight className="h-5 w-5" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
