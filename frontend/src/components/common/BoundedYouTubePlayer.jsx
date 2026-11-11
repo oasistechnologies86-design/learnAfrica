@@ -49,6 +49,8 @@ export default function BoundedYouTubePlayer({ url, startSeconds = 0, endSeconds
   const mountRef = useRef(null);
   const playerRef = useRef(null);
   const intervalRef = useRef(null);
+  const pendingRestartRef = useRef(false);
+  const pendingRestartTicksRef = useRef(0);
   const [error, setError] = useState('');
   const onCurrentTimeChangeRef = useRef(onCurrentTimeChange);
   const onPlayerReadyRef = useRef(onPlayerReady);
@@ -72,6 +74,22 @@ export default function BoundedYouTubePlayer({ url, startSeconds = 0, endSeconds
         const duration = typeof player.getDuration === 'function' ? player.getDuration() : 0;
         onCurrentTimeChangeRef.current?.(current, duration);
         if (!enforceRange) return;
+
+        // A replay seek is asynchronous. Do not enforce the end boundary
+        // against the old playhead while YouTube is still seeking to start.
+        if (pendingRestartRef.current) {
+          pendingRestartTicksRef.current += 1;
+          if (current <= start + 1.25) {
+            pendingRestartRef.current = false;
+            pendingRestartTicksRef.current = 0;
+          } else if (pendingRestartTicksRef.current < 20) {
+            return;
+          } else {
+            pendingRestartRef.current = false;
+            pendingRestartTicksRef.current = 0;
+          }
+        }
+
         if (current < start - 0.35) {
           player.seekTo(start, true);
           return;
@@ -104,7 +122,6 @@ export default function BoundedYouTubePlayer({ url, startSeconds = 0, endSeconds
           playsinline: 1,
           rel: 0,
           ...(enforceRange && start > 0 ? { start: Math.floor(start) } : {}),
-          ...(enforceRange && end > 0 ? { end: Math.floor(end) } : {}),
         },
         events: {
           onReady: event => {
@@ -120,6 +137,8 @@ export default function BoundedYouTubePlayer({ url, startSeconds = 0, endSeconds
             if (event.data === YT.PlayerState.PLAYING) {
               try {
                 if (enforceRange && end > 0 && event.target.getCurrentTime() >= end - 0.12) {
+                  pendingRestartRef.current = true;
+                  pendingRestartTicksRef.current = 0;
                   event.target.seekTo(start, true);
                 }
               } catch {}
@@ -127,7 +146,9 @@ export default function BoundedYouTubePlayer({ url, startSeconds = 0, endSeconds
                 intervalRef.current = window.setInterval(publishAndEnforceRange, 200);
               }
             }
-            publishAndEnforceRange();
+            // Skip the immediate boundary check after a replay seek. The
+            // monitor will resume enforcement once the seek reaches start.
+            if (!pendingRestartRef.current) publishAndEnforceRange();
             if (event.data === YT.PlayerState.ENDED && enforceRange && end > 0) {
               try { event.target.seekTo(end, true); } catch {}
             }
@@ -151,6 +172,8 @@ export default function BoundedYouTubePlayer({ url, startSeconds = 0, endSeconds
     return () => {
       cancelled = true;
       clearMonitor();
+      pendingRestartRef.current = false;
+      pendingRestartTicksRef.current = 0;
       try { playerRef.current?.destroy(); } catch {}
       playerRef.current = null;
     };
