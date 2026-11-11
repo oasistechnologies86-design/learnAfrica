@@ -4,6 +4,8 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { API_BASE } from '@/lib/api';
 
+const EMPTY_DISCUSSIONS = Object.freeze([]);
+
 const api = async (url, opts = {}) => {
   const token = sessionStorage.getItem('auth_token');
   const res = await fetch(`${API_BASE}${url}`, {
@@ -182,7 +184,7 @@ function DiscussionPost({ post, courseId, lessonId, user, onDelete, onReply, rea
   );
 }
 
-export function DiscussionBoard({ courseId, lessonId, readOnly = false, initialPosts = [] }) {
+export function DiscussionBoard({ courseId, lessonId, readOnly = false, initialPosts = EMPTY_DISCUSSIONS }) {
   const { user, isAuthenticated } = useAuth();
   const [posts, setPosts]   = useState(() => (readOnly ? initialPosts : []));
   const [loading, setLoading] = useState(true);
