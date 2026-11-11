@@ -3,12 +3,13 @@ import {
   BookOpen, Layout, X, ChevronRight, Plus, GripVertical, Video,
   HelpCircle, Link as LinkIcon, Trash2, ChevronDown, ChevronUp,
   Award, Download, CheckCircle2, Circle, Upload, Loader2,
-  FileText, File, Image as ImgIcon, Archive, Flag,
+  FileText, File, Image as ImgIcon, Archive, Flag, Eye,
   Type, ToggleLeft, AlignLeft, Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Card, CardHeader, CardContent } from '@/components/common/Card';
-import { listCustomLessons } from '@/components/customLessons/registry';
+import { getCustomLesson, listCustomLessons } from '@/components/customLessons/registry';
+import CustomLessonFrame from '@/components/customLessons/CustomLessonFrame';
 import { Switch } from '@/components/common/Switch';
 import { RichTextEditor } from '@/components/common/RichTextEditor';
 import { TimePicker, formatDuration } from '@/components/common/TimePicker';
@@ -628,6 +629,10 @@ function LessonResourcesEditor({ resources = [], onChange }) {
 // ── Lesson Item Editor ──────────────────────────────────────────────────────
 function CurriculumItemEditor({ item, index, onUpdate, onRemove, onMoveUp, onMoveDown, isFirst, isLast, hasResources = false }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [showCustomPreview, setShowCustomPreview] = useState(false);
+  const selectedCustomEntry = getCustomLesson(item.component_key || item.componentKey);
+  const SelectedCustomComponent = selectedCustomEntry?.component;
+  const customPreviewLesson = { ...item, component_key: item.component_key || item.componentKey };
   return (
     <div className={cn('rounded-xl border overflow-hidden shadow-sm transition-all',
       item.is_final ? 'border-warning/40 bg-warning/5' : 'border-border/50 bg-background')}>
@@ -811,9 +816,39 @@ function CurriculumItemEditor({ item, index, onUpdate, onRemove, onMoveUp, onMov
                   ))}
                 </select>
                 <p className="text-2xs text-muted-foreground mt-1.5">
-                  Custom Page lessons are pre-built React components you can plug into a course. They auto-complete on open — no manual step for the student.
+                  Select the custom page students will see. Preview it here before saving or publishing the course.
                 </p>
               </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button type="button" size="sm" variant="outline"
+                  disabled={!SelectedCustomComponent}
+                  onClick={() => setShowCustomPreview(true)}
+                  className="h-9 text-xs border-purple-500/30 text-purple-700 dark:text-purple-300">
+                  <Eye className="h-3.5 w-3.5 mr-1.5" /> Preview Custom Page
+                </Button>
+                {!SelectedCustomComponent && <span className="text-2xs text-muted-foreground">Choose a page first to preview it.</span>}
+              </div>
+              {showCustomPreview && SelectedCustomComponent && (
+                <div className="fixed inset-0 z-[10000] bg-black/70 backdrop-blur-sm p-2 sm:p-5 flex items-center justify-center"
+                  role="dialog" aria-modal="true" aria-label="Custom page instructor preview">
+                  <div className="w-full h-full max-w-6xl bg-background rounded-xl shadow-2xl overflow-hidden flex flex-col">
+                    <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-3 border-b border-border bg-background">
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold truncate">Custom Page Preview</p>
+                        <p className="text-2xs text-muted-foreground truncate">{selectedCustomEntry?.label || item.title || 'Selected custom page'} · Student reading view</p>
+                      </div>
+                      <Button type="button" size="sm" variant="outline" onClick={() => setShowCustomPreview(false)} className="shrink-0">
+                        <X className="h-4 w-4 mr-1" /> Close Preview
+                      </Button>
+                    </div>
+                    <div className="flex-1 min-h-0 overflow-y-auto">
+                      <CustomLessonFrame lesson={customPreviewLesson} mode="instructor">
+                        <SelectedCustomComponent lesson={customPreviewLesson} student={null} />
+                      </CustomLessonFrame>
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="rounded-lg border border-purple-500/20 bg-purple-500/5 p-3">
                 <p className="text-2xs text-purple-500 font-semibold">
                   ℹ Custom pages don't accept resources or content — the page IS the content.
