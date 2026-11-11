@@ -165,7 +165,7 @@ function DiscussionPost({ post, courseId, lessonId, user, onDelete, onReply, rea
                       <span className="text-2xs text-muted-foreground">{timeAgo(reply.created_at)}</span>
                     </div>
                     <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">{reply.content}</p>
-                    {(reply.user_id === user?.id || ['admin','superadmin','instructor'].includes(user?.role)) && (
+                    {!readOnly && (reply.user_id === user?.id || ['admin','superadmin','instructor'].includes(user?.role)) && (
                       <button onClick={() => onDelete(reply.id)}
                         className="mt-1 flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors">
                         <Trash2 className="h-3 w-3" />
@@ -200,7 +200,7 @@ export function DiscussionBoard({ courseId, lessonId, readOnly = false }) {
     setLoading(false);
   }, [courseId, lessonId]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { if (!readOnly) load(); else setLoading(false); }, [load, readOnly]);
 
   const handlePost = async (e) => {
     e.preventDefault();
