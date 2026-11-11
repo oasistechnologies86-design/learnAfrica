@@ -6,7 +6,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
-  ChevronLeft, ChevronRight, CheckCircle, Play, FileText,
+  ChevronLeft, ChevronRight, ChevronUp, ChevronDown, CheckCircle, Play, FileText,
   MessageSquare, BookOpen, Clock, Menu, X, FolderOpen,
   ExternalLink, Download, File, ArrowUpRight, HelpCircle,
   Loader2, AlertTriangle, Eye, Lock, Sparkles, CheckCircle2, ClipboardList
@@ -169,6 +169,7 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false, hasCertificate = fal
   const [showQuestions, setShowQuestions] = useState(false);
   const [confirmStart, setConfirmStart] = useState(false);
   const [timeLeft, setTimeLeft] = useState(null);
+  const [showQuestionNumbers, setShowQuestionNumbers] = useState(true);
   useEffect(() => { setParentQuizActive?.(showQuestions || submitted); }, [showQuestions, submitted, setParentQuizActive]);
 
   useEffect(() => {
@@ -385,18 +386,33 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false, hasCertificate = fal
             </section>
 
             <div className="mb-4 rounded-xl border border-border/70 bg-card/80 p-3 shadow-sm">
-              <div className="mb-3 flex items-center justify-between gap-3"><p className="text-sm font-bold">Your questions</p><p className="text-xs text-muted-foreground">{answeredCount} of {quiz.questions.length} answered</p></div>
-              <div className="flex flex-wrap justify-center gap-2">
-                {quiz.questions.map((_, index) => (
-                  <button key={index} type="button" onClick={() => setCurrent(index)}
-                    className={cn("relative flex h-10 w-10 items-center justify-center rounded-xl text-xs font-bold transition-all",
-                      current === index ? "bg-primary text-primary-foreground scale-110" :
-                      isPreviewAnswerComplete(index) ? "bg-success/10 text-success border border-success/30" : "bg-card border border-border")}>
-                    {index + 1}
-                    {isPreviewAnswerComplete(index) && current !== index && <CheckCircle2 className="absolute -top-1 -right-1 h-3 w-3 bg-background rounded-full fill-success text-white" />}
-                  </button>
-                ))}
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-bold">Question numbers</p>
+                  <p className="text-xs text-muted-foreground">{answeredCount} of {quiz.questions.length} answered</p>
+                </div>
+                <Button type="button" size="sm" variant="outline"
+                  onClick={() => setShowQuestionNumbers(value => !value)}
+                  aria-label={showQuestionNumbers ? 'Hide question numbers' : 'Show question numbers'}
+                  aria-expanded={showQuestionNumbers}>
+                  {showQuestionNumbers ? <><ChevronUp className="h-4 w-4" /> Hide</> : <><ChevronDown className="h-4 w-4" /> Show</>}
+                </Button>
               </div>
+              {showQuestionNumbers && (
+                <div className="mt-3 flex flex-wrap justify-center gap-2">
+                  {quiz.questions.map((_, index) => (
+                    <button key={index} type="button" onClick={() => setCurrent(index)}
+                      aria-label={`Go to question ${index + 1}`}
+                      aria-current={current === index ? 'step' : undefined}
+                      className={cn("relative flex h-10 w-10 items-center justify-center rounded-xl text-xs font-bold transition-all",
+                        current === index ? "bg-primary text-primary-foreground scale-110" :
+                        isPreviewAnswerComplete(index) ? "bg-success/10 text-success border border-success/30" : "bg-card border border-border")}>
+                      {index + 1}
+                      {isPreviewAnswerComplete(index) && current !== index && <CheckCircle2 className="absolute -top-1 -right-1 h-3 w-3 bg-background rounded-full fill-success text-white" />}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <Card className="overflow-hidden rounded-2xl border border-border/70 bg-card p-4 shadow-md sm:p-6">
