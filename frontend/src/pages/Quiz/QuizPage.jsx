@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Clock, CheckCircle2, Loader2, Sparkles, ClipboardList } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Clock, CheckCircle2, Loader2, Sparkles, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
 import { QuizQuestion } from '@/components/quiz/QuizQuestion';
@@ -27,6 +27,7 @@ export function QuizPage() {
     useCourseTimeTracking(courseId, { ready: true });
 
   const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [showQuestionNumbers, setShowQuestionNumbers] = useState(true);
   const [answers, setAnswers] = useState({});
   const [timeLeft, setTimeLeft] = useState(null);
   const [attemptId, setAttemptId] = useState(null);
@@ -319,7 +320,7 @@ export function QuizPage() {
           <div className="mt-4 space-y-2">
             {Number(quiz?.extra_attempt_price || 0) > 0 ? (
               <>
-                <p className="text-sm text-muted-foreground">Pay GHS {Number(quiz.extra_attempt_price).toFixed(2)} to unlock one additional attempt. Each verified payment grants one attempt; it does not reset the full allowance. Passing the Final Examination for the first time resets the course quiz allowances to the instructor’s original included amounts.</p>
+                <p className="text-sm text-muted-foreground">A verified payment of GHS {Number(quiz.extra_attempt_price).toFixed(2)} unlocks one additional attempt. {isFinalQuiz ? 'Passing this Final Examination for the first time resets the course quiz allowances to the instructor’s original included amounts.' : 'A full course-wide reset happens only when the course Final Examination is passed for the first time.'}</p>
                 <Button className="w-full" onClick={purchaseExtraAttempt} disabled={buyingAttempt}>
                   {buyingAttempt ? 'Starting secure payment…' : `Buy One More Attempt · GHS ${Number(quiz.extra_attempt_price).toFixed(2)}`}
                 </Button>
@@ -394,23 +395,34 @@ export function QuizPage() {
 
         {/* Question navigator */}
         <div className="mb-4 rounded-xl border border-border/70 bg-card/80 p-3 shadow-sm">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <p className="text-sm font-bold">Your questions</p>
-            <p className="text-xs text-muted-foreground">{answeredCount} of {questions.length} answered</p>
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-sm font-bold">Question numbers</p>
+              <p className="text-xs text-muted-foreground">{answeredCount} of {questions.length} answered</p>
+            </div>
+            <Button type="button" size="sm" variant="outline" onClick={() => setShowQuestionNumbers(value => !value)}
+              aria-label={showQuestionNumbers ? 'Hide question numbers' : 'Show question numbers'}
+              aria-expanded={showQuestionNumbers}>
+              {showQuestionNumbers ? <><ChevronUp className="h-4 w-4" /> Hide</> : <><ChevronDown className="h-4 w-4" /> Show</>}
+            </Button>
           </div>
-          <div className="flex flex-wrap justify-center gap-2">
-          {questions.map((_, idx) => (
-            <button key={idx} onClick={() => setCurrentQuestion(idx)}
-              className={cn('relative flex h-10 w-10 items-center justify-center rounded-xl text-xs font-bold transition-all',
-                currentQuestion === idx ? 'bg-primary text-primary-foreground scale-110' :
-                answers[idx] !== undefined ? 'bg-success/10 text-success border border-success/30' :
-                'bg-card border border-border')}>
-              {idx + 1}
-              {answers[idx] !== undefined && currentQuestion !== idx &&
-                <CheckCircle2 className="absolute -top-1 -right-1 h-3 w-3 bg-background rounded-full fill-success text-white" />}
-            </button>
-          ))}
-          </div>
+          {showQuestionNumbers && (
+            <div className="mt-3 flex flex-wrap justify-center gap-2">
+              {questions.map((_, idx) => (
+                <button key={idx} type="button" onClick={() => setCurrentQuestion(idx)}
+                  aria-label={`Go to question ${idx + 1}`}
+                  aria-current={currentQuestion === idx ? 'step' : undefined}
+                  className={cn('relative flex h-10 w-10 items-center justify-center rounded-xl text-xs font-bold transition-all',
+                    currentQuestion === idx ? 'bg-primary text-primary-foreground scale-110' :
+                    answers[idx] !== undefined ? 'bg-success/10 text-success border border-success/30' :
+                    'bg-card border border-border')}>
+                  {idx + 1}
+                  {answers[idx] !== undefined && currentQuestion !== idx &&
+                    <CheckCircle2 className="absolute -top-1 -right-1 h-3 w-3 bg-background rounded-full fill-success text-white" />}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <Card className="overflow-hidden rounded-2xl border border-border/70 bg-card p-4 shadow-md sm:p-6">
