@@ -3,6 +3,10 @@ import { useState } from 'react';
 // Use built-in crypto.randomUUID() - no external package needed
 const uid = () => crypto.randomUUID();
 
+export function createCurriculumSection(title = 'New Section', id = uid()) {
+  return { id, title, lessons: [] };
+}
+
 export function createCurriculumLesson(type = 'video', id = uid(), title = '') {
   return {
     id,
@@ -28,7 +32,7 @@ export function useCurriculum(initialData = []) {
   const [sections, setSections] = useState(initialData);
 
   const addSection = (title = 'New Section') => {
-    setSections(prev => [...prev, { id: uid(), title, lessons: [] }]);
+    setSections(prev => [...prev, createCurriculumSection(title)]);
   };
 
   const removeSection = (sectionId) => {
