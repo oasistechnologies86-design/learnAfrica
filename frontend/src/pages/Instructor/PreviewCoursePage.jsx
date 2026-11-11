@@ -200,7 +200,7 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false, hasCertificate = fal
       const required = Number(question.required_answers || (Array.isArray(question.correctAnswer) ? question.correctAnswer.length : 0));
       return Array.isArray(answer) && (required > 0 ? answer.length === required : answer.length > 0);
     }
-    return answer !== undefined && answer !== '';
+    return answer !== undefined && answer !== null && answer !== '';
   };
   const selectPreviewAnswer = (value) => setAnswers(previous => {
     const question = quiz?.questions?.[current];
@@ -210,6 +210,11 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false, hasCertificate = fal
       const required = Number(question.required_answers || 0);
       if (required > 0 && selected.length >= required) return previous;
       return { ...previous, [current]: [...selected, value] };
+    }
+    if (value === null || value === undefined || value === '') {
+      const next = { ...previous };
+      delete next[current];
+      return next;
     }
     return { ...previous, [current]: value };
   });
