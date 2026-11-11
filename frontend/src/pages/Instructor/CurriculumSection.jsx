@@ -62,6 +62,12 @@ function VideoUrlInput({ item, onChanged }) {
   const [draftStart, setDraftStart] = useState(formatVideoTimestamp(item.video_start_seconds));
   const [draftEnd, setDraftEnd] = useState(item.video_end_seconds ? formatVideoTimestamp(item.video_end_seconds) : '');
   const [rangeError, setRangeError] = useState('');
+  const [playheadSeconds, setPlayheadSeconds] = useState(0);
+  const [videoDurationSeconds, setVideoDurationSeconds] = useState(0);
+  const handleCurrentTimeChange = (seconds, duration) => {
+    if (Number.isFinite(seconds)) setPlayheadSeconds(Math.max(0, seconds));
+    if (Number.isFinite(duration) && duration > 0) setVideoDurationSeconds(duration);
+  };
 
   useEffect(() => {
     setDraftStart(formatVideoTimestamp(item.video_start_seconds));
@@ -113,8 +119,10 @@ function VideoUrlInput({ item, onChanged }) {
             <div className="aspect-video">
               <BoundedYouTubePlayer
                 url={currentUrl}
-                startSeconds={item.video_start_seconds}
-                endSeconds={item.video_end_seconds}
+                startSeconds={editingRange ? 0 : item.video_start_seconds}
+                endSeconds={editingRange ? 0 : item.video_end_seconds}
+                onCurrentTimeChange={handleCurrentTimeChange}
+                enforceRange={!editingRange}
                 title="Video preview"
               />
             </div>
@@ -126,16 +134,20 @@ function VideoUrlInput({ item, onChanged }) {
           ) : (
             <video key={`${currentUrl}-${item.video_start_seconds}-${item.video_end_seconds}`}
               src={currentUrl} controls className="w-full max-h-56" preload="metadata"
-              onLoadedMetadata={e => { if (item.video_start_seconds > 0) e.currentTarget.currentTime = item.video_start_seconds; }}
+              onLoadedMetadata={e => {
+                setVideoDurationSeconds(e.currentTarget.duration || 0);
+                if (!editingRange && item.video_start_seconds > 0) e.currentTarget.currentTime = item.video_start_seconds;
+              }}
               onTimeUpdate={e => {
-                if (item.video_end_seconds > 0 && e.currentTarget.currentTime >= item.video_end_seconds) {
+                handleCurrentTimeChange(e.currentTarget.currentTime, e.currentTarget.duration);
+                if (!editingRange && item.video_end_seconds > 0 && e.currentTarget.currentTime >= item.video_end_seconds) {
                   e.currentTarget.pause();
                   e.currentTarget.currentTime = item.video_end_seconds;
                 }
               }}
               onSeeking={e => {
-                if (e.currentTarget.currentTime < (item.video_start_seconds || 0)) e.currentTarget.currentTime = item.video_start_seconds || 0;
-                if (item.video_end_seconds > 0 && e.currentTarget.currentTime > item.video_end_seconds) e.currentTarget.currentTime = item.video_end_seconds;
+                if (!editingRange && e.currentTarget.currentTime < (item.video_start_seconds || 0)) e.currentTarget.currentTime = item.video_start_seconds || 0;
+                if (!editingRange && item.video_end_seconds > 0 && e.currentTarget.currentTime > item.video_end_seconds) e.currentTarget.currentTime = item.video_end_seconds;
               }} />
           )}
         </div>
@@ -174,7 +186,23 @@ function VideoUrlInput({ item, onChanged }) {
                     placeholder="Full video" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
                 </label>
               </div>
-              <p className="text-2xs text-muted-foreground">Use MM:SS or HH:MM:SS. Leave the end time empty to play through to the end.</p>
+              <div className="rounded-lg border border-border bg-background/70 p-3 space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <span className="font-semibold">Video position: {formatVideoTimestamp(playheadSeconds)}</span>
+                  <span className="text-muted-foreground">{videoDurationSeconds > 0 ? `of ${formatVideoTimestamp(videoDurationSeconds)}` : 'Play or move the video timeline to choose a point'}</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" onClick={() => { setDraftStart(formatVideoTimestamp(playheadSeconds)); setRangeError(''); }}
+                    className="rounded-lg border border-primary/30 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/5">
+                    Set start here
+                  </button>
+                  <button type="button" onClick={() => { setDraftEnd(formatVideoTimestamp(playheadSeconds)); setRangeError(''); }}
+                    className="rounded-lg border border-primary/30 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/5">
+                    Set end here
+                  </button>
+                </div>
+              </div>
+              <p className="text-2xs text-muted-foreground">Play the video or move its timeline, then use the buttons above. You can still type MM:SS or HH:MM:SS if needed. Leave the end time empty to play through to the end.</p>
               {rangeError && <p className="text-xs text-destructive">{rangeError}</p>}
               <div className="flex justify-end gap-2">
                 <button type="button" onClick={() => {
