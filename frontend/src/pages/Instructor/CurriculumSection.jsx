@@ -39,17 +39,15 @@ const formatVideoTimestamp = (seconds) => {
 
 const getVideoPreviewUrl = (url, startSeconds = 0, endSeconds = 0) => {
   if (!url) return '';
+  const youtubeId = getYouTubeVideoId(url);
+  if (youtubeId) {
+    const params = new URLSearchParams({ rel: '0' });
+    if (startSeconds > 0) params.set('start', String(Math.floor(startSeconds)));
+    if (endSeconds > 0) params.set('end', String(Math.floor(endSeconds)));
+    return `https://www.youtube.com/embed/${youtubeId}?${params.toString()}`;
+  }
   try {
     const parsed = new URL(url);
-    let videoId = '';
-    if (parsed.hostname.includes('youtu.be')) videoId = parsed.pathname.split('/').filter(Boolean)[0] || '';
-    else if (parsed.hostname.includes('youtube.com')) videoId = parsed.searchParams.get('v') || parsed.pathname.split('/').filter(Boolean).pop() || '';
-    if (videoId) {
-      const params = new URLSearchParams({ rel: '0' });
-      if (startSeconds > 0) params.set('start', String(Math.floor(startSeconds)));
-      if (endSeconds > 0) params.set('end', String(Math.floor(endSeconds)));
-      return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
-    }
     if (parsed.hostname.includes('vimeo.com')) {
       const videoId = parsed.pathname.split('/').filter(Boolean).pop();
       if (videoId) return `https://player.vimeo.com/video/${videoId}`;
@@ -86,7 +84,7 @@ function VideoUrlInput({ item, onChanged }) {
     setEditingRange(false);
   };
 
-  const isYouTube = /youtube\.com|youtu\.be/i.test(currentUrl);
+  const isYouTube = !!getYouTubeVideoId(currentUrl);
   const isVimeo = /vimeo\.com/i.test(currentUrl);
   const previewUrl = getVideoPreviewUrl(currentUrl, item.video_start_seconds, item.video_end_seconds);
 
@@ -134,6 +132,10 @@ function VideoUrlInput({ item, onChanged }) {
                   e.currentTarget.pause();
                   e.currentTarget.currentTime = item.video_end_seconds;
                 }
+              }}
+              onSeeking={e => {
+                if (e.currentTarget.currentTime < (item.video_start_seconds || 0)) e.currentTarget.currentTime = item.video_start_seconds || 0;
+                if (item.video_end_seconds > 0 && e.currentTarget.currentTime > item.video_end_seconds) e.currentTarget.currentTime = item.video_end_seconds;
               }} />
           )}
         </div>
