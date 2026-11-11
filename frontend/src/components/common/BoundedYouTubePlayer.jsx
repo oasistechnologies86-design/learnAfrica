@@ -45,14 +45,16 @@ export function getYouTubeVideoId(url) {
   return null;
 }
 
-export default function BoundedYouTubePlayer({ url, startSeconds = 0, endSeconds = 0, title = 'YouTube video', className = 'w-full h-full', onCurrentTimeChange, enforceRange = true }) {
+export default function BoundedYouTubePlayer({ url, startSeconds = 0, endSeconds = 0, title = 'YouTube video', className = 'w-full h-full', onCurrentTimeChange, onPlayerReady, enforceRange = true }) {
   const mountRef = useRef(null);
   const playerRef = useRef(null);
   const intervalRef = useRef(null);
   const [error, setError] = useState('');
   const onCurrentTimeChangeRef = useRef(onCurrentTimeChange);
+  const onPlayerReadyRef = useRef(onPlayerReady);
   const videoId = getYouTubeVideoId(url);
   useEffect(() => { onCurrentTimeChangeRef.current = onCurrentTimeChange; }, [onCurrentTimeChange]);
+  useEffect(() => { onPlayerReadyRef.current = onPlayerReady; }, [onPlayerReady]);
   const start = Math.max(0, Number(startSeconds) || 0);
   const end = Math.max(0, Number(endSeconds) || 0);
 
@@ -82,6 +84,7 @@ export default function BoundedYouTubePlayer({ url, startSeconds = 0, endSeconds
       } catch {}
     };
 
+    onPlayerReadyRef.current?.(false);
     if (!videoId || !mountRef.current) {
       setError('This YouTube link could not be recognised.');
       return undefined;
@@ -105,6 +108,7 @@ export default function BoundedYouTubePlayer({ url, startSeconds = 0, endSeconds
         },
         events: {
           onReady: event => {
+            onPlayerReadyRef.current?.(true);
             if (enforceRange && start > 0) {
               try { event.target.seekTo(start, true); } catch {}
             }
@@ -118,11 +122,17 @@ export default function BoundedYouTubePlayer({ url, startSeconds = 0, endSeconds
               try { event.target.seekTo(end, true); } catch {}
             }
           },
-          onError: () => setError('YouTube cannot play this video here. Check that its owner allows embedding.'),
+          onError: () => {
+            onPlayerReadyRef.current?.(false);
+            setError('YouTube cannot play this video here. Check that its owner allows embedding.');
+          },
         },
       });
     }).catch(() => {
-      if (!cancelled) setError('The YouTube player could not be loaded. Please check your connection and try again.');
+      if (!cancelled) {
+        onPlayerReadyRef.current?.(false);
+        setError('The YouTube player could not be loaded. Please check your connection and try again.');
+      }
     });
 
     return () => {
