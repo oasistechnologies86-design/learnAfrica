@@ -71,7 +71,7 @@ function ReplyBox({ onSubmit, onCancel, isLoading }) {
   );
 }
 
-function DiscussionPost({ post, courseId, lessonId, user, onDelete, onReply }) {
+function DiscussionPost({ post, courseId, lessonId, user, onDelete, onReply, readOnly = false }) {
   const [showReplies, setShowReplies]   = useState(false);
   const [showReplyBox, setShowReplyBox] = useState(false);
   const [replyLoading, setReplyLoading] = useState(false);
@@ -121,14 +121,14 @@ function DiscussionPost({ post, courseId, lessonId, user, onDelete, onReply }) {
           </div>
           <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap break-words">{post.content}</p>
           <div className="flex items-center gap-2 mt-3 flex-wrap">
-            <button onClick={handleUpvote}
+            {!readOnly && <button onClick={handleUpvote}
               className={cn('flex items-center gap-1.5 text-xs font-medium rounded-lg px-2.5 py-1 transition-all',
                 upvoted ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted')}>
               <ThumbsUp className="h-3.5 w-3.5" />
               {upvotes > 0 && <span>{upvotes}</span>}
               <span>{upvoted ? 'Liked' : 'Like'}</span>
-            </button>
-            {user && (
+            </button>}
+            {!readOnly && user && (
               <button onClick={() => setShowReplyBox(!showReplyBox)}
                 className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:bg-muted rounded-lg px-2.5 py-1 transition-all">
                 <Reply className="h-3.5 w-3.5" /> Reply
@@ -141,14 +141,14 @@ function DiscussionPost({ post, courseId, lessonId, user, onDelete, onReply }) {
                 {localReplies.length} {localReplies.length === 1 ? 'reply' : 'replies'}
               </button>
             )}
-            {canDelete && (
+            {!readOnly && canDelete && (
               <button onClick={() => onDelete(post.id)}
                 className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors ml-auto">
                 <Trash2 className="h-3 w-3" />
               </button>
             )}
           </div>
-          {showReplyBox && <ReplyBox onSubmit={handleReply} onCancel={() => setShowReplyBox(false)} isLoading={replyLoading} />}
+          {!readOnly && showReplyBox && <ReplyBox onSubmit={handleReply} onCancel={() => setShowReplyBox(false)} isLoading={replyLoading} />}
           {showReplies && localReplies.length > 0 && (
             <div className="mt-4 space-y-3 border-l-2 border-border pl-4">
               {localReplies.map(reply => (
@@ -182,7 +182,7 @@ function DiscussionPost({ post, courseId, lessonId, user, onDelete, onReply }) {
   );
 }
 
-export function DiscussionBoard({ courseId, lessonId }) {
+export function DiscussionBoard({ courseId, lessonId, readOnly = false }) {
   const { user, isAuthenticated } = useAuth();
   const [posts, setPosts]   = useState([]);
   const [loading, setLoading] = useState(true);
@@ -247,7 +247,7 @@ export function DiscussionBoard({ courseId, lessonId }) {
         </h3>
       </div>
 
-      {isAuthenticated ? (
+      {!readOnly && isAuthenticated ? (
         <form onSubmit={handlePost} className="space-y-3">
           <div className="flex gap-3">
             <Avatar name={user?.name} role={user?.role} size="md" />
@@ -266,12 +266,14 @@ export function DiscussionBoard({ courseId, lessonId }) {
             </button>
           </div>
         </form>
-      ) : (
+      ) : !readOnly ? (
         <div className="p-5 rounded-xl bg-muted/30 border border-border text-center">
           <p className="text-sm text-muted-foreground">
             <a href="/login" className="text-primary font-semibold hover:underline">Log in</a> and enroll in this course to join the discussion.
           </p>
         </div>
+      ) : (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-700 dark:text-amber-400">Instructor preview is read-only. Posting, replying, liking and deleting are disabled.</div>
       )}
 
       {loading ? (
@@ -286,7 +288,7 @@ export function DiscussionBoard({ courseId, lessonId }) {
         <div className="space-y-4 max-h-[700px] overflow-y-auto pr-2">
           {posts.map(post => (
             <DiscussionPost key={post.id} post={post} courseId={courseId} lessonId={lessonId}
-              user={user} onDelete={handleDelete} onReply={handleReply} />
+              user={user} onDelete={handleDelete} onReply={handleReply} readOnly={readOnly} />
           ))}
         </div>
       )}
