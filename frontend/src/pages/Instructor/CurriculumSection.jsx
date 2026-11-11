@@ -454,11 +454,11 @@ function QuizEditor({ item, onUpdate }) {
         return (
           <div key={q.id} className="rounded-xl border border-border bg-background overflow-hidden">
             {/* Question header */}
-            <div className="flex items-center justify-between px-4 py-3 bg-muted/20 border-b border-border">
-              <div className="flex items-center gap-2">
-                <span className="text-3xs font-black text-primary uppercase">Q{qIdx + 1}</span>
-                {/* Type selector */}
-                <div className="flex rounded-lg border border-border overflow-hidden">
+            <div className="flex flex-col gap-2 border-b border-border bg-muted/20 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <span className="shrink-0 text-3xs font-black uppercase text-primary">Q{qIdx + 1}</span>
+                {/* Type selector: wraps on narrow screens so every type remains reachable. */}
+                <div className="flex min-w-0 flex-1 flex-wrap overflow-hidden rounded-lg border border-border sm:flex-nowrap">
                   {Q_TYPES.map(t => (
                     <button key={t.value} type="button"
                       onClick={() => {
@@ -468,19 +468,19 @@ function QuizEditor({ item, onUpdate }) {
                         updateQ(q.id, { question_type: t.value, options: opts, correctAnswer: t.value === 'mcq_multi' ? [] : 0 });
                       }}
                       className={cn(
-                        'px-2.5 py-1 text-2xs font-bold transition-colors flex items-center gap-1',
+                        'flex min-w-0 flex-1 items-center justify-center gap-1 whitespace-nowrap px-2 py-1 text-[11px] font-bold transition-colors sm:px-2.5 sm:text-2xs',
                         qType === t.value
                           ? 'bg-primary text-primary-foreground'
                           : 'bg-background text-muted-foreground hover:bg-muted'
                       )}>
-                      <t.icon className="h-3 w-3" />
+                      <t.icon className="h-3 w-3 shrink-0" />
                       {t.label}
                     </button>
                   ))}
                 </div>
               </div>
-              <button type="button" onClick={() => removeQ(q.id)}
-                className="text-muted-foreground hover:text-destructive">
+              <button type="button" onClick={() => removeQ(q.id)} aria-label={`Remove question ${qIdx + 1}`}
+                className="self-end shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-destructive sm:self-auto">
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             </div>
