@@ -730,7 +730,7 @@ export function PreviewCoursePage() {
                 )}
 
                 {activeTab === 'discussion' && (
-                  <DiscussionBoard courseId={courseId} lessonId={activeLesson.id} readOnly />
+                  <DiscussionBoard courseId={courseId} lessonId={activeLesson.id} readOnly initialPosts={activeLesson.discussions || []} />
                 )}
 
                 {activeTab === 'notes' && (
