@@ -458,7 +458,7 @@ function QuizEditor({ item, onUpdate }) {
               <div className="flex min-w-0 flex-wrap items-center gap-2">
                 <span className="shrink-0 text-3xs font-black uppercase text-primary">Q{qIdx + 1}</span>
                 {/* Type selector: wraps on narrow screens so every type remains reachable. */}
-                <div className="flex min-w-0 flex-1 flex-wrap overflow-hidden rounded-lg border border-border sm:flex-nowrap">
+                <div className="grid min-w-0 flex-1 grid-cols-2 overflow-hidden rounded-lg border border-border sm:flex sm:flex-nowrap">
                   {Q_TYPES.map(t => (
                     <button key={t.value} type="button"
                       onClick={() => {
@@ -468,7 +468,7 @@ function QuizEditor({ item, onUpdate }) {
                         updateQ(q.id, { question_type: t.value, options: opts, correctAnswer: t.value === 'mcq_multi' ? [] : 0 });
                       }}
                       className={cn(
-                        'flex min-w-0 flex-1 items-center justify-center gap-1 whitespace-nowrap px-2 py-1 text-[11px] font-bold transition-colors sm:px-2.5 sm:text-2xs',
+                        'flex w-full min-w-0 items-center justify-center gap-1 whitespace-nowrap px-2 py-1 text-[11px] font-bold transition-colors sm:flex-1 sm:px-2.5 sm:text-2xs',
                         qType === t.value
                           ? 'bg-primary text-primary-foreground'
                           : 'bg-background text-muted-foreground hover:bg-muted'
