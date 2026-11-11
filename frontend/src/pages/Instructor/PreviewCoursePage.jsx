@@ -375,7 +375,7 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false, hasCertificate = fal
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">{isFinal ? 'Final Examination preview' : 'Lesson Test preview'}</p>
                   <h1 className="mt-1 text-lg font-bold tracking-tight text-foreground sm:text-xl">{quiz.title || assessmentName}</h1>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Read each question carefully. Some questions may ask you to select more than one answer. Your answers stay on this page until you submit this preview.</p>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Read each question carefully. Your answers stay on this page until you submit this preview.</p>
                 </div>
               </div>
               <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
