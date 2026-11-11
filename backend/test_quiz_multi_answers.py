@@ -61,3 +61,27 @@ if __name__ == "__main__":
     test_single_answer_grading_remains_unchanged()
     test_served_multiple_answer_question_hides_keys_but_shows_required_count()
     print("ALL MULTIPLE-ANSWER QUIZ CHECKS PASSED")
+
+
+
+def test_dropdown_question_serving_hides_answer_and_grades_selection():
+    quiz = {"shuffle_questions": False, "shuffle_options": False, "questions_per_attempt": 0}
+    rows = [{
+        "id": "q-dropdown",
+        "question_text": "Choose the capital.",
+        "question_type": "dropdown",
+        "options": '["Accra", "Kumasi", "Tamale"]',
+        "correct_answer": 0,
+        "correct_answers": None,
+    }]
+    served = build_served_questions(quiz, rows)
+    assert served[0]["question_type"] == "dropdown"
+    assert served[0]["options"] == ["Accra", "Kumasi", "Tamale"]
+    assert served[0]["correct_answer"] == 0
+    public = public_questions(served)
+    assert "correct_answer" not in public[0]
+    score, count, correct_map, passed = grade_served(served, {"0": 0}, 70)
+    assert score == 100 and count == 1 and passed is True
+    assert correct_map == {0: 0}
+    score, count, _, passed = grade_served(served, {"0": 1}, 70)
+    assert score == 0 and count == 0 and passed is False
