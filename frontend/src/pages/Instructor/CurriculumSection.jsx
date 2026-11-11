@@ -843,7 +843,7 @@ function CurriculumItemEditor({ item, index, onUpdate, onRemove, onMoveUp, onMov
                     </div>
                     <div className="flex-1 min-h-0 overflow-y-auto">
                       <CustomLessonFrame lesson={customPreviewLesson} mode="instructor">
-                        <SelectedCustomComponent lesson={customPreviewLesson} student={null} />
+                        <SelectedCustomComponent lesson={customPreviewLesson} student={{ id: 'instructor-preview', name: 'Instructor Preview', role: 'instructor' }} />
                       </CustomLessonFrame>
                     </div>
                   </div>
