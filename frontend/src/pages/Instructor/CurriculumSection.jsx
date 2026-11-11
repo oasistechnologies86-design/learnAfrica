@@ -151,6 +151,15 @@ function VideoUrlInput({ item, onChanged }) {
                 setVideoDurationSeconds(e.currentTarget.duration || 0);
                 if (!editingRange && item.video_start_seconds > 0) e.currentTarget.currentTime = item.video_start_seconds;
               }}
+              onPlay={e => {
+                const video = e.currentTarget;
+                if (!editingRange && item.video_end_seconds > 0
+                  && video.currentTime >= item.video_end_seconds - 0.25) {
+                  // Restart the selected clip instead of immediately stopping
+                  // again at its end when the instructor presses Play.
+                  video.currentTime = Math.max(0, Number(item.video_start_seconds) || 0);
+                }
+              }}
               onTimeUpdate={e => {
                 handleCurrentTimeChange(e.currentTarget.currentTime, e.currentTarget.duration);
                 if (!editingRange && item.video_end_seconds > 0 && e.currentTarget.currentTime >= item.video_end_seconds) {
@@ -174,7 +183,7 @@ function VideoUrlInput({ item, onChanged }) {
                 {isVimeo
                   ? 'Vimeo videos play in full. Optional range editing is available for YouTube and direct video files.'
                   : item.video_start_seconds || item.video_end_seconds
-                    ? `Students see ${formatVideoTimestamp(item.video_start_seconds)} to ${item.video_end_seconds ? formatVideoTimestamp(item.video_end_seconds) : 'the end'}.`
+                    ? `Preview and students play ${formatVideoTimestamp(item.video_start_seconds)} to ${item.video_end_seconds ? formatVideoTimestamp(item.video_end_seconds) : 'the end'}.`
                     : 'Full video selected. Students will watch from beginning to end.'}
               </p>
             </div>
