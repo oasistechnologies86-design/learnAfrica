@@ -85,3 +85,7 @@ def test_dropdown_question_serving_hides_answer_and_grades_selection():
     assert correct_map == {0: 0}
     score, count, _, passed = grade_served(served, {"0": 1}, 70)
     assert score == 0 and count == 0 and passed is False
+
+
+if __name__ == "__main__":
+    test_dropdown_question_serving_hides_answer_and_grades_selection()
