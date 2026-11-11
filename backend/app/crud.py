@@ -615,6 +615,73 @@ def _upgrade_demo_courses(app, db, use_pg, ph):
                 if hasattr(db, '_conn'): db._conn.rollback()
             except Exception: pass
 
+        # Bring older seeded lessons forward to the current course-builder schema.
+        # These updates are additive and preserve lesson, quiz, question, resource,
+        # progress, attempt-session, and paid-credit IDs.
+        try:
+            db.execute(
+                "UPDATE lessons SET text_content=content WHERE course_id=" + ph +
+                " AND type='text' AND (text_content IS NULL OR text_content='')" +
+                " AND content IS NOT NULL AND content<>''",
+                (cid,)
+            )
+            db.execute(
+                "UPDATE lessons SET video_start_seconds=COALESCE(video_start_seconds,0)," +
+                " video_end_seconds=COALESCE(video_end_seconds,0)" +
+                " WHERE course_id=" + ph,
+                (cid,)
+            )
+        except Exception as lesson_schema_error:
+            print(f'  ⚠ Could not backfill lesson editor fields for {title}: {lesson_schema_error}')
+            try:
+                if hasattr(db, '_conn'): db._conn.rollback()
+            except Exception: pass
+
+        # Every quiz lesson should have a settings row so the editor can expose
+        # the same timer, attempt, passing-score, and anti-cheat controls as a
+        # newly created course. Existing quiz rows are updated only where a
+        # value is NULL/blank; configured settings are never overwritten.
+        try:
+            quiz_lessons = db.execute(
+                "SELECT id,title,duration FROM lessons WHERE course_id=" + ph + " AND type='quiz'",
+                (cid,)
+            ).fetchall()
+            for quiz_lesson in quiz_lessons:
+                existing_quiz = db.execute(
+                    "SELECT * FROM quizzes WHERE course_id=" + ph + " AND lesson_id=" + ph + " ORDER BY id LIMIT 1",
+                    (cid, quiz_lesson['id'])
+                ).fetchone()
+                if not existing_quiz:
+                    db.execute(
+                        "INSERT INTO quizzes (id,course_id,lesson_id,title,duration,duration_seconds,timer_enabled," +
+                        "max_attempts,attempts_enabled,extra_attempt_price,pass_score,questions_per_attempt," +
+                        "shuffle_questions,shuffle_options) VALUES (" + ",".join([ph] * 14) + ")",
+                        (str(uuid.uuid4()), cid, quiz_lesson['id'], quiz_lesson['title'] or 'Quiz',
+                         quiz_lesson['duration'] or 'No limit', 0, 0, 0, 0, 0, 70, 0, 0, 0)
+                    )
+                else:
+                    qid = existing_quiz['id']
+                    db.execute(
+                        "UPDATE quizzes SET " +
+                        "title=COALESCE(NULLIF(title,'')," + ph + ")," +
+                        "duration=COALESCE(NULLIF(duration,'')," + ph + ")," +
+                        "duration_seconds=COALESCE(duration_seconds,0)," +
+                        "timer_enabled=COALESCE(timer_enabled,0)," +
+                        "max_attempts=COALESCE(max_attempts,0)," +
+                        "attempts_enabled=COALESCE(attempts_enabled,CASE WHEN COALESCE(max_attempts,0)>0 THEN 1 ELSE 0 END)," +
+                        "extra_attempt_price=COALESCE(extra_attempt_price,0)," +
+                        "pass_score=COALESCE(pass_score,70)," +
+                        "questions_per_attempt=COALESCE(questions_per_attempt,0)," +
+                        "shuffle_questions=COALESCE(shuffle_questions,0)," +
+                        "shuffle_options=COALESCE(shuffle_options,0) WHERE id=" + ph,
+                        (quiz_lesson['title'] or 'Quiz', quiz_lesson['duration'] or 'No limit', qid)
+                    )
+        except Exception as quiz_schema_error:
+            print(f'  ⚠ Could not backfill quiz editor settings for {title}: {quiz_schema_error}')
+            try:
+                if hasattr(db, '_conn'): db._conn.rollback()
+            except Exception: pass
+
         # Insert tags if not already present
         try:
             existing_tags = {r['tag'] for r in db.execute(
