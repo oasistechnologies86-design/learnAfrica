@@ -109,6 +109,12 @@ export function QuizPage() {
             const parsed = JSON.parse(saved);
             if (parsed?.quiz_id === q.id && parsed?.attempt_id && Array.isArray(parsed.questions)) {
               startData = parsed;
+              // Restore the student's in-progress work before rendering the quiz.
+              setAnswers(parsed.answers && typeof parsed.answers === 'object' ? parsed.answers : {});
+              const restoredQuestion = Number(parsed.current_question || 0);
+              setCurrentQuestion(Number.isFinite(restoredQuestion)
+                ? Math.max(0, Math.min(restoredQuestion, parsed.questions.length - 1))
+                : 0);
             } else {
               sessionStorage.removeItem(attemptStorageKey);
             }
@@ -145,7 +151,9 @@ export function QuizPage() {
             throw new Error(startData.message || startData.error || 'Could not start assessment');
           }
           try {
-            sessionStorage.setItem(attemptStorageKey, JSON.stringify({ ...startData, quiz_id: q.id }));
+            sessionStorage.setItem(attemptStorageKey, JSON.stringify({
+              ...startData, quiz_id: q.id, answers: {}, current_question: 0,
+            }));
           } catch {}
         }
         q = {
@@ -281,21 +289,48 @@ export function QuizPage() {
     return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
   };
 
-  const handleSelectAnswer = (val) => setAnswers(prev => {
-    const current = questions[currentQuestion];
-    if ((current?.question_type || 'mcq') === 'mcq_multi') {
-      const selected = Array.isArray(prev[currentQuestion]) ? prev[currentQuestion] : [];
-      if (selected.includes(val)) {
-        return { ...prev, [currentQuestion]: selected.filter(index => index !== val) };
+  // Keep progress in the same tab's session storage. This survives refreshes
+  // without creating a second attempt or changing the server-issued deadline.
+  const saveAttemptProgress = (nextAnswers, nextQuestion) => {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(attemptStorageKey) || '{}');
+      if (saved?.attempt_id && saved?.quiz_id === quiz?.id) {
+        sessionStorage.setItem(attemptStorageKey, JSON.stringify({
+          ...saved,
+          answers: nextAnswers,
+          current_question: nextQuestion,
+        }));
       }
-      const required = Number(current?.required_answers || 0);
-      if (required > 0 && selected.length >= required) return prev;
-      return { ...prev, [currentQuestion]: [...selected, val] };
+    } catch {
+      // A storage failure should not interrupt the active quiz.
     }
-    return { ...prev, [currentQuestion]: val };
-  });
-  const handleNext = () => currentQuestion < questions.length - 1 && setCurrentQuestion(p => p + 1);
-  const handlePrev = () => currentQuestion > 0 && setCurrentQuestion(p => p - 1);
+  };
+
+  const handleSelectAnswer = (val) => {
+    const current = questions[currentQuestion];
+    let nextAnswers = answers;
+    if ((current?.question_type || 'mcq') === 'mcq_multi') {
+      const selected = Array.isArray(answers[currentQuestion]) ? answers[currentQuestion] : [];
+      if (selected.includes(val)) {
+        nextAnswers = { ...answers, [currentQuestion]: selected.filter(index => index !== val) };
+      } else {
+        const required = Number(current?.required_answers || 0);
+        if (required > 0 && selected.length >= required) return;
+        nextAnswers = { ...answers, [currentQuestion]: [...selected, val] };
+      }
+    } else {
+      nextAnswers = { ...answers, [currentQuestion]: val };
+    }
+    setAnswers(nextAnswers);
+    saveAttemptProgress(nextAnswers, currentQuestion);
+  };
+  const goToQuestion = (index) => {
+    const nextQuestion = Math.max(0, Math.min(index, questions.length - 1));
+    setCurrentQuestion(nextQuestion);
+    saveAttemptProgress(answers, nextQuestion);
+  };
+  const handleNext = () => currentQuestion < questions.length - 1 && goToQuestion(currentQuestion + 1);
+  const handlePrev = () => currentQuestion > 0 && goToQuestion(currentQuestion - 1);
 
   const questions = quiz?.questions || [];
   const answeredCount = Object.keys(answers).length;
@@ -409,7 +444,7 @@ export function QuizPage() {
           {showQuestionNumbers && (
             <div className="mt-3 flex flex-wrap justify-center gap-2">
               {questions.map((_, idx) => (
-                <button key={idx} type="button" onClick={() => setCurrentQuestion(idx)}
+                <button key={idx} type="button" onClick={() => goToQuestion(idx)}
                   aria-label={`Go to question ${idx + 1}`}
                   aria-current={currentQuestion === idx ? 'step' : undefined}
                   className={cn('relative flex h-10 w-10 items-center justify-center rounded-xl text-xs font-bold transition-all',
