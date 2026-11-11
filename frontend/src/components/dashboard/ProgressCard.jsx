@@ -28,13 +28,13 @@ export default function ProgressCard({ course }) {
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="mb-2 flex flex-wrap items-center gap-2 text-2xs">
-              <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 font-semibold uppercase tracking-wide text-primary">
-                <Sparkles className="h-3 w-3 shrink-0" /><span className="truncate">{course.category}</span>
+            <div className="mb-1.5 flex flex-wrap items-center gap-2 text-2xs">
+              <span className="max-w-full truncate rounded-md bg-muted/60 px-2 py-0.5 text-[10px] font-medium tracking-wide text-muted-foreground">
+                {course.category}
               </span>
-              <span className="truncate text-muted-foreground">{course.instructor_name}</span>
+              <span className="truncate text-xs text-muted-foreground">{course.instructor_name}</span>
             </div>
-            <h3 className="mb-3 line-clamp-2 text-sm font-semibold leading-snug text-foreground sm:text-[15px]">{course.title}</h3>
+            <h3 className="mb-3 line-clamp-2 text-sm font-bold leading-snug text-foreground sm:text-[15px]">{course.title}</h3>
             <div className="space-y-1.5">
               <div className="flex items-center justify-between gap-2">
                 <span className="flex min-w-0 items-center gap-1 text-2xs font-medium text-muted-foreground">
