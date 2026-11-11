@@ -623,6 +623,8 @@ export function PreviewCoursePage() {
                 )}
               </div>
 
+              {activeLesson.type !== 'quiz' && (
+                <>
               {/* Tabs */}
               <div className="border-b border-border mb-8">
                 <div className="flex items-center gap-4 sm:gap-10 overflow-x-auto pb-px">
@@ -663,9 +665,6 @@ export function PreviewCoursePage() {
                           ? 'No additional lesson content is attached to this assessment.'
                           : 'No written content for this lesson.'}
                       </p>
-                    )}
-                    {activeLesson.type === 'quiz' && (
-                      <PreviewQuiz courseId={courseId} lessonId={activeLesson.id} isFinal={!!activeLesson.is_final} />
                     )}
                   </div>
                 )}
@@ -715,6 +714,15 @@ export function PreviewCoursePage() {
                   </Card>
                 )}
               </div>
+
+
+                </>
+              )}
+              {activeLesson.type === 'quiz' && (
+                <div className="max-w-3xl mx-auto py-2">
+                  <PreviewQuiz courseId={courseId} lessonId={activeLesson.id} isFinal={!!activeLesson.is_final} />
+                </div>
+              )}
 
               {/* Navigation footer */}
               <div className="mt-16 pt-8 border-t border-border">
