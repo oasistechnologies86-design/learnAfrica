@@ -867,7 +867,7 @@ export function LessonPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="rounded-lg bg-muted/60 p-3">
                         <p className="text-xs text-muted-foreground mb-1">Number of questions</p>
-                        <p className="text-base font-bold">{Number(quizMeta.questions_per_attempt) > 0 ? Math.min(Number(quizMeta.questions_per_attempt), Number(quizMeta.question_count ?? quizMeta.questions?.length ?? 0)) : Number(quizMeta.question_count ?? quizMeta.questions?.length ?? 0)}</p>
+                        <p className="text-base font-bold">{Number(quizMeta.questions_for_attempt_count ?? quizMeta.question_count ?? 0)}</p>
                       </div>
                       <div className="rounded-lg bg-muted/60 p-3">
                         <p className="text-xs text-muted-foreground mb-1">Time allowed</p>
@@ -898,17 +898,23 @@ export function LessonPage() {
                     </div>
                     <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground space-y-1">
                       <p className="font-semibold text-foreground">Please note</p>
-                      <p>Once you confirm and start this assessment, your attempt begins. If a time limit is set, the countdown starts and cannot be paused by leaving this page.</p>
-                      <p>Your answers must be submitted before the time expires. The test is marked according to the instructor’s assessment settings.</p>
-                    </div>
-                    <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground space-y-1">
-                      <p className="font-semibold text-foreground">{lesson.is_final ? 'How attempt resets work' : 'About extra attempts'}</p>
-                      {lesson.is_final ? (
-                        <p>If you use all included attempts, the fee shown above buys one extra attempt. If you pass this Final Examination for the first time, including with a paid extra attempt, the attempt allowance for every quiz in this course returns to the original number of attempts set by the instructor. You will not keep paying after that reset. Earlier attempts and payment receipts stay in your history.</p>
+                      {quizMeta.timer_enabled && Number(quizMeta.duration_seconds) > 0 ? (
+                        <p>Your {formatDuration(Number(quizMeta.duration_seconds))} countdown starts when you begin. It continues if you leave this page, so submit your answers before it reaches zero.</p>
                       ) : (
-                        <p>If you use all included attempts, the fee shown above buys one extra attempt. A payment does not reset the full allowance. The course-wide reset happens when you pass the course’s Final Examination for the first time. Earlier attempts and payment receipts remain in your history.</p>
+                        <p>There is no countdown for this assessment. Take the time you need to complete and submit your answers.</p>
                       )}
+                      <p>Your result is marked using the instructor’s passing score.</p>
                     </div>
+                    {quizMeta.attempts_enabled && Number(quizMeta.max_attempts) > 0 && (
+                      <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground space-y-1">
+                        <p className="font-semibold text-foreground">{Number(quizMeta.extra_attempt_price) > 0 ? 'About extra attempts' : 'When you use your attempts'}</p>
+                        {Number(quizMeta.extra_attempt_price) > 0 ? (
+                          <p>After your included attempts are used, a verified payment of GHS {Number(quizMeta.extra_attempt_price).toFixed(2)} adds one attempt. {lesson.is_final ? 'When you pass this Final Examination for the first time, the attempt allowances for quizzes across this course reset to the instructor’s original settings.' : allLessons.some(item => item.is_final) ? 'The course-wide attempt allowances reset to the instructor’s original settings the first time you pass the course Final Examination.' : ''} Previous attempts and payment records remain in your history.</p>
+                        ) : (
+                          <p>After using your included attempts, contact your instructor to ask about another attempt. {allLessons.some(item => item.is_final) ? 'The course-wide attempt allowances reset to the instructor’s original settings the first time you pass the course Final Examination.' : ''}</p>
+                        )}
+                      </div>
+                    )}
                     {!lesson.description && !(lesson.content || lesson.text_content || lesson.textContent) && (
                       <p className="mt-3 text-center text-xs italic text-muted-foreground">No additional lesson content is attached to this assessment. Review the assessment rules above before starting.</p>
                     )}
