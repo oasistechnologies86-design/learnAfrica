@@ -9,7 +9,7 @@ import {
   ChevronLeft, ChevronRight, CheckCircle, Play, FileText,
   MessageSquare, BookOpen, Clock, Menu, X, FolderOpen,
   ExternalLink, Download, File, ArrowUpRight, HelpCircle,
-  Loader2, AlertTriangle, Eye, Lock
+  Loader2, AlertTriangle, Eye, Lock, Sparkles, CheckCircle2, ClipboardList
 } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
@@ -159,7 +159,7 @@ function PreviewSidebar({ sections, allLessons, activeLessonId, courseId, course
 // ── Preview Quiz ─────────────────────────────────────────────────────────────
 // Uses instructor-only read access to the answer key. All interaction remains
 // in local component state; no student attempt, payment, score or progress is written.
-function PreviewQuiz({ courseId, lessonId, isFinal = false, hasCertificate = false, timeEnforce = false, timeRequired = 0 }) {
+function PreviewQuiz({ courseId, lessonId, isFinal = false, hasCertificate = false, timeEnforce = false, timeRequired = 0, courseTitle = '', setParentQuizActive }) {
   const [quiz, setQuiz] = useState(null);
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
@@ -169,6 +169,7 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false, hasCertificate = fal
   const [showQuestions, setShowQuestions] = useState(false);
   const [confirmStart, setConfirmStart] = useState(false);
   const [timeLeft, setTimeLeft] = useState(null);
+  useEffect(() => { setParentQuizActive?.(showQuestions || submitted); }, [showQuestions, submitted, setParentQuizActive]);
 
   useEffect(() => {
     let cancelled = false;
@@ -328,68 +329,102 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false, hasCertificate = fal
     </div>
   );
 
+  const answeredCount = quiz.questions.reduce((count, _, index) => count + (isPreviewAnswerComplete(index) ? 1 : 0), 0);
+  const canSubmitPreview = quiz.questions.every((_, index) => isPreviewAnswerComplete(index));
+  const resetToInformation = () => {
+    setSubmitted(false); setAnswers({}); setCurrent(0); setScore(null);
+    setTimeLeft(null); setShowQuestions(false); setParentQuizActive?.(false);
+  };
+
   return (
-    <div className="space-y-5">
-      <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30">
-        <Eye className="h-4 w-4 text-amber-600 shrink-0" />
-        <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
-          This is an instructor preview of the {assessmentName}. Nothing is saved, and student progress is not changed.
-        </p>
+    <div className="min-h-[70vh] -mx-4 sm:-mx-6 lg:-mx-8 bg-gradient-to-br from-slate-50 via-background to-primary/10 dark:from-background dark:via-background dark:to-primary/5">
+      <header className="sticky top-0 z-20 border-b border-border/70 bg-background/90 backdrop-blur-xl shadow-sm">
+        <div className="flex min-h-16 items-center justify-between gap-3 px-4 sm:px-6">
+          <Button variant="ghost" onClick={resetToInformation} className="rounded-full px-3 text-sm font-semibold text-muted-foreground">
+            <ChevronLeft className="h-4 w-4" /> Exit
+          </Button>
+          <div className="text-center min-w-0">
+            <p className="text-sm font-bold">{assessmentName}</p>
+            <p className="text-xs text-muted-foreground truncate">{quiz.title || assessmentName}</p>
+            {courseTitle && <p className="text-xs text-muted-foreground truncate">{courseTitle}</p>}
+            {quiz.attempts_enabled && Number(quiz.max_attempts) > 0 && <p className="text-2xs text-muted-foreground">{Number(quiz.max_attempts)} configured included attempts</p>}
+          </div>
+          <div className={cn("flex items-center gap-2 text-xs bg-muted px-2 py-1 rounded-md tabular-nums", timeLeft !== null && timeLeft < 60 && "text-destructive bg-destructive/10")}>
+            <Clock className="h-3.5 w-3.5" />{formatPreviewTime(timeLeft)}
+          </div>
+        </div>
+        <div className="h-1 w-full bg-muted"><div className="h-full bg-primary transition-all" style={{ width: ((answeredCount / quiz.questions.length) * 100) + '%' }} /></div>
+      </header>
+
+      <div className="container max-w-4xl mx-auto px-4 py-5 sm:py-7 space-y-4">
+        <div className="flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs font-semibold text-amber-700 dark:text-amber-400">
+          <Eye className="h-4 w-4 shrink-0" /> Instructor preview only. Answers and results stay in this page session and are never saved.
+        </div>
+        {!submitted ? (
+          <>
+            <section className="mb-5 overflow-hidden rounded-2xl border border-primary/15 bg-card/90 p-4 shadow-sm sm:p-5">
+              <div className="flex items-start gap-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Sparkles className="h-5 w-5" /></div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">{isFinal ? 'Final Examination preview' : 'Lesson Test preview'}</p>
+                  <h1 className="mt-1 text-lg font-bold tracking-tight text-foreground sm:text-xl">{quiz.title || assessmentName}</h1>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Read each question carefully. Some questions may ask you to select more than one answer. Your answers stay on this page until you submit this preview.</p>
+                </div>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                <div className="rounded-xl bg-muted/70 p-2.5"><div className="flex items-center gap-2 text-xs text-muted-foreground"><ClipboardList className="h-4 w-4" /> Questions</div><p className="mt-1 text-lg font-bold tabular-nums">{quiz.questions.length}</p></div>
+                <div className="rounded-2xl bg-muted/70 p-3"><div className="flex items-center gap-2 text-xs text-muted-foreground"><CheckCircle2 className="h-4 w-4" /> Answered</div><p className="mt-1 text-lg font-bold tabular-nums">{answeredCount}<span className="ml-1 text-sm font-medium text-muted-foreground">/ {quiz.questions.length}</span></p></div>
+                <div className="col-span-2 rounded-2xl bg-primary/5 p-3 sm:col-span-1"><div className="text-xs text-muted-foreground">Completion</div><p className="mt-1 text-lg font-bold tabular-nums">{Math.round(answeredCount / quiz.questions.length * 100)}%</p></div>
+              </div>
+            </section>
+
+            <div className="mb-4 rounded-xl border border-border/70 bg-card/80 p-3 shadow-sm">
+              <div className="mb-3 flex items-center justify-between gap-3"><p className="text-sm font-bold">Your questions</p><p className="text-xs text-muted-foreground">{answeredCount} of {quiz.questions.length} answered</p></div>
+              <div className="flex flex-wrap justify-center gap-2">
+                {quiz.questions.map((_, index) => (
+                  <button key={index} type="button" onClick={() => setCurrent(index)}
+                    className={cn("relative flex h-10 w-10 items-center justify-center rounded-xl text-xs font-bold transition-all",
+                      current === index ? "bg-primary text-primary-foreground scale-110" :
+                      isPreviewAnswerComplete(index) ? "bg-success/10 text-success border border-success/30" : "bg-card border border-border")}>
+                    {index + 1}
+                    {isPreviewAnswerComplete(index) && current !== index && <CheckCircle2 className="absolute -top-1 -right-1 h-3 w-3 bg-background rounded-full fill-success text-white" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <Card className="overflow-hidden rounded-2xl border border-border/70 bg-card p-4 shadow-md sm:p-6">
+              <QuizQuestion
+                question={{ ...q, required_answers: q.required_answers || (Array.isArray(q.correctAnswer) ? q.correctAnswer.length : 0), question: q.question_text || q.question || q.text }}
+                questionNumber={current + 1}
+                totalQuestions={quiz.questions.length}
+                selectedAnswer={answers[current]}
+                onSelectAnswer={selectPreviewAnswer}
+              />
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border/70 pt-4">
+                <Button variant="ghost" onClick={() => setCurrent(v => Math.max(0, v - 1))} disabled={current === 0}><ChevronLeft className="h-4 w-4" /> Previous</Button>
+                <span className="text-xs text-muted-foreground self-center">{current + 1} / {quiz.questions.length}</span>
+                {current === quiz.questions.length - 1 ? (
+                  <Button onClick={submitPreview} disabled={!canSubmitPreview} className="rounded-xl px-5 font-bold shadow-lg">Submit {assessmentName} Preview</Button>
+                ) : (
+                  <Button onClick={() => setCurrent(v => Math.min(quiz.questions.length - 1, v + 1))} className="rounded-xl px-5 font-bold shadow-md">Next <ChevronRight className="h-4 w-4" /></Button>
+                )}
+              </div>
+            </Card>
+            {!canSubmitPreview && current === quiz.questions.length - 1 && <div className="mt-4 rounded-xl bg-amber-500/10 p-3 text-sm text-center">Answer all {quiz.questions.length} questions before submitting.</div>}
+          </>
+        ) : (
+          <div className="space-y-4 text-center rounded-2xl border border-border bg-card p-6 sm:p-8">
+            <div className={cn('inline-flex h-20 w-20 items-center justify-center rounded-full mx-auto', score >= passScore ? 'bg-success/10' : 'bg-destructive/10')}><span className="text-2xl font-bold">{score}%</span></div>
+            <p className="font-bold text-lg">{score >= passScore ? assessmentName + ' would be passed' : assessmentName + ' would not be passed'}</p>
+            <p className="text-sm text-muted-foreground">The configured passing score is {passScore}%. This is a preview result only; it does not affect course completion or certificate eligibility.</p>
+            <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-3 text-xs text-amber-700 dark:text-amber-400">No score, attempt, payment, or progress was saved.</div>
+            <Button variant="outline" onClick={resetToInformation}>Retake Preview</Button>
+          </div>
+        )}
       </div>
-      {!submitted ? (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
-            <span>Question {current + 1} of {quiz.questions.length} · {assessmentName}</span>
-            <span className={cn("rounded-md bg-muted px-2 py-1 font-semibold tabular-nums", timeLeft !== null && timeLeft < 60 && "text-destructive bg-destructive/10")}>
-              {formatPreviewTime(timeLeft)}
-            </span>
-          </div>
-          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-            <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${((current + 1) / quiz.questions.length) * 100}%` }} />
-          </div>
-          <div className="flex flex-wrap justify-center gap-2">
-            {quiz.questions.map((_, index) => (
-              <button key={index} type="button" onClick={() => setCurrent(index)}
-                className={cn("h-8 w-8 rounded-lg border text-xs font-bold transition-colors",
-                  current === index ? "bg-primary text-primary-foreground border-primary" :
-                  isPreviewAnswerComplete(index) ? "bg-success/10 text-success border-success/30" :
-                  "bg-card border-border")}>
-                {index + 1}
-              </button>
-            ))}
-          </div>
-          <div className="p-4 rounded-lg border border-border bg-card">
-            <QuizQuestion
-              question={{ ...q, required_answers: q.required_answers || (Array.isArray(q.correctAnswer) ? q.correctAnswer.length : 0), question: q.question_text || q.question || q.text }}
-              questionNumber={current + 1}
-              totalQuestions={quiz.questions.length}
-              selectedAnswer={answers[current]}
-              onSelectAnswer={selectPreviewAnswer}
-            />
-          </div>
-          <div className="flex gap-3">
-            {current > 0 && <Button variant="outline" onClick={() => setCurrent(v => v - 1)} className="flex-1">← Previous</Button>}
-            {current < quiz.questions.length - 1 ? (
-              <Button onClick={() => setCurrent(v => v + 1)} className="flex-1" disabled={!isPreviewAnswerComplete(current)}>Next →</Button>
-            ) : (
-              <Button onClick={submitPreview} className="flex-1" disabled={quiz.questions.some((question, i) => !isPreviewAnswerComplete(i))}>
-                Submit {assessmentName} Preview
-              </Button>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-4 text-center">
-          <div className={cn('inline-flex h-20 w-20 items-center justify-center rounded-full mx-auto', score >= passScore ? 'bg-success/10' : 'bg-destructive/10')}>
-            <span className="text-2xl font-bold">{score}%</span>
-          </div>
-          <p className="font-bold text-lg">{score >= passScore ? `${assessmentName} would be passed` : `${assessmentName} would not be passed`}</p>
-          <p className="text-sm text-muted-foreground">The configured passing score is {passScore}%. This is a preview result only; it does not affect course completion or certificate eligibility.</p>
-          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-400">This is a preview only. No score, attempt, payment, or progress was saved.</div>
-          <Button variant="outline" onClick={() => { setSubmitted(false); setAnswers({}); setCurrent(0); setScore(null); setTimeLeft(null); setShowQuestions(false); }}>Retake Preview</Button>
-        </div>
-      )}
     </div>
+  );
   );
 }
 
@@ -413,10 +448,11 @@ export function PreviewCoursePage() {
   const [lessonLoading,setLessonLoading]= useState(false);
   const [error,        setError]        = useState(null);
   const [previewNotes, setPreviewNotes] = useState('');
+  const [quizPreviewActive, setQuizPreviewActive] = useState(false);
 
   // ⚠ Defined BEFORE the useEffect below - the effect calls this on mount.
   const loadLesson = useCallback(async (lessonId, cid) => {
-    setLessonLoading(true); setActiveTab('content'); setPreviewNotes('');
+    setLessonLoading(true); setActiveTab('content'); setPreviewNotes(''); setQuizPreviewActive(false);
     try {
       const r = await authedFetch(`/api/instructor/courses/${cid || courseId}/lessons/${lessonId}/preview`);
       if (!r.ok) throw new Error(await parseErr(r, 'Lesson not found'));
@@ -506,8 +542,8 @@ export function PreviewCoursePage() {
         timeEnforce={!!course?.enforce_min_time}
       />
 
-      {/* Header */}
-      <header className="sticky top-8 z-30 border-b border-border bg-background/95 backdrop-blur">
+      {/* Course header is replaced while the dedicated quiz-taking preview is open. */}
+      {!(activeLesson?.type === 'quiz' && quizPreviewActive) && <header className="sticky top-8 z-30 border-b border-border bg-background/95 backdrop-blur">
         <div className="flex h-14 items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" onClick={() => navigate(backTo)}
@@ -538,7 +574,7 @@ export function PreviewCoursePage() {
             </Button>
           </div>
         </div>
-      </header>
+      </header>}
 
       {/* Body */}
       <div className="flex flex-1 overflow-hidden">
@@ -761,11 +797,12 @@ export function PreviewCoursePage() {
               )}
               {activeLesson.type === 'quiz' && (
                 <div className="max-w-3xl mx-auto py-2">
-                  <PreviewQuiz courseId={courseId} lessonId={activeLesson.id} isFinal={!!activeLesson.is_final} hasCertificate={!!course?.has_certificate} timeEnforce={!!course?.enforce_min_time} timeRequired={Number(course?.min_time_seconds || 0)} />
+                  <PreviewQuiz courseId={courseId} lessonId={activeLesson.id} isFinal={!!activeLesson.is_final} hasCertificate={!!course?.has_certificate} timeEnforce={!!course?.enforce_min_time} timeRequired={Number(course?.min_time_seconds || 0)} courseTitle={course?.title || ""} setParentQuizActive={setQuizPreviewActive} />
                 </div>
               )}
 
-              {/* Reserve space for the same fixed bottom navigation used by students. */}
+              {/* Hide course navigation while the dedicated quiz-taking screen is open. */}
+              {!quizPreviewActive && <>
               <div className="h-24" aria-hidden="true" />
               <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur-md shadow-[0_-2px_12px_rgba(0,0,0,0.08)]">
                 <div className="max-w-4xl mx-auto px-4 py-3">
@@ -793,6 +830,7 @@ export function PreviewCoursePage() {
                   </div>
                 </div>
               </div>
+              </>}
 
             </div>
           ) : activeLesson ? null : (
@@ -824,8 +862,8 @@ export function PreviewCoursePage() {
           )}
         </main>
 
-        {/* Sidebar */}
-        <aside className={cn(
+        {/* The student quiz-taking screen has no course sidebar. */}
+        {!(activeLesson?.type === 'quiz' && quizPreviewActive) && <aside className={cn(
           'fixed inset-y-0 right-0 z-40 lg:z-30 w-full sm:w-80 border-l border-border bg-card transition-transform duration-300 lg:static lg:translate-x-0',
           showSidebar ? 'translate-x-0' : 'translate-x-full'
         )}>
@@ -840,7 +878,7 @@ export function PreviewCoursePage() {
               onClose={() => setShowSidebar(false)}
             />
           </div>
-        </aside>
+        </aside>}
         {showSidebar && (
           <div className="fixed inset-0 z-10 bg-background/60 backdrop-blur-sm lg:hidden"
             onClick={() => setShowSidebar(false)} />
