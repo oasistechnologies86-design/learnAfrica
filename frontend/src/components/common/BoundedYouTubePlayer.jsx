@@ -62,7 +62,7 @@ export default function BoundedYouTubePlayer({ url, startSeconds = 0, endSeconds
       if (intervalRef.current) window.clearInterval(intervalRef.current);
       intervalRef.current = null;
     };
-    const enforceRange = () => {
+    const publishAndEnforceRange = () => {
       const player = playerRef.current;
       if (!player || typeof player.getCurrentTime !== 'function') return;
       try {
@@ -108,12 +108,12 @@ export default function BoundedYouTubePlayer({ url, startSeconds = 0, endSeconds
             if (enforceRange && start > 0) {
               try { event.target.seekTo(start, true); } catch {}
             }
-            enforceRange();
+            publishAndEnforceRange();
             clearMonitor();
-            intervalRef.current = window.setInterval(enforceRange, 200);
+            intervalRef.current = window.setInterval(publishAndEnforceRange, 200);
           },
           onStateChange: event => {
-            enforceRange();
+            publishAndEnforceRange();
             if (event.data === YT.PlayerState.ENDED && enforceRange && end > 0) {
               try { event.target.seekTo(end, true); } catch {}
             }
@@ -131,7 +131,7 @@ export default function BoundedYouTubePlayer({ url, startSeconds = 0, endSeconds
       try { playerRef.current?.destroy(); } catch {}
       playerRef.current = null;
     };
-  }, [videoId, start, end]);
+  }, [videoId, start, end, enforceRange]);
 
   if (error) {
     const fallbackUrl = videoId
