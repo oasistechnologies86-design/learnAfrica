@@ -639,6 +639,13 @@ export function LessonPage() {
                       onLoadedMetadata={e => {
                         if (videoStartSeconds > 0) e.currentTarget.currentTime = videoStartSeconds;
                       }}
+                      onPlay={e => {
+                        const video = e.currentTarget;
+                        if (videoEndSeconds > 0 && video.currentTime >= videoEndSeconds - 0.25) {
+                          // Replay the bounded lesson section from its configured start.
+                          video.currentTime = videoStartSeconds;
+                        }
+                      }}
                       onTimeUpdate={e => {
                         if (videoEndSeconds > 0 && e.currentTarget.currentTime >= videoEndSeconds) {
                           e.currentTarget.pause();
