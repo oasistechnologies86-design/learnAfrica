@@ -20,6 +20,7 @@ import { RichTextViewer } from '@/components/common/RichTextEditor';
 import { formatHMS, formatDuration } from '@/components/common/TimePicker';
 import { getCustomLesson } from '@/components/customLessons/registry';
 import CustomLessonFrame from '@/components/customLessons/CustomLessonFrame';
+import BoundedYouTubePlayer, { getYouTubeVideoId } from '@/components/common/BoundedYouTubePlayer';
 
 // ── helpers ───────────────────────────────────────────────────────────────
 const getEmbedUrl = (url, startSeconds = 0, endSeconds = 0) => {
@@ -427,6 +428,8 @@ export function LessonPage() {
   const videoEndSeconds = Math.max(0, Number(lesson.video_end_seconds) || 0);
   const embedUrl = getEmbedUrl(lesson.videoUrl || lesson.video_url || '', videoStartSeconds, videoEndSeconds);
   const isIframe   = embedUrl && (embedUrl.includes('youtube.com/embed') || embedUrl.includes('vimeo.com'));
+  const youtubeUrl = lesson.videoUrl || lesson.video_url || '';
+  const isYouTube = !!getYouTubeVideoId(youtubeUrl);
   const resources  = lesson.resources || [];
 
   // teammate's nav button classes
@@ -617,7 +620,14 @@ export function LessonPage() {
                   aspect-video keeps a responsive 16:9 frame. */}
               <div className="w-full max-w-4xl mx-auto">
                 <div className="aspect-video w-full bg-slate-950 relative shadow-inner rounded-2xl overflow-hidden">
-                  {isIframe ? (
+                  {isYouTube ? (
+                    <BoundedYouTubePlayer
+                      url={youtubeUrl}
+                      startSeconds={videoStartSeconds}
+                      endSeconds={videoEndSeconds}
+                      title={lesson.title}
+                    />
+                  ) : isIframe ? (
                     <iframe src={embedUrl} className="w-full h-full" allowFullScreen
                       title={lesson.title}
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" />
