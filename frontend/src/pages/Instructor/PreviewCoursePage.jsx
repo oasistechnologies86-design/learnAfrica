@@ -23,6 +23,7 @@ import { API_BASE, parseErr } from '@/lib/api';
 import { formatPrice } from '@/lib/money';
 import { formatDuration } from '@/components/common/TimePicker';
 import { QuizQuestion } from '@/components/quiz/QuizQuestion';
+import { DiscussionBoard } from '@/components/lesson/DiscussionBoard';
 import BoundedYouTubePlayer, { getYouTubeVideoId } from '@/components/common/BoundedYouTubePlayer';
 
 // ── helpers ───────────────────────────────────────────────────────────────
@@ -113,12 +114,14 @@ function PreviewSidebar({ sections, allLessons, activeLessonId, courseId, course
                 className="w-full flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-accent/50 transition-colors text-left">
                 <FolderOpen className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                 <span className="flex-1 text-xs font-bold text-foreground truncate">{sec.title}</span>
-                <span className="text-2xs text-muted-foreground">{secLessons.length}</span>
+                <span className="text-2xs text-muted-foreground shrink-0">{secLessons.filter(l => l.is_completed || l.isCompleted).length}/{secLessons.length}</span>
                 <ChevronRight className={cn('h-3 w-3 text-muted-foreground/60 shrink-0 transition-transform', isOpen && 'rotate-90')} />
               </button>
               {isOpen && secLessons.map((l, idx) => {
                 const gIdx     = allLessons.findIndex(x => String(x.id) === String(l.id));
                 const isCurrent = String(l.id) === String(activeLessonId);
+                const isDone = !!(l.is_completed || l.isCompleted);
+                const isLocked = gIdx > 0 && !(allLessons[gIdx - 1]?.is_completed || allLessons[gIdx - 1]?.isCompleted);
                 const isQuiz   = l.type === 'quiz';
                 return (
                   <button key={l.id}
@@ -131,13 +134,13 @@ function PreviewSidebar({ sections, allLessons, activeLessonId, courseId, course
                       'flex h-7 w-7 items-center justify-center rounded-full shrink-0 text-xs font-black transition-colors',
                       isCurrent ? 'bg-white text-primary' : 'bg-muted group-hover:bg-background'
                     )}>
-                      {isQuiz ? <HelpCircle className="h-3.5 w-3.5" /> : gIdx + 1}
+                      {isDone ? <CheckCircle className="h-4 w-4 stroke-[3px]" /> : isLocked ? <Lock className="h-3.5 w-3.5" /> : isQuiz ? <HelpCircle className="h-3.5 w-3.5" /> : gIdx + 1}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="truncate font-bold tracking-tight leading-tight">{l.title}</p>
                       <p className={cn('text-2xs mt-0.5 font-medium opacity-70',
                         isCurrent ? 'text-primary-foreground' : 'text-muted-foreground')}>
-                        {isQuiz ? (l.is_final ? 'Final Examination' : 'Lesson Test') : l.duration || ''}
+                        {isQuiz ? (l.is_final ? 'Final Examination' : 'Lesson Test') : l.duration || ''}{isLocked ? ' · Student access locked until previous lesson is complete' : ''}
                       </p>
                     </div>
                   </button>
@@ -399,6 +402,7 @@ export function PreviewCoursePage() {
   const [loading,      setLoading]      = useState(true);
   const [lessonLoading,setLessonLoading]= useState(false);
   const [error,        setError]        = useState(null);
+  const [previewNotes, setPreviewNotes] = useState('');
 
   // ⚠ Defined BEFORE the useEffect below - the effect calls this on mount.
   const loadLesson = useCallback(async (lessonId, cid) => {
@@ -524,6 +528,18 @@ export function PreviewCoursePage() {
       <div className="flex flex-1 overflow-hidden">
         <main className="flex-1 overflow-y-auto outline-none px-4 sm:px-6 lg:px-8 py-6">
 
+          {/* Lesson heading appears before media, matching the student lesson layout. */}
+          {activeLesson && activeLesson.type !== 'custom' && !lessonLoading && (
+            <div className="max-w-4xl mx-auto pt-2 pb-6">
+              <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
+                {activeLesson.duration && <div className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /><span>{activeLesson.duration}</span></div>}
+                {activeLesson.type === 'quiz' && <span className="flex items-center gap-1.5 text-primary"><HelpCircle className="h-3.5 w-3.5" />{activeLesson.is_final ? 'Final Exam' : 'Test'}</span>}
+              </div>
+              <h1 className="text-lg sm:text-xl font-bold tracking-tight mb-3">{activeLesson.title}</h1>
+              {activeLesson.description && <p className="text-muted-foreground text-sm leading-relaxed max-w-3xl">{activeLesson.description}</p>}
+            </div>
+          )}
+
           {/* Custom page lesson - plug in a pre-built React component */}
           {activeLesson?.type === 'custom' ? (() => {
             const registryEntry = getCustomLesson(activeLesson.component_key || activeLesson.componentKey);
@@ -634,28 +650,7 @@ export function PreviewCoursePage() {
               <Loader2 className="h-6 w-6 animate-spin text-primary/50" />
             </div>
           ) : activeLesson && activeLesson.type !== 'custom' ? (
-            <div className="max-w-4xl mx-auto py-8">
-
-              {/* Lesson meta */}
-              <div className="mb-10">
-                <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
-                  {activeLesson.duration && (
-                    <div className="flex items-center gap-1.5">
-                      <Clock className="h-3.5 w-3.5" />
-                      <span>{activeLesson.duration}</span>
-                    </div>
-                  )}
-                  {activeLesson.type === 'quiz' && (
-                    <span className="flex items-center gap-1.5 text-primary">
-                      <HelpCircle className="h-3.5 w-3.5" /> {activeLesson.is_final ? 'Final Exam' : 'Test'}
-                    </span>
-                  )}
-                </div>
-                <h1 className="text-lg sm:text-xl font-bold tracking-tight mb-3">{activeLesson.title}</h1>
-                {activeLesson.description && (
-                  <p className="text-muted-foreground text-sm leading-relaxed max-w-3xl">{activeLesson.description}</p>
-                )}
-              </div>
+            <div className="max-w-4xl mx-auto py-2">
 
               {activeLesson.type !== 'quiz' && (
                 <>
@@ -730,21 +725,17 @@ export function PreviewCoursePage() {
                 )}
 
                 {activeTab === 'discussion' && (
-                  <Card className="p-6 border-dashed bg-muted/30">
-                    <div className="flex items-center gap-2 mb-3"><MessageSquare className="h-5 w-5 text-primary" /><p className="font-semibold">Course discussion</p></div>
-                    <p className="text-sm text-muted-foreground">Students can view and participate in lesson discussions when enrolled. Discussion posts and replies are disabled in instructor preview so no real student discussion records can be changed.</p>
-                  </Card>
+                  <DiscussionBoard courseId={courseId} lessonId={activeLesson.id} readOnly />
                 )}
 
                 {activeTab === 'notes' && (
-                  <Card className="p-6 border-dashed bg-muted/30">
-                    <div className="flex items-center gap-2 mb-4 text-muted-foreground">
-                      <Eye className="h-5 w-5 text-amber-500" />
-                      <p className="text-sm font-semibold">Notes are not saved in preview mode</p>
+                  <Card className="p-6 sm:p-8 border-dashed bg-muted/30 relative overflow-hidden">
+                    <div className="flex items-center justify-between mb-4 gap-4">
+                      <h3 className="font-bold text-lg tracking-tight text-foreground flex items-center gap-2"><BookOpen className="h-5 w-5 text-primary" /> Quick Notes</h3>
+                      <span className="text-3xs font-bold uppercase tracking-wide text-amber-600">Preview only</span>
                     </div>
-                    <textarea disabled
-                      placeholder="In preview mode, notes are not saved. Students can take notes here when enrolled."
-                      className="w-full min-h-[180px] rounded-xl border border-input bg-muted/30 px-4 py-3 text-sm resize-none text-muted-foreground cursor-not-allowed" />
+                    <textarea value={previewNotes} onChange={e => setPreviewNotes(e.target.value)} placeholder="Type notes to test the student interface. They will be cleared when you leave this preview." className="w-full min-h-[220px] rounded-xl border border-input bg-background/50 px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none resize-none transition-all mb-3" />
+                    <p className="text-xs text-muted-foreground">These notes exist only in this page session. They are not saved to the database or browser storage.</p>
                   </Card>
                 )}
               </div>
