@@ -2467,17 +2467,20 @@ def create_app() -> Flask:
         qd['attempts_enabled'] = bool(qd.get('attempts_enabled')) if qd.get('attempts_enabled') is not None else qd['max_attempts'] > 0
         qd['extra_attempt_price'] = float(qd.get('extra_attempt_price') or 0)
         qd['pass_score'] = int(qd.get('pass_score') or app.config['QUIZ_PASS_SCORE'])
-        # Anti-cheat flags. When any of these are on, the student flow calls
-        # POST /api/quizzes/<id>/start instead of relying on this response.
-        qd['duration_seconds']     = int(qd.get('duration_seconds') or 0)
-        qd['questions_per_attempt'] = int(qd.get('questions_per_attempt') or 0)
-        qd['shuffle_questions']    = bool(qd.get('shuffle_questions'))
-        qd['shuffle_options']      = bool(qd.get('shuffle_options'))
-        qd['question_count']       = len(questions)
-        qd['randomized'] = bool(
-            qd['shuffle_questions'] or qd['shuffle_options']
-            or (0 < qd['questions_per_attempt'] < len(questions))
+        # Only expose the number of questions a student will receive.
+        # Question-bank size and randomisation controls remain instructor-side.
+        qd['duration_seconds'] = int(qd.get('duration_seconds') or 0)
+        configured_question_count = int(qd.get('questions_per_attempt') or 0)
+        qd['questions_for_attempt_count'] = (
+            min(configured_question_count, len(questions))
+            if configured_question_count > 0 else len(questions)
         )
+        qd.pop('questions_per_attempt', None)
+        qd.pop('shuffle_questions', None)
+        qd.pop('shuffle_options', None)
+        qd.pop('randomized', None)
+        qd.pop('question_count', None)
+        qd.pop('questions', None)
         _cycle_credits = 0
         try:
             used_count, _cycle_credits = _course_quiz_attempt_usage(
