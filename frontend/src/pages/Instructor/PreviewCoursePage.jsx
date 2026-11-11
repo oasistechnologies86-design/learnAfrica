@@ -59,8 +59,8 @@ function PreviewBanner({ courseTitle, isPaid, price }) {
       <span className="text-center">
         INSTRUCTOR PREVIEW
         {isPaid && price > 0
-          ? ` - This is a paid course (${formatPrice(price)}). Students see a payment flow here. No charges are made, and nothing you do in preview is saved to the database.`
-          : ' - You are viewing this course as a student would. Nothing you do in preview is saved to the database.'}
+          ? ` - This is a paid course (${formatPrice(price)}). Students see a payment flow here. No charges are made, learning time is not counted, and nothing you do in preview is saved to the database.`
+          : ' - You are viewing this course as a student would. Learning time is not counted, and nothing you do in preview is saved to the database.'}
       </span>
     </div>
   );
@@ -411,7 +411,7 @@ export function PreviewCoursePage() {
 
   // ⚠ Defined BEFORE the useEffect below - the effect calls this on mount.
   const loadLesson = useCallback(async (lessonId, cid) => {
-    setLessonLoading(true); setActiveTab('content');
+    setLessonLoading(true); setActiveTab('content'); setPreviewNotes('');
     try {
       const r = await authedFetch(`/api/instructor/courses/${cid || courseId}/lessons/${lessonId}/preview`);
       if (!r.ok) throw new Error(await parseErr(r, 'Lesson not found'));
@@ -792,6 +792,24 @@ export function PreviewCoursePage() {
                 Add Lessons
               </Button>
             </div>
+          )}
+          {activeLesson?.type === 'custom' && (
+            <>
+              <div className="h-24" aria-hidden="true" />
+              <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur-md shadow-[0_-2px_12px_rgba(0,0,0,0.08)]">
+                <div className="max-w-4xl mx-auto px-4 py-3">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1 flex justify-start">
+                      {prevLesson && <Button variant="outline" className={navBtnClass} onClick={() => loadLesson(prevLesson.id)}><ChevronLeft className="h-5 w-5" /><span className="hidden sm:inline">Previous</span></Button>}
+                    </div>
+                    <div className="flex-1 flex justify-center"><span className="text-3xs font-black uppercase tracking-tighter text-amber-600">Preview Mode</span></div>
+                    <div className="flex-1 flex justify-end">
+                      {nextLesson && <Button variant="outline" className={navBtnClass} onClick={() => loadLesson(nextLesson.id)}><span className="hidden sm:inline">Next</span><ChevronRight className="h-5 w-5" /></Button>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
           )}
         </main>
 
