@@ -75,6 +75,12 @@ function VideoUrlInput({ item, onChanged }) {
     setDraftEnd(item.video_end_seconds ? formatVideoTimestamp(item.video_end_seconds) : '');
   }, [item.video_start_seconds, item.video_end_seconds]);
 
+  useEffect(() => {
+    setPlayheadSeconds(0);
+    setVideoDurationSeconds(0);
+    setYoutubePlayerReady(false);
+  }, [currentUrl]);
+
   const saveRange = () => {
     const start = parseVideoTimestamp(draftStart);
     const end = draftEnd.trim() ? parseVideoTimestamp(draftEnd) : 0;
