@@ -11,6 +11,14 @@ export function QuizQuestion({
 }) {
   const qType = question.question_type || 'mcq';
   const options = question.options || [];
+  const questionTypeLabels = {
+    mcq: 'Single Choice',
+    mcq_multi: 'Multiple Choice',
+    true_false: 'True or False',
+    dropdown: 'Dropdown',
+    fill_blank: 'Fill in the Blank',
+  };
+  const questionTypeLabel = questionTypeLabels[qType] || 'Question';
 
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
@@ -26,8 +34,15 @@ export function QuizQuestion({
         </div>
       </div>
 
-      {/* Question text */}
-      <div><h2 className="text-lg font-semibold leading-relaxed tracking-tight text-foreground sm:text-xl">{question.question}</h2></div>
+      {/* Question type and text */}
+      <div className="space-y-2">
+        <div className="flex justify-end">
+          <span className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-primary">
+            {questionTypeLabel}
+          </span>
+        </div>
+        <h2 className="text-lg font-semibold leading-relaxed tracking-tight text-foreground sm:text-xl">{question.question}</h2>
+      </div>
 
       {/* ── MCQ ── */}
       {qType === 'mcq' && (
@@ -136,7 +151,11 @@ export function QuizQuestion({
       {qType === 'dropdown' && (
         <div className="space-y-2">
           <select value={selectedAnswer === undefined || selectedAnswer === null ? '' : String(selectedAnswer)}
-            onChange={event => !showResult && onSelectAnswer(Number(event.target.value))}
+            onChange={event => {
+              if (showResult) return;
+              const value = event.target.value;
+              onSelectAnswer(value === '' ? null : Number(value));
+            }}
             disabled={showResult} aria-label="Choose an answer"
             className={cn('w-full rounded-xl border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20',
               showResult ? Number(selectedAnswer) === Number(correctAnswer) ? 'border-success bg-success/10 text-success' : 'border-destructive bg-destructive/10' : 'border-border')}>
