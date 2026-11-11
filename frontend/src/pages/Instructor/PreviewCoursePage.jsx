@@ -58,7 +58,7 @@ function PreviewBanner({ courseTitle, isPaid, price }) {
       <span className="text-center">
         INSTRUCTOR PREVIEW
         {isPaid && price > 0
-          ? ` - This is a paid course (${formatPrice(price)}). Students see a payment flow here. No charges are made in preview.`
+          ? ` - This is a paid course (${formatPrice(price)}). Students see a payment flow here. No charges are made, and nothing you do in preview is saved to the database.`
           : ' - You are viewing this course as a student would. Nothing you do in preview is saved to the database.'}
       </span>
     </div>
@@ -300,7 +300,7 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" role="dialog" aria-modal="true">
           <Card className="w-full max-w-md p-6 shadow-2xl">
             <h3 className="text-xl font-black mb-2">Start {assessmentName} preview?</h3>
-            <p className="text-sm text-muted-foreground mb-5">This is a safe instructor preview. No student attempt or timer will be started and no records will be changed.</p>
+            <p className="text-sm text-muted-foreground mb-5">This is a safe instructor preview. A countdown may run locally to demonstrate the timer, but no student attempt or database record is created or changed.</p>
             <div className="flex gap-3">
               <Button variant="outline" className="flex-1" onClick={() => setConfirmStart(false)}>Go Back</Button>
               <Button className="flex-1" onClick={() => {
