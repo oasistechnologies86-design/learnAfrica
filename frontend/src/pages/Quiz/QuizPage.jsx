@@ -318,6 +318,9 @@ export function QuizPage() {
         if (required > 0 && selected.length >= required) return;
         nextAnswers = { ...answers, [currentQuestion]: [...selected, val] };
       }
+    } else if (val === null || val === undefined || val === '') {
+      nextAnswers = { ...answers };
+      delete nextAnswers[currentQuestion];
     } else {
       nextAnswers = { ...answers, [currentQuestion]: val };
     }
