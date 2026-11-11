@@ -3,6 +3,27 @@ import { useState } from 'react';
 // Use built-in crypto.randomUUID() - no external package needed
 const uid = () => crypto.randomUUID();
 
+export function createCurriculumLesson(type = 'video', id = uid(), title = '') {
+  return {
+    id,
+    title: title || (type === 'quiz' ? 'New Quiz' : type === 'text' ? 'New Text Lesson' : type === 'custom' ? 'New Custom Page' : 'New Lesson'),
+    type,
+    content: '',
+    videoUrl: '',
+    video_start_seconds: 0,
+    video_end_seconds: 0,
+    duration: '',
+    text_content: type === 'text' ? '' : undefined,
+    duration_seconds: 0,
+    quiz_duration_seconds: 0,
+    quiz_timer_enabled: false,
+    component_key: type === 'custom' ? '' : undefined,
+    componentKey: type === 'custom' ? '' : undefined,
+    questions: type === 'quiz' ? [] : undefined,
+    resources: [],
+  };
+}
+
 export function useCurriculum(initialData = []) {
   const [sections, setSections] = useState(initialData);
 
@@ -45,26 +66,7 @@ export function useCurriculum(initialData = []) {
   }));
 
   const addLesson = (sectionId, type = 'video', title = '') => {
-    const newLesson = {
-      id: uid(),
-      title: title || (
-        type === 'quiz'   ? 'New Quiz' :
-        type === 'text'   ? 'New Text Lesson' :
-        type === 'custom' ? 'New Custom Page' :
-                            'New Lesson'
-      ),
-      type,
-      content: '',
-      videoUrl: '',
-      duration: '',
-      text_content: type === 'text' ? '' : undefined,
-      duration_seconds: 0,
-      quiz_duration_seconds: 0,
-      quiz_timer_enabled: false,
-      component_key: type === 'custom' ? '' : undefined,
-      componentKey:  type === 'custom' ? '' : undefined,
-      questions: type === 'quiz' ? [] : undefined,
-    };
+    const newLesson = createCurriculumLesson(type, uid(), title);
     setSections(prev => prev.map(section =>
       section.id === sectionId
         ? { ...section, lessons: [...section.lessons, newLesson] }
