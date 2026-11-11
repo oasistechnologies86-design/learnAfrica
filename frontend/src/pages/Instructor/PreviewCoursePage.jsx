@@ -186,6 +186,9 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
   }, [courseId, lessonId]);
 
   const passScore = Number(quiz?.pass_score ?? 70);
+  const previewQuestionCount = Number(quiz?.questions_per_attempt) > 0
+    ? Math.min(Number(quiz.questions_per_attempt), Number(quiz?.question_count ?? quiz?.questions?.length ?? 0))
+    : Number(quiz?.question_count ?? quiz?.questions?.length ?? 0);
   const isPreviewAnswerComplete = (index) => {
     const question = quiz?.questions?.[index];
     const answer = answers[index];
@@ -267,7 +270,7 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           <div className="rounded-lg bg-muted/60 p-3">
             <p className="text-xs text-muted-foreground mb-1">Questions in this preview</p>
-            <p className="text-base font-bold">{quiz.questions.length}</p>
+            <p className="text-base font-bold">{previewQuestionCount}</p>
           </div>
           <div className="rounded-lg bg-muted/60 p-3">
             <p className="text-xs text-muted-foreground mb-1">Time allowed</p>
@@ -291,12 +294,14 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
         <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
           This preview uses the configured question selection and shuffling. Starting it will not create a real attempt, start a student timer, or save a score.
         </div>
-        {isFinal && (
-          <div className="mt-3 rounded-lg border border-success/20 bg-success/5 p-3 text-xs text-muted-foreground">
-            <p className="font-semibold text-foreground">Course attempt allowance</p>
-            <p>The first time a student passes this Final Examination, the attempt limits for quizzes in this course reset to the original included-attempt amounts set by the instructor. Previous attempts and payment receipts remain in history.</p>
-          </div>
-        )}
+        <div className="mt-3 rounded-lg border border-success/20 bg-success/5 p-3 text-xs text-muted-foreground">
+          <p className="font-semibold text-foreground">{isFinal ? 'Course attempt allowance' : 'About extra attempts'}</p>
+          {isFinal ? (
+            <p>The first time a student passes this Final Examination, including with a paid extra attempt, the attempt limits for quizzes in this course reset to the original included-attempt amounts set by the instructor. Previous attempts and payment receipts remain in history.</p>
+          ) : (
+            <p>When included attempts are used, the fee shown above buys one additional attempt. The course-wide attempt allowance resets only when the student passes the course Final Examination for the first time. Previous attempts and payment receipts remain in history.</p>
+          )}
+        </div>
         <Button className="w-full mt-5" onClick={() => setConfirmStart(true)}>Start {assessmentName} Preview</Button>
       </Card>
       {confirmStart && (
