@@ -32,10 +32,12 @@ function loadYouTubeApi() {
 
 export function getYouTubeVideoId(url) {
   try {
-    const parsed = new URL(url);
-    const host = parsed.hostname.replace(/^www\\./, '').toLowerCase();
+    const rawUrl = String(url || '').trim();
+    if (!rawUrl) return null;
+    const parsed = new URL(/^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`);
+    const host = parsed.hostname.replace(/^www\./i, '').toLowerCase();
     if (host === 'youtu.be') return parsed.pathname.split('/').filter(Boolean)[0] || null;
-    if (!['youtube.com', 'm.youtube.com', 'music.youtube.com', 'youtube-nocookie.com', 'www.youtube-nocookie.com'].includes(host)) return null;
+    if (!['youtube.com', 'm.youtube.com', 'music.youtube.com', 'youtube-nocookie.com'].includes(host)) return null;
     if (parsed.searchParams.get('v')) return parsed.searchParams.get('v');
     const parts = parsed.pathname.split('/').filter(Boolean);
     if (['embed', 'shorts', 'live', 'v'].includes(parts[0])) return parts[1] || null;
