@@ -14,6 +14,9 @@ const QUESTION_TYPES = {
   'true/false': 'true_false',
   fill_blank: 'fill_blank',
   fill_in_blank: 'fill_blank',
+  dropdown: 'dropdown',
+  dropdown_select: 'dropdown',
+  select: 'dropdown',
 };
 
 function normaliseQuestion(raw, quizIndex, questionIndex) {
