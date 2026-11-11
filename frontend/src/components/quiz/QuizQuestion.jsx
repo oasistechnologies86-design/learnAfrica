@@ -27,20 +27,7 @@ export function QuizQuestion({
       </div>
 
       {/* Question text */}
-      <div className="space-y-1">
-        <span className={cn(
-          'inline-flex items-center px-2.5 py-0.5 rounded-full text-3xs font-bold uppercase tracking-wider',
-          qType === 'mcq'        ? 'bg-primary/10 text-primary'  :
-          qType === 'true_false' ? 'bg-blue-500/10 text-blue-600' :
-                                   'bg-orange-500/10 text-orange-600'
-        )}>
-          {qType === 'mcq_multi'  ? 'Multiple Answer' :
-           qType === 'mcq'        ? 'Single Answer' :
-           qType === 'true_false' ? 'True or False' :
-                                    'Fill in the Blank'}
-        </span>
-        <h2 className="mt-2 text-lg font-bold leading-relaxed tracking-tight text-foreground sm:text-xl">{question.question}</h2>
-      </div>
+      <div><h2 className="text-lg font-semibold leading-relaxed tracking-tight text-foreground sm:text-xl">{question.question}</h2></div>
 
       {/* ── MCQ ── */}
       {qType === 'mcq' && (
@@ -86,9 +73,7 @@ export function QuizQuestion({
       {/* ── Multiple-answer MCQ ── */}
       {qType === 'mcq_multi' && (
         <div className="space-y-2">
-          <p className="text-xs font-semibold text-primary">
-            Select exactly {question.required_answers || 'all'} answer{question.required_answers === 1 ? '' : 's'}.
-          </p>
+          <p className="text-xs text-muted-foreground">Select all that apply.</p>
           {options.map((option, index) => {
             const selected = Array.isArray(selectedAnswer) && selectedAnswer.includes(index);
             const correct = Array.isArray(correctAnswer) && correctAnswer.includes(index);
@@ -144,6 +129,23 @@ export function QuizQuestion({
               </button>
             );
           })}
+        </div>
+      )}
+
+      {/* ── Dropdown selection ── */}
+      {qType === 'dropdown' && (
+        <div className="space-y-2">
+          <select value={selectedAnswer === undefined || selectedAnswer === null ? '' : String(selectedAnswer)}
+            onChange={event => !showResult && onSelectAnswer(Number(event.target.value))}
+            disabled={showResult} aria-label="Choose an answer"
+            className={cn('w-full rounded-xl border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20',
+              showResult ? Number(selectedAnswer) === Number(correctAnswer) ? 'border-success bg-success/10 text-success' : 'border-destructive bg-destructive/10' : 'border-border')}>
+            <option value="">Choose an answer</option>
+            {options.map((option, index) => <option key={index} value={index}>{option}</option>)}
+          </select>
+          {showResult && <p className="text-xs text-muted-foreground">
+            {Number(selectedAnswer) === Number(correctAnswer) ? 'Correct answer' : `Correct answer: ${options[correctAnswer] || ''}`}
+          </p>}
         </div>
       )}
 
