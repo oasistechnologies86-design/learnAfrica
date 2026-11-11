@@ -23,6 +23,7 @@ import { API_BASE, parseErr } from '@/lib/api';
 import { formatPrice } from '@/lib/money';
 import { formatDuration } from '@/components/common/TimePicker';
 import { QuizQuestion } from '@/components/quiz/QuizQuestion';
+import BoundedYouTubePlayer, { getYouTubeVideoId } from '@/components/common/BoundedYouTubePlayer';
 
 // ── helpers ───────────────────────────────────────────────────────────────
 const getEmbedUrl = (url) => {
@@ -58,7 +59,7 @@ function PreviewBanner({ courseTitle, isPaid, price }) {
         INSTRUCTOR PREVIEW
         {isPaid && price > 0
           ? ` - This is a paid course (${formatPrice(price)}). Students see a payment flow here. No charges are made in preview.`
-          : ' - You are viewing this course as a student would. No progress or certificates are recorded.'}
+          : ' - You are viewing this course as a student would. Nothing you do in preview is saved to the database.'}
       </span>
     </div>
   );
@@ -474,6 +475,9 @@ export function PreviewCoursePage() {
     return embedUrl.startsWith('http') ? embedUrl : null;
   })();
   const resources = activeLesson?.resources || [];
+  const videoStartSeconds = Math.max(0, Number(activeLesson?.video_start_seconds) || 0);
+  const videoEndSeconds = Math.max(0, Number(activeLesson?.video_end_seconds) || 0);
+  const isYouTube = !!getYouTubeVideoId(activeLesson?.videoUrl || activeLesson?.video_url || '');
   const navBtnClass = "h-11 px-3 sm:px-4 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200 flex items-center justify-center gap-2 shrink-0";
 
   return (
@@ -571,12 +575,42 @@ export function PreviewCoursePage() {
           ) : embedSrc && (
             <>
               <div className="aspect-video w-full bg-slate-950 relative shadow-inner rounded-2xl overflow-hidden">
-                {(embedSrc.includes('youtube.com/embed') || embedSrc.includes('vimeo.com')) ? (
+                {isYouTube ? (
+                  <BoundedYouTubePlayer
+                    url={activeLesson?.videoUrl || activeLesson?.video_url || ''}
+                    startSeconds={videoStartSeconds}
+                    endSeconds={videoEndSeconds}
+                    title={activeLesson?.title || 'Lesson video'}
+                  />
+                ) : isIframe ? (
                   <iframe src={embedSrc} className="w-full h-full" allowFullScreen
                     title={activeLesson?.title}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" />
                 ) : (
-                  <video controls className="w-full h-full object-cover" preload="metadata">
+                  <video
+                    controls
+                    className="w-full h-full object-cover"
+                    preload="metadata"
+                    onLoadedMetadata={e => {
+                      if (videoStartSeconds > 0) e.currentTarget.currentTime = videoStartSeconds;
+                    }}
+                    onPlay={e => {
+                      const video = e.currentTarget;
+                      if (videoEndSeconds > 0 && video.currentTime >= videoEndSeconds - 0.25) {
+                        video.currentTime = videoStartSeconds;
+                      }
+                    }}
+                    onTimeUpdate={e => {
+                      if (videoEndSeconds > 0 && e.currentTarget.currentTime >= videoEndSeconds) {
+                        e.currentTarget.pause();
+                        e.currentTarget.currentTime = videoEndSeconds;
+                      }
+                    }}
+                    onSeeking={e => {
+                      if (e.currentTarget.currentTime < videoStartSeconds) e.currentTarget.currentTime = videoStartSeconds;
+                      if (videoEndSeconds > 0 && e.currentTarget.currentTime > videoEndSeconds) e.currentTarget.currentTime = videoEndSeconds;
+                    }}
+                  >
                     <source src={embedSrc} type="video/mp4" />
                   </video>
                 )}
