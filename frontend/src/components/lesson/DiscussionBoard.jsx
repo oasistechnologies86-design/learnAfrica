@@ -182,9 +182,9 @@ function DiscussionPost({ post, courseId, lessonId, user, onDelete, onReply, rea
   );
 }
 
-export function DiscussionBoard({ courseId, lessonId, readOnly = false }) {
+export function DiscussionBoard({ courseId, lessonId, readOnly = false, initialPosts = [] }) {
   const { user, isAuthenticated } = useAuth();
-  const [posts, setPosts]   = useState([]);
+  const [posts, setPosts]   = useState(() => (readOnly ? initialPosts : []));
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
   const [text, setText]       = useState('');
@@ -200,7 +200,10 @@ export function DiscussionBoard({ courseId, lessonId, readOnly = false }) {
     setLoading(false);
   }, [courseId, lessonId]);
 
-  useEffect(() => { if (!readOnly) load(); else setLoading(false); }, [load, readOnly]);
+  useEffect(() => {
+    if (!readOnly) load();
+    else { setPosts(Array.isArray(initialPosts) ? initialPosts : []); setLoading(false); }
+  }, [load, readOnly, initialPosts]);
 
   const handlePost = async (e) => {
     e.preventDefault();
