@@ -117,6 +117,16 @@ export default function BoundedYouTubePlayer({ url, startSeconds = 0, endSeconds
             intervalRef.current = window.setInterval(publishAndEnforceRange, 200);
           },
           onStateChange: event => {
+            if (event.data === YT.PlayerState.PLAYING) {
+              try {
+                if (enforceRange && end > 0 && event.target.getCurrentTime() >= end - 0.12) {
+                  event.target.seekTo(start, true);
+                }
+              } catch {}
+              if (!intervalRef.current) {
+                intervalRef.current = window.setInterval(publishAndEnforceRange, 200);
+              }
+            }
             publishAndEnforceRange();
             if (event.data === YT.PlayerState.ENDED && enforceRange && end > 0) {
               try { event.target.seekTo(end, true); } catch {}
