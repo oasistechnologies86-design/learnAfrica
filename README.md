@@ -1567,3 +1567,31 @@ When the backend upgrades an existing seeded course, it performs additive, repea
 
 In the instructor curriculum editor, open **Edit video range** and play or seek the preview to the desired point. **Set start here** and **Set end here** copy the current playback position into the range fields. The timestamps can still be edited manually. Save the range to apply it to student playback. YouTube playback uses the embedded player API when available and falls back to the standard YouTube embed if the API cannot load. Direct video files use the browser's native playback controls. Vimeo range selection is not currently supported.
 
+
+
+## Quiz question types and JSON import
+
+LearnAfrica supports five quiz question types in the instructor editor and JSON importer:
+
+| Type | JSON `type` | Correct-answer field | Student response |
+|---|---|---|---|
+| Single choice | `single_choice` | `correct_answer` (zero-based option index) | Select one option |
+| Multiple selection | `multiple_answer` | `correct_answers` (array of zero-based option indexes) | Select all that apply |
+| True/False | `true_false` | `correct_answer` (`true` or `false`) | Choose True or False |
+| Fill in the blank | `fill_blank` | `correct_answer` (text) | Type the answer |
+| Dropdown | `dropdown` | `correct_answer` (zero-based option index) | Choose one option from a dropdown |
+
+### Dropdown JSON example
+
+```json
+{
+  "type": "dropdown",
+  "text": "Which city is the capital of Ghana?",
+  "options": ["Accra", "Kumasi", "Tamale"],
+  "correct_answer": 0
+}
+```
+
+Option indexes start at zero, so `0` means the first option. Dropdown questions are single-answer questions. The correct answer stays on the server during an active assessment, and the server grades the submitted option index. Choice and dropdown questions require at least two non-empty options and a valid zero-based `correct_answer`. Multiple-selection questions use `correct_answers` with at least two valid indexes. Fill-in-the-blank questions use a non-empty text `correct_answer`. The instructor's **Download template** includes an example of every supported question type.
+
+The generic instruction above student questions no longer says that some questions may have multiple answers. The multiple-selection question itself displays **Select all that apply**. The existing assessment information shown before the quiz starts is unchanged.
