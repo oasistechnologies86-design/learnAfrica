@@ -132,7 +132,10 @@ export default function BoundedYouTubePlayer({ url, startSeconds = 0, endSeconds
               try { event.target.seekTo(end, true); } catch {}
             }
           },
-          onError: () => {
+          onError: event => {
+            clearMonitor();
+            try { event.target.destroy(); } catch {}
+            playerRef.current = null;
             onPlayerReadyRef.current?.(false);
             setError('YouTube cannot play this video here. Check that its owner allows embedding.');
           },
