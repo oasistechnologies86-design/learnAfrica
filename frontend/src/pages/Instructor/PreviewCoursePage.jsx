@@ -24,6 +24,7 @@ import { formatPrice } from '@/lib/money';
 import { formatDuration } from '@/components/common/TimePicker';
 import { QuizQuestion } from '@/components/quiz/QuizQuestion';
 import { DiscussionBoard } from '@/components/lesson/DiscussionBoard';
+import { CourseTimeBar } from '@/components/common/CourseTimeBar';
 import BoundedYouTubePlayer, { getYouTubeVideoId } from '@/components/common/BoundedYouTubePlayer';
 
 // ── helpers ───────────────────────────────────────────────────────────────
@@ -494,6 +495,12 @@ export function PreviewCoursePage() {
 
       {/* Preview banner */}
       <PreviewBanner courseTitle={course?.title} isPaid={isPaid} price={course?.price} />
+      {/* Show the student's minimum-time indicator without starting a timer or sending heartbeats. */}
+      <CourseTimeBar
+        timeSpent={0}
+        timeRequired={Number(course?.min_time_seconds || 0)}
+        timeEnforce={!!course?.enforce_min_time}
+      />
 
       {/* Header */}
       <header className="sticky top-8 z-30 border-b border-border bg-background/95 backdrop-blur">
