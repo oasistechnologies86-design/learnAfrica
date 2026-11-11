@@ -1556,3 +1556,14 @@ The maintained quiz JSON files are in `docs/Professional_Computing_Quizzes_Updat
 - The JSON import files are separate so each lesson quiz can be imported into its matching curriculum lesson and the final exam into the course's final-exam lesson.
 
 Import through the instructor course editor's **Import quizzes from JSON** control and choose the destination section before selecting the file. Review quiz settings after import and save the course.
+
+### Editing existing courses and seeded-course upgrades
+
+The Create Course and Edit Course screens use the same lesson initialisation helper. Newly added lessons in either screen receive the same baseline fields for video ranges, text content, lesson duration, quiz timing, custom-page identifiers, questions, and lesson resources.
+
+When the backend upgrades an existing seeded course, it performs additive, repeatable backfills. It fills missing text-lesson content from the legacy content field, initialises empty video-range values, and ensures each quiz lesson has a quiz settings record. Existing non-empty quiz settings are retained. Existing course, section, lesson, quiz, question, resource, enrolment, progress, attempt, and payment records are not deliberately replaced by this upgrade.
+
+### Selecting video ranges from playback
+
+In the instructor curriculum editor, open **Edit video range** and play or seek the preview to the desired point. **Set start here** and **Set end here** copy the current playback position into the range fields. The timestamps can still be edited manually. Save the range to apply it to student playback. YouTube playback uses the embedded player API when available and falls back to the standard YouTube embed if the API cannot load. Direct video files use the browser's native playback controls. Vimeo range selection is not currently supported.
+
