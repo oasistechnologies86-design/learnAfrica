@@ -15,6 +15,7 @@ import { RichTextEditor } from '@/components/common/RichTextEditor';
 import { TimePicker, formatDuration } from '@/components/common/TimePicker';
 import { cn } from '@/lib/utils';
 import { parseQuizImport } from '@/lib/quizImport';
+import BoundedYouTubePlayer, { getYouTubeVideoId } from '@/components/common/BoundedYouTubePlayer';
 
 // ── Video URL and optional playback-range editor ─────────────────────────
 const parseVideoTimestamp = (value) => {
@@ -110,7 +111,16 @@ function VideoUrlInput({ item, onChanged }) {
       </div>
       {currentUrl && (
         <div className="rounded-xl overflow-hidden border border-border bg-slate-950">
-          {isYouTube || isVimeo ? (
+          {isYouTube ? (
+            <div className="aspect-video">
+              <BoundedYouTubePlayer
+                url={currentUrl}
+                startSeconds={item.video_start_seconds}
+                endSeconds={item.video_end_seconds}
+                title="Video preview"
+              />
+            </div>
+          ) : isVimeo ? (
             <div className="aspect-video">
               <iframe src={previewUrl} className="w-full h-full" allowFullScreen title="Video preview"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" />
