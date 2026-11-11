@@ -306,6 +306,8 @@ export function QuizResultsPage() {
 
         {answerKeyAvailable && (questions || []).map((q, idx) => {
           const qType = q.question_type || 'mcq';
+          const questionTypeLabels = { mcq: 'Single Choice', mcq_multi: 'Multiple Choice', true_false: 'True or False', dropdown: 'Dropdown', fill_blank: 'Fill in the Blank' };
+          const questionTypeLabel = questionTypeLabels[qType] || 'Question';
           const correct = isCorrectForQuestion(q, idx);
           const serverCorrect = answerKeyAvailable
             ? (qType === 'mcq_multi' && Array.isArray(correctAnswers[idx]) ? correctAnswers[idx].map(Number) : Number(correctAnswers[idx]))
@@ -324,7 +326,10 @@ export function QuizResultsPage() {
                     : <XCircle    className="h-4 w-4 text-destructive" />}
                 </div>
                 <div className="flex-1 space-y-3">
-                  <p className="font-semibold text-sm">Q{idx + 1}: {q.question || q.question_text}</p>
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <p className="font-semibold text-sm">Q{idx + 1}: {q.question || q.question_text}</p>
+                    <span className="inline-flex shrink-0 items-center rounded-full border border-primary/20 bg-primary/5 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-primary">{questionTypeLabel}</span>
+                  </div>
 
                   {(qType === 'mcq' || qType === 'mcq_multi' || qType === 'true_false' || qType === 'dropdown') && (
                     <div className="space-y-1.5">
