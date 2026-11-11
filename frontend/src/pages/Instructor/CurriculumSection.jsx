@@ -69,7 +69,6 @@ function VideoUrlInput({ item, onChanged }) {
     if (Number.isFinite(seconds)) setPlayheadSeconds(Math.max(0, seconds));
     if (Number.isFinite(duration) && duration > 0) setVideoDurationSeconds(duration);
   };
-  const canCapturePosition = isYouTube ? youtubePlayerReady : videoDurationSeconds > 0;
 
   useEffect(() => {
     setDraftStart(formatVideoTimestamp(item.video_start_seconds));
@@ -97,6 +96,7 @@ function VideoUrlInput({ item, onChanged }) {
   };
 
   const isYouTube = !!getYouTubeVideoId(currentUrl);
+  const canCapturePosition = isYouTube ? youtubePlayerReady : videoDurationSeconds > 0;
   const isVimeo = /vimeo\.com/i.test(currentUrl);
   const previewUrl = getVideoPreviewUrl(currentUrl, item.video_start_seconds, item.video_end_seconds);
 
