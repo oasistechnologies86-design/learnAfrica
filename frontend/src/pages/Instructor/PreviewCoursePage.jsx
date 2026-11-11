@@ -159,7 +159,7 @@ function PreviewSidebar({ sections, allLessons, activeLessonId, courseId, course
 // ── Preview Quiz ─────────────────────────────────────────────────────────────
 // Uses instructor-only read access to the answer key. All interaction remains
 // in local component state; no student attempt, payment, score or progress is written.
-function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
+function PreviewQuiz({ courseId, lessonId, isFinal = false, hasCertificate = false, timeEnforce = false, timeRequired = 0 }) {
   const [quiz, setQuiz] = useState(null);
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
@@ -298,7 +298,11 @@ function PreviewQuiz({ courseId, lessonId, isFinal = false }) {
         <div className="mt-3 rounded-lg border border-success/20 bg-success/5 p-3 text-xs text-muted-foreground">
           <p className="font-semibold text-foreground">{isFinal ? 'Course attempt allowance' : 'About extra attempts'}</p>
           {isFinal ? (
-            <p>The first time a student passes this Final Examination, including with a paid extra attempt, the attempt limits for quizzes in this course reset to the original included-attempt amounts set by the instructor. Previous attempts and payment receipts remain in history.</p>
+            <>
+              <p>The first time a student passes this Final Examination, including with a paid extra attempt, the attempt limits for quizzes in this course reset to the original included-attempt amounts set by the instructor. Previous attempts and payment receipts remain in history.</p>
+              <p className="mt-2">{hasCertificate ? 'Passing contributes to course completion and certificate eligibility when all course requirements are met.' : 'Passing contributes to course completion. This course does not offer a certificate.'}</p>
+              {timeEnforce && timeRequired > 0 && <p className="mt-2">Students must meet the course minimum learning time before the Final Examination. This instructor preview does not enforce or record that time.</p>}
+            </>
           ) : (
             <p>When included attempts are used, the fee shown above buys one additional attempt. The course-wide attempt allowance resets only when the student passes the course Final Examination for the first time. Previous attempts and payment receipts remain in history.</p>
           )}
@@ -757,7 +761,7 @@ export function PreviewCoursePage() {
               )}
               {activeLesson.type === 'quiz' && (
                 <div className="max-w-3xl mx-auto py-2">
-                  <PreviewQuiz courseId={courseId} lessonId={activeLesson.id} isFinal={!!activeLesson.is_final} />
+                  <PreviewQuiz courseId={courseId} lessonId={activeLesson.id} isFinal={!!activeLesson.is_final} hasCertificate={!!course?.has_certificate} timeEnforce={!!course?.enforce_min_time} timeRequired={Number(course?.min_time_seconds || 0)} />
                 </div>
               )}
 
