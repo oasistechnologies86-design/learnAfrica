@@ -13,6 +13,7 @@ import { API_BASE } from '@/lib/api';
 import { PRESET_CATEGORIES, DIFFICULTIES } from '@/lib/categories';
 import { formatPrice } from '@/lib/money';
 import { safeStringify } from '@/lib/safeStringify';
+import { createCurriculumLesson } from '@/lib/useCurriculum';
 
 
 const inputCls = "flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary";
@@ -99,16 +100,7 @@ export function EditCoursePage() {
   }));
   const addLesson = (sId, type = 'video') =>
     setSections(p => p.map(s => s.id === sId
-      ? { ...s, lessons: [...s.lessons, {
-          id: crypto.randomUUID(),
-          title: type === 'quiz' ? 'New Quiz' : 'New Lesson',
-          type,
-          videoUrl: '',
-          duration: '',
-          content: '',
-          questions: type === 'quiz' ? [] : undefined,
-          resources: []
-        }] }
+      ? { ...s, lessons: [...(s.lessons || []), createCurriculumLesson(type)] }
       : s));
   const removeLesson = (sId, lId) =>
     setSections(p => p.map(s => s.id === sId
