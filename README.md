@@ -1559,7 +1559,7 @@ Import through the instructor course editor's **Import quizzes from JSON** contr
 
 ### Editing existing courses and seeded-course upgrades
 
-The Create Course and Edit Course screens use the same lesson initialisation helper. Newly added lessons in either screen receive the same baseline fields for video ranges, text content, lesson duration, quiz timing, custom-page identifiers, questions, and lesson resources.
+The Create Course and Edit Course screens use the same section and lesson initialisation helpers. Newly added sections and lessons in either screen receive the same baseline structure and fields for video ranges, text content, lesson duration, quiz timing, custom-page identifiers, questions, and lesson resources.
 
 When the backend upgrades an existing seeded course, it performs additive, repeatable backfills. It fills missing text-lesson content from the legacy content field, initialises empty video-range values, and ensures each quiz lesson has a quiz settings record. Existing non-empty quiz settings are retained. Existing course, section, lesson, quiz, question, resource, enrolment, progress, attempt, and payment records are not deliberately replaced by this upgrade.
 
