@@ -4,7 +4,7 @@ import {
   HelpCircle, Link as LinkIcon, Trash2, ChevronDown, ChevronUp,
   Award, Download, CheckCircle2, Circle, Upload, Loader2,
   FileText, File, Image as ImgIcon, Archive, Flag, Eye,
-  Type, ToggleLeft, AlignLeft, Sparkles
+  Type, ToggleLeft, AlignLeft, Sparkles, List
 } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Card, CardHeader, CardContent } from '@/components/common/Card';
@@ -426,6 +426,7 @@ const Q_TYPES = [
   { value: 'mcq_multi',  label: 'Choose many',   icon: CheckCircle2, desc: 'Choose all correct answers' },
   { value: 'true_false', label: 'True / False',  icon: ToggleLeft, desc: '2 options' },
   { value: 'fill_blank', label: 'Fill in Blank', icon: AlignLeft,  desc: 'Type the answer' },
+  { value: 'dropdown',   label: 'Dropdown',      icon: List,       desc: 'Choose from a list' },
 ];
 
 function QuizEditor({ item, onUpdate }) {
@@ -433,7 +434,7 @@ function QuizEditor({ item, onUpdate }) {
 
   const addQuestion = (qType = 'mcq') => {
     const base = { id: `q_${Date.now()}`, text: '', correctAnswer: qType === 'mcq_multi' ? [] : 0, question_type: qType };
-    if (qType === 'mcq' || qType === 'mcq_multi') {
+    if (qType === 'mcq' || qType === 'mcq_multi' || qType === 'dropdown') {
       return onUpdate({ questions: [...questions, { ...base, options: ['', '', '', ''] }] });
     }
     if (qType === 'true_false') return onUpdate({ questions: [...questions, { ...base, options: ['True', 'False'] }] });
@@ -493,10 +494,10 @@ function QuizEditor({ item, onUpdate }) {
                 className="w-full bg-muted/10 border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" />
 
               {/* ── MCQ options ── */}
-              {(qType === 'mcq' || qType === 'mcq_multi') && (
+              {(qType === 'mcq' || qType === 'mcq_multi' || qType === 'dropdown') && (
                 <div className="space-y-2">
                   <p className="text-3xs font-bold uppercase text-muted-foreground">
-                    {qType === 'mcq_multi' ? 'Options — select every correct answer' : 'Options — select the one correct answer'}
+                    {qType === 'mcq_multi' ? 'Options — select every correct answer' : qType === 'dropdown' ? 'Dropdown options — select the correct answer' : 'Options — select the one correct answer'}
                   </p>
                   {(q.options || ['','','','']).map((opt, oIdx) => {
                     const selectedCorrect = qType === 'mcq_multi'
@@ -520,11 +521,30 @@ function QuizEditor({ item, onUpdate }) {
                         }}
                         placeholder={`Option ${oIdx + 1}`}
                         className="flex-1 bg-muted/10 border border-border rounded-lg px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-primary" />
+                      {qType === 'dropdown' && (
+                        <button type="button" disabled={(q.options || []).length <= 2}
+                          aria-label={`Remove dropdown option ${oIdx + 1}`}
+                          onClick={() => {
+                            const nextOptions = [...(q.options || [])];
+                            nextOptions.splice(oIdx, 1);
+                            const nextCorrect = Number(q.correctAnswer || 0);
+                            updateQ(q.id, { options: nextOptions, correctAnswer: nextCorrect === oIdx ? 0 : nextCorrect > oIdx ? nextCorrect - 1 : nextCorrect });
+                          }}
+                          className="rounded p-1 text-muted-foreground hover:text-destructive disabled:opacity-30">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
                     );
                   })}
                   {qType === 'mcq_multi' && (
-                    <p className="text-2xs text-muted-foreground">Students will be told to select all correct answers. Mark at least two options as correct.</p>
+                    <p className="text-2xs text-muted-foreground">Students will see "Select all that apply". Mark at least two options as correct.</p>
+                  )}
+                  {qType === 'dropdown' && (
+                    <button type="button" onClick={() => updateQ(q.id, { options: [...(q.options || []), ''] })}
+                      className="rounded-lg border border-dashed border-border px-3 py-2 text-xs font-medium text-muted-foreground hover:border-primary hover:text-primary">
+                      + Add dropdown option
+                    </button>
                   )}
                 </div>
               )}
@@ -1222,7 +1242,8 @@ export function CurriculumSection({
           { type: 'single_choice', text: 'Which city is the capital of Ghana?', options: ['Accra', 'Kumasi', 'Tamale'], correct_answer: 0 },
           { type: 'multiple_answer', text: 'Select TWO correct answers.', options: ['Python', 'Java', 'Microsoft Word'], correct_answers: [0, 1] },
           { type: 'true_false', text: 'Accra is in Ghana.', correct_answer: true },
-          { type: 'fill_blank', text: 'The capital of Ghana is ___', correct_answer: 'Accra' }
+          { type: 'fill_blank', text: 'The capital of Ghana is ___', correct_answer: 'Accra' },
+          { type: 'dropdown', text: 'Which city is the capital of Ghana?', options: ['Accra', 'Kumasi', 'Tamale'], correct_answer: 0 }
         ]
       }]
     };
