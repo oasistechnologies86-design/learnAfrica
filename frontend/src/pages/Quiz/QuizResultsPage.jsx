@@ -159,7 +159,7 @@ export function QuizResultsPage() {
   // authoritative), but we must not display the correct option.
   const answerKeyAvailable = correctAnswers != null;
 
-  // "Back to Course" goes back to the exact lesson, not the course overview
+  // "Back to Lesson" returns the student to the exact lesson they came from.
   const backToLesson = lessonId
     ? `/learn/course/${courseId}/lesson/${lessonId}`
     : `/courses/${courseId}`;
