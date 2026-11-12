@@ -483,6 +483,8 @@ export default function StudentDashboard() {
   const stats    = user?.stats || {};
   const userBadges = user?.badges || [];
   const [viewAllActive, setViewAllActive] = useState(false);
+  const [certificatesExpanded, setCertificatesExpanded] = useState(true);
+  const [badgesExpanded, setBadgesExpanded] = useState(true);
 
   const enrolledCourses    = useMemo(() => courses.filter(c => c.isEnrolled),           [courses]);
   const completedCourses   = useMemo(() => courses.filter(c => c.progress === 100),     [courses]);
@@ -622,55 +624,89 @@ export default function StudentDashboard() {
       {/* ── Certificates ── */}
       {completedCourses.length > 0 && (
         <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2">
-              <Award className="h-5 w-5 text-primary" /> My Certificates
-            </h2>
-            <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">{completedCourses.length} earned</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            {completedCourses.map(course => (
-              <div key={course.id} className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                <div className="h-1.5 bg-gradient-to-r from-primary via-accent to-primary" />
-                <div className="p-4 flex items-start gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-success/10 flex items-center justify-center shrink-0">
-                    <CheckCircle2 className="h-5 w-5 text-success" />
+          <button
+            type="button"
+            onClick={() => setCertificatesExpanded(value => !value)}
+            aria-expanded={certificatesExpanded}
+            aria-controls="student-certificates-content"
+            className="flex w-full items-center justify-between gap-3 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          >
+            <span className="flex min-w-0 items-center gap-2 text-lg sm:text-xl font-bold">
+              <Award className="h-5 w-5 shrink-0 text-primary" /> My Certificates
+            </span>
+            <span className="flex shrink-0 items-center gap-2">
+              <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">{completedCourses.length} earned</span>
+              <ChevronDown className={cn("h-5 w-5 text-muted-foreground transition-transform duration-200", certificatesExpanded && "rotate-180")} />
+            </span>
+          </button>
+          <div
+            id="student-certificates-content"
+            aria-hidden={!certificatesExpanded}
+            className={cn("grid transition-[grid-template-rows,opacity] duration-300 ease-in-out", certificatesExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")}
+          >
+            <div className="min-h-0 overflow-hidden">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 pt-1">
+                {completedCourses.map(course => (
+                  <div key={course.id} className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <div className="h-1.5 bg-gradient-to-r from-primary via-accent to-primary" />
+                    <div className="p-4 flex items-start gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-success/10 flex items-center justify-center shrink-0">
+                        <CheckCircle2 className="h-5 w-5 text-success" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm line-clamp-2 leading-snug">{course.title}</p>
+                        <p className="text-2xs text-muted-foreground mt-0.5">{course.category}</p>
+                        {course.has_certificate && certEligibility[course.id] === true && (
+                          <Link to={`/certificate/${course.id}`} className="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-primary hover:underline">
+                            <ExternalLink className="h-3 w-3" /> View Certificate
+                          </Link>
+                        )}
+                        {course.has_certificate && certEligibility[course.id] === false && (
+                          <p className="mt-2 text-2xs text-muted-foreground">
+                            Pass the final exam to unlock your certificate
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm line-clamp-2 leading-snug">{course.title}</p>
-                    <p className="text-2xs text-muted-foreground mt-0.5">{course.category}</p>
-                    {course.has_certificate && certEligibility[course.id] === true && (
-                      <Link to={`/certificate/${course.id}`} className="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-primary hover:underline">
-                        <ExternalLink className="h-3 w-3" /> View Certificate
-                      </Link>
-                    )}
-                    {course.has_certificate && certEligibility[course.id] === false && (
-                      <p className="mt-2 text-2xs text-muted-foreground">
-                        Pass the final exam to unlock your certificate
-                      </p>
-                    )}
-                  </div>
-                </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
         </section>
       )}
 
       {/* ── Badges ── */}
       <section id="badges-section" className="space-y-3 scroll-mt-20">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-warning" /> My Badges
-          </h2>
-          <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-            {earnedCount} / {badgeConfig.length} earned
+        <button
+          type="button"
+          onClick={() => setBadgesExpanded(value => !value)}
+          aria-expanded={badgesExpanded}
+          aria-controls="student-badges-content"
+          className="flex w-full items-center justify-between gap-3 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+        >
+          <span className="flex min-w-0 items-center gap-2 text-lg sm:text-xl font-bold">
+            <Trophy className="h-5 w-5 shrink-0 text-warning" /> My Badges
           </span>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {liveBadges.map(badge => (
-            <BadgeCard key={badge.id} badge={badge} userName={user?.name} />
-          ))}
+          <span className="flex shrink-0 items-center gap-2">
+            <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+              {earnedCount} / {badgeConfig.length} earned
+            </span>
+            <ChevronDown className={cn("h-5 w-5 text-muted-foreground transition-transform duration-200", badgesExpanded && "rotate-180")} />
+          </span>
+        </button>
+        <div
+          id="student-badges-content"
+          aria-hidden={!badgesExpanded}
+          className={cn("grid transition-[grid-template-rows,opacity] duration-300 ease-in-out", badgesExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")}
+        >
+          <div className="min-h-0 overflow-hidden">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-1">
+              {liveBadges.map(badge => (
+                <BadgeCard key={badge.id} badge={badge} userName={user?.name} />
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
