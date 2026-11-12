@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, BookOpen, MessageCircle, ShieldCheck, UsersRound } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -10,16 +11,25 @@ const communityValues = [
 ];
 
 const communityImages = [
-  { src: '/hero-community.jpg', alt: 'LearnAfrica learners connecting and learning together', className: 'col-span-2 row-span-2' },
-  { src: '/student1.jpg', alt: 'Student learning on LearnAfrica', className: '' },
-  { src: '/student2.jpg', alt: 'Learner studying', className: '' },
-  { src: '/student3.jpg', alt: 'Student taking part in learning', className: '' },
-  { src: '/student4.jpg', alt: 'Learner building new skills', className: '' },
-  { src: '/student5.jpg', alt: 'Student developing their knowledge', className: '' },
+  { src: '/hero-community.jpg', alt: 'LearnAfrica learners connecting and learning together' },
+  { src: '/student1.jpg', alt: 'A student learning on LearnAfrica' },
+  { src: '/student2.jpg', alt: 'A learner studying' },
+  { src: '/student3.jpg', alt: 'A student taking part in learning' },
+  { src: '/student4.jpg', alt: 'A learner building new skills' },
+  { src: '/student5.jpg', alt: 'A student developing their knowledge' },
 ];
 
 export default function CommunityPage() {
   const { user, isAuthenticated } = useAuth();
+  const [activeImage, setActiveImage] = useState(0);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setActiveImage((current) => (current + 1) % communityImages.length);
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   return (
     <main className="bg-background text-foreground">
       <section className="border-b border-border bg-muted/20">
@@ -41,12 +51,22 @@ export default function CommunityPage() {
               </div>
               <p className="mt-4 text-xs text-muted-foreground">{isAuthenticated ? 'You are signed in and can take part in the discussion.' : 'You can read discussions without signing in.'}</p>
             </div>
-            <div className="grid aspect-[1.35] grid-cols-4 grid-rows-3 gap-2 sm:gap-3" aria-label="Photos of learners and learning activities">
+            <div className="relative aspect-[1.35] min-h-[220px] overflow-hidden rounded-xl bg-muted sm:min-h-[300px]" aria-label="LearnAfrica learner photographs">
               {communityImages.map((item, index) => (
-                <div key={item.src} className={`relative min-h-0 overflow-hidden rounded-xl bg-muted ${item.className}`}>
-                  <img src={item.src} alt={item.alt} className="h-full w-full object-cover transition duration-500 hover:scale-105" loading={index < 3 ? 'eager' : 'lazy'} />
-                </div>
+                <img
+                  key={item.src}
+                  src={item.src}
+                  alt={item.alt}
+                  aria-hidden={activeImage !== index}
+                  className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${activeImage === index ? 'opacity-100' : 'opacity-0'}`}
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                />
               ))}
+              <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2">
+                {communityImages.map((item, index) => (
+                  <span key={item.src} className={`h-1.5 rounded-full transition-all ${activeImage === index ? 'w-6 bg-white' : 'w-1.5 bg-white/60'}`} />
+                ))}
+              </div>
             </div>
           </div>
           <div className="mt-7 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
