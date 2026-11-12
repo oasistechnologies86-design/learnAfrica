@@ -132,14 +132,25 @@ export default function CourseCard({ course, enrolled = false }) {
             </div>
           )}
 
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              {enrolled ? 'Your course' : 'Course price'}
-            </span>
-            <span className={cn('text-sm font-bold', isFree ? 'text-emerald-600' : 'text-foreground')}>
-              {isFree ? 'Free' : formatPrice(price)}
-            </span>
-          </div>
+          {enrolled && !isFree ? (
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                Payment status
+              </span>
+              <Badge variant="success" className="px-2 py-0.5 text-[10px] font-semibold">
+                Paid
+              </Badge>
+            </div>
+          ) : (
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                {enrolled ? 'Your course' : 'Course price'}
+              </span>
+              <span className={cn('text-sm font-bold', isFree ? 'text-emerald-600' : 'text-foreground')}>
+                {isFree ? 'Free' : formatPrice(price)}
+              </span>
+            </div>
+          )}
 
           <Link to={`/courses/${course.id}`} className="block">
             <Button
