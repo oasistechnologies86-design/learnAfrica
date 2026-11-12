@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  Clock, Users, Star, BookOpen, Play, CheckCircle, ChevronDown, ChevronUp,
+  Clock, Star, BookOpen, Play, CheckCircle, ChevronDown, ChevronUp,
   Award, Globe, Calendar, AlertCircle, Lock, Loader2, Send,
   HelpCircle, Flag, Download, FileText, File, MapPin
 } from 'lucide-react';
@@ -305,9 +305,6 @@ export function CourseDetailPage() {
                 <div className="flex items-center gap-2">
                   <Star className="h-5 w-5 fill-warning text-warning" />
                   <span className="font-semibold">{course.rating ? Number(course.rating).toFixed(1) : '4.5'}</span>
-                  <span className="text-muted-foreground">
-                    ({(course.enrollments || 0).toLocaleString()} students)
-                  </span>
                 </div>
                 {(course.weeks_required || course.duration_weeks) > 0 && (
                   <div className="flex items-center gap-2 text-muted-foreground">
@@ -587,16 +584,10 @@ export function CourseDetailPage() {
                       {course.instructor_specialization || course.instructor_field || course.instructor_title || 'Instructor'}
                     </p>
                   </div>
-                  <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center justify-center md:justify-start gap-3 md:gap-6">
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 md:gap-6">
                     <div className="flex flex-col sm:flex-row items-center gap-1.5 p-2 rounded-xl bg-muted/50 sm:bg-transparent">
                       <Star className="h-4 w-4 fill-warning text-warning" />
                       <span className="text-xs md:text-sm font-semibold">{averageRating} Rating</span>
-                    </div>
-                    <div className="flex flex-col sm:flex-row items-center gap-1.5 p-2 rounded-xl bg-muted/50 sm:bg-transparent">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-xs md:text-sm font-semibold">
-                        {(course.instructor_total_students || 0).toLocaleString()} Students
-                      </span>
                     </div>
                     <div className="flex flex-col sm:flex-row items-center gap-1.5 p-2 rounded-xl bg-muted/50 sm:bg-transparent col-span-2">
                       <BookOpen className="h-4 w-4 text-muted-foreground" />
