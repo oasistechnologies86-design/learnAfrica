@@ -433,7 +433,7 @@ export function LessonPage() {
   const resources  = lesson.resources || [];
 
   // teammate's nav button classes
-  const navBtnClass = "h-11 px-3 sm:px-4 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200 flex items-center justify-center gap-2 shrink-0";
+  const navBtnClass = "h-11 min-w-[108px] px-3 sm:px-4 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200 flex items-center justify-center gap-2 shrink-0 text-xs sm:text-sm";
 
   return (
     <div className="flex flex-col bg-background font-sans antialiased text-foreground">
@@ -1004,7 +1004,7 @@ export function LessonPage() {
                     <Link to={`/learn/course/${courseId}/lesson/${prevLesson.id}`}>
                       <Button variant="outline" className={navBtnClass}>
                         <ChevronLeft className="h-5 w-5" />
-                        <span className="hidden sm:inline">Previous</span>
+                        <span>Previous</span>
                       </Button>
                     </Link>
                   )}
@@ -1034,7 +1034,7 @@ export function LessonPage() {
                   <Button variant="outline" className={navBtnClass}
                     onClick={() => nextLesson && navigate(`/learn/course/${courseId}/lesson/${nextLesson.id}`)}
                     disabled={!currentLessonFinished || !nextLesson}>
-                    <span className="hidden sm:inline">Next</span>
+                    <span>Next</span>
                     <ChevronRight className="h-5 w-5" />
                   </Button>
                 </div>
@@ -1056,7 +1056,9 @@ export function LessonPage() {
           <div className="flex flex-col h-full shadow-2xl lg:shadow-none">
             <div className="flex items-center justify-between p-5 border-b lg:hidden">
               <h3 className="font-bold tracking-tight">Course Content</h3>
-              <Button variant="ghost" size="sm" onClick={() => setShowSidebar(false)} className="h-8 w-8 p-0">
+              <Button type="button" variant="outline" size="sm" onClick={() => setShowSidebar(false)}
+                aria-label="Close course content" title="Close course content"
+                className="h-10 w-10 shrink-0 border-border bg-background text-foreground hover:bg-accent p-0">
                 <X className="h-5 w-5" />
               </Button>
             </div>
