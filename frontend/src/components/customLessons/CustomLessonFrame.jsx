@@ -1,8 +1,9 @@
 import React from 'react';
 
-export default function CustomLessonFrame({ lesson, children, mode = 'student', onComplete, isCompleted = false, isSaving = false }) {
+export default function CustomLessonFrame({ lesson, children, mode = 'student', onComplete, isCompleted = false, isSaving = false, navigationOpen = false }) {
   const readingRef = React.useRef(null);
   const canComplete = mode === 'student' && typeof onComplete === 'function';
+  const [showReadingCue, setShowReadingCue] = React.useState(true);
 
   const getScrollContainer = () => {
     const article = readingRef.current;
@@ -25,6 +26,31 @@ export default function CustomLessonFrame({ lesson, children, mode = 'student', 
     if (isDocumentScroll) window.scrollTo({ top: nextTop, behavior: 'smooth' });
     else container.scrollTo({ top: nextTop, behavior: 'smooth' });
   };
+
+  React.useEffect(() => {
+    const container = getScrollContainer();
+    if (!container) return undefined;
+    const isDocumentScroll = container === document.scrollingElement || container === document.documentElement;
+    const updateCueVisibility = () => {
+      if (navigationOpen) {
+        setShowReadingCue(false);
+        return;
+      }
+      const currentTop = isDocumentScroll ? window.scrollY : container.scrollTop;
+      const viewportHeight = container.clientHeight || window.innerHeight;
+      const maxTop = Math.max(0, container.scrollHeight - viewportHeight);
+      const remaining = maxTop - currentTop;
+      setShowReadingCue(maxTop > 80 && remaining > Math.max(220, viewportHeight * 0.42));
+    };
+    updateCueVisibility();
+    const target = isDocumentScroll ? window : container;
+    target.addEventListener('scroll', updateCueVisibility, { passive: true });
+    window.addEventListener('resize', updateCueVisibility);
+    return () => {
+      target.removeEventListener('scroll', updateCueVisibility);
+      window.removeEventListener('resize', updateCueVisibility);
+    };
+  }, [navigationOpen, lesson?.id]);
 
   const heroTitle = lesson?.title || 'Explore, understand and apply what you learn.';
 
@@ -49,19 +75,14 @@ export default function CustomLessonFrame({ lesson, children, mode = 'student', 
         )}
         <div className="custom-lesson-content-end" aria-hidden="true" />
       </article>
-      <div className="custom-lesson-sticky-action">
-        <button type="button" onClick={advanceReading} aria-label="Scroll down through the lesson in small steps">
-          <span className="custom-lesson-scroll-label">{mode === 'student' ? 'SCROLL DOWN AND MARK AS COMPLETE' : 'SCROLL THROUGH LESSON'}</span>
-          <span className="custom-lesson-scroll-hand" aria-hidden="true">
-            <svg viewBox="0 0 32 38" role="presentation" focusable="false">
-              <path d="M13.1 3.8c0-1.6 1.2-2.8 2.7-2.8s2.7 1.2 2.7 2.8v14.1l1.1-2.2c.7-1.4 2.4-2 3.8-1.3 1.3.7 1.8 2.2 1.2 3.6l-3.4 8.2c-1.3 3.2-4.3 5.3-7.7 5.3h-1.2c-2.8 0-5.4-1.5-6.8-3.9L2.2 20.2c-.8-1.3-.4-3 .9-3.8 1.2-.8 2.8-.4 3.7.8l2.7 3.6V8.1c0-1.5 1.1-2.7 2.5-2.7.5 0 .9.1 1.3.4" />
-              <path d="M10.7 8.2V5.9c0-1.5 1.2-2.7 2.7-2.7" />
-              <path d="M18.5 17.9h2.1" />
-            </svg>
-            <span className="custom-lesson-scroll-ripple"></span>
-          </span>
-        </button>
-      </div>
+      {!navigationOpen && showReadingCue && (
+        <div className="custom-lesson-sticky-action">
+          <button type="button" onClick={advanceReading} aria-label="Continue reading by scrolling down">
+            <span className="custom-lesson-scroll-label">Keep reading <span aria-hidden="true">·</span> Completion is at the end</span>
+            <span className="custom-lesson-scroll-arrow" aria-hidden="true">↓</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
