@@ -446,7 +446,10 @@ export function LessonPage() {
           <div className="flex items-center gap-4">
             {showSidebar ? (
               <button type="button"
-                onClick={() => navigate(`/learn/course/${courseId}/lesson/${lessonId}`)}
+                onClick={() => {
+                  setShowSidebar(false);
+                  navigate(`/learn/course/${courseId}/lesson/${lessonId}`);
+                }}
                 className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
                 <ChevronLeft className="h-4 w-4 shrink-0" />
                 <span>Back to Lesson</span>
