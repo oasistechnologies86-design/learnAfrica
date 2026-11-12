@@ -432,8 +432,8 @@ export function LessonPage() {
   const isYouTube = !!getYouTubeVideoId(youtubeUrl);
   const resources  = lesson.resources || [];
 
-  // teammate's nav button classes
-  const navBtnClass = "h-11 min-w-[108px] px-3 sm:px-4 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200 flex items-center justify-center gap-2 shrink-0 text-xs sm:text-sm";
+  // Compact lesson navigation controls, with the completion action centered.
+  const navBtnClass = "h-9 min-w-[82px] px-2 sm:px-3 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200 flex items-center justify-center gap-1.5 shrink-0 text-[11px] sm:text-xs";
 
   return (
     <div className="flex flex-col bg-background font-sans antialiased text-foreground">
@@ -444,11 +444,20 @@ export function LessonPage() {
       <header className="sticky top-16 z-[55] border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90 shadow-sm">
         <div className="flex h-14 items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-4">
-            <Link to={`/courses/${courseId}`}
-              className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-              <ChevronLeft className="h-4 w-4 shrink-0" />
-              <span>Back to Course</span>
-            </Link>
+            {showSidebar ? (
+              <button type="button"
+                onClick={() => navigate(`/learn/course/${courseId}/lesson/${lessonId}`)}
+                className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+                <ChevronLeft className="h-4 w-4 shrink-0" />
+                <span>Back to Lesson</span>
+              </button>
+            ) : (
+              <Link to={`/courses/${courseId}`}
+                className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+                <ChevronLeft className="h-4 w-4 shrink-0" />
+                <span>Back to Course</span>
+              </Link>
+            )}
             <div className="hidden md:block h-4 w-px bg-border" />
             <div className="hidden md:block">
               <p className="text-sm font-semibold truncate max-w-xs">{lesson.courseTitle || ''}</p>
@@ -460,10 +469,15 @@ export function LessonPage() {
                 {currentIndex + 1} / {allLessons.length}
               </span>
             )}
-            <Button variant="outline" size="sm"
-              onClick={() => setShowSidebar(true)}
+            <Button type="button" variant="outline" size="sm"
+              onClick={() => setShowSidebar(open => !open)}
+              aria-label={showSidebar ? "Close course content" : "Open course content"}
+              aria-expanded={showSidebar}
+              title={showSidebar ? "Close course content" : "Open course content"}
               className="lg:hidden h-9 w-9 p-0">
-              <Menu className="h-4 w-4" />
+              {showSidebar
+                ? <X className="h-4 w-4 text-red-600" />
+                : <Menu className="h-4 w-4" />}
             </Button>
           </div>
         </div>
@@ -1014,7 +1028,7 @@ export function LessonPage() {
                 <div className="flex-1 flex justify-center">
                   {lesson.type === 'custom' || isQuizLesson ? null : !currentLessonFinished ? (
                     <Button onClick={handleMarkComplete} disabled={isSaving}
-                      className="w-full max-w-[180px] h-11 font-bold uppercase tracking-widest text-2xs sm:text-xs shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
+                      className="w-full max-w-[148px] h-9 px-2 font-bold uppercase tracking-wide text-[10px] sm:text-xs shadow-md active:scale-95 transition-all flex items-center justify-center gap-1.5">
                       <CheckCircle className="h-4 w-4 shrink-0" />
                       <span>{isSaving ? 'Saving...' : 'Mark Complete'}</span>
                     </Button>
@@ -1054,13 +1068,8 @@ export function LessonPage() {
           showSidebar ? 'translate-x-0' : 'translate-x-full'
         )}>
           <div className="flex flex-col h-full shadow-2xl lg:shadow-none">
-            <div className="flex items-center justify-between p-5 border-b lg:hidden">
+            <div className="p-5 border-b lg:hidden">
               <h3 className="font-bold tracking-tight">Course Content</h3>
-              <Button type="button" variant="outline" size="sm" onClick={() => setShowSidebar(false)}
-                aria-label="Close course content" title="Close course content"
-                className="h-10 w-10 shrink-0 border-border bg-background text-foreground hover:bg-accent p-0">
-                <X className="h-5 w-5" />
-              </Button>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               <div className="mb-5 flex items-center gap-3 rounded-xl border border-border bg-background/70 p-3">
