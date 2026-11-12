@@ -71,8 +71,7 @@ export function VerifySection() {
   return (
     <section id="verify-section" ref={sectionRef} className="scroll-mt-24 py-3 sm:py-5">
       <div className={cn(
-        "container mx-auto max-w-2xl transition-all duration-700",
-        sectionVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+        "container mx-auto max-w-2xl"
       )}>
         <div className="text-center mb-5">
           <div className="inline-flex items-center justify-center h-11 w-11 rounded-xl bg-primary/10 mb-3">
@@ -84,13 +83,13 @@ export function VerifySection() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-border/80 bg-card/90 p-4 shadow-lg shadow-primary/5 backdrop-blur sm:p-5">
+        <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
         <form onSubmit={handleVerify} className="mb-0 flex flex-col gap-3 sm:flex-row">
           <input type="text" value={credId}
             onChange={e => { setCredId(e.target.value); setSearched(false); setResult(null); }}
             placeholder="e.g. LA-CERT-ABCD-1A2B3C"
-            className="h-13 min-w-0 flex-1 rounded-xl border border-input bg-background/80 px-4 text-sm shadow-inner outline-none transition placeholder:text-muted-foreground/60 focus:border-primary/60 focus:ring-4 focus:ring-primary/10" />
-          <Button type="submit" disabled={loading || !credId.trim()} className="h-13 shrink-0 gap-2 rounded-xl px-6 shadow-lg shadow-primary/15">
+            className="h-12 min-w-0 flex-1 rounded-lg border border-input bg-background px-4 text-sm outline-none transition placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/10" />
+          <Button type="submit" disabled={loading || !credId.trim()} className="h-12 shrink-0 gap-2 rounded-lg px-6">
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
             <span className="hidden sm:inline">Verify</span>
           </Button>
