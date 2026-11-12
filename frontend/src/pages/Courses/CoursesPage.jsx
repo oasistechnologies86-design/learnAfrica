@@ -127,7 +127,7 @@ export function CoursesPage() {
   const clearFilters = () => { setSelectedCategory('All Categories'); setSelectedDifficulty('All Levels'); setSearchQuery(''); };
 
   const renderSkeletons = () => (
-    <div className={cn('gap-6', viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3' : 'flex flex-col')}>
+    <div className={cn('gap-4 sm:gap-5 xl:gap-5', viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3' : 'flex flex-col')}>
       {[...Array(6)].map((_,i) => <CourseCardSkeleton key={i} />)}
     </div>
   );
@@ -154,7 +154,7 @@ export function CoursesPage() {
   const endItem   = Math.min(currentPage*itemsPerPage, filteredCourses.length);
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-3 sm:px-4 py-8">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Explore Courses</h1>
@@ -245,7 +245,7 @@ export function CoursesPage() {
               </div>
             ) : (
               <>
-                <div className={cn('gap-6', viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3' : 'flex flex-col')}>
+                <div className={cn('gap-4 sm:gap-5 xl:gap-5', viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3' : 'flex flex-col')}>
                   {paginatedCourses.map(course => (
                     <CourseCard key={course.id} course={course}
                       enrolled={course.isEnrolled || course.progress > 0}
