@@ -628,55 +628,44 @@ export function LandingPage() {
       {/* ── Testimonials Carousel ── */}
       <TestimonialsSection />
 
-      {/* Futuristic credential trust + community feature cards */}
-      <section className="relative isolate overflow-hidden border-y border-border/70 bg-muted/30 py-10 text-foreground sm:py-14">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-50" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(16,185,129,.10) 1px, transparent 0)', backgroundSize: '26px 26px' }} />
-        <div aria-hidden="true" className="pointer-events-none absolute -left-32 top-0 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
-        <div aria-hidden="true" className="pointer-events-none absolute -right-24 bottom-0 h-80 w-80 rounded-full bg-primary/5 blur-3xl" />
-        <div className="container relative mx-auto px-4">
-          <div className="mx-auto mb-7 max-w-2xl text-center sm:mb-9">
-            <p className="text-[11px] font-black uppercase tracking-[0.28em] text-primary">Beyond the classroom</p>
-            <h2 className="mt-3 text-2xl font-black tracking-tight sm:text-3xl">Skills deserve to be seen. <span className="text-primary">People deserve to connect.</span></h2>
-            <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">Verify a learning milestone with confidence, then find your people and keep growing together.</p>
+      {/* Certificate verification and learner community */}
+      <section className="border-y border-border bg-muted/20 py-10 sm:py-14">
+        <div className="container mx-auto px-4">
+          <div className="mx-auto mb-8 max-w-2xl text-center">
+            <p className="text-sm font-semibold text-primary">More from LearnAfrica</p>
+            <h2 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">Your learning does not stop at the course.</h2>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">Show what you have achieved and stay connected with other learners.</p>
           </div>
-          <div className="mx-auto grid max-w-6xl gap-4 lg:grid-cols-2">
-            <article className="group relative overflow-hidden rounded-2xl border border-border bg-card/80 p-4 transition duration-500 hover:-translate-y-1 hover:border-primary/30 hover:bg-primary/[0.03] sm:p-5">
-              <div aria-hidden="true" className="pointer-events-none absolute -right-12 -top-14 h-48 w-48 rounded-full border border-primary/10 transition-transform duration-700 group-hover:scale-125" />
-              <div className="relative grid items-center gap-4 sm:grid-cols-[1fr_0.8fr]">
+          <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-2">
+            <article className="flex flex-col rounded-2xl border border-border bg-card p-5 sm:p-6">
+              <div className="flex items-start gap-4">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><ShieldCheck className="h-5 w-5" /></div>
                 <div>
-                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary"><ShieldCheck className="h-5 w-5" /></span>
-                  <p className="mt-4 text-[10px] font-black uppercase tracking-[0.24em] text-primary/75">Credential trust portal</p>
-                  <h3 className="mt-2 text-xl font-bold tracking-tight sm:text-2xl">A certificate that speaks for itself.</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">Let employers and institutions check the authenticity of LearnAfrica certificates and badges. No account needed.</p>
-                  <Link to="/verify-credential" className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground transition hover:bg-primary/90">Verify a certificate <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></Link>
-                </div>
-                <div className="relative mx-auto w-full max-w-[195px] rotate-2 rounded-xl border border-primary/20 bg-gradient-to-br from-muted via-card to-background p-2 shadow-2xl shadow-black/30 transition-transform duration-500 group-hover:rotate-0">
-                  <div className="rounded-lg border border-primary/15 px-3 py-4 text-center">
-                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Award className="h-6 w-6" /></div>
-                    <p className="mt-3 text-[8px] font-black uppercase tracking-[0.25em] text-muted-foreground">LearnAfrica</p>
-                    <p className="mt-2 font-serif text-lg leading-tight text-foreground">Certificate of <span className="italic text-primary">achievement</span></p>
-                    <div className="mx-auto my-3 h-px w-14 bg-gradient-to-r from-transparent via-primary/70 to-transparent" />
-                    <div className="flex items-center justify-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-2 py-1.5 text-[8px] font-bold text-primary"><ShieldCheck className="h-3 w-3" /> PUBLIC VERIFICATION</div>
-                    <p className="mt-3 font-mono text-[8px] tracking-widest text-muted-foreground/70">LEARN · BUILD · GROW</p>
-                  </div>
+                  <h3 className="text-lg font-bold">Verify a certificate</h3>
+                  <p className="mt-1 text-sm leading-6 text-muted-foreground">Employers, schools, and anyone you share your certificate with can check its authenticity using its credential ID.</p>
                 </div>
               </div>
+              <div className="mt-5 rounded-lg border border-border bg-muted/50 p-3">
+                <p className="text-xs font-medium text-muted-foreground">Certificate ID example</p>
+                <p className="mt-1 font-mono text-sm">LA-CERT-ABCD-123456</p>
+              </div>
+              <Link to="/verify-credential" className="mt-5 inline-flex h-10 w-fit items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90">Verify certificate <ArrowRight className="h-4 w-4" /></Link>
             </article>
-            <article className="group relative overflow-hidden rounded-2xl border border-border bg-card/80 p-4 transition duration-500 hover:-translate-y-1 hover:border-primary/30 sm:p-5">
-              <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-12 h-48 w-48 rounded-full bg-primary/[0.05] blur-2xl transition-transform duration-700 group-hover:scale-125" />
-              <div className="relative">
-                <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary"><Users className="h-5 w-5" /></span>
-                <p className="mt-5 text-[10px] font-black uppercase tracking-[0.24em] text-primary/75">The LearnAfrica network</p>
-                <h3 className="mt-2 max-w-lg text-xl font-bold tracking-tight sm:text-2xl">Your next breakthrough could start with a conversation.</h3>
-                <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted-foreground">Ask questions, share progress, and connect with learners across Africa in a dedicated member community.</p>
-                <div className="mt-4 grid gap-2 sm:grid-cols-3">
-                  <span className="rounded-xl border border-border bg-muted/60 p-2.5 text-xs text-muted-foreground"><MessageSquare className="mb-2 h-4 w-4 text-primary" /> Ask & share</span>
-                  <span className="rounded-xl border border-border bg-muted/60 p-3 text-xs text-muted-foreground"><Users className="mb-2 h-4 w-4 text-primary" /> Learn together</span>
-                  <span className="rounded-xl border border-border bg-muted/60 p-3 text-xs text-muted-foreground"><Sparkles className="mb-2 h-4 w-4 text-primary" /> Grow skills</span>
+            <article className="flex flex-col rounded-2xl border border-border bg-card p-5 sm:p-6">
+              <div className="flex items-start gap-4">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Users className="h-5 w-5" /></div>
+                <div>
+                  <h3 className="text-lg font-bold">Learn with the community</h3>
+                  <p className="mt-1 text-sm leading-6 text-muted-foreground">Ask questions, share useful resources, discuss what you are studying, and encourage other learners.</p>
                 </div>
-                <Link to="/community" className="mt-6 inline-flex h-11 items-center gap-2 rounded-xl border border-primary/25 bg-primary/10 px-4 text-sm font-bold text-primary transition hover:bg-primary/15">{isAuthenticated ? 'Open the Community' : 'Sign in to join the Community'} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></Link>
-                <p className="mt-3 text-[11px] text-muted-foreground">Community participation requires an account.</p>
               </div>
+              <ul className="mt-5 grid gap-2 text-sm text-muted-foreground sm:grid-cols-3">
+                <li className="flex items-center gap-2 rounded-lg bg-muted/50 p-3"><MessageSquare className="h-4 w-4 shrink-0 text-primary" /> Ask questions</li>
+                <li className="flex items-center gap-2 rounded-lg bg-muted/50 p-3"><Users className="h-4 w-4 shrink-0 text-primary" /> Share ideas</li>
+                <li className="flex items-center gap-2 rounded-lg bg-muted/50 p-3"><BookOpen className="h-4 w-4 shrink-0 text-primary" /> Learn together</li>
+              </ul>
+              <Link to="/community" className="mt-5 inline-flex h-10 w-fit items-center gap-2 rounded-lg border border-border bg-background px-4 text-sm font-semibold transition hover:border-primary hover:text-primary">{isAuthenticated ? 'Open community' : 'Visit the community'} <ArrowRight className="h-4 w-4" /></Link>
+              <p className="mt-3 text-xs text-muted-foreground">Sign in to post, reply, and take part in discussions.</p>
             </article>
           </div>
         </div>
