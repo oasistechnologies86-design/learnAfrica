@@ -1,16 +1,26 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, ArrowUpRight, Award, CheckCircle2, LockKeyhole, Search, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, CheckCircle2, LockKeyhole, ShieldCheck } from 'lucide-react';
 import { VerifySection } from './VerifySection';
 
 const credentialImages = [
-  { src: '/carousel-collab.jpg', alt: 'Learners collaborating during a course', className: 'col-span-2 row-span-2' },
-  { src: '/carousel-lab.webp', alt: 'Practical learning in a computer lab', className: '' },
-  { src: '/carousel-library.webp', alt: 'Independent study and research', className: '' },
-  { src: '/feature-student.jpg', alt: 'Student learning new skills', className: '' },
-  { src: '/tech-skills.jpg', alt: 'Technology skills training', className: '' },
+  { src: '/carousel-collab.jpg', alt: 'Learners collaborating during a course' },
+  { src: '/carousel-lab.webp', alt: 'Practical learning in a computer lab' },
+  { src: '/carousel-library.webp', alt: 'Independent study and research' },
+  { src: '/feature-student.jpg', alt: 'A student learning new skills' },
+  { src: '/tech-skills.jpg', alt: 'Technology skills training' },
 ];
 
 export default function VerifyCredentialPage() {
+  const [activeImage, setActiveImage] = useState(0);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setActiveImage((current) => (current + 1) % credentialImages.length);
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   return (
     <main className="min-h-screen bg-background text-foreground">
       <section className="border-b border-border bg-muted/20">
@@ -31,40 +41,28 @@ export default function VerifyCredentialPage() {
                 <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Results from our records</span>
               </div>
             </div>
-            <div className="grid aspect-[1.35] grid-cols-4 grid-rows-3 gap-2 sm:gap-3" aria-label="LearnAfrica course and student photographs">
+            <div className="relative aspect-[1.35] min-h-[220px] overflow-hidden rounded-xl bg-muted sm:min-h-[300px]" aria-label="LearnAfrica course and student photographs">
               {credentialImages.map((item, index) => (
-                <div key={item.src} className={`relative min-h-0 overflow-hidden rounded-xl bg-muted shadow-sm ${item.className}`}>
-                  <img src={item.src} alt={item.alt} className="h-full w-full object-cover transition duration-500 hover:scale-105" loading={index < 3 ? 'eager' : 'lazy'} />
-                </div>
+                <img
+                  key={item.src}
+                  src={item.src}
+                  alt={item.alt}
+                  aria-hidden={activeImage !== index}
+                  className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${activeImage === index ? 'opacity-100' : 'opacity-0'}`}
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                />
               ))}
-            </div>
-          </div>
-          <div className="mx-auto max-w-3xl rounded-2xl border border-border bg-card p-5 sm:p-6">
-            <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <Award className="h-6 w-6" />
+              <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2">
+                {credentialImages.map((item, index) => (
+                  <span key={item.src} className={`h-1.5 rounded-full transition-all ${activeImage === index ? 'w-6 bg-white' : 'w-1.5 bg-white/60'}`} />
+                ))}
               </div>
-              <div>
-                <h2 className="font-semibold">What you will need</h2>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">Use the ID printed on the certificate or included in its verification link.</p>
-              </div>
-            </div>
-            <div className="mt-5 border-t border-border pt-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Example ID</p>
-              <p className="mt-2 rounded-lg bg-muted px-3 py-2 font-mono text-sm">LA-CERT-ABCD-123456</p>
             </div>
           </div>
         </div>
       </section>
 
       <section className="container mx-auto max-w-6xl px-4 py-10 sm:py-14">
-        <div className="mx-auto mb-7 max-w-2xl text-center">
-          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Search className="h-5 w-5" />
-          </div>
-          <h2 className="mt-4 text-2xl font-bold tracking-tight sm:text-3xl">Verify a credential</h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">Enter the ID below. We will check it against LearnAfrica's issued credential records.</p>
-        </div>
         <VerifySection />
         <div className="mx-auto mt-8 flex max-w-3xl flex-col items-center justify-center gap-3 text-center text-xs text-muted-foreground sm:flex-row">
           <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary" /> Official LearnAfrica verification</span>
