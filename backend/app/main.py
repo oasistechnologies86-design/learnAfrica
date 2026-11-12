@@ -5706,118 +5706,137 @@ def create_app() -> Flask:
     @app.route('/api/badges/issue', methods=['POST'])
     @token_required
     def issue_badge():
+        """Issue one permanent badge credential after checking server-side eligibility.
+
+        Dashboard progress is a presentation hint only. The API re-checks the
+        underlying student records and repairs missing legacy user_badges rows
+        before creating the permanent credential.
+        """
+        db = None
         try:
             d = request.get_json() or {}
-            badge_key = (d.get('badge_key') or '').strip()
-            badge_title = (d.get('badge_title') or '').strip()
-            if not badge_key:
-                return jsonify({'error': 'badge_key required'}), 400
+            badge_key = str(d.get('badge_key') or '').strip().upper()
+            badge_definitions = {
+                'FIRST_STEPS': ('First Steps', 'lessons_completed'),
+                'COURSE_CHAMPION': ('Course Champion', 'courses_completed'),
+                'QUIZ_MASTER': ('Quiz Master', 'perfect_quizzes'),
+                'CONSISTENT_LEARNER': ('Consistent Learner', 'streak'),
+                'PATHFINDER': ('Pathfinder', 'profile_completed'),
+            }
+            definition = badge_definitions.get(badge_key)
+            if not definition:
+                return jsonify({'error': 'This badge type is not recognised.'}), 400
+
             db = get_db()
             uid = g.current_user['user_id']
-            
-            # Verify user earned it
-            earned = db.execute('SELECT id FROM user_badges WHERE user_id=? AND badge_key=?',
-                                (uid, badge_key)).fetchone()
-            if not earned:
-                return jsonify({'error': 'Badge not earned'}), 403
-            
-            # Ensure required columns exist on issued_badges (force-add if missing)
-            use_pg = app.config.get('USE_POSTGRES')
-            if use_pg:
-                for col_sql in [
-                    'ALTER TABLE issued_badges ADD COLUMN IF NOT EXISTS badge_id TEXT',
-                    'ALTER TABLE issued_badges ADD COLUMN IF NOT EXISTS user_name TEXT',
-                    'ALTER TABLE issued_badges ADD COLUMN IF NOT EXISTS badge_title TEXT',
-                ]:
-                    try:
-                        db.execute(col_sql)
-                        db.commit()
-                    except Exception:
-                        try:
-                            if hasattr(db, '_conn'): db._conn.rollback()
-                        except Exception: pass
-            
-            # Check if already issued (now safe since columns exist)
-            existing = None
-            try:
-                existing = db.execute('SELECT badge_id FROM issued_badges WHERE user_id=? AND badge_key=?',
-                                      (uid, badge_key)).fetchone()
-                if existing and existing['badge_id']:
-                    return jsonify({'badge_id': existing['badge_id']})
-            except Exception as ex:
-                app.logger.warning(f'badge lookup failed: {ex}')
-                try:
-                    if hasattr(db, '_conn'): db._conn.rollback()
-                except Exception: pass
-            
-            # Issue a new one
-            user = db.execute('SELECT name FROM users WHERE id=?', (uid,)).fetchone()
-            user_name = user['name'] if user else 'Learner'
-            badge_id = 'LA-BADGE-' + badge_key[:4].upper() + '-' + str(uuid.uuid4())[:6].upper()
-            
-            try:
-                db.execute(
-                    'INSERT INTO issued_badges (badge_id,user_id,user_name,badge_key,badge_title)'
-                    ' VALUES (?,?,?,?,?) ON CONFLICT (user_id,badge_key) DO NOTHING',
-                    (badge_id, uid, user_name, badge_key, badge_title)
-                )
-                db.commit()
-            except Exception as ex:
-                app.logger.warning(f'full insert failed: {ex}')
-                try:
-                    if hasattr(db, '_conn'): db._conn.rollback()
-                except Exception: pass
-                # Fallback - try with what's likely to exist
-                try:
-                    db.execute(
-                        'INSERT INTO issued_badges (user_id, badge_key) VALUES (?, ?)'
-                        ' ON CONFLICT (user_id, badge_key) DO NOTHING',
-                        (uid, badge_key)
-                    )
-                    db.commit()
-                except Exception as ex2:
-                    app.logger.warning(f'minimal insert failed: {ex2}')
-                    try:
-                        if hasattr(db, '_conn'): db._conn.rollback()
-                    except Exception: pass
-            
-            # Try UPDATE to ensure badge_id is set on the row (in case INSERT was DO NOTHING)
-            try:
-                db.execute(
-                    'UPDATE issued_badges SET badge_id=?, user_name=?, badge_title=?'
-                    ' WHERE user_id=? AND badge_key=? AND (badge_id IS NULL OR badge_id=\'\')',
-                    (badge_id, user_name, badge_title, uid, badge_key)
-                )
-                db.commit()
-            except Exception as ex:
-                app.logger.warning(f'badge_id update failed: {ex}')
-                try:
-                    if hasattr(db, '_conn'): db._conn.rollback()
-                except Exception: pass
-            
-            # Re-fetch what's actually stored
-            try:
-                final = db.execute('SELECT badge_id FROM issued_badges WHERE user_id=? AND badge_key=?',
-                                   (uid, badge_key)).fetchone()
-                if final and final['badge_id']:
-                    audit('badge_issue', 'badge', final['badge_id'], badge_title,
-                          {'badge_key': badge_key})
-                    return jsonify({'badge_id': final['badge_id']})
-            except Exception:
-                try:
-                    if hasattr(db, '_conn'): db._conn.rollback()
-                except Exception: pass
-            audit('badge_issue', 'badge', badge_id, badge_title, {'badge_key': badge_key})
-            return jsonify({'badge_id': badge_id})
+
+            # Derive eligibility from persisted data, not client-supplied title,
+            # progress, or earned flags. Reconcile counters from source records
+            # where possible so older students are not rejected for missing rows.
+            stats = db.execute(
+                'SELECT lessons_completed,courses_completed,perfect_quizzes,streak,last_activity '
+                'FROM user_stats WHERE user_id=?', (uid,)
+            ).fetchone()
+            if not stats:
+                return jsonify({'error': 'Your learning progress is still being prepared. Please refresh and try again.'}), 409
+
+            user = db.execute(
+                'SELECT name,bio,avatar FROM users WHERE id=?', (uid,)
+            ).fetchone()
+            if not user:
+                return jsonify({'error': 'Student account could not be found.'}), 404
+
+            lessons_count = db.execute(
+                'SELECT COUNT(*) AS c FROM user_progress WHERE user_id=? AND is_completed=1',
+                (uid,)
+            ).fetchone()['c']
+            courses_count = db.execute(
+                'SELECT COUNT(*) AS c FROM user_enrollments WHERE user_id=? AND progress>=100',
+                (uid,)
+            ).fetchone()['c']
+            perfect_count = int(stats['perfect_quizzes'] or 0)
+            streak_count = int(stats['streak'] or 0)
+            last_activity = str(stats['last_activity'] or '')[:10]
+            today = datetime.now().date()
+            # A streak remains current through the following day. Older activity
+            # means the streak has expired even if the stored counter is stale.
+            streak_is_current = last_activity in (
+                today.isoformat(), (today - timedelta(days=1)).isoformat()
+            )
+            criteria = {
+                'lessons_completed': int(lessons_count or 0) >= 1,
+                'courses_completed': int(courses_count or 0) >= 1,
+                'perfect_quizzes': perfect_count >= 5,
+                'streak': streak_count >= 7 and streak_is_current,
+                'profile_completed': bool((user['bio'] or '').strip() and (user['avatar'] or '').strip()),
+            }
+            if not criteria[definition[1]]:
+                return jsonify({'error': 'This badge has not been earned yet. Complete its requirement and try again.'}), 403
+
+            # Repair/backfill the earned record for students who met the
+            # requirement before the original award insertion was triggered.
+            db.execute(
+                'INSERT INTO user_badges (user_id,badge_key) VALUES (?,?) ON CONFLICT (user_id,badge_key) DO NOTHING',
+                (uid, badge_key)
+            )
+            db.commit()
+
+            # Keep existing installations compatible with older issued_badges
+            # tables. ensure_column handles SQLite and PostgreSQL.
+            for column, sql_type in (
+                ('badge_id', 'TEXT'), ('user_name', 'TEXT'),
+                ('badge_title', 'TEXT'), ('badge_name', 'TEXT'),
+                ('name_change_count', 'INTEGER DEFAULT 0'),
+            ):
+                ensure_column(db, 'issued_badges', column, sql_type)
+
+            badge_title = definition[0]
+            user_name = (user['name'] or 'Learner').strip() or 'Learner'
+            existing = db.execute(
+                'SELECT badge_id FROM issued_badges WHERE user_id=? AND badge_key=?',
+                (uid, badge_key)
+            ).fetchone()
+            if existing and existing['badge_id']:
+                return jsonify({'badge_id': existing['badge_id'], 'badge_title': badge_title})
+
+            # Full UUID entropy avoids collisions between different students
+            # or badges; the unique (user_id,badge_key) row keeps re-issuance stable.
+            candidate_id = 'LA-BADGE-' + badge_key[:4] + '-' + uuid.uuid4().hex[:12].upper()
+            db.execute(
+                'INSERT INTO issued_badges (badge_id,user_id,user_name,badge_name,badge_key,badge_title)'
+                ' VALUES (?,?,?,?,?,?) ON CONFLICT (user_id,badge_key) DO NOTHING',
+                (candidate_id, uid, user_name, user_name, badge_key, badge_title)
+            )
+            db.commit()
+
+            # Fill any legacy row with a missing ID/name without replacing a
+            # previously issued ID or a student-edited badge name.
+            db.execute(
+                "UPDATE issued_badges SET badge_id=?, user_name=COALESCE(NULLIF(user_name,''),?), "
+                "badge_title=COALESCE(NULLIF(badge_title,''),?), "
+                "badge_name=COALESCE(NULLIF(badge_name,''),?) "
+                "WHERE user_id=? AND badge_key=? AND (badge_id IS NULL OR badge_id='')",
+                (candidate_id, user_name, badge_title, user_name, uid, badge_key)
+            )
+            db.commit()
+            final = db.execute(
+                'SELECT badge_id FROM issued_badges WHERE user_id=? AND badge_key=?',
+                (uid, badge_key)
+            ).fetchone()
+            if not final or not final['badge_id']:
+                raise RuntimeError('Badge record was saved without a verification ID.')
+
+            audit('badge_issue', 'badge', final['badge_id'], badge_title, {'badge_key': badge_key})
+            return jsonify({'badge_id': final['badge_id'], 'badge_title': badge_title})
         except Exception as e:
-            import traceback
-            app.logger.error(f'issue_badge error: {traceback.format_exc()}')
+            app.logger.exception('issue_badge failed')
             try:
-                db = getattr(g, '_db', None)
-                if db and hasattr(db, '_conn'): db._conn.rollback()
-            except Exception: pass
-            return jsonify({'error': 'Failed to issue badge', 'detail': _err_detail(e)}), 500
-    
+                if db and hasattr(db, '_conn'):
+                    db._conn.rollback()
+            except Exception:
+                pass
+            return jsonify({'error': 'We could not issue this badge right now. Please try again.'}), 500
+
     @app.route('/api/badges/<badge_key>', methods=['GET'])
     @token_required
     def get_badge_name_info(badge_key):
