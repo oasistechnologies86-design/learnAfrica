@@ -275,7 +275,7 @@ export function QuizResultsPage() {
             {/* Back to the exact lesson they came from */}
             <Link to={backToLesson} className="flex-1">
               <Button variant="outline" className="w-full gap-2">
-                <BookOpen className="h-4 w-4" /> Back to Course
+                <BookOpen className="h-4 w-4" /> Back to Lesson
               </Button>
             </Link>
 
@@ -382,7 +382,7 @@ export function QuizResultsPage() {
         {/* Bottom nav */}
         <div className="pb-8 flex gap-3">
           <Link to={backToLesson} className="flex-1">
-            <Button variant="outline" className="w-full h-12">← Back to Course</Button>
+            <Button variant="outline" className="w-full h-12">← Back to Lesson</Button>
           </Link>
           {showCertSection && passed && certData && (
             <Button onClick={handleDownload}
