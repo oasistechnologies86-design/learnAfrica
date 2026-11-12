@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { MapPin, Globe, BookOpen, Users, Loader2, ChevronLeft } from 'lucide-react';
+import { MapPin, Globe, BookOpen, Loader2, ChevronLeft } from 'lucide-react';
 import { Card, CardContent } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { API_BASE } from '@/lib/api';
@@ -119,10 +119,7 @@ export default function InstructorProfilePage() {
                 <CardContent className="p-5">
                   <p className="font-semibold line-clamp-2">{c.title}</p>
                   <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{c.description}</p>
-                  <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Users className="h-3.5 w-3.5" /> {c.student_count}
-                    </span>
+                  <div className="mt-3 flex justify-end text-xs text-muted-foreground">
                     <span className="font-medium text-foreground">
                       {c.is_free ? 'Free' : formatPrice(c.price)}
                     </span>
