@@ -13,7 +13,7 @@ export function VerifySection() {
   const [result,   setResult]   = useState(null);
   const [loading,  setLoading]  = useState(false);
   const [searched, setSearched] = useState(false);
-  const [sectionRef, sectionVisible] = useOnScreen({ threshold: 0.2 });
+  const [sectionRef] = useOnScreen({ threshold: 0.2 });
 
   const runVerify = useCallback(async (raw) => {
     // Aggressive client-side normalization: strip ALL whitespace anywhere in the ID
