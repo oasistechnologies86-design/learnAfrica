@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, BookOpen, MessageCircle, ShieldCheck, UsersRound } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { Button } from '@/components/common/Button';
 import { CommentsSection } from './CommunitySection';
 
 const communityValues = [
@@ -10,43 +9,52 @@ const communityValues = [
   { icon: ShieldCheck, title: 'Keep it respectful', text: 'Help make the space welcoming, useful, and safe for everyone.' },
 ];
 
+const communityImages = [
+  { src: '/hero-community.jpg', alt: 'LearnAfrica learners connecting and learning together', className: 'col-span-2 row-span-2' },
+  { src: '/student1.jpg', alt: 'Student learning on LearnAfrica', className: '' },
+  { src: '/student2.jpg', alt: 'Learner studying', className: '' },
+  { src: '/student3.jpg', alt: 'Student taking part in learning', className: '' },
+  { src: '/student4.jpg', alt: 'Learner building new skills', className: '' },
+  { src: '/student5.jpg', alt: 'Student developing their knowledge', className: '' },
+];
+
 export default function CommunityPage() {
   const { user, isAuthenticated } = useAuth();
   return (
     <main className="bg-background text-foreground">
       <section className="border-b border-border bg-muted/20">
         <div className="container mx-auto max-w-6xl px-4 py-8 sm:py-10">
-          <div className="relative mb-8 min-h-[230px] overflow-hidden rounded-2xl bg-muted sm:min-h-[320px]">
-            <img
-              src="https://rwesck.knust.edu.gh/sites/rwesck.knust.edu.gh/files/2023-02/rwesck-about-image.png"
-              alt="Students in Ghana working together around a laptop"
-              className="absolute inset-0 h-full w-full object-cover"
-              loading="eager"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/45 to-black/10" />
-            <div className="relative flex min-h-[230px] max-w-2xl flex-col justify-end p-5 text-white sm:min-h-[320px] sm:p-9">
-              <p className="text-sm font-semibold text-white/85">LearnAfrica community</p>
+          <div className="grid items-center gap-7 overflow-hidden rounded-2xl border border-border bg-card p-4 sm:p-6 lg:grid-cols-[0.9fr_1.1fr] lg:p-8">
+            <div className="max-w-xl py-2">
+              <p className="text-sm font-semibold text-primary">LearnAfrica community</p>
               <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">Learning is better when we share it.</h1>
-              <p className="mt-3 max-w-xl text-sm leading-6 text-white/90 sm:text-base sm:leading-7">
+              <p className="mt-3 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
                 Meet other learners, ask questions, share your progress, and help someone else move forward.
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
-                <a href="#community-discussion" className="inline-flex h-11 items-center gap-2 rounded-lg bg-white px-5 text-sm font-semibold text-slate-900 transition hover:bg-white/90">
+                <a href="#community-discussion" className="inline-flex h-11 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:opacity-90">
                   Join the discussion <ArrowRight className="h-4 w-4" />
                 </a>
-                <Link to="/courses" className="inline-flex h-11 items-center gap-2 rounded-lg border border-white/70 bg-black/20 px-5 text-sm font-semibold text-white transition hover:bg-black/35">
+                <Link to="/courses" className="inline-flex h-11 items-center gap-2 rounded-lg border border-border bg-background px-5 text-sm font-semibold transition hover:bg-muted">
                   <BookOpen className="h-4 w-4" /> Browse courses
                 </Link>
               </div>
+              <p className="mt-4 text-xs text-muted-foreground">{isAuthenticated ? 'You are signed in and can take part in the discussion.' : 'You can read discussions without signing in.'}</p>
+            </div>
+            <div className="grid aspect-[1.35] grid-cols-4 grid-rows-3 gap-2 sm:gap-3" aria-label="Photos of learners and learning activities">
+              {communityImages.map((item, index) => (
+                <div key={item.src} className={`relative min-h-0 overflow-hidden rounded-xl bg-muted ${item.className}`}>
+                  <img src={item.src} alt={item.alt} className="h-full w-full object-cover transition duration-500 hover:scale-105" loading={index < 3 ? 'eager' : 'lazy'} />
+                </div>
+              ))}
             </div>
           </div>
-          <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="mt-7 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
             <div className="max-w-xl">
               <h2 className="text-xl font-bold tracking-tight">A community for sharing what you learn</h2>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
                 Ask for help, share useful resources, and encourage other learners. Sign in or create an account to post, reply, and like discussions.
               </p>
-              <p className="mt-3 text-xs text-muted-foreground">{isAuthenticated ? 'You are signed in and can take part in the discussion.' : 'You can read discussions without signing in.'}</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               {communityValues.map(({ icon: Icon, title, text }) => (
