@@ -497,44 +497,38 @@ button:disabled,
 .custom-lesson-completion button:focus-visible { outline:3px solid var(--ring);outline-offset:4px; }
 .custom-lesson-completion button:disabled { opacity:.88;cursor:default; }
 .custom-lesson-completion button.is-completed { border-color:var(--lesson-green);background:var(--lesson-green); }
-.custom-lesson-sticky-action button { cursor:pointer;white-space:normal;text-align:center;line-height:1.3;font-family:Arial,Helvetica,sans-serif; }
-.custom-lesson-sticky-action button:focus-visible { outline:2px solid var(--ring);outline-offset:4px; }
 .custom-lesson-content-end { height:1px; }
 .custom-lesson-system { padding-bottom:112px; }
 .custom-lesson-sticky-action {
-  position:fixed;z-index:70;left:50%;bottom:calc(4.9rem + env(safe-area-inset-bottom));
+  position:fixed;z-index:45;left:50%;bottom:calc(5.35rem + env(safe-area-inset-bottom));
   transform:translateX(-50%);width:max-content;max-width:calc(100vw - 2rem);
   display:flex;justify-content:center;pointer-events:none;
 }
 .custom-lesson-sticky-action button {
   pointer-events:auto;position:relative;display:inline-flex;align-items:center;justify-content:center;
-  gap:10px;min-height:46px;padding:10px 18px;border:1px solid color-mix(in oklab,var(--lesson-green) 58%,var(--lesson-line));
+  gap:8px;min-height:36px;padding:7px 12px;border:1px solid color-mix(in oklab,var(--lesson-green) 38%,var(--lesson-line));
   border-radius:999px;color:var(--lesson-green-dark);
-  background:color-mix(in oklab,var(--lesson-surface) 92%,var(--lesson-green));
-  box-shadow:0 7px 24px rgba(0,0,0,.16),0 0 0 3px color-mix(in oklab,var(--lesson-green) 10%,transparent);
-  font-size:11px;font-weight:800;letter-spacing:.075em;text-shadow:none;
-  transition:transform .22s ease,box-shadow .22s ease,background .22s ease,border-color .22s ease;
-  animation:customLessonHintFloat 3s ease-in-out infinite;
+  background:color-mix(in oklab,var(--lesson-surface) 96%,var(--lesson-green));
+  box-shadow:0 3px 12px rgba(0,0,0,.09);
+  font-size:11px;font-weight:600;letter-spacing:.005em;text-shadow:none;
+  transition:transform .2s ease,box-shadow .2s ease,background .2s ease,border-color .2s ease;
 }
 .custom-lesson-sticky-action button:hover {
-  transform:translateY(-3px) scale(1.035);
+  transform:translateY(-2px);
   border-color:var(--lesson-green);
   background:var(--lesson-surface);
-  box-shadow:0 10px 30px rgba(0,0,0,.2),0 0 0 5px color-mix(in oklab,var(--lesson-green) 13%,transparent);
+  box-shadow:0 5px 16px rgba(0,0,0,.13);
 }
 .custom-lesson-sticky-action button:active { transform:translateY(0) scale(.985); }
 .custom-lesson-scroll-label { white-space:nowrap; }
-.custom-lesson-scroll-hand { position:relative;display:inline-flex;align-items:center;justify-content:center;width:1.7rem;height:1.7rem;flex:0 0 1.7rem;filter:drop-shadow(0 2px 3px color-mix(in oklab,var(--lesson-green) 24%,transparent));animation:customLessonHandSwipe 1.45s cubic-bezier(.4,0,.2,1) infinite; }
-.custom-lesson-scroll-hand svg { display:block;width:1.55rem;height:1.7rem;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;transform:rotate(180deg); }
-.custom-lesson-scroll-ripple { position:absolute;left:50%;bottom:-.22rem;width:1rem;height:.38rem;border:1.5px solid currentColor;border-top:0;border-radius:0 0 1rem 1rem;opacity:0;transform:translateX(-50%) scale(.65);animation:customLessonTouchRipple 1.45s ease-out infinite; }
-@keyframes customLessonHandSwipe { 0%,18% { transform:translateY(-3px); } 58% { transform:translateY(4px); } 78%,100% { transform:translateY(-3px); } }
-@keyframes customLessonTouchRipple { 0%,48% { opacity:0;transform:translateX(-50%) scale(.65); } 62% { opacity:.75;transform:translateX(-50%) scale(1.15); } 82%,100% { opacity:0;transform:translateX(-50%) scale(1.45); } }
-@keyframes customLessonHintFloat { 0%,100% { translate:0 0; } 50% { translate:0 -3px; } }
+.custom-lesson-scroll-arrow { display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;background:color-mix(in oklab,var(--lesson-green) 12%,transparent);font-size:14px;line-height:1;transition:transform .2s ease; }
+.custom-lesson-sticky-action button:hover .custom-lesson-scroll-arrow { transform:translateY(2px); }
 .dark .custom-lesson-sticky-action button {
-  color:var(--foreground);background:color-mix(in oklab,var(--card) 88%,var(--primary) 12%);
-  border-color:color-mix(in oklab,var(--primary) 62%,var(--border));
-  box-shadow:0 8px 26px rgba(0,0,0,.42),0 0 0 3px color-mix(in oklab,var(--primary) 14%,transparent);
+  color:var(--foreground);background:color-mix(in oklab,var(--card) 94%,var(--primary) 6%);
+  border-color:color-mix(in oklab,var(--primary) 42%,var(--border));
+  box-shadow:0 3px 14px rgba(0,0,0,.3);
 }
+
 .dark .custom-lesson-page {
   --lesson-surface: var(--card);
   --lesson-page-shadow: 0 8px 36px rgba(0,0,0,.28);
@@ -567,9 +561,10 @@ button:disabled,
 }
 @media(max-width:650px) {
   .custom-lesson-page { border-radius:16px; }
-  .custom-lesson-sticky-action { bottom:calc(4.9rem + env(safe-area-inset-bottom)); }
+  .custom-lesson-sticky-action { bottom:calc(5.35rem + env(safe-area-inset-bottom)); }
   .custom-lesson-system { padding-bottom:150px; }
-  .custom-lesson-sticky-action button { min-height:44px;padding:9px 13px;gap:8px;font-size:10px; }
+  .custom-lesson-sticky-action button { min-height:34px;padding:7px 10px;gap:7px;font-size:10px; }
+  .custom-lesson-scroll-arrow { width:16px;height:16px; }
 }
 @media(prefers-reduced-motion:reduce) {
   .custom-lesson-page { box-shadow:0 0 0 1px color-mix(in oklab,var(--primary) 18%,var(--border)); }
