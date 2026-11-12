@@ -1417,19 +1417,27 @@ def create_app() -> Flask:
 
 
     def _touch_streak(db, user_id):
-        """Daily streak: same day keeps it, the next day adds 1, a missed day resets to 1."""
+        """Update the daily streak and persist the seven-day badge once earned."""
         try:
             row = db.execute('SELECT streak, last_activity FROM user_stats WHERE user_id=?', (user_id,)).fetchone()
             if not row:
                 return
             today = datetime.now().date()
             last = str(row['last_activity'] or '')[:10]
-            if last == today.isoformat():
-                return
-            yesterday = (today - timedelta(days=1)).isoformat()
-            streak = int(row['streak'] or 0) + 1 if last == yesterday else 1
-            db.execute('UPDATE user_stats SET streak=?, last_activity=? WHERE user_id=?',
-                       (streak, today.isoformat(), user_id))
+            if last != today.isoformat():
+                yesterday = (today - timedelta(days=1)).isoformat()
+                streak = int(row['streak'] or 0) + 1 if last == yesterday else 1
+                db.execute('UPDATE user_stats SET streak=?, last_activity=? WHERE user_id=?',
+                           (streak, today.isoformat(), user_id))
+            else:
+                streak = int(row['streak'] or 0)
+            # This also repairs accounts that reached seven days before this
+            # award hook existed, or whose first insert previously failed.
+            if streak >= 7:
+                db.execute(
+                    "INSERT INTO user_badges (user_id,badge_key) VALUES(?,'CONSISTENT_LEARNER') ON CONFLICT DO NOTHING",
+                    (user_id,)
+                )
             db.commit()
         except Exception as ex:
             app.logger.warning(f'streak update failed: {ex}')
