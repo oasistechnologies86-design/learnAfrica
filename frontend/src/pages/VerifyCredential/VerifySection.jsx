@@ -7,31 +7,29 @@ import { cn } from '@/lib/utils';
 import { API_BASE } from '@/lib/api';
 import { useOnScreen } from '@/lib/useOnScreen';
 
-// ── Verify Credential ─────────────────────────────────────────────────────
 export function VerifySection() {
-  const [credId,   setCredId]   = useState('');
-  const [result,   setResult]   = useState(null);
-  const [loading,  setLoading]  = useState(false);
+  const [credId, setCredId] = useState('');
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [sectionRef] = useOnScreen({ threshold: 0.2 });
 
   const runVerify = useCallback(async (raw) => {
-    // Aggressive client-side normalization: strip ALL whitespace anywhere in the ID
-    // (users often paste with tabs, newlines, or extra spaces). Uppercase for
-    // case-insensitive match. Backend does the same and also tolerates hyphens
-    // being dropped/added.
-    const normalized = raw.replace(/\s+/g, '').toUpperCase();
+    const normalized = raw.replace(/\\s+/g, '').toUpperCase();
     if (!normalized) return;
     setCredId(normalized);
-    setLoading(true); setResult(null); setSearched(false);
+    setLoading(true);
+    setResult(null);
+    setSearched(false);
     try {
-      const res  = await fetch(`${API_BASE}/api/verify?id=${encodeURIComponent(normalized)}`);
+      const res = await fetch(`${API_BASE}/api/verify?id=${encodeURIComponent(normalized)}`);
       const data = await res.json();
       setResult(data);
     } catch {
       setResult({ valid: false, message: 'Verification service unavailable.' });
     }
-    setLoading(false); setSearched(true);
+    setLoading(false);
+    setSearched(true);
   }, []);
 
   const handleVerify = (e) => {
@@ -39,11 +37,6 @@ export function VerifySection() {
     runVerify(credId);
   };
 
-  // A certificate/badge QR links here as /#verify-section?id=LA-CERT-... —
-  // pre-fill the box and verify automatically so a scan lands on the result.
-  // The listener also covers the case where the visitor is already on this
-  // page and a link only changes the hash, which would otherwise not re-run
-  // the effect (and would not scroll, because the fragment is not a plain id).
   useEffect(() => {
     const readId = () => {
       const params = new URLSearchParams(window.location.search);
@@ -54,7 +47,6 @@ export function VerifySection() {
       const prefill = readId();
       if (!prefill) return;
       runVerify(prefill);
-      // Let the section render, then bring it into view for a scanned link.
       setTimeout(() => sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
     };
     apply();
@@ -64,104 +56,89 @@ export function VerifySection() {
 
   const fmt = (s) => {
     if (!s) return '—';
-    try { return new Date(s).toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' }); }
+    try { return new Date(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }); }
     catch { return s; }
   };
 
   return (
     <section id="verify-section" ref={sectionRef} className="scroll-mt-24 py-3 sm:py-5">
-      <div className={cn(
-        "container mx-auto max-w-3xl"
-      )}>
-        <div className="text-center mb-5">
-          <div className="inline-flex items-center justify-center h-11 w-11 rounded-xl bg-primary/10 mb-3">
-            <ShieldCheck className="h-5 w-5 text-primary" />
+      <div className="mx-auto max-w-4xl">
+        <div className="mx-auto mb-7 max-w-2xl text-center">
+          <div className="mx-auto mb-3 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+            <ShieldCheck className="h-6 w-6 text-primary" />
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Enter your credential ID</h2>
-          <p className="text-muted-foreground mt-2 text-sm">
-            Enter a certificate or badge ID to verify its authenticity.
+          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Verify your certificate or badge</h2>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
+            Enter the ID printed on your LearnAfrica certificate or achievement badge.
           </p>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-5 sm:p-7">
-        <form onSubmit={handleVerify} className="mb-0 flex flex-col gap-3 sm:flex-row sm:items-stretch">
-          <input type="text" value={credId}
-            onChange={e => { setCredId(e.target.value); setSearched(false); setResult(null); }}
-            placeholder="e.g. LA-CERT-ABCD-1A2B3C"
-            className="h-14 min-w-0 flex-1 rounded-lg border border-input bg-background px-5 text-base outline-none transition placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/10" />
-          <Button type="submit" disabled={loading || !credId.trim()} className="h-14 min-w-28 shrink-0 gap-2 rounded-lg px-8 text-base">
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-            <span className="hidden sm:inline">Verify</span>
-          </Button>
-        </form>
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-8 lg:p-10">
+          <form onSubmit={handleVerify} className="space-y-4">
+            <label htmlFor="credential-id" className="block text-base font-semibold">Your certificate or badge ID</label>
+            <input
+              id="credential-id"
+              type="text"
+              value={credId}
+              onChange={e => { setCredId(e.target.value); setSearched(false); setResult(null); }}
+              placeholder="Enter your credential ID here"
+              autoComplete="off"
+              className="h-16 w-full rounded-xl border-2 border-input bg-background px-5 text-lg outline-none transition placeholder:text-muted-foreground/60 focus:border-primary focus:ring-4 focus:ring-primary/10 sm:h-[72px] sm:px-6 sm:text-xl"
+            />
+            <Button type="submit" disabled={loading || !credId.trim()} className="h-14 w-full gap-2 rounded-xl px-8 text-base font-semibold sm:h-16 sm:text-lg">
+              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
+              {loading ? 'Checking credential...' : 'Verify credential'}
+            </Button>
+          </form>
 
-        {searched && result && (
-          <div className={cn(
-            'rounded-2xl border p-4 animate-in fade-in slide-in-from-bottom-2',
-            result.valid ? 'bg-success/5 border-success/30' : 'bg-destructive/5 border-destructive/30'
-          )}>
-            {result.valid ? (
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-success/10 flex items-center justify-center shrink-0">
-                    <CheckCircle2 className="h-5 w-5 text-success" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-success">Valid {result.type === 'certificate' ? 'Certificate' : 'Badge'}</p>
-                    <p className="text-xs text-muted-foreground font-mono">{result.id}</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-border/50">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase text-muted-foreground">Holder</p>
-                    <p className="font-semibold mt-0.5">{result.holder}</p>
-                  </div>
-                  {result.type === 'certificate' && (<>
-                    <div>
-                      <p className="text-[10px] font-bold uppercase text-muted-foreground">Course</p>
-                      <p className="font-semibold mt-0.5">{result.course}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold uppercase text-muted-foreground">Course Delivery</p>
-                      <p className="font-semibold mt-0.5">{result.delivery || 'Instructor-led'}</p>
-                    </div>
-                  </>)}
-                  {result.type === 'badge' && (
-                    <div>
-                      <p className="text-[10px] font-bold uppercase text-muted-foreground">Achievement</p>
-                      <p className="font-semibold mt-0.5">{result.badge}</p>
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-[10px] font-bold uppercase text-muted-foreground">Issued</p>
-                    <p className="font-semibold mt-0.5">{fmt(result.issued_at)}</p>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground pt-1">
-                  This {result.type} was issued by LearnAfrica and is authentic.
-                </p>
-              </div>
-            ) : (
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
-                  <XCircle className="h-5 w-5 text-destructive" />
-                </div>
-                <div>
-                  <p className="font-bold text-destructive">
-                    {result.revoked ? 'Credential Revoked' : 'Credential Not Found'}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-0.5">
-                    {result.message || 'This ID does not match any issued certificate or badge.'}
-                  </p>
-                </div>
-              </div>
-            )}
+          <div className="mt-6 rounded-xl border border-dashed border-border bg-muted/40 p-4 sm:p-5">
+            <p className="text-sm font-semibold">Example format only</p>
+            <p className="mt-1 text-sm text-muted-foreground">This is just an example to show how an ID may look. Do not enter this sample unless it is the ID printed on your own credential.</p>
+            <p className="mt-3 inline-block rounded-md bg-background px-3 py-2 font-mono text-sm text-muted-foreground">LA-CERT-ABCD-123456</p>
           </div>
-        )}
+
+          {searched && result && (
+            <div className={cn(
+              'mt-6 rounded-2xl border p-5 animate-in fade-in slide-in-from-bottom-2',
+              result.valid ? 'bg-success/5 border-success/30' : 'bg-destructive/5 border-destructive/30'
+            )}>
+              {result.valid ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-success/10">
+                      <CheckCircle2 className="h-5 w-5 text-success" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-success">Valid {result.type === 'certificate' ? 'Certificate' : 'Badge'}</p>
+                      <p className="font-mono text-xs text-muted-foreground">{result.id}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 border-t border-border/50 pt-3 sm:grid-cols-2">
+                    <div><p className="text-[10px] font-bold uppercase text-muted-foreground">Holder</p><p className="mt-0.5 font-semibold">{result.holder}</p></div>
+                    {result.type === 'certificate' && <>
+                      <div><p className="text-[10px] font-bold uppercase text-muted-foreground">Course</p><p className="mt-0.5 font-semibold">{result.course}</p></div>
+                      <div><p className="text-[10px] font-bold uppercase text-muted-foreground">Course Delivery</p><p className="mt-0.5 font-semibold">{result.delivery || 'Instructor-led'}</p></div>
+                    </>}
+                    {result.type === 'badge' && <div><p className="text-[10px] font-bold uppercase text-muted-foreground">Achievement</p><p className="mt-0.5 font-semibold">{result.badge}</p></div>}
+                    <div><p className="text-[10px] font-bold uppercase text-muted-foreground">Issued</p><p className="mt-0.5 font-semibold">{fmt(result.issued_at)}</p></div>
+                  </div>
+                  <p className="pt-1 text-xs text-muted-foreground">This {result.type} was issued by LearnAfrica and is authentic.</p>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-destructive/10">
+                    <XCircle className="h-5 w-5 text-destructive" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-destructive">{result.revoked ? 'Credential Revoked' : 'Credential Not Found'}</p>
+                    <p className="mt-0.5 text-sm text-muted-foreground">{result.message || 'This ID does not match any issued certificate or badge.'}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </section>
   );
 }
-
-
