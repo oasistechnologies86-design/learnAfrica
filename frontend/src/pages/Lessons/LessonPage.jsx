@@ -582,6 +582,7 @@ export function LessonPage() {
                           onComplete={handleMarkComplete}
                           isCompleted={!!currentLessonFinished}
                           isSaving={isSaving}
+                          navigationOpen={showSidebar}
                         >
                           <Component student={user} lesson={lesson} />
                         </CustomLessonFrame>
