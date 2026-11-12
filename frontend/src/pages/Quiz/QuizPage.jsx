@@ -528,8 +528,8 @@ export function QuizPage() {
                 <Button variant="outline" className="flex-1" onClick={() => setTimeGate(null)}>
                   Close
                 </Button>
-                <Button className="flex-1" onClick={() => navigate(`/courses/${courseId}`)}>
-                  Back to course
+                <Button className="flex-1" onClick={() => navigate(`/learn/course/${courseId}/lesson/${lessonId}`)}>
+                  Back to lesson
                 </Button>
               </div>
             </Card>
