@@ -5809,7 +5809,7 @@ def create_app() -> Flask:
 
             # Full UUID entropy avoids collisions between different students
             # or badges; the unique (user_id,badge_key) row keeps re-issuance stable.
-            candidate_id = 'LA-BADGE-' + badge_key[:4] + '-' + uuid.uuid4().hex[:12].upper()
+            candidate_id = 'LA-BADGE-' + badge_key[:4] + '-' + uuid.uuid4().hex.upper()
             db.execute(
                 'INSERT INTO issued_badges (badge_id,user_id,user_name,badge_name,badge_key,badge_title)'
                 ' VALUES (?,?,?,?,?,?) ON CONFLICT (user_id,badge_key) DO NOTHING',
