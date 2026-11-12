@@ -45,19 +45,17 @@ const iconMap = { Target, Trophy, BookOpen, Flame, Compass, Award };
 // ── PDF Badge Generator ────────────────────────────────────────────────────
 async function registerBadge(badge) {
   const token = sessionStorage.getItem('auth_token');
-  if (!token) return null;
-  try {
-    const res = await fetch(`${API_BASE}/api/badges/issue`,  {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ badge_key: badge.key, badge_title: badge.title })
-    });
-    if (res.ok) {
-      const data = await res.json();
-      return data.badge_id;
-    }
-  } catch {}
-  return null;
+  if (!token) throw new Error('Your session has expired. Sign in again to issue this badge.');
+  const res = await fetch(`${API_BASE}/api/badges/issue`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ badge_key: badge.key })
+  });
+  let data = {};
+  try { data = await res.json(); } catch {}
+  if (!res.ok) throw new Error(data.error || 'Badge issuance failed. Please try again.');
+  if (!data.badge_id) throw new Error('The badge was saved, but its verification ID was not returned. Please retry.');
+  return data.badge_id;
 }
 
 
@@ -204,6 +202,8 @@ function BadgeEditNameControl({ badgeKey, currentName, remaining, onUpdated, sup
 // same component, same data, cannot drift apart.
 function BadgePreviewModal({ badge, userName, onClose }) {
   const [badgeId, setBadgeId] = useState(null);
+  const [badgeError, setBadgeError] = useState('');
+  const [issuing, setIssuing] = useState(true);
   const [nameInfo, setNameInfo] = useState({ badgeName: userName, remaining: 3 });
   const [supportEmail, setSupportEmail] = useState('support@learnafrica.com');
   const { showToast } = useToast();
@@ -228,23 +228,29 @@ function BadgePreviewModal({ badge, userName, onClose }) {
     return () => document.body.classList.remove('badge-print-mode');
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
+  const issueBadge = useCallback(async () => {
+    setIssuing(true);
+    setBadgeError('');
+    try {
       const id = await registerBadge(badge);
-      if (cancelled) return;
       setBadgeId(id);
-      try {
-        const token = sessionStorage.getItem('auth_token');
-        const res = await fetch(`${API_BASE}/api/badges/${badge.key}`, { headers: { Authorization: `Bearer ${token}` } });
-        if (res.ok) {
-          const d = await res.json();
-          if (!cancelled) setNameInfo({ badgeName: d.badgeName || userName, remaining: d.nameChangesRemaining ?? 3 });
-        }
-      } catch {}
-    })();
-    return () => { cancelled = true; };
+      const token = sessionStorage.getItem('auth_token');
+      const res = await fetch(`${API_BASE}/api/badges/${badge.key}`, { headers: { Authorization: `Bearer ${token}` } });
+      if (res.ok) {
+        const d = await res.json();
+        setNameInfo({ badgeName: d.badgeName || userName, remaining: d.nameChangesRemaining ?? 3 });
+      }
+    } catch (error) {
+      setBadgeId(null);
+      setBadgeError(error?.message || 'Badge issuance failed. Please try again.');
+    } finally {
+      setIssuing(false);
+    }
   }, [badge, userName]);
+
+  useEffect(() => {
+    issueBadge();
+  }, [issueBadge]);
 
   const [downloading, setDownloading] = useState(false);
   const [printing, setPrinting] = useState(false);
@@ -300,21 +306,28 @@ function BadgePreviewModal({ badge, userName, onClose }) {
           </ScaleToFit>
         </div>
         <div className="mt-4 flex flex-col items-center gap-2">
+          {issuing && <p className="text-sm text-white/80">Preparing your badge and verification QR code…</p>}
+          {badgeError && (
+            <div role="alert" className="w-full rounded-xl border border-red-300/40 bg-red-950/40 p-3 text-center text-sm text-white">
+              <p>{badgeError}</p>
+              <Button variant="outline" onClick={issueBadge} className="mt-2 border-white/30 text-white hover:bg-white/10">Try again</Button>
+            </div>
+          )}
           <div className="flex w-full sm:w-auto items-center justify-center gap-2">
-            <Button onClick={handleDownload} className="px-8 gap-2">
+            <Button onClick={handleDownload} disabled={!badgeId || issuing || downloading} className="px-8 gap-2">
               <Download className="h-4 w-4" /> {downloading ? "Preparing…" : "Download Badge"}
             </Button>
-            <Button variant="outline" onClick={handlePrint} disabled={printing} className="px-6 gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20">
+            <Button variant="outline" onClick={handlePrint} disabled={!badgeId || issuing || printing} className="px-6 gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20">
               {printing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Printer className="h-4 w-4" />} Print
             </Button>
           </div>
-          <BadgeEditNameControl
+          {badgeId && <BadgeEditNameControl
             badgeKey={badge.key}
             currentName={nameInfo.badgeName}
             remaining={nameInfo.remaining}
             supportEmail={supportEmail}
             onUpdated={(name, remaining) => setNameInfo({ badgeName: name, remaining })}
-          />
+          />}
         </div>
       </div>
     </div>
