@@ -306,6 +306,136 @@ const extendedTeachingSections = {
   ]
 };
 
+
+/*
+ * Guided worked examples turn the reading into teachable, applied reasoning.
+ * Each example models the steps a student should use before attempting a
+ * similar case independently. These are teaching aids, not legal advice.
+ */
+const guidedWorkedExamples = {
+  1: {
+    title: 'Worked example: pressure to alter a student record',
+    scenario: 'A senior employee asks an IT administrator to change a student result. The request is informal and the student is related to the employee.',
+    steps: [
+      ['Establish the facts', 'Confirm what change is requested, who made the request, whether there is an authorised correction record and what evidence supports it. Do not assume the request is valid because of the requester’s position.'],
+      ['Identify stakeholders and duties', 'The student, other students, lecturers, the institution, examination administrators and the public may be affected. Relevant duties include honesty, fairness, confidentiality, record accuracy and following approved procedures.'],
+      ['Compare options', 'Changing the result informally creates unfairness and damages record integrity. Ignoring the request without documenting it may allow pressure to continue. The responsible option is to refuse the unauthorised change, preserve the request and refer it through the formal results-review process.'],
+      ['Justify and review', 'Document the facts and decision, use an independent authorised reviewer and retain an audit trail. Review whether access controls or approval procedures need improvement.']
+    ],
+    takeaway: 'An ethical decision is not merely a personal opinion. It is a reasoned, documented choice that considers evidence, duties, affected people and consequences.'
+  },
+  2: {
+    title: 'Worked example: a technician receives a request for private information',
+    scenario: 'A technician can access the student database. A friend asks for another student’s phone number, saying it is needed urgently.',
+    steps: [
+      ['Separate authentication from authorisation', 'The technician may be authenticated and technically able to open the record. That does not authorise the disclosure.'],
+      ['Apply purpose and least privilege', 'Ask whether accessing the record is part of an assigned work task. A personal favour is not a legitimate work purpose.'],
+      ['Choose a safe response', 'Do not search for or disclose the number. Direct the friend to an approved contact route or ask the data subject to share their details voluntarily.'],
+      ['Protect accountability', 'If the request creates pressure or appears suspicious, follow the organisation’s reporting process. Do not share credentials or use another worker’s account.']
+    ],
+    takeaway: 'Authentication proves an identity; authorisation grants permitted actions. Technical access is not permission.'
+  },
+  3: {
+    title: 'Worked example: responding to a suspected phishing incident',
+    scenario: 'Several students report a message that imitates the university portal and asks them to sign in to avoid account suspension.',
+    steps: [
+      ['Recognise indicators', 'Look for an unusual sender address, unexpected urgency, a mismatched link destination, spelling inconsistencies and requests for passwords or verification codes. One indicator alone may not prove fraud, so verify independently.'],
+      ['Contain and communicate', 'Report the message to the designated IT/security contact. Warn users through a trusted official channel. If credentials were entered, follow the approved account-reset and session-revocation procedure.'],
+      ['Preserve evidence', 'Keep the original message, headers, link information, timestamps and relevant logs where safe and authorised. Do not forward the link to others or delete evidence before reporting.'],
+      ['Recover and learn', 'Check affected accounts, monitor for suspicious activity, restore services if needed and explain what happened. Review filtering, multi-factor authentication, user training and reporting routes.']
+    ],
+    takeaway: 'Incident response combines preparation, identification, containment, evidence preservation, recovery and lessons learned.'
+  },
+  4: {
+    title: 'Worked example: deciding whether a learning app needs location data',
+    scenario: 'A learning app asks every student for continuous location access, although lessons and assessments work without it.',
+    steps: [
+      ['Define the purpose', 'Ask what specific feature needs location and whether that feature is essential to the learning service. A vague wish to collect more data is not a sufficient explanation.'],
+      ['Test necessity and proportionality', 'Consider whether a less intrusive option, such as a student-selected campus or a one-time check, would achieve the same result.'],
+      ['Explain and safeguard', 'Provide a clear notice, restrict access, set retention limits and assess who receives the information. Where consent is relied on, it must be meaningful and appropriate to the context.'],
+      ['Make the design decision', 'If location is not necessary, do not collect it. If a justified feature requires it, collect the minimum needed and make the choice clear to users.']
+    ],
+    takeaway: 'Privacy is not solved by adding a consent checkbox. First question whether the information should be collected at all.'
+  },
+  5: {
+    title: 'Worked example: moderating a heated class discussion',
+    scenario: 'A learner criticises a college policy. Another learner responds with personal insults and publishes the critic’s private phone number.',
+    steps: [
+      ['Separate the content', 'Policy criticism is not automatically harmful. Personal insults may breach community rules, while publishing private contact details creates a distinct privacy and safety concern.'],
+      ['Apply a clear rule', 'Identify the published moderation rule and the specific content that may breach it. Avoid removing criticism simply because it is uncomfortable.'],
+      ['Choose a proportionate action', 'Remove or restrict the exposed personal information promptly, address targeted abuse under the rules and preserve relevant evidence. Keep lawful, respectful criticism available where possible.'],
+      ['Provide review', 'Explain the decision and offer an appeal route. Apply the same standards to comparable cases, regardless of the person’s status or viewpoint.']
+    ],
+    takeaway: 'Good moderation distinguishes criticism from abuse, identifies the actual harm and uses a consistent, proportionate and reviewable response.'
+  },
+  6: {
+    title: 'Worked example: reusing an image in paid course materials',
+    scenario: 'A lecturer finds an attractive image through a search engine and wants to place it in a course that students pay to access.',
+    steps: [
+      ['Find the original source', 'Identify the creator or rights holder and the page where the work was first published. A search result or download button does not establish permission.'],
+      ['Read the exact licence', 'Check whether commercial use is permitted, whether adaptations are allowed, what attribution is required and whether ShareAlike conditions apply.'],
+      ['Check the planned use', 'A paid course may be a commercial context depending on the facts and licence. If the licence excludes commercial use, obtain permission or choose another resource.'],
+      ['Record compliance', 'Keep the source URL, creator name, licence version, access date and required attribution. If no suitable permission exists, do not use the image.']
+    ],
+    takeaway: 'Attribution and permission are different. Giving credit does not automatically authorise copying, adaptation or commercial use.'
+  },
+  7: {
+    title: 'Worked example: an automated scholarship screening system',
+    scenario: 'A college uses software to rank scholarship applicants. Testing shows that applicants from areas with unreliable internet receive lower scores because they submit forms later.',
+    steps: [
+      ['Define the intended purpose', 'The system is meant to assess eligibility and merit, not to reward applicants for having better connectivity.'],
+      ['Investigate the source of bias', 'Check whether submission time is a valid criterion, whether missing data is treated unfairly and whether the training or historical data reflects unequal access.'],
+      ['Test and validate', 'Compare outcomes across relevant groups, test realistic edge cases and ask affected users whether the process works for them. Verification against the specification is not enough if the specification itself is unfair.'],
+      ['Add safeguards', 'Remove or justify the problematic feature, provide an accessible alternative, enable human review and give applicants a way to correct errors or appeal. Monitor results after deployment.']
+    ],
+    takeaway: 'A system can function exactly as coded and still produce an unfair result. Validation asks whether it solves the right problem for real users.'
+  },
+  8: {
+    title: 'Worked example: evaluating a new automated attendance system',
+    scenario: 'A school expects an automated attendance system to save staff time, but some students have older phones and unreliable connectivity.',
+    steps: [
+      ['Measure the intended result', 'Define what success means: accurate attendance, less administrative time, fewer errors and a reliable process for students who cannot connect.'],
+      ['Compare efficiency and effectiveness', 'A fast check-in is efficient only if it records the correct students. If many learners are incorrectly marked absent, the system is not effective.'],
+      ['Assess inclusion and wellbeing', 'Test with different devices, connectivity conditions and accessibility needs. Consider whether constant monitoring is necessary and whether it creates avoidable stress.'],
+      ['Plan alternatives and sustainability', 'Provide a supported manual or offline route, train staff, maintain devices and plan repair and responsible disposal. Review actual outcomes before expanding the system.']
+    ],
+    takeaway: 'Evaluate technology by outcomes for people, not only by speed, cost or the number of tasks automated.'
+  },
+  9: {
+    title: 'Worked example: checking a viral social-media claim',
+    scenario: 'A post claims that a named university has lost all student records. It is widely shared and includes a screenshot with no source or date.',
+    steps: [
+      ['Pause before sharing', 'High engagement is not evidence. Sharing first and checking later can spread fear and expose people to scams.'],
+      ['Trace the original claim', 'Look for the original publisher, date, context and supporting evidence. Check official university channels and credible independent reporting.'],
+      ['Classify carefully', 'If the claim is inaccurate but shared without intent to deceive, it may be misinformation. If someone knowingly spreads it to mislead, it may be disinformation. Do not guess intent without evidence.'],
+      ['Respond responsibly', 'Do not repost the screenshot as fact. If appropriate, share a correction with a reliable source and report impersonation or fraudulent links through the platform.']
+    ],
+    takeaway: 'Check source, evidence, date and context. Misinformation and disinformation describe different things, especially the intent behind sharing.'
+  },
+  10: {
+    title: 'Worked example: choosing a cloud-service provider',
+    scenario: 'An organisation wants to outsource storage of learner records to a low-cost provider.',
+    steps: [
+      ['Define the service and risks', 'List the data involved, service availability needs, security requirements, locations and the consequences of provider failure or unauthorised disclosure.'],
+      ['Perform due diligence', 'Assess provider competence, security controls, access management, incident handling, subcontractors, continuity arrangements, support and financial reliability.'],
+      ['Set enforceable expectations', 'The service agreement should specify responsibilities, service levels, security and privacy duties, incident notification, audit or assurance rights, data return and secure deletion at exit.'],
+      ['Monitor the relationship', 'Review performance and incidents, test continuity arrangements and escalate concerns. Outsourcing a task does not remove the organisation’s responsibility to govern the service.']
+    ],
+    takeaway: 'Procurement is not just choosing the cheapest quote. Due diligence and ongoing oversight are part of responsible organisational governance.'
+  },
+  11: {
+    title: 'Worked example: a learner requests correction of an academic record',
+    scenario: 'A learner tells a Ghanaian education provider that their date of birth is incorrect in the student portal.',
+    steps: [
+      ['Receive and verify the request', 'Use a documented process to establish the requester’s identity without collecting unnecessary additional information. Record the date and nature of the request.'],
+      ['Locate and assess the record', 'Identify the relevant data, check the evidence supplied and determine which systems or authorised processors hold copies. Do not change unrelated records.'],
+      ['Correct and communicate securely', 'Where the information is inaccurate, follow the provider’s correction procedure, update appropriate systems and communicate the outcome through a secure channel. Keep an appropriate record of the action.'],
+      ['Check the wider process', 'Consider whether the error was copied to another system, whether a processor must be instructed to correct it and whether the organisation’s data-quality controls need improvement. Apply the Act and current Data Protection Commission guidance.']
+    ],
+    takeaway: 'A data subject request should be handled through a secure, documented process. This example is educational and does not replace the full Act or legal advice.'
+  }
+};
+
 const furtherReading = [
   { label: 'George W. Reynolds, Ethics in Information Technology (5th ed., Cengage)', url: 'https://books.google.com/books?id=v6wIzgEACAAJ' },
   { label: 'Herman T. Tavani, Ethics and Technology (Wiley companion contents)', url: 'https://bcs.wiley.com/he-bcs/Books?action=contents&bcsId=8462&itemId=1118281721' },
@@ -342,6 +472,26 @@ export default function ProfessionalComputingLesson({ lesson }) {
         {[...data.sections, ...(expandedSections[number] || []), ...(assessmentCoverageSections[number] || []), ...(extendedTeachingSections[number] || [])].map((section,i)=>(
           <Section key={i} title={section[0]}>{section[1]}</Section>
         ))}
+      </section>
+
+      <section className="custom-lesson-worked-examples space-y-4">
+        <h2>Guided worked example</h2>
+        <p>Study the reasoning process below. Notice how the example moves from facts to a justified action. Then apply the same method to a different situation.</p>
+        {guidedWorkedExamples[number] && (
+          <div className="rounded-xl border border-border p-4 sm:p-5 space-y-3">
+            <h3 className="text-lg font-semibold">{guidedWorkedExamples[number].title}</h3>
+            <p><strong>Situation:</strong> {guidedWorkedExamples[number].scenario}</p>
+            <ol className="list-decimal pl-5 space-y-3">
+              {guidedWorkedExamples[number].steps.map(([heading, explanation], index) => (
+                <li key={index}>
+                  <strong>{heading}</strong>
+                  <p className="mt-1 leading-relaxed">{explanation}</p>
+                </li>
+              ))}
+            </ol>
+            <p className="rounded-lg bg-muted/50 p-3 leading-relaxed"><strong>What to remember:</strong> {guidedWorkedExamples[number].takeaway}</p>
+          </div>
+        )}
       </section>
 
       <section className="custom-lesson-note">
