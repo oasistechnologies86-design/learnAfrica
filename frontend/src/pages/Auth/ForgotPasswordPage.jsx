@@ -58,7 +58,7 @@ export function ForgotPasswordPage() {
   const [supportEmail, setSupportEmail] = useState('support@learnafrica.com');
   const [modalOpen, setModalOpen] = useState(false);
   const [cooldown, setCooldown] = useState(0);   // seconds left before resend
-  const [lastResult, setLastResult] = useState(null); // 'sent' | 'failed'
+  const [lastResult, setLastResult] = useState(null); // 'sent' | 'manual_review'
   const timerRef = useRef(null);
 
   useEffect(() => {
@@ -116,9 +116,14 @@ export function ForgotPasswordPage() {
         }
         throw new Error(data.error || 'Something went wrong');
       }
+      // Use the mode returned by the request itself. The admin setting may
+      // have changed since the page first loaded.
+      const actualMode = data.mode === 'manual' ? 'manual' : 'email';
+      setMode(actualMode);
       setMessage(data.message || '');
       if (data.expires_hours) setExpiresHours(data.expires_hours);
-      setLastResult(data.email_sent ? 'sent' : 'queued');
+      if (data.sla_hours) setSlaHours(data.sla_hours);
+      setLastResult(data.email_sent === true ? 'sent' : 'manual_review');
       // Begin the resend timer (server tells us the cooldown length).
       startCooldown(data.resend_cooldown ?? 60);
       setSent(true);
@@ -148,6 +153,12 @@ export function ForgotPasswordPage() {
 
   if (sent) {
     const sentOk = lastResult === 'sent';
+    const maskedEmail = (() => {
+      const [local = '', domain = ''] = email.trim().split('@');
+      if (!local || !domain) return email;
+      const visible = local.length <= 2 ? local[0] : `${local.slice(0, 2)}${'•'.repeat(Math.min(5, local.length - 2))}`;
+      return `${visible}@${domain}`;
+    })();
     return (
       <AuthShell>
         <div className="space-y-6 text-center">
@@ -155,13 +166,27 @@ export function ForgotPasswordPage() {
             <CheckCircle2 className="h-8 w-8 text-success" />
           </div>
           <h1 className="text-2xl font-bold">
-            {mode === 'email' ? 'Check your inbox' : 'Request received'}
+            {sentOk ? 'Check your inbox' : 'Request received'}
           </h1>
           <p className="text-muted-foreground text-sm">
-            {message || (mode === 'email'
-              ? <span>If an account exists for <strong>{email}</strong>, you'll receive a reset link shortly. Check your spam folder if you don't see it.</span>
-              : <span>Your request for <strong>{email}</strong> has been recorded. An administrator will send your password reset link <strong>within {slaHours} hours</strong>. If it doesn't arrive, please contact support.</span>)}
+            {sentOk
+              ? <span>{message || 'If an account exists for this address, a password reset link has been accepted for sending. Check your inbox and spam folder.'}</span>
+              : <span>We could not complete automatic email delivery. If an account matches this address, the request will need administrator assistance. Please contact support if you need help. Manual requests are normally reviewed within <strong>{slaHours} hours</strong>.</span>}
           </p>
+          <div className="rounded-lg bg-muted/50 px-4 py-3 text-left space-y-1">
+            <p className="text-xs text-muted-foreground">Email address used</p>
+            <p className="text-sm font-semibold break-all">{maskedEmail}</p>
+          </div>
+
+          <Button variant="outline" className="w-full h-10" onClick={() => {
+            setSent(false);
+            setLastResult(null);
+            setMessage('');
+            setError('');
+          }}>
+            Use a different email address
+          </Button>
+
           {mode === 'email' && sentOk && (
             <p className="text-xs text-muted-foreground">
               The link is valid for <strong>{expiresHours} {expiresHours === 1 ? 'hour' : 'hours'}</strong>.
@@ -169,7 +194,7 @@ export function ForgotPasswordPage() {
             </p>
           )}
 
-          {mode === 'email' && (
+          {mode === 'email' && sentOk && (
             <div className="space-y-3">
               <Button
                 variant="outline"
