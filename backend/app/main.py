@@ -6878,6 +6878,129 @@ def create_app() -> Flask:
             'instructor_share_pct': instructor_pct,
             'admin_share_pct': admin_pct,
         })
+
+    # ── ADMIN FINANCIAL RECORDS ───────────────────────────────────────────────
+    def ensure_admin_financial_records_table(db):
+        """Additive ledger for expenses and owner withdrawals; existing payments stay untouched."""
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS admin_financial_records (
+                id TEXT PRIMARY KEY,
+                record_type TEXT NOT NULL,
+                category TEXT NOT NULL,
+                amount REAL NOT NULL,
+                description TEXT,
+                reference TEXT,
+                created_by TEXT,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        db.commit()
+
+    @app.route('/api/admin/financial-records', methods=['GET', 'POST'])
+    @admin_required
+    def admin_financial_records():
+        try:
+            db = get_db()
+            ensure_transactions_table(db)
+            ensure_admin_financial_records_table(db)
+
+            if request.method == 'POST':
+                data = request.get_json(silent=True) or {}
+                record_type = str(data.get('record_type') or '').strip().lower()
+                category = str(data.get('category') or '').strip()[:80]
+                description = str(data.get('description') or '').strip()[:500]
+                reference = str(data.get('reference') or '').strip()[:120]
+                try:
+                    amount = round(float(data.get('amount')), 2)
+                except (TypeError, ValueError):
+                    return jsonify({'error': 'Enter a valid amount.'}), 400
+                if record_type not in ('expense', 'withdrawal'):
+                    return jsonify({'error': 'Choose an expense or owner withdrawal.'}), 400
+                if not category:
+                    return jsonify({'error': 'Enter a category.'}), 400
+                if not (amount > 0 and amount < 1000000000000):
+                    return jsonify({'error': 'Amount must be greater than zero.'}), 400
+
+                record_id = str(uuid.uuid4())
+                db.execute(
+                    """INSERT INTO admin_financial_records
+                       (id, record_type, category, amount, description, reference, created_by)
+                       VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                    (record_id, record_type, category, amount, description or None,
+                     reference or None, g.current_user['user_id'])
+                )
+                db.commit()
+                return jsonify({'message': 'Financial record saved.', 'id': record_id}), 201
+
+            # Use the same successful transaction types as the Earnings tab.
+            totals = db.execute(
+                """SELECT
+                     COALESCE(SUM(amount), 0) AS collected,
+                     COALESCE(SUM(instructor_share), 0) AS instructor_earned,
+                     COALESCE(SUM(platform_share), 0) AS platform_earned
+                   FROM transactions
+                   WHERE status='success'
+                     AND type IN ('purchase','quiz_extra_attempt','instructor_registration')"""
+            ).fetchone()
+            registration = db.execute(
+                """SELECT COALESCE(SUM(amount), 0) AS amount
+                   FROM transactions
+                   WHERE status='success' AND type='instructor_registration'"""
+            ).fetchone()
+            paid = db.execute(
+                """SELECT COALESCE(SUM(instructor_share), 0) AS amount
+                   FROM transactions
+                   WHERE status='success'
+                     AND type IN ('purchase','quiz_extra_attempt')
+                     AND payout_status='paid'"""
+            ).fetchone()
+            outstanding = db.execute(
+                """SELECT COALESCE(SUM(instructor_share), 0) AS amount
+                   FROM transactions
+                   WHERE status='success'
+                     AND type IN ('purchase','quiz_extra_attempt')
+                     AND payout_status='pending'"""
+            ).fetchone()
+            records = db.execute(
+                """SELECT id, record_type, category, amount, description, reference, created_at
+                   FROM admin_financial_records ORDER BY created_at DESC LIMIT 100"""
+            ).fetchall()
+            expense_total = db.execute(
+                "SELECT COALESCE(SUM(amount), 0) AS amount FROM admin_financial_records WHERE record_type='expense'"
+            ).fetchone()
+            withdrawal_total = db.execute(
+                "SELECT COALESCE(SUM(amount), 0) AS amount FROM admin_financial_records WHERE record_type='withdrawal'"
+            ).fetchone()
+
+            collected = float(totals['collected'] or 0)
+            instructor_earned = float(totals['instructor_earned'] or 0)
+            platform_earned = float(totals['platform_earned'] or 0) + float(registration['amount'] or 0)
+            paid_amount = float(paid['amount'] or 0)
+            expenses = float(expense_total['amount'] or 0)
+            withdrawals = float(withdrawal_total['amount'] or 0)
+            # This is a ledger estimate, not a bank or Paystack balance. Provider fees
+            # are included when recorded as an expense (category: Paystack fees).
+            remaining = collected - paid_amount - expenses - withdrawals
+            return jsonify({
+                'currency': 'GHS',
+                'total_collected': round(collected, 2),
+                'instructor_earned': round(instructor_earned, 2),
+                'platform_earned': round(platform_earned, 2),
+                'instructor_paid': round(paid_amount, 2),
+                'instructor_outstanding': round(float(outstanding['amount'] or 0), 2),
+                'expenses': round(expenses, 2),
+                'owner_withdrawals': round(withdrawals, 2),
+                'estimated_remaining': round(remaining, 2),
+                'records': safe_list(records),
+            })
+        except Exception as e:
+            app.logger.error(f'admin_financial_records: {e}')
+            try:
+                db = getattr(g, '_db', None)
+                if db and hasattr(db, '_conn'): db._conn.rollback()
+            except Exception: pass
+            return jsonify({'error': 'Could not load financial records.'}), 500
+
     
     
     # ── INSTRUCTOR GUIDE ──────────────────────────────────────────────────────────
