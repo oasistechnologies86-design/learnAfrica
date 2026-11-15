@@ -10446,6 +10446,7 @@ def create_app() -> Flask:
             'client_id': cid,
             'redirect_uri': _email_oauth_redirect_uri(),
             'response_type': 'code',
+            'response_mode': 'form_post',
             'scope': 'https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.email',
             'access_type': 'offline',
             'prompt': 'consent',
@@ -10455,12 +10456,15 @@ def create_app() -> Flask:
         url = 'https://accounts.google.com/o/oauth2/v2/auth?' + urlencode(params)
         return jsonify({'url': url, 'redirect_uri': _email_oauth_redirect_uri()})
 
-    @app.route('/api/admin/email/oauth/callback', methods=['GET'])
+    @app.route('/api/admin/email/oauth/callback', methods=['POST'])
     def email_oauth_callback():
-        """Google redirects here after the admin grants access. Exchanges the
-        code for a refresh token and stores it against the chosen slot."""
-        code = (request.args.get('code') or '').strip()
-        state = (request.args.get('state') or '').strip()
+        """Google posts the OAuth response to this endpoint.
+
+        Using response_mode=form_post keeps the one-time authorization code and
+        signed state out of the callback URL and hosting request-access logs.
+        """
+        code = (request.form.get('code') or '').strip()
+        state = (request.form.get('state') or '').strip()
         slot_guess = ''
         try:
             slot_guess = (jwt.decode(state, app.config['JWT_SECRET'], algorithms=['HS256'])
@@ -10759,18 +10763,10 @@ def create_app() -> Flask:
         """Email a reset link using the active sender. Returns (ok, err)."""
         support = _support_email()
         expiry = _reset_expiry_phrase()
-        html_body = email_service.render_email(
-            'Reset your password',
-            '<p style="margin:0 0 12px;">We received a request to reset the password '
-            'for your LearnAfrica account.</p>'
-            '<p style="margin:0;">Select the button below to choose a new password. '
-            'If you did not make this request, no action is needed — your password '
-            'will stay the same.</p>',
-            preheader='Choose a new password for your LearnAfrica account.',
-            button_text='Reset my password',
-            button_url=link,
-            footer_note=f'This link expires in {expiry} and can be used once. Never share '
-                        f'this link with anyone. Need help? Contact support at {support}.',
+        html_body = email_service.render_password_reset_email(
+            link=link,
+            expiry=expiry,
+            support_email=support,
         )
         text_body = (
             'Reset your LearnAfrica password\n\n'
