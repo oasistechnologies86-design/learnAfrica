@@ -9067,6 +9067,7 @@ def create_app() -> Flask:
                                     "UPDATE transactions SET paystack_fee=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
                                     (fee_amount, tx['id'])
                                 )
+                                db.commit()
                             except (TypeError, ValueError):
                                 app.logger.warning('Invalid Paystack fee amount for transaction %s', tx['id'])
                     if tx and tx['status'] != 'success':
