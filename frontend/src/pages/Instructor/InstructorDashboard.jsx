@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import {
   BookOpen, Users, DollarSign, Star, TrendingUp, Award,
   ChevronDown, ChevronUp, Play, CheckCircle2, Loader2,
-  BookMarked, Target, GraduationCap, Info
+  BookMarked, Target, GraduationCap, Info, Search
 } from 'lucide-react';
 import StatsCard from '@/components/dashboard/StatsCard';
 import { API_BASE } from '@/lib/api';
@@ -438,6 +438,10 @@ export function InstructorDashboard() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [paymentConfigured, setPaymentConfigured] = useState(true); // assume true until proven otherwise
+  const [myStudents, setMyStudents] = useState([]);
+  const [studentsLoading, setStudentsLoading] = useState(true);
+  const [studentSearch, setStudentSearch] = useState('');
+  const [studentCourse, setStudentCourse] = useState('all');
   const ITEMS_PER_PAGE = 5;
 
   const getInitials = n => n ? n.split(' ').map(x=>x[0]).join('').toUpperCase().slice(0,2) : '??';
@@ -457,6 +461,10 @@ export function InstructorDashboard() {
       setLoading(false);
     };
     fetchStats();
+    api('/api/instructor/students')
+      .then(data => setMyStudents(data.students || []))
+      .catch(() => setMyStudents([]))
+      .finally(() => setStudentsLoading(false));
     // Check payment-method configuration
     api('/api/users/me/payment-method')
       .then(d => setPaymentConfigured(!!d?.configured))
@@ -479,6 +487,17 @@ export function InstructorDashboard() {
     month: m.month?.slice(5) || m.month,
     enrollments: m.count
   }));
+
+  const studentCourses = [...new Map(myStudents.map(student => [
+    student.course_id, { id: student.course_id, title: student.course_title },
+  ])).values()];
+  const filteredMyStudents = myStudents.filter(student => {
+    const query = studentSearch.trim().toLowerCase();
+    const matchesSearch = !query || [
+      student.name, student.email, student.phone, student.course_title,
+    ].some(value => String(value || '').toLowerCase().includes(query));
+    return matchesSearch && (studentCourse === 'all' || student.course_id === studentCourse);
+  });
 
   return (
     <div className="space-y-8 pb-10">
@@ -620,6 +639,67 @@ export function InstructorDashboard() {
           </CardContent>
         </Card>
       )}
+
+      {/* Full student directory, restricted by the backend to this instructor's courses */}
+      <Card className="border-border/50 shadow-sm overflow-hidden">
+        <CardHeader className="border-b border-border pb-3">
+          <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+            My Students
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">Students enrolled in your courses.</p>
+        </CardHeader>
+        <CardContent className="p-4 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input value={studentSearch} onChange={e => setStudentSearch(e.target.value)}
+                placeholder="Search name, email, phone or course"
+                className="h-10 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-sm" />
+            </div>
+            <select value={studentCourse} onChange={e => setStudentCourse(e.target.value)}
+              className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
+              <option value="all">All my courses</option>
+              {studentCourses.map(course => <option key={course.id} value={course.id}>{course.title}</option>)}
+            </select>
+          </div>
+          {studentsLoading ? (
+            <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-primary/50" /></div>
+          ) : filteredMyStudents.length ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead><tr className="border-b border-border text-left text-xs text-muted-foreground">
+                  <th className="py-2 pr-3">Student</th><th className="py-2 pr-3">Course</th>
+                  <th className="py-2 pr-3">Enrolled</th><th className="py-2 pr-3 text-right">Progress</th>
+                  <th className="py-2 text-right">Status</th>
+                </tr></thead>
+                <tbody>
+                  {filteredMyStudents.map((student, index) => (
+                    <tr key={student.student_id + ':' + student.course_id + ':' + index} className="border-b border-border/40">
+                      <td className="py-3 pr-3">
+                        <p className="font-medium">{student.name || 'Student'}</p>
+                        <p className="text-xs text-muted-foreground">{student.email || '—'}{student.phone ? ' · ' + student.phone : ''}</p>
+                      </td>
+                      <td className="py-3 pr-3">{student.course_title}</td>
+                      <td className="py-3 pr-3 text-xs text-muted-foreground">{student.enrolled_at ? String(student.enrolled_at).slice(0, 10) : '—'}</td>
+                      <td className="py-3 pr-3 text-right tabular-nums">{student.progress}%</td>
+                      <td className="py-3 text-right">
+                        <span className={cn('rounded-full px-2 py-1 text-2xs font-semibold', student.completed ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground')}>
+                          {student.completed ? 'Completed' : 'In progress'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              {myStudents.length ? 'No students match your search.' : 'No students are enrolled in your courses yet.'}
+            </p>
+          )}
+          <p className="text-xs text-muted-foreground">{filteredMyStudents.length} enrolment record(s)</p>
+        </CardContent>
+      </Card>
 
       {/* ── Instructor Guide ── */}
       <InstructorGuide />
