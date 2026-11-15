@@ -607,11 +607,6 @@ button:disabled,
 .custom-lesson-reader-timeline small { white-space:nowrap; font-variant-numeric:tabular-nums; }
 .custom-lesson-reader-note { margin:8px 0 0; line-height:1.5; }
 .custom-lesson-reading-active { background:color-mix(in oklab,var(--primary) 15%,transparent); border-radius:5px; outline:2px solid color-mix(in oklab,var(--primary) 20%,transparent); outline-offset:3px; }
-::highlight(custom-lesson-current-sentence) {
-  background:color-mix(in oklab,var(--primary) 24%,transparent); color:inherit;
-  text-decoration:underline; text-decoration-color:var(--primary);
-  text-decoration-thickness:2px; text-underline-offset:3px;
-}
 @media(max-width:650px) {
   .custom-lesson-reader-controls { margin:12px auto; padding:13px 14px; border-radius:13px; }
   .custom-lesson-reader-actions { gap:6px; }

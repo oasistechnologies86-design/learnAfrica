@@ -173,6 +173,22 @@ export default function CustomLessonFrame({
   }, []);
 
   React.useEffect(() => {
+    if (typeof document === 'undefined' || !window.CSS?.highlights) return undefined;
+    const style = document.createElement('style');
+    style.setAttribute('data-custom-lesson-highlight', 'true');
+    style.textContent = `::highlight(custom-lesson-current-sentence) {
+      background: color-mix(in oklab, var(--primary) 24%, transparent);
+      color: inherit;
+      text-decoration: underline;
+      text-decoration-color: var(--primary);
+      text-decoration-thickness: 2px;
+      text-underline-offset: 3px;
+    }`;
+    document.head.appendChild(style);
+    return () => style.remove();
+  }, []);
+
+  React.useEffect(() => {
     const supported = typeof window !== 'undefined'
       && 'speechSynthesis' in window
       && typeof window.SpeechSynthesisUtterance === 'function';
