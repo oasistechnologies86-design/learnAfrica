@@ -206,6 +206,7 @@ export default function ReceiptStatementPage() {
             <Meta label="Student" value={tx.buyer?.name} />
             <Meta label="Payment Method" value={tx.payment_method} />
             <Meta label="Account" value={tx.buyer?.email} />
+            <Meta label="Contact Number" value={tx.buyer?.phone || tx.buyer?.contact?.phone || tx.buyer?.contact?.phone_number || 'Contact number not provided'} />
             <Meta label="Provider" value={tx.provider} />
           </div>
 
