@@ -7004,7 +7004,9 @@ def create_app() -> Flask:
 
             collected = float(totals['collected'] or 0)
             instructor_earned = float(totals['instructor_earned'] or 0)
-            platform_earned = float(totals['platform_earned'] or 0) + float(registration['amount'] or 0)
+            # Registration-fee transactions already store their full amount in
+            # platform_share, so do not add them a second time here.
+            platform_earned = float(totals['platform_earned'] or 0)
             paid_amount = float(paid['amount'] or 0)
             expenses = float(expense_total['amount'] or 0)
             withdrawals = float(withdrawal_total['amount'] or 0)
