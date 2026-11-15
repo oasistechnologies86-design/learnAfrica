@@ -3280,9 +3280,8 @@ function AdminBlogTab() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await API('/api/admin/blog');
-      const j = await r.json().catch(() => ({}));
-      setPosts(j.posts || []);
+      const data = await API('/api/admin/blog');
+      setPosts(data.posts || []);
     } finally {
       setLoading(false);
     }
@@ -3303,11 +3302,12 @@ function AdminBlogTab() {
     if (!form.title.trim()) { setStatus({ type: 'error', msg: 'Title is required.' }); return; }
     setBusy(true); setStatus(null);
     try {
-      const r = editingId
-        ? await API(`/api/admin/blog/${editingId}`, { method: 'PUT', body: JSON.stringify(form) })
-        : await API('/api/admin/blog', { method: 'POST', body: JSON.stringify(form) });
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(j.error || 'Save failed');
+      await API(editingId
+        ? `/api/admin/blog/${editingId}`
+        : '/api/admin/blog', {
+        method: editingId ? 'PUT' : 'POST',
+        body: JSON.stringify(form),
+      });
       setStatus({ type: 'success', msg: editingId ? 'Post updated.' : 'Post created.' });
       setShowForm(false); setForm(empty); setEditingId(null);
       load();
@@ -3321,8 +3321,7 @@ function AdminBlogTab() {
   const remove = async (id) => {
     if (!window.confirm('Delete this post? This cannot be undone.')) return;
     try {
-      const r = await API(`/api/admin/blog/${id}`, { method: 'DELETE' });
-      if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.error || 'Delete failed'); }
+      await API(`/api/admin/blog/${id}`, { method: 'DELETE' });
       load();
     } catch (e) {
       setStatus({ type: 'error', msg: e.message });
@@ -3596,10 +3595,9 @@ function AdminAuditLogTab() {
     try {
       const qs = new URLSearchParams({ limit: '200' });
       if (filter) qs.set('action', filter);
-      const r = await API(`/api/admin/audit-log?${qs.toString()}`);
-      const j = await r.json().catch(() => ({}));
-      setEntries(j.log || []);
-      setTotal(j.total || 0);
+      const data = await API(`/api/admin/audit-log?${qs.toString()}`);
+      setEntries(data.log || []);
+      setTotal(data.total || 0);
     } finally {
       setLoading(false);
     }
