@@ -6932,7 +6932,7 @@ def create_app() -> Flask:
         try:
             db = get_db()
             ensure_transactions_table(db)
-            ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
+            fee_column_ready = ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
             ensure_admin_financial_records_table(db)
 
             if request.method == 'POST':
@@ -6999,10 +6999,12 @@ def create_app() -> Flask:
                 """SELECT COALESCE(SUM(amount), 0) AS amount FROM admin_financial_records
                    WHERE record_type='expense' AND LOWER(category) = 'paystack fees'"""
             ).fetchone()
-            automatic_paystack_fees = db.execute(
-                """SELECT COALESCE(SUM(paystack_fee), 0) AS amount FROM transactions
-                   WHERE status='success' AND provider='paystack'"""
-            ).fetchone()
+            automatic_paystack_fees = (
+                db.execute(
+                    """SELECT COALESCE(SUM(paystack_fee), 0) AS amount FROM transactions
+                       WHERE status='success' AND provider='paystack'"""
+                ).fetchone() if fee_column_ready else {'amount': 0}
+            )
             withdrawal_total = db.execute(
                 "SELECT COALESCE(SUM(amount), 0) AS amount FROM admin_financial_records WHERE record_type='withdrawal'"
             ).fetchone()
@@ -9022,7 +9024,9 @@ def create_app() -> Flask:
             ref   = data.get('reference') or ''
             db    = get_db()
             ensure_transactions_table(db)
-            ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
+            paystack_fee_column_ready = ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
+            if not paystack_fee_column_ready:
+                app.logger.warning('Paystack fee column unavailable; webhook will continue without fee capture.')
 
             # charge.success — a course purchase completed
             if event == 'charge.success' and ref:
@@ -9056,7 +9060,7 @@ def create_app() -> Flask:
                         # Paystack webhook amounts (including fees) are in the
                         # currency's minor unit. Store the verified fee in GHS.
                         fee_minor = data.get('fees')
-                        if fee_minor is not None:
+                        if fee_minor is not None and paystack_fee_column_ready:
                             try:
                                 fee_amount = round(float(fee_minor) / 100, 2)
                                 db.execute(
