@@ -133,6 +133,7 @@ export default function AdminPage() {
   const [globalStatus, setGlobalStatus] = useState(null);
   const [earnings, setEarnings]         = useState(null);
   const [financialSummary, setFinancialSummary] = useState(null);
+  const [paystackBalance, setPaystackBalance] = useState(null);
   const [financialForm, setFinancialForm] = useState({
     record_type: 'expense', category: 'Paystack fees', amount: '', description: '', reference: '',
   });
@@ -174,6 +175,11 @@ export default function AdminPage() {
           setFinancialSummary(await API('/api/admin/financial-records'));
         } catch (financeError) {
           setFinancialSummary({ error: financeError.message });
+        }
+        try {
+          setPaystackBalance(await API('/api/admin/paystack/balance'));
+        } catch {
+          setPaystackBalance({ available: false, message: 'Paystack balance could not be refreshed.' });
         }
       }
       else if (section === 'Guide') {
@@ -865,6 +871,21 @@ export default function AdminPage() {
                 ) : financialSummary ? (
                   <>
                     <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                      <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
+                        <p className="text-xs text-muted-foreground">Paystack available balance</p>
+                        {paystackBalance?.available ? (
+                          <>
+                            <p className="text-lg font-bold mt-1 tabular-nums">
+                              {formatPrice((paystackBalance.balances || []).find(item => item.currency === 'GHS')?.amount || 0)}
+                            </p>
+                            <p className="text-2xs text-muted-foreground mt-1">
+                              Read-only · {paystackBalance.mode === 'test' ? 'Test mode' : paystackBalance.mode === 'live' ? 'Live mode' : 'Provider mode unverified'}
+                            </p>
+                          </>
+                        ) : (
+                          <p className="text-sm font-semibold mt-1">{paystackBalance?.message || 'Checking Paystack…'}</p>
+                        )}
+                      </div>
                       {[
                         ['Total collected', financialSummary.total_collected],
                         ['Platform earnings', financialSummary.platform_earned],
@@ -885,7 +906,7 @@ export default function AdminPage() {
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Paystack fees are not guessed or automatically estimated. Record the actual fee as an expense under “Paystack fees” when confirmed. A transfer from Paystack to your bank is not an expense.
+                      The Paystack figure is the provider's available balance, fetched read-only from your backend. It is separate from the estimated remaining funds, which accounts for recorded payouts, expenses and withdrawals. Paystack fees are recorded using the actual fee amount; a transfer to your bank is not an expense.
                     </p>
                   </>
                 ) : (
