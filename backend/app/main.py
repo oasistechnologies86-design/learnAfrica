@@ -6932,6 +6932,7 @@ def create_app() -> Flask:
         try:
             db = get_db()
             ensure_transactions_table(db)
+            ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
             ensure_admin_financial_records_table(db)
 
             if request.method == 'POST':
@@ -6991,7 +6992,16 @@ def create_app() -> Flask:
                    FROM admin_financial_records ORDER BY created_at DESC LIMIT 100"""
             ).fetchall()
             expense_total = db.execute(
-                "SELECT COALESCE(SUM(amount), 0) AS amount FROM admin_financial_records WHERE record_type='expense'"
+                """SELECT COALESCE(SUM(amount), 0) AS amount FROM admin_financial_records
+                   WHERE record_type='expense' AND LOWER(category) <> 'paystack fees'"""
+            ).fetchone()
+            manual_paystack_fees = db.execute(
+                """SELECT COALESCE(SUM(amount), 0) AS amount FROM admin_financial_records
+                   WHERE record_type='expense' AND LOWER(category) = 'paystack fees'"""
+            ).fetchone()
+            automatic_paystack_fees = db.execute(
+                """SELECT COALESCE(SUM(paystack_fee), 0) AS amount FROM transactions
+                   WHERE status='success' AND provider='paystack'"""
             ).fetchone()
             withdrawal_total = db.execute(
                 "SELECT COALESCE(SUM(amount), 0) AS amount FROM admin_financial_records WHERE record_type='withdrawal'"
@@ -7003,10 +7013,11 @@ def create_app() -> Flask:
             # platform_share, so do not add them a second time here.
             platform_earned = float(totals['platform_earned'] or 0)
             paid_amount = float(paid['amount'] or 0)
-            expenses = float(expense_total['amount'] or 0)
+            other_expenses = float(expense_total['amount'] or 0)
+            paystack_fees = float(automatic_paystack_fees['amount'] or 0) + float(manual_paystack_fees['amount'] or 0)
+            expenses = other_expenses + paystack_fees
             withdrawals = float(withdrawal_total['amount'] or 0)
-            # This is a ledger estimate, not a bank or Paystack balance. Provider fees
-            # are included when recorded as an expense (category: Paystack fees).
+            # This is a ledger estimate, not a bank or Paystack balance.
             remaining = collected - paid_amount - expenses - withdrawals
             return jsonify({
                 'currency': 'GHS',
@@ -7016,6 +7027,8 @@ def create_app() -> Flask:
                 'instructor_paid': round(paid_amount, 2),
                 'instructor_outstanding': round(float(outstanding['amount'] or 0), 2),
                 'expenses': round(expenses, 2),
+                'other_expenses': round(other_expenses, 2),
+                'paystack_fees': round(paystack_fees, 2),
                 'owner_withdrawals': round(withdrawals, 2),
                 'estimated_remaining': round(remaining, 2),
                 'records': safe_list(records),
@@ -9009,6 +9022,7 @@ def create_app() -> Flask:
             ref   = data.get('reference') or ''
             db    = get_db()
             ensure_transactions_table(db)
+            ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
 
             # charge.success — a course purchase completed
             if event == 'charge.success' and ref:
@@ -9038,6 +9052,19 @@ def create_app() -> Flask:
                                    != str(tx['currency'] or 'GHS').strip().upper()):
                             app.logger.warning('Paystack webhook verification mismatch for transaction %s', tx['id'])
                             return jsonify({'error': 'Payment verification mismatch'}), 400
+                    if tx:
+                        # Paystack webhook amounts (including fees) are in the
+                        # currency's minor unit. Store the verified fee in GHS.
+                        fee_minor = data.get('fees')
+                        if fee_minor is not None:
+                            try:
+                                fee_amount = round(float(fee_minor) / 100, 2)
+                                db.execute(
+                                    "UPDATE transactions SET paystack_fee=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                                    (fee_amount, tx['id'])
+                                )
+                            except (TypeError, ValueError):
+                                app.logger.warning('Invalid Paystack fee amount for transaction %s', tx['id'])
                     if tx and tx['status'] != 'success':
                         db.execute(
                             "UPDATE transactions SET status='success', updated_at=CURRENT_TIMESTAMP WHERE id=?",
