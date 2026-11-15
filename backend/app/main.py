@@ -7813,6 +7813,7 @@ def create_app() -> Flask:
                 'buyer': {
                     'name': tx.get('user_name') or '',
                     'email': tx.get('user_email') or '',
+                    'phone': pd.get('phone') or pd.get('phone_number') or pd.get('mobile') or '',
                     'contact': pd,
                 },
             }
