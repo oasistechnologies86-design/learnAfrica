@@ -53,7 +53,7 @@ const VOICE_GENDER_PATTERNS = {
 function findVoiceForGender(voices, gender) {
   const pattern = VOICE_GENDER_PATTERNS[gender];
   if (!pattern) return null;
-  const matching = voices.filter(voice => pattern.test(`${voice.name || ''} ${voice.voiceURI || ''}`));
+  const matching = voices.filter(voice => pattern.test(`${voice.gender || ''} ${voice.name || ''} ${voice.voiceURI || ''}`));
   const english = matching.filter(voice => /^en([_-]|$)/i.test(voice.lang || ''));
   return english[0] || matching[0] || null;
 }
@@ -79,12 +79,14 @@ export default function CustomLessonFrame({
   const sentencesRef = React.useRef([]);
   const sessionRef = React.useRef(0);
   const fallbackHighlightRef = React.useRef(null);
-  const rateRef = React.useRef(1);
+  const rateRef = React.useRef(0.8);
   const currentSentenceRef = React.useRef(0);
   const speechStartTimerRef = React.useRef(null);
   const wasPlayingBeforeSeekRef = React.useRef(false);
   const voicesRef = React.useRef([]);
   const voiceGenderRef = React.useRef('female');
+  const femaleVoiceAvailable = Boolean(findVoiceForGender(voices, 'female'));
+  const maleVoiceAvailable = Boolean(findVoiceForGender(voices, 'male'));
   const canComplete = mode === 'student' && typeof onComplete === 'function';
   const canRemember = mode === 'student' && Boolean(studentId) && Boolean(lesson?.id);
   const storageKey = canRemember ? `learnafrica:custom-reading:${studentId}:${lesson.id}` : null;
@@ -447,8 +449,8 @@ export default function CustomLessonFrame({
               <label className="custom-lesson-reader-speed">
                 <span>Voice</span>
                 <select value={voiceGender} onChange={handleVoiceChange} aria-label="Narration voice">
-                  <option value="female">Woman</option>
-                  <option value="male">Man</option>
+                  <option value="female">Woman{femaleVoiceAvailable ? '' : ' (not detected)'}</option>
+                  <option value="male">Man{maleVoiceAvailable ? '' : ' (not detected)'}</option>
                 </select>
               </label>
               <label className="custom-lesson-reader-speed">
