@@ -159,8 +159,9 @@ export default function CustomLessonFrame({
       setReaderStatus('Your device stopped the audio. Please check its text-to-speech voice settings and try again.');
     };
     try {
-      // Speak immediately inside the Play tap. Some mobile browsers block speech
-      // if it is delayed until after the tap has finished.
+      // Resume and speak immediately inside the Play tap. Some mobile browsers
+      // suspend speech until resume() is called after a previous cancel/pause.
+      window.speechSynthesis.resume();
       window.speechSynthesis.speak(utterance);
     } catch {
       setIsPlaying(false);
@@ -335,8 +336,8 @@ export default function CustomLessonFrame({
               <span>{readerStatus}</span>
             </div>
             <div className="custom-lesson-reader-actions">
-              <button type="button" onClick={handlePlay} disabled={!sentences.length} aria-label={isPaused ? 'Resume reading' : 'Play reading'}>
-                <Play aria-hidden="true" /> {isPaused ? 'Resume' : 'Play'}
+              <button type="button" onClick={handlePlay} disabled={!sentences.length || isPlaying} aria-label={isPlaying ? 'Reading aloud' : isPaused ? 'Resume reading' : 'Play reading'}>
+                <Play aria-hidden="true" /> {isPlaying ? 'Playing...' : isPaused ? 'Resume' : 'Play'}
               </button>
               <button type="button" onClick={handlePause} disabled={!isPlaying} aria-label="Pause reading">
                 <Pause aria-hidden="true" /> Pause
