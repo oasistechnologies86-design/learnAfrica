@@ -888,7 +888,7 @@ export default function AdminPage() {
                       </div>
                       {[
                         ['Total collected', financialSummary.total_collected],
-                        ['Platform earnings', financialSummary.platform_earned],
+                        ['Platform share (before expenses)', financialSummary.platform_earned],
                         ['Instructor earnings', financialSummary.instructor_earned],
                         ['Instructor payments made', financialSummary.instructor_paid],
                         ['Outstanding instructor earnings', financialSummary.instructor_outstanding],
@@ -904,6 +904,12 @@ export default function AdminPage() {
                       <div className="rounded-xl border border-success/30 bg-success/5 p-3">
                         <p className="text-xs text-muted-foreground">Estimated remaining funds</p>
                         <p className="text-lg font-bold text-success mt-1 tabular-nums">{formatPrice(financialSummary.estimated_remaining || 0)}</p>
+                      </div>
+                      <div className="rounded-xl border border-border bg-muted/20 p-3">
+                        <p className="text-xs text-muted-foreground">After unpaid instructor earnings</p>
+                        <p className={cn('text-lg font-bold mt-1 tabular-nums', Number(financialSummary.available_after_instructor_obligations || 0) < 0 ? 'text-destructive' : 'text-foreground')}>
+                          {formatPrice(financialSummary.available_after_instructor_obligations || 0)}
+                        </p>
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground">
