@@ -7978,6 +7978,20 @@ def create_app() -> Flask:
                     pd = {}
             if not (is_admin or is_buyer):
                 pd = {}
+            if not isinstance(pd, dict):
+                pd = {}
+            buyer_phone = (
+                pd.get('phone') or pd.get('phone_number') or pd.get('mobile') or ''
+            )
+            # If checkout metadata has no phone, use the buyer's registered
+            # profile number. Only the buyer and Admin may see this detail.
+            if not buyer_phone and (is_admin or is_buyer) and tx.get('user_id'):
+                buyer_row = db.execute(
+                    'SELECT phone FROM users WHERE id=?', (tx['user_id'],)
+                ).fetchone()
+                buyer_phone = (buyer_row['phone'] if buyer_row else '') or ''
+            if buyer_phone and not pd.get('phone') and (is_admin or is_buyer):
+                pd['phone'] = buyer_phone
 
             line_items = []
             if tx.get('line_items'):
@@ -8025,7 +8039,7 @@ def create_app() -> Flask:
                 'buyer': {
                     'name': tx.get('user_name') or '',
                     'email': tx.get('user_email') or '',
-                    'phone': pd.get('phone') or pd.get('phone_number') or pd.get('mobile') or '',
+                    'phone': buyer_phone,
                     'contact': pd,
                 },
             }
