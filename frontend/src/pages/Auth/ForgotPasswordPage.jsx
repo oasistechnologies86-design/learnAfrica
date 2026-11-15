@@ -171,7 +171,9 @@ export function ForgotPasswordPage() {
           <p className="text-muted-foreground text-sm">
             {sentOk
               ? <span>{message || 'If an account exists for this address, a password reset link has been accepted for sending. Check your inbox and spam folder.'}</span>
-              : <span>We could not complete automatic email delivery. If an account matches this address, the request will need administrator assistance. Please contact support if you need help. Manual requests are normally reviewed within <strong>{slaHours} hours</strong>.</span>}
+              : mode === 'manual'
+                ? <span>Your request has been submitted for administrator review. If an account matches this address, the team can assist. Requests are normally reviewed within <strong>{slaHours} hours</strong>.</span>
+                : <span>Automatic email delivery was not completed. If an account matches this address, administrator assistance may be needed. Please contact support if you need help. Manual requests are normally reviewed within <strong>{slaHours} hours</strong>.</span>}
           </p>
           <div className="rounded-lg bg-muted/50 px-4 py-3 text-left space-y-1">
             <p className="text-xs text-muted-foreground">Email address used</p>
