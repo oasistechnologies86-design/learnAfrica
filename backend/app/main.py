@@ -6972,11 +6972,6 @@ def create_app() -> Flask:
                    WHERE status='success'
                      AND type IN ('purchase','quiz_extra_attempt','instructor_registration')"""
             ).fetchone()
-            registration = db.execute(
-                """SELECT COALESCE(SUM(amount), 0) AS amount
-                   FROM transactions
-                   WHERE status='success' AND type='instructor_registration'"""
-            ).fetchone()
             paid = db.execute(
                 """SELECT COALESCE(SUM(instructor_share), 0) AS amount
                    FROM transactions
