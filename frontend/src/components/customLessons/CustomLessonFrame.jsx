@@ -86,6 +86,7 @@ export default function CustomLessonFrame({
   const [rate, setRate] = React.useState(readerPreferences.rate);
   const rateRef = React.useRef(rate);
   const currentSentenceRef = React.useRef(0);
+  const manualScrollUntilRef = React.useRef(0);
   const speechStartTimerRef = React.useRef(null);
   const wasPlayingBeforeSeekRef = React.useRef(false);
   const canComplete = mode === 'student' && typeof onComplete === 'function';
@@ -106,6 +107,31 @@ export default function CustomLessonFrame({
     const main = article.closest('main');
     if (main && main.scrollHeight > main.clientHeight) return main;
     return document.scrollingElement || document.documentElement;
+  };
+
+  const scrollSentenceIntoView = (index) => {
+    if (typeof window === 'undefined' || !readingRef.current || Date.now() < manualScrollUntilRef.current) return;
+    const sentence = sentencesRef.current[index];
+    const range = makeSentenceRange(sentence, sentenceNodesRef.current);
+    const rect = range?.getBoundingClientRect();
+    if (!rect || !rect.height) return;
+
+    const container = getScrollContainer();
+    if (!container) return;
+    const isDocumentScroll = container === document.scrollingElement || container === document.documentElement;
+    const bounds = isDocumentScroll
+      ? { top: 0, bottom: window.innerHeight }
+      : container.getBoundingClientRect();
+    const topPadding = 112;
+    const bottomPadding = 104;
+    let adjustment = 0;
+
+    if (rect.top < bounds.top + topPadding) adjustment = rect.top - (bounds.top + topPadding);
+    else if (rect.bottom > bounds.bottom - bottomPadding) adjustment = rect.bottom - (bounds.bottom - bottomPadding);
+
+    if (Math.abs(adjustment) < 8) return;
+    if (isDocumentScroll) window.scrollBy({ top: adjustment, behavior: 'smooth' });
+    else container.scrollTo({ top: container.scrollTop + adjustment, behavior: 'smooth' });
   };
 
   const advanceReading = () => {
@@ -169,6 +195,7 @@ export default function CustomLessonFrame({
       if (speechStartTimerRef.current) window.clearTimeout(speechStartTimerRef.current);
       speechStartTimerRef.current = null;
       setReaderStatus('Reading aloud now.');
+      scrollSentenceIntoView(index);
     };
     utterance.onend = () => {
       if (session !== sessionRef.current) return;
@@ -306,6 +333,14 @@ export default function CustomLessonFrame({
   React.useEffect(() => {
     const container = getScrollContainer();
     if (!container) return undefined;
+    const markManualScroll = (event) => {
+      if (event.target?.closest?.('.custom-lesson-reader-controls')) return;
+      manualScrollUntilRef.current = Date.now() + 4500;
+    };
+    const scrollTarget = container === document.scrollingElement || container === document.documentElement ? window : container;
+    scrollTarget.addEventListener('wheel', markManualScroll, { passive: true });
+    scrollTarget.addEventListener('touchstart', markManualScroll, { passive: true });
+    scrollTarget.addEventListener('pointerdown', markManualScroll, { passive: true });
     const isDocumentScroll = container === document.scrollingElement || container === document.documentElement;
     const updateCueVisibility = () => {
       if (navigationOpen) {
@@ -325,6 +360,9 @@ export default function CustomLessonFrame({
     return () => {
       target.removeEventListener('scroll', updateCueVisibility);
       window.removeEventListener('resize', updateCueVisibility);
+      scrollTarget.removeEventListener('wheel', markManualScroll);
+      scrollTarget.removeEventListener('touchstart', markManualScroll);
+      scrollTarget.removeEventListener('pointerdown', markManualScroll);
     };
   }, [navigationOpen, lesson?.id]);
 
