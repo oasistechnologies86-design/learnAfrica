@@ -64,8 +64,8 @@ function readReaderPreferences() {
 }
 
 const VOICE_GENDER_PATTERNS = {
-  female: /\\b(female|woman|girl|zira|samantha|karen|moira|tessa|victoria|susan|aria|jenny|libby|hazel|sara|google uk english female|google us english female)\\b/i,
-  male: /\\b(male|man|boy|david|mark|guy|alex|daniel|james|aaron|fred|tom|george|ryan|oliver|liam|matthew|google uk english male|google us english male)\\b/i
+  female: /\b(female|woman|girl|zira|samantha|karen|moira|tessa|victoria|susan|aria|jenny|libby|hazel|sara|google uk english female|google us english female)\b/i,
+  male: /\b(male|man|boy|david|mark|guy|alex|daniel|james|aaron|fred|tom|george|ryan|oliver|liam|matthew|google uk english male|google us english male)\b/i
 };
 
 function findVoiceForGender(voices, gender) {

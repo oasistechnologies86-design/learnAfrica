@@ -660,3 +660,6 @@ button:disabled,
   .custom-lesson-page[data-text-size="large"] .custom-lesson-system p,
   .custom-lesson-page[data-text-size="large"] .custom-lesson-system li { font-size:18px!important; }
 }
+
+.custom-lesson-reading-content h2,
+.custom-lesson-reading-content h3 { scroll-margin-top: 90px; }
