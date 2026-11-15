@@ -45,6 +45,19 @@ function collectReadingSentences(root) {
   return { sentences: parts, nodes };
 }
 
+const VOICE_GENDER_PATTERNS = {
+  female: /\\b(female|woman|girl|zira|samantha|karen|moira|tessa|victoria|susan|aria|jenny|libby|hazel|sara|google uk english female|google us english female)\\b/i,
+  male: /\\b(male|man|boy|david|mark|guy|alex|daniel|james|aaron|fred|tom|george|ryan|oliver|liam|matthew|google uk english male|google us english male)\\b/i
+};
+
+function findVoiceForGender(voices, gender) {
+  const pattern = VOICE_GENDER_PATTERNS[gender];
+  if (!pattern) return null;
+  const matching = voices.filter(voice => pattern.test(`${voice.name || ''} ${voice.voiceURI || ''}`));
+  const english = matching.filter(voice => /^en([_-]|$)/i.test(voice.lang || ''));
+  return english[0] || matching[0] || null;
+}
+
 function makeSentenceRange(sentence, nodes) {
   if (!sentence || !nodes.length) return null;
   const first = nodes.find(item => item.end > sentence.start);
@@ -70,6 +83,8 @@ export default function CustomLessonFrame({
   const currentSentenceRef = React.useRef(0);
   const speechStartTimerRef = React.useRef(null);
   const wasPlayingBeforeSeekRef = React.useRef(false);
+  const voicesRef = React.useRef([]);
+  const voiceGenderRef = React.useRef('female');
   const canComplete = mode === 'student' && typeof onComplete === 'function';
   const canRemember = mode === 'student' && Boolean(studentId) && Boolean(lesson?.id);
   const storageKey = canRemember ? `learnafrica:custom-reading:${studentId}:${lesson.id}` : null;
@@ -78,7 +93,9 @@ export default function CustomLessonFrame({
   const [currentSentence, setCurrentSentence] = React.useState(0);
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [isPaused, setIsPaused] = React.useState(false);
-  const [rate, setRate] = React.useState(1);
+  const [rate, setRate] = React.useState(0.8);
+  const [voices, setVoices] = React.useState([]);
+  const [voiceGender, setVoiceGender] = React.useState('female');
   const [speechSupported, setSpeechSupported] = React.useState(false);
   const [savedPosition, setSavedPosition] = React.useState(false);
   const [readerStatus, setReaderStatus] = React.useState('Ready to read.');
@@ -147,6 +164,8 @@ export default function CustomLessonFrame({
     highlightSentence(index);
     const utterance = new window.SpeechSynthesisUtterance(sentence.text);
     utterance.rate = rateRef.current;
+    const selectedVoice = findVoiceForGender(voicesRef.current, voiceGenderRef.current);
+    if (selectedVoice) utterance.voice = selectedVoice;
     utterance.onstart = () => {
       if (session !== sessionRef.current) return;
       if (speechStartTimerRef.current) window.clearTimeout(speechStartTimerRef.current);
@@ -223,6 +242,18 @@ export default function CustomLessonFrame({
     setIsPlaying(false);
     setIsPaused(false);
     setReaderStatus('Reading stopped.');
+  }, []);
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return undefined;
+    const updateVoices = () => {
+      const available = window.speechSynthesis.getVoices() || [];
+      voicesRef.current = available;
+      setVoices(available);
+    };
+    updateVoices();
+    window.speechSynthesis.addEventListener?.('voiceschanged', updateVoices);
+    return () => window.speechSynthesis.removeEventListener?.('voiceschanged', updateVoices);
   }, []);
 
   React.useEffect(() => {
@@ -320,6 +351,11 @@ export default function CustomLessonFrame({
       setReaderStatus('No lesson text was found to read aloud.');
       return;
     }
+    if (!findVoiceForGender(voicesRef.current, voiceGenderRef.current)) {
+      const voiceLabel = voiceGenderRef.current === 'male' ? 'Male' : 'Female';
+      setReaderStatus(`${voiceLabel} voice is not available on this device. Install or enable an English ${voiceLabel.toLowerCase()} text-to-speech voice in your device settings.`);
+      return;
+    }
     if (isPaused) {
       // Restart the current sentence instead of relying on native resume().
       // Several mobile speech engines lose their paused queue after a short wait.
@@ -360,7 +396,19 @@ export default function CustomLessonFrame({
     const nextRate = Number(event.target.value);
     rateRef.current = nextRate;
     setRate(nextRate);
-    if (isPlaying) playFrom(currentSentence);
+    if (isPlaying) playFrom(currentSentenceRef.current);
+  };
+  const handleVoiceChange = (event) => {
+    const nextGender = event.target.value;
+    voiceGenderRef.current = nextGender;
+    setVoiceGender(nextGender);
+    if (isPlaying) {
+      if (findVoiceForGender(voicesRef.current, nextGender)) playFrom(currentSentenceRef.current);
+      else {
+        stopReading();
+        setReaderStatus(`${nextGender === 'male' ? 'Male' : 'Female'} voice is not available on this device. Enable a matching voice in your device settings.`);
+      }
+    }
   };
 
   const heroTitle = lesson?.title || 'Explore, understand and apply what you learn.';
@@ -396,6 +444,13 @@ export default function CustomLessonFrame({
               <button type="button" onClick={handleRestart} disabled={!sentences.length} aria-label="Restart reading from the beginning">
                 <RotateCcw aria-hidden="true" /> Restart
               </button>
+              <label className="custom-lesson-reader-speed">
+                <span>Voice</span>
+                <select value={voiceGender} onChange={handleVoiceChange} aria-label="Narration voice">
+                  <option value="female">Woman</option>
+                  <option value="male">Man</option>
+                </select>
+              </label>
               <label className="custom-lesson-reader-speed">
                 <span>Speed</span>
                 <select value={rate} onChange={handleRateChange} aria-label="Reading speed">
