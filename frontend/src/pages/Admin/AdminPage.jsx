@@ -132,6 +132,11 @@ export default function AdminPage() {
   const [emergencyTarget, setEmergencyTarget] = useState(null);
   const [globalStatus, setGlobalStatus] = useState(null);
   const [earnings, setEarnings]         = useState(null);
+  const [financialSummary, setFinancialSummary] = useState(null);
+  const [financialForm, setFinancialForm] = useState({
+    record_type: 'expense', category: 'Paystack fees', amount: '', description: '', reference: '',
+  });
+  const [savingFinancialRecord, setSavingFinancialRecord] = useState(false);
   const [splitForm, setSplitForm]       = useState({ instructor_share: 50 });
   const [guideSteps, setGuideSteps]     = useState([]);
   const [guideForm, setGuideForm]       = useState({ title: '', description: '', video_url: '' });
@@ -163,6 +168,13 @@ export default function AdminPage() {
         setEarnings(earnData);
         setSplitForm({ instructor_share: splitData.instructor_share });
         setInstructorSplitEdits(Object.fromEntries((earnData.instructors || []).map(inst => [inst.id, String(inst.instructor_share_pct ?? splitData.instructor_share)])));
+        // This is independent of the existing earnings request so a ledger error
+        // never prevents the original revenue-sharing view from rendering.
+        try {
+          setFinancialSummary(await API('/api/admin/financial-records'));
+        } catch (financeError) {
+          setFinancialSummary({ error: financeError.message });
+        }
       }
       else if (section === 'Guide') {
         const d = await API('/api/admin/instructor-guide');
@@ -297,6 +309,27 @@ export default function AdminPage() {
       await load(tab);
     } catch (e) { showStatus('error', e.message); }
     setActionLoading('');
+  };
+
+  const saveFinancialRecord = async (event) => {
+    event.preventDefault();
+    setSavingFinancialRecord(true);
+    try {
+      const amount = Number(financialForm.amount);
+      if (!Number.isFinite(amount) || amount <= 0) throw new Error('Enter an amount greater than zero.');
+      await API('/api/admin/financial-records', {
+        method: 'POST',
+        body: JSON.stringify({ ...financialForm, amount }),
+      });
+      setFinancialForm(prev => ({ ...prev, amount: '', description: '', reference: '' }));
+      setFinancialSummary(await API('/api/admin/financial-records'));
+      showStatus('success', financialForm.record_type === 'withdrawal'
+        ? 'Owner withdrawal recorded.' : 'Business expense recorded.');
+    } catch (e) {
+      showStatus('error', e.message);
+    } finally {
+      setSavingFinancialRecord(false);
+    }
   };
 
   const saveSplit = async () => {
@@ -817,6 +850,107 @@ export default function AdminPage() {
           {/* ── BROADCAST ── */}
           {tab === 'Earnings' && (
             <div className="space-y-6">
+              {/* Financial summary and owner-entered cash movements */}
+              <Card className="p-5 space-y-5">
+                <div>
+                  <h2 className="text-lg font-bold flex items-center gap-2">
+                    <Wallet className="h-5 w-5 text-primary" /> Financial Summary
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    A record-based overview using successful LearnAfrica transactions, completed instructor payouts and expenses you record here. This is not your live bank balance.
+                  </p>
+                </div>
+                {financialSummary?.error ? (
+                  <p className="text-sm text-warning">Financial summary is temporarily unavailable. Your existing Earnings information remains available.</p>
+                ) : financialSummary ? (
+                  <>
+                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                      {[
+                        ['Total collected', financialSummary.total_collected],
+                        ['Platform earnings', financialSummary.platform_earned],
+                        ['Instructor earnings', financialSummary.instructor_earned],
+                        ['Instructor payments made', financialSummary.instructor_paid],
+                        ['Outstanding instructor earnings', financialSummary.instructor_outstanding],
+                        ['Recorded expenses', financialSummary.expenses],
+                        ['Owner withdrawals', financialSummary.owner_withdrawals],
+                      ].map(([label, value]) => (
+                        <div key={label} className="rounded-xl border border-border bg-muted/20 p-3">
+                          <p className="text-xs text-muted-foreground">{label}</p>
+                          <p className="text-lg font-bold mt-1 tabular-nums">{formatPrice(value || 0)}</p>
+                        </div>
+                      ))}
+                      <div className="rounded-xl border border-success/30 bg-success/5 p-3">
+                        <p className="text-xs text-muted-foreground">Estimated remaining funds</p>
+                        <p className="text-lg font-bold text-success mt-1 tabular-nums">{formatPrice(financialSummary.estimated_remaining || 0)}</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Paystack fees are not guessed or automatically estimated. Record the actual fee as an expense under “Paystack fees” when confirmed. A transfer from Paystack to your bank is not an expense.
+                    </p>
+                  </>
+                ) : (
+                  <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-primary/50" /></div>
+                )}
+                <div className="border-t border-border pt-4 space-y-3">
+                  <h3 className="font-semibold text-sm">Record a financial movement</h3>
+                  <form onSubmit={saveFinancialRecord} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <select
+                      value={financialForm.record_type}
+                      onChange={e => setFinancialForm(prev => ({
+                        ...prev, record_type: e.target.value,
+                        category: e.target.value === 'withdrawal' ? 'Owner withdrawal' : 'Paystack fees',
+                      }))}
+                      className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
+                    >
+                      <option value="expense">Business expense</option>
+                      <option value="withdrawal">Owner withdrawal</option>
+                    </select>
+                    <input required maxLength={80} value={financialForm.category}
+                      onChange={e => setFinancialForm(prev => ({ ...prev, category: e.target.value }))}
+                      placeholder="Category (e.g. Paystack fees, hosting)"
+                      className="h-10 rounded-lg border border-border bg-background px-3 text-sm" />
+                    <input required type="number" min="0.01" step="0.01" value={financialForm.amount}
+                      onChange={e => setFinancialForm(prev => ({ ...prev, amount: e.target.value }))}
+                      placeholder="Amount (GHS)"
+                      className="h-10 rounded-lg border border-border bg-background px-3 text-sm" />
+                    <input maxLength={120} value={financialForm.reference}
+                      onChange={e => setFinancialForm(prev => ({ ...prev, reference: e.target.value }))}
+                      placeholder="Reference (optional)"
+                      className="h-10 rounded-lg border border-border bg-background px-3 text-sm" />
+                    <input maxLength={500} value={financialForm.description}
+                      onChange={e => setFinancialForm(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Description (optional)"
+                      className="h-10 rounded-lg border border-border bg-background px-3 text-sm sm:col-span-2" />
+                    <Button type="submit" disabled={savingFinancialRecord} className="sm:col-span-2">
+                      {savingFinancialRecord ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
+                      {savingFinancialRecord ? 'Saving…' : 'Save financial record'}
+                    </Button>
+                  </form>
+                </div>
+                {(financialSummary?.records || []).length > 0 && (
+                  <div className="border-t border-border pt-4">
+                    <h3 className="font-semibold text-sm mb-3">Recent financial records</h3>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead><tr className="border-b border-border text-left text-xs text-muted-foreground">
+                          <th className="py-2 pr-3">Type</th><th className="py-2 pr-3">Category</th>
+                          <th className="py-2 pr-3 text-right">Amount</th><th className="py-2">Date</th>
+                        </tr></thead>
+                        <tbody>
+                          {financialSummary.records.map(record => (
+                            <tr key={record.id} className="border-b border-border/50">
+                              <td className="py-2 pr-3 capitalize">{record.record_type}</td>
+                              <td className="py-2 pr-3">{record.category}</td>
+                              <td className="py-2 pr-3 text-right font-medium">{formatPrice(record.amount)}</td>
+                              <td className="py-2 text-muted-foreground">{record.created_at ? new Date(record.created_at).toLocaleDateString() : '—'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </Card>
               {/* Revenue Split Control */}
               <Card className="p-6 space-y-5">
                 <div>
