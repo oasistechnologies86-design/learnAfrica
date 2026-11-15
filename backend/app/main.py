@@ -7033,6 +7033,50 @@ def create_app() -> Flask:
 
     
     
+    @app.route('/api/admin/paystack/balance', methods=['GET'])
+    @admin_required
+    def admin_paystack_balance():
+        """Read-only Paystack balance lookup. Never initiates transfers or payments."""
+        secret = (os.environ.get('PAYSTACK_SECRET_KEY') or '').strip()
+        if not secret:
+            return jsonify({'configured': False, 'available': False, 'message': 'Paystack is not configured.'})
+        try:
+            response = requests.get(
+                'https://api.paystack.co/balance',
+                headers={'Authorization': f'Bearer {secret}', 'Content-Type': 'application/json'},
+                timeout=8,
+            )
+            payload = response.json() if response.content else {}
+            if response.status_code >= 400 or not payload.get('status'):
+                return jsonify({
+                    'configured': True, 'available': False,
+                    'message': 'Paystack balance could not be refreshed.',
+                })
+            raw_balances = payload.get('data') or []
+            if isinstance(raw_balances, dict):
+                raw_balances = [raw_balances]
+            balances = []
+            for item in raw_balances:
+                try:
+                    minor_units = int(item.get('balance') or 0)
+                except (TypeError, ValueError):
+                    continue
+                balances.append({
+                    'currency': str(item.get('currency') or 'GHS').upper(),
+                    'amount': round(minor_units / 100, 2),
+                })
+            key_mode = 'test' if secret.startswith('sk_test_') else ('live' if secret.startswith('sk_live_') else 'unknown')
+            return jsonify({
+                'configured': True, 'available': True,
+                'mode': key_mode, 'balances': balances,
+            })
+        except Exception as e:
+            app.logger.warning(f'admin_paystack_balance: {e}')
+            return jsonify({
+                'configured': True, 'available': False,
+                'message': 'Paystack balance could not be refreshed.',
+            })
+
     # ── INSTRUCTOR GUIDE ──────────────────────────────────────────────────────────
     @app.route('/api/instructor-guide', methods=['GET'])
     @token_required
