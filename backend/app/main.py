@@ -7021,13 +7021,16 @@ def create_app() -> Flask:
             withdrawals = float(withdrawal_total['amount'] or 0)
             # This is a ledger estimate, not a bank or Paystack balance.
             remaining = collected - paid_amount - expenses - withdrawals
+            outstanding_amount = float(outstanding['amount'] or 0)
+            after_obligations = remaining - outstanding_amount
             return jsonify({
                 'currency': 'GHS',
                 'total_collected': round(collected, 2),
                 'instructor_earned': round(instructor_earned, 2),
                 'platform_earned': round(platform_earned, 2),
                 'instructor_paid': round(paid_amount, 2),
-                'instructor_outstanding': round(float(outstanding['amount'] or 0), 2),
+                'instructor_outstanding': round(outstanding_amount, 2),
+                'available_after_instructor_obligations': round(after_obligations, 2),
                 'expenses': round(expenses, 2),
                 'other_expenses': round(other_expenses, 2),
                 'paystack_fees': round(paystack_fees, 2),
