@@ -587,12 +587,12 @@ export function PreviewCoursePage() {
               </span>
             )}
             <div className="hidden lg:flex items-center gap-1.5">
-              {prevLesson
-                ? <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => loadLesson(prevLesson.id)}><ChevronLeft className="h-4 w-4" /></Button>
-                : <Button variant="outline" size="sm" className="h-8 w-8 p-0" disabled><ChevronLeft className="h-4 w-4" /></Button>}
-              {nextLesson
-                ? <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => loadLesson(nextLesson.id)}><ChevronRight className="h-4 w-4" /></Button>
-                : <Button variant="outline" size="sm" className="h-8 w-8 p-0" disabled><ChevronRight className="h-4 w-4" /></Button>}
+              <Button variant="outline" size="sm" className="h-8 px-2 gap-1" onClick={() => prevLesson && loadLesson(prevLesson.id)} disabled={!prevLesson}>
+                <ChevronLeft className="h-4 w-4" /><span>Previous</span>
+              </Button>
+              <Button variant="outline" size="sm" className="h-8 px-2 gap-1" onClick={() => nextLesson && loadLesson(nextLesson.id)} disabled={!nextLesson}>
+                <span>Next</span><ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
             <Button variant="outline" size="sm" onClick={() => setShowSidebar(true)}
               className="lg:hidden h-9 w-9 p-0">
@@ -836,7 +836,7 @@ export function PreviewCoursePage() {
                     <div className="flex-1 flex justify-start">
                       {prevLesson && (
                         <Button variant="outline" className={navBtnClass} onClick={() => loadLesson(prevLesson.id)}>
-                          <ChevronLeft className="h-5 w-5" /><span className="hidden sm:inline">Previous</span>
+                          <ChevronLeft className="h-5 w-5" /><span>Previous</span>
                         </Button>
                       )}
                     </div>
@@ -849,7 +849,7 @@ export function PreviewCoursePage() {
                     <div className="flex-1 flex justify-end">
                       {nextLesson && (
                         <Button variant="outline" className={navBtnClass} onClick={() => loadLesson(nextLesson.id)}>
-                          <span className="hidden sm:inline">Next</span><ChevronRight className="h-5 w-5" />
+                          <span>Next</span><ChevronRight className="h-5 w-5" />
                         </Button>
                       )}
                     </div>
@@ -875,11 +875,11 @@ export function PreviewCoursePage() {
                 <div className="max-w-4xl mx-auto px-4 py-3">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex-1 flex justify-start">
-                      {prevLesson && <Button variant="outline" className={navBtnClass} onClick={() => loadLesson(prevLesson.id)}><ChevronLeft className="h-5 w-5" /><span className="hidden sm:inline">Previous</span></Button>}
+                      {prevLesson && <Button variant="outline" className={navBtnClass} onClick={() => loadLesson(prevLesson.id)}><ChevronLeft className="h-5 w-5" /><span>Previous</span></Button>}
                     </div>
                     <div className="flex-1 flex justify-center"><span className="text-3xs font-black uppercase tracking-tighter text-amber-600">Preview Mode</span></div>
                     <div className="flex-1 flex justify-end">
-                      {nextLesson && <Button variant="outline" className={navBtnClass} onClick={() => loadLesson(nextLesson.id)}><span className="hidden sm:inline">Next</span><ChevronRight className="h-5 w-5" /></Button>}
+                      {nextLesson && <Button variant="outline" className={navBtnClass} onClick={() => loadLesson(nextLesson.id)}><span>Next</span><ChevronRight className="h-5 w-5" /></Button>}
                     </div>
                   </div>
                 </div>

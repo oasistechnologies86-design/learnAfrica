@@ -596,6 +596,7 @@ export function LessonPage() {
                         <CustomLessonFrame
                           lesson={lesson}
                           mode="student"
+                          studentId={user?.id}
                           onComplete={handleMarkComplete}
                           isCompleted={!!currentLessonFinished}
                           isSaving={isSaving}

@@ -569,3 +569,54 @@ button:disabled,
 @media(prefers-reduced-motion:reduce) {
   .custom-lesson-page { box-shadow:0 0 0 1px color-mix(in oklab,var(--primary) 18%,var(--border)); }
 }
+
+
+/* Shared read-aloud controls for every registered custom lesson page. */
+.custom-lesson-reader-controls {
+  width: min(100%, 1050px); margin: 18px auto 14px;
+  padding: 16px clamp(16px, 3vw, 28px);
+  border: 1px solid color-mix(in oklab, var(--primary) 24%, var(--border));
+  border-radius: 16px; background: color-mix(in oklab, var(--background) 94%, var(--primary));
+  color: var(--foreground); box-shadow: 0 5px 20px rgba(0,0,0,.045);
+}
+.custom-lesson-reader-heading, .custom-lesson-reader-heading > span,
+.custom-lesson-reader-actions, .custom-lesson-reader-timeline { display:flex; align-items:center; }
+.custom-lesson-reader-heading { justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+.custom-lesson-reader-heading > span { gap:8px; font-size:14px; font-weight:750; }
+.custom-lesson-reader-heading svg { width:17px; height:17px; color:var(--primary); }
+.custom-lesson-reader-heading small, .custom-lesson-reader-note,
+.custom-lesson-reader-timeline small { color:var(--muted-foreground); font-size:12px; }
+.custom-lesson-reader-actions { gap:8px; flex-wrap:wrap; }
+.custom-lesson-reader-actions > button {
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  min-height:36px; padding:7px 11px; border:1px solid var(--border);
+  border-radius:9px; background:var(--background); color:var(--foreground);
+  font-size:12px; font-weight:700; cursor:pointer;
+}
+.custom-lesson-reader-actions > button:first-child { background:var(--primary); color:var(--primary-foreground); border-color:var(--primary); }
+.custom-lesson-reader-actions > button:disabled { opacity:.45; cursor:not-allowed; }
+.custom-lesson-reader-actions > button svg { width:14px; height:14px; }
+.custom-lesson-reader-speed { display:inline-flex; align-items:center; gap:7px; margin-left:auto; font-size:12px; font-weight:650; }
+.custom-lesson-reader-speed select {
+  min-height:36px; border:1px solid var(--border); border-radius:9px;
+  padding:0 9px; background:var(--background); color:var(--foreground); font-size:12px;
+}
+.custom-lesson-reader-timeline { gap:12px; margin-top:14px; }
+.custom-lesson-reader-timeline > span { font-size:12px; font-weight:700; white-space:nowrap; }
+.custom-lesson-reader-timeline input { flex:1; min-width:70px; accent-color:var(--primary); cursor:pointer; }
+.custom-lesson-reader-timeline small { white-space:nowrap; font-variant-numeric:tabular-nums; }
+.custom-lesson-reader-note { margin:8px 0 0; line-height:1.5; }
+.custom-lesson-reading-active { background:color-mix(in oklab,var(--primary) 15%,transparent); border-radius:5px; outline:2px solid color-mix(in oklab,var(--primary) 20%,transparent); outline-offset:3px; }
+::highlight(custom-lesson-current-sentence) {
+  background:color-mix(in oklab,var(--primary) 24%,transparent); color:inherit;
+  text-decoration:underline; text-decoration-color:var(--primary);
+  text-decoration-thickness:2px; text-underline-offset:3px;
+}
+@media(max-width:650px) {
+  .custom-lesson-reader-controls { margin:12px auto; padding:13px 14px; border-radius:13px; }
+  .custom-lesson-reader-actions { gap:6px; }
+  .custom-lesson-reader-actions > button { min-height:35px; padding:7px 9px; font-size:11px; }
+  .custom-lesson-reader-speed { margin-left:0; }
+  .custom-lesson-reader-timeline { display:grid; grid-template-columns:1fr auto; gap:7px 10px; }
+  .custom-lesson-reader-timeline input { grid-column:1 / -1; grid-row:2; width:100%; }
+}
