@@ -239,6 +239,10 @@ export async function drawStatementPdf(tx) {
   labelValue(doc, 'Receipt No', tx?.receipt_id || '—', LEFT_X, y + 14, { maxWidth: COL_W });
   labelValue(doc, 'Student', tx?.buyer?.name || '—', LEFT_X, y + 28, { maxWidth: COL_W });
   labelValue(doc, 'Account', tx?.buyer?.email || '—', LEFT_X, y + 42, { valueStyle: 'normal', valueSize: 9, maxWidth: COL_W });
+  const payerPhone = tx?.buyer?.phone || tx?.buyer?.contact?.phone || tx?.buyer?.contact?.phone_number || tx?.buyer?.contact?.mobile || '';
+  labelValue(doc, 'Contact Number', payerPhone || 'Contact number not provided', LEFT_X, y + 56, {
+    valueStyle: 'normal', valueSize: 9, maxWidth: COL_W,
+  });
 
   const dateStr = tx?.created_at ? new Date(tx.created_at).toLocaleString('en-GB') : '—';
   labelValue(doc, 'Payment Date', dateStr, RIGHT_X, y, { valueStyle: 'normal', valueSize: 9, align: 'right', maxWidth: COL_W });
@@ -257,7 +261,7 @@ export async function drawStatementPdf(tx) {
   labelValue(doc, 'Reference', tx?.reference || '—', RIGHT_X, y + 28, { valueStyle: 'normal', valueSize: 8.5, align: 'right', maxWidth: COL_W });
   labelValue(doc, 'Payment Method', tx?.payment_method || '—', RIGHT_X, y + 42, { valueStyle: 'normal', valueSize: 9, align: 'right', maxWidth: COL_W });
 
-  y += 60;
+  y += 74;
   doc.setDrawColor(...BRAND.line);
   doc.setLineWidth(0.3);
   doc.line(15, y, P.w - 15, y);
