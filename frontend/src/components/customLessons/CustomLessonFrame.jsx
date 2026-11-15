@@ -187,6 +187,8 @@ export default function CustomLessonFrame({
         setIsPlaying(false);
         setIsPaused(false);
         setReaderStatus('Audio did not start on this device. Check that text-to-speech is enabled, then press Play again.');
+        // Ignore any late events from this request after the timeout.
+        sessionRef.current += 1;
         window.speechSynthesis.cancel();
       }, 7000);
     } catch {
