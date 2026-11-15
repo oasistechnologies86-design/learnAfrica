@@ -17,8 +17,12 @@ function collectReadingSentences(root) {
   let current;
   while ((current = walker.nextNode())) {
     const value = current.nodeValue || '';
-    if (!value) continue;
-    nodes.push({ node: current, start: fullText.length, end: fullText.length + value.length });
+    if (!value.trim()) continue;
+    // Text nodes can be split by inline formatting elements. Add a real word
+    // boundary when adjacent nodes would otherwise run together.
+    if (fullText && value && !/\\s$/.test(fullText) && !/^\\s/.test(value)) fullText += ' ';
+    const start = fullText.length;
+    nodes.push({ node: current, start, end: start + value.length });
     fullText += value;
   }
   let parts = [];
@@ -63,6 +67,9 @@ export default function CustomLessonFrame({
   const sessionRef = React.useRef(0);
   const fallbackHighlightRef = React.useRef(null);
   const rateRef = React.useRef(1);
+  const currentSentenceRef = React.useRef(0);
+  const speechStartTimerRef = React.useRef(null);
+  const wasPlayingBeforeSeekRef = React.useRef(false);
   const canComplete = mode === 'student' && typeof onComplete === 'function';
   const canRemember = mode === 'student' && Boolean(studentId) && Boolean(lesson?.id);
   const storageKey = canRemember ? `learnafrica:custom-reading:${studentId}:${lesson.id}` : null;
@@ -136,24 +143,34 @@ export default function CustomLessonFrame({
       return;
     }
     setCurrentSentence(index);
+    currentSentenceRef.current = index;
     highlightSentence(index);
     const utterance = new window.SpeechSynthesisUtterance(sentence.text);
     utterance.rate = rateRef.current;
     utterance.onstart = () => {
-      if (session === sessionRef.current) setReaderStatus('Reading aloud now.');
+      if (session !== sessionRef.current) return;
+      if (speechStartTimerRef.current) window.clearTimeout(speechStartTimerRef.current);
+      speechStartTimerRef.current = null;
+      setReaderStatus('Reading aloud now.');
     };
     utterance.onend = () => {
       if (session !== sessionRef.current) return;
+      if (speechStartTimerRef.current) window.clearTimeout(speechStartTimerRef.current);
+      speechStartTimerRef.current = null;
       if (index + 1 < sentencesRef.current.length) speakAt(index + 1, session);
       else {
         setIsPlaying(false);
         setIsPaused(false);
-        setCurrentSentence(Math.max(0, sentencesRef.current.length - 1));
+        const lastSentence = Math.max(0, sentencesRef.current.length - 1);
+        setCurrentSentence(lastSentence);
+        currentSentenceRef.current = lastSentence;
         setReaderStatus('Finished reading. Press Restart to listen again.');
       }
     };
     utterance.onerror = (event) => {
       if (session !== sessionRef.current || event.error === 'canceled' || event.error === 'interrupted') return;
+      if (speechStartTimerRef.current) window.clearTimeout(speechStartTimerRef.current);
+      speechStartTimerRef.current = null;
       setIsPlaying(false);
       setIsPaused(false);
       setReaderStatus('Your device stopped the audio. Please check its text-to-speech voice settings and try again.');
@@ -163,8 +180,20 @@ export default function CustomLessonFrame({
       // suspend speech until resume() is called after a previous cancel/pause.
       window.speechSynthesis.resume();
       window.speechSynthesis.speak(utterance);
+      if (speechStartTimerRef.current) window.clearTimeout(speechStartTimerRef.current);
+      speechStartTimerRef.current = window.setTimeout(() => {
+        if (session !== sessionRef.current) return;
+        // Some mobile speech engines accept the request but never start it.
+        setIsPlaying(false);
+        setIsPaused(false);
+        setReaderStatus('Audio did not start on this device. Check that text-to-speech is enabled, then press Play again.');
+        window.speechSynthesis.cancel();
+      }, 7000);
     } catch {
+      if (speechStartTimerRef.current) window.clearTimeout(speechStartTimerRef.current);
+      speechStartTimerRef.current = null;
       setIsPlaying(false);
+      setIsPaused(false);
       setReaderStatus('Audio could not start. Please try Play again.');
     }
   }, [highlightSentence]);
@@ -173,6 +202,8 @@ export default function CustomLessonFrame({
     if (typeof window === 'undefined' || !window.speechSynthesis || !sentencesRef.current.length) return;
     sessionRef.current += 1;
     const session = sessionRef.current;
+    if (speechStartTimerRef.current) window.clearTimeout(speechStartTimerRef.current);
+    speechStartTimerRef.current = null;
     window.speechSynthesis.cancel();
     setIsPaused(false);
     setIsPlaying(true);
@@ -184,6 +215,8 @@ export default function CustomLessonFrame({
 
   const stopReading = React.useCallback(() => {
     sessionRef.current += 1;
+    if (speechStartTimerRef.current) window.clearTimeout(speechStartTimerRef.current);
+    speechStartTimerRef.current = null;
     if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
     setIsPlaying(false);
     setIsPaused(false);
@@ -225,10 +258,13 @@ export default function CustomLessonFrame({
       }
     }
     setCurrentSentence(saved);
+    currentSentenceRef.current = saved;
     setSavedPosition(saved > 0);
     if (saved > 0) highlightSentence(saved);
     return () => {
       sessionRef.current += 1;
+      if (speechStartTimerRef.current) window.clearTimeout(speechStartTimerRef.current);
+      speechStartTimerRef.current = null;
       if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
       clearSentenceHighlight();
     };
@@ -282,31 +318,41 @@ export default function CustomLessonFrame({
       setReaderStatus('No lesson text was found to read aloud.');
       return;
     }
-    if (isPaused && window.speechSynthesis) {
-      window.speechSynthesis.resume();
-      setReaderStatus('Resuming audio...');
-      setIsPaused(false);
-      setIsPlaying(true);
+    if (isPaused) {
+      // Restart the current sentence instead of relying on native resume().
+      // Several mobile speech engines lose their paused queue after a short wait.
+      playFrom(currentSentenceRef.current);
       return;
     }
-    playFrom(currentSentence);
+    playFrom(currentSentenceRef.current);
   };
   const handlePause = () => {
     if (!isPlaying || !window.speechSynthesis) return;
-    window.speechSynthesis.pause();
+    // Invalidate callbacks from the old utterance before cancelling it.
+    // Resume will speak the current sentence again, so progress is not lost.
+    sessionRef.current += 1;
+    if (speechStartTimerRef.current) window.clearTimeout(speechStartTimerRef.current);
+    speechStartTimerRef.current = null;
+    window.speechSynthesis.cancel();
     setIsPlaying(false);
     setIsPaused(true);
+    setReaderStatus('Paused. Press Resume to continue from this sentence.');
   };
   const handleRestart = () => {
+    currentSentenceRef.current = 0;
     setCurrentSentence(0);
     setSavedPosition(false);
     playFrom(0);
   };
   const handleSeek = (event) => {
     const next = Number(event.target.value);
+    currentSentenceRef.current = next;
     setCurrentSentence(next);
     setSavedPosition(false);
-    if (isPlaying) playFrom(next);
+  };
+  const finishSeek = () => {
+    if (wasPlayingBeforeSeekRef.current) playFrom(currentSentenceRef.current);
+    wasPlayingBeforeSeekRef.current = false;
   };
   const handleRateChange = (event) => {
     const nextRate = Number(event.target.value);
@@ -361,6 +407,11 @@ export default function CustomLessonFrame({
               <span>Reading progress</span>
               <input type="range" min="0" max={Math.max(0, sentences.length - 1)} step="1"
                 value={Math.min(currentSentence, Math.max(0, sentences.length - 1))}
+                onPointerDown={() => { wasPlayingBeforeSeekRef.current = isPlaying; }}
+                onPointerUp={finishSeek}
+                onPointerCancel={finishSeek}
+                onKeyDown={() => { wasPlayingBeforeSeekRef.current = isPlaying; }}
+                onKeyUp={finishSeek}
                 onChange={handleSeek} disabled={!sentences.length}
                 aria-label="Move to a sentence in the lesson" />
               <small>{sentences.length ? `Sentence ${Math.min(currentSentence + 1, sentences.length)} of ${sentences.length}` : 'No reading text found'}</small>
