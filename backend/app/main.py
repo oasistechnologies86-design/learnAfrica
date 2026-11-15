@@ -4069,6 +4069,36 @@ def create_app() -> Flask:
             'total_last_30_days': int(recent['c'] or 0) if recent else 0,
         })
 
+    @app.route('/api/instructor/students', methods=['GET'])
+    @instructor_required
+    def instructor_students():
+        """Return enrolments only for courses owned by the authenticated instructor."""
+        try:
+            db = get_db()
+            uid = g.current_user['user_id']
+            rows = db.execute(
+                """SELECT ue.user_id AS student_id, u.name, u.email, u.phone,
+                          c.id AS course_id, c.title AS course_title,
+                          ue.progress, CAST(ue.enrolled_at AS TEXT) AS enrolled_at
+                   FROM user_enrollments ue
+                   JOIN users u ON u.id = ue.user_id
+                   JOIN courses c ON c.id = ue.course_id
+                   WHERE c.instructor_id = ?
+                   ORDER BY ue.enrolled_at DESC, u.name ASC
+                   LIMIT 5000""",
+                (uid,)
+            ).fetchall()
+            students = []
+            for row in rows:
+                item = dict(row)
+                item['progress'] = max(0, min(100, int(item.get('progress') or 0)))
+                item['completed'] = item['progress'] >= 100
+                students.append(item)
+            return jsonify({'students': students, 'count': len(students)})
+        except Exception as e:
+            app.logger.error(f'instructor_students: {e}')
+            return jsonify({'error': 'Could not load your students.'}), 500
+
     @app.route('/api/instructor/analytics/per-course', methods=['GET'])
     @instructor_required
     def analytics_per_course():
