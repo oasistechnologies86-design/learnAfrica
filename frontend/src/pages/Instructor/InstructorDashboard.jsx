@@ -440,6 +440,7 @@ export function InstructorDashboard() {
   const [paymentConfigured, setPaymentConfigured] = useState(true); // assume true until proven otherwise
   const [myStudents, setMyStudents] = useState([]);
   const [studentsLoading, setStudentsLoading] = useState(true);
+  const [studentsError, setStudentsError] = useState('');
   const [studentSearch, setStudentSearch] = useState('');
   const [studentCourse, setStudentCourse] = useState('all');
   const ITEMS_PER_PAGE = 5;
@@ -462,8 +463,8 @@ export function InstructorDashboard() {
     };
     fetchStats();
     api('/api/instructor/students')
-      .then(data => setMyStudents(data.students || []))
-      .catch(() => setMyStudents([]))
+      .then(data => { setMyStudents(data.students || []); setStudentsError(''); })
+      .catch(error => { setMyStudents([]); setStudentsError(error.message || 'Could not load your students.'); })
       .finally(() => setStudentsLoading(false));
     // Check payment-method configuration
     api('/api/users/me/payment-method')
@@ -664,6 +665,8 @@ export function InstructorDashboard() {
           </div>
           {studentsLoading ? (
             <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-primary/50" /></div>
+          ) : studentsError ? (
+            <p className="py-6 text-center text-sm text-destructive">{studentsError}</p>
           ) : filteredMyStudents.length ? (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
