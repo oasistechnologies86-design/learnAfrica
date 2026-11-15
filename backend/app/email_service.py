@@ -161,6 +161,74 @@ def render_email(heading, body_html, *, preheader='', button_text=None,
 </html>'''
 
 
+
+def render_password_reset_email(*, link, expiry, support_email):
+    """Render a compact, dedicated password-reset email.
+
+    Kept separate from render_email so registration OTP and other transactional
+    messages retain their existing appearance and markup.
+    """
+    from html import escape as _escape
+
+    safe_link = _escape(str(link or ''), quote=True)
+    safe_expiry = _escape(str(expiry or '1 hour'))
+    safe_support = _escape(str(support_email or 'support@learnafrica.com'))
+    year = datetime.utcnow().year
+    return f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
+<title>Reset your LearnAfrica password</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f6f5;-webkit-text-size-adjust:100%;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;font-size:1px;line-height:1px;mso-hide:all;">
+    Choose a new password for your LearnAfrica account.
+  </div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f6f5;padding:28px 12px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+        style="max-width:480px;background:#ffffff;border:1px solid #e5e9e7;border-radius:12px;">
+        <tr><td style="padding:25px 28px 8px;font-family:Arial,Helvetica,sans-serif;">
+          <p style="margin:0;color:#168447;font-size:16px;line-height:1.4;font-weight:700;">LearnAfrica</p>
+        </td></tr>
+        <tr><td style="padding:12px 28px 26px;font-family:Arial,Helvetica,sans-serif;color:#25312b;">
+          <h1 style="margin:0 0 14px;font-size:22px;line-height:1.3;font-weight:700;color:#17221c;">Reset your password</h1>
+          <p style="margin:0 0 12px;font-size:14px;line-height:1.7;color:#46534c;">
+            We received a request to reset the password for your LearnAfrica account.
+          </p>
+          <p style="margin:0;font-size:14px;line-height:1.7;color:#46534c;">
+            Select the button below to choose a new password. If you did not make this request, you can ignore this email.
+          </p>
+          <div style="padding:22px 0 18px;text-align:left;">
+            <a href="{safe_link}" style="display:inline-block;padding:12px 22px;border-radius:7px;background:#168447;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.2;font-weight:700;text-decoration:none;">
+              Reset my password
+            </a>
+          </div>
+          <p style="margin:0 0 7px;font-size:12px;line-height:1.6;color:#647168;">
+            This link expires in {safe_expiry} and can be used once.
+          </p>
+          <p style="margin:0;font-size:12px;line-height:1.6;color:#647168;">
+            If the button does not work, copy and paste this address into your browser:
+          </p>
+          <p style="margin:7px 0 0;font-size:12px;line-height:1.6;overflow-wrap:anywhere;word-break:break-word;">
+            <a href="{safe_link}" style="color:#168447;text-decoration:underline;">{safe_link}</a>
+          </p>
+          <p style="margin:20px 0 0;font-size:12px;line-height:1.6;color:#647168;">
+            Need help? Contact <a href="mailto:{safe_support}" style="color:#168447;text-decoration:underline;">{safe_support}</a>.
+          </p>
+        </td></tr>
+      </table>
+      <p style="margin:15px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.6;color:#87918b;text-align:center;">
+        Automated message from LearnAfrica. Please do not reply.<br>
+        &copy; {year} LearnAfrica.
+      </p>
+    </td></tr>
+  </table>
+</body>
+</html>'''
+
 def _empty_account():
     return {
         'client_id': '',
