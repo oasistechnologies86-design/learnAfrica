@@ -49,14 +49,13 @@ function collectReadingSentences(root) {
 const READER_PREFERENCES_KEY = 'learnafrica:custom-reading-preferences:v1';
 
 function readReaderPreferences() {
-  const defaults = { rate: 0.8, voiceGender: 'female', textSize: 'normal' };
+  const defaults = { rate: 0.8, voiceGender: 'female' };
   if (typeof window === 'undefined') return defaults;
   try {
     const saved = JSON.parse(window.localStorage.getItem(READER_PREFERENCES_KEY) || '{}');
     return {
       rate: [0.8, 1, 1.2].includes(Number(saved.rate)) ? Number(saved.rate) : defaults.rate,
       voiceGender: ['female', 'male'].includes(saved.voiceGender) ? saved.voiceGender : defaults.voiceGender,
-      textSize: ['small', 'normal', 'large'].includes(saved.textSize) ? saved.textSize : defaults.textSize
     };
   } catch {
     return defaults;
@@ -100,7 +99,6 @@ export default function CustomLessonFrame({
   const [readerPreferences] = React.useState(readReaderPreferences);
   const [rate, setRate] = React.useState(readerPreferences.rate);
   const [voiceGender, setVoiceGender] = React.useState(readerPreferences.voiceGender);
-  const [textSize, setTextSize] = React.useState(readerPreferences.textSize);
   const rateRef = React.useRef(rate);
   const currentSentenceRef = React.useRef(0);
   const speechStartTimerRef = React.useRef(null);
@@ -116,7 +114,6 @@ export default function CustomLessonFrame({
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [isPaused, setIsPaused] = React.useState(false);
   const [voices, setVoices] = React.useState([]);
-  const [sections, setSections] = React.useState([]);
   const [speechSupported, setSpeechSupported] = React.useState(false);
   const [savedPosition, setSavedPosition] = React.useState(false);
   const [readerStatus, setReaderStatus] = React.useState('Ready to read.');
@@ -280,33 +277,6 @@ export default function CustomLessonFrame({
   }, []);
 
   React.useEffect(() => {
-    try {
-      window.localStorage.setItem(READER_PREFERENCES_KEY, JSON.stringify({ rate, voiceGender, textSize }));
-    } catch {
-      // Reading controls still work when browser storage is unavailable.
-    }
-  }, [rate, voiceGender, textSize]);
-
-  React.useEffect(() => {
-    const root = contentRef.current;
-    if (!root) {
-      setSections([]);
-      return;
-    }
-    const headings = Array.from(root.querySelectorAll('h2, h3'));
-    const nextSections = headings.map((heading, index) => {
-      const label = (heading.textContent || '').replace(/\s+/g, ' ').trim();
-      if (!label) return null;
-      if (!heading.id) {
-        const lessonKey = String(lesson?.id || 'lesson').replace(/[^a-z0-9_-]/gi, '-');
-        heading.id = `custom-lesson-${lessonKey}-section-${index + 1}`;
-      }
-      return { id: heading.id, label, level: heading.tagName.toLowerCase() };
-    }).filter(Boolean);
-    setSections(nextSections);
-  }, [children, lesson?.id]);
-
-  React.useEffect(() => {
     if (typeof document === 'undefined' || !window.CSS?.highlights) return undefined;
     const style = document.createElement('style');
     style.setAttribute('data-custom-lesson-highlight', 'true');
@@ -461,22 +431,10 @@ export default function CustomLessonFrame({
     }
   };
 
-  const handleSectionChange = (event) => {
-    const targetId = event.target.value;
-    if (!targetId) return;
-    document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-  const changeTextSize = (direction) => {
-    const sizes = ['small', 'normal', 'large'];
-    const current = Math.max(0, sizes.indexOf(textSize));
-    const next = Math.min(sizes.length - 1, Math.max(0, current + direction));
-    setTextSize(sizes[next]);
-  };
-
   const heroTitle = lesson?.title || 'Explore, understand and apply what you learn.';
 
   return (
-    <div className="custom-lesson-page" data-custom-lesson-mode={mode} data-text-size={textSize}>
+    <div className="custom-lesson-page" data-custom-lesson-mode={mode}>
       <section className="custom-lesson-hero" aria-label="Lesson introduction">
         <img className="custom-lesson-hero-photo" src="https://images.pexels.com/photos/5965650/pexels-photo-5965650.jpeg?auto=compress&cs=tinysrgb&w=2000"
           alt="A student studying outdoors on a laptop with a notebook beside her" loading="eager" />
@@ -521,22 +479,6 @@ export default function CustomLessonFrame({
                   <option value="1.2">Fast</option>
                 </select>
               </label>
-              <label className="custom-lesson-reader-speed custom-lesson-reader-sections">
-                <span>Jump to</span>
-                <select value="" onChange={handleSectionChange} aria-label="Jump to a lesson section" disabled={!sections.length}>
-                  <option value="">{sections.length ? 'Choose a section' : 'No sections'}</option>
-                  {sections.map((section) => (
-                    <option key={section.id} value={section.id}>
-                      {section.level === 'h3' ? `· ${section.label}` : section.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <div className="custom-lesson-reader-text-size" role="group" aria-label="Lesson text size">
-                <span>Text</span>
-                <button type="button" onClick={() => changeTextSize(-1)} disabled={textSize === 'small'} aria-label="Make lesson text smaller">A−</button>
-                <button type="button" onClick={() => changeTextSize(1)} disabled={textSize === 'large'} aria-label="Make lesson text larger">A+</button>
-              </div>
             </div>
             <div className="custom-lesson-reader-timeline">
               <span>Reading progress</span>
