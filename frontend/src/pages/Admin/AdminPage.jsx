@@ -892,7 +892,8 @@ export default function AdminPage() {
                         ['Instructor earnings', financialSummary.instructor_earned],
                         ['Instructor payments made', financialSummary.instructor_paid],
                         ['Outstanding instructor earnings', financialSummary.instructor_outstanding],
-                        ['Recorded expenses', financialSummary.expenses],
+                        ['Paystack processing fees', financialSummary.paystack_fees],
+                        ['Other business expenses', financialSummary.other_expenses],
                         ['Owner withdrawals', financialSummary.owner_withdrawals],
                       ].map(([label, value]) => (
                         <div key={label} className="rounded-xl border border-border bg-muted/20 p-3">
@@ -906,7 +907,7 @@ export default function AdminPage() {
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      The Paystack figure is the provider's available balance, fetched read-only from your backend. It is separate from the estimated remaining funds, which accounts for recorded payouts, expenses and withdrawals. Paystack fees are recorded using the actual fee amount; a transfer to your bank is not an expense.
+                      The Paystack figure is fetched read-only from Paystack. Fees from new successful Paystack webhook events are recorded from the provider's fee amount. For older transactions or fees not included in a webhook, record the actual fee once as a “Paystack fees” expense. Do not enter a fee twice. A transfer to your bank is not an expense.
                     </p>
                   </>
                 ) : (
