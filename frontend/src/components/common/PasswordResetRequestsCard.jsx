@@ -20,21 +20,36 @@ const STATUS_STYLES = {
   dismissed: 'bg-muted text-muted-foreground border-border',
 };
 
+function parseResetTimestamp(ts) {
+  if (ts == null || ts === '') return null;
+  if (ts instanceof Date) return Number.isFinite(ts.getTime()) ? ts : null;
+  if (typeof ts === 'number') {
+    const date = new Date(ts);
+    return Number.isFinite(date.getTime()) ? date : null;
+  }
+  if (typeof ts !== 'string') return null;
+  const value = ts.trim();
+  if (!value) return null;
+  // Preserve explicit UTC offsets; treat database timestamps without a zone as UTC.
+  const normalized = value.includes('T') ? value : value.replace(' ', 'T');
+  const hasZone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(normalized);
+  const date = new Date(hasZone ? normalized : `${normalized}Z`);
+  return Number.isFinite(date.getTime()) ? date : null;
+}
+
 function fmt(ts) {
-  if (!ts) return '—';
-  try { return new Date(ts.replace(' ', 'T') + (ts.includes('Z') ? '' : 'Z')).toLocaleString(); }
-  catch { return ts; }
+  const date = parseResetTimestamp(ts);
+  return date ? date.toLocaleString() : (ts == null || ts === '' ? '—' : 'Date unavailable');
 }
 
 // The promised turnaround for a manual reset request. Shown so an admin can see
 // at a glance which requests are close to (or past) their 24-hour window.
 const RESET_SLA_HOURS = 24;
 function dueBy(ts) {
-  if (!ts) return null;
-  try {
-    const d = new Date(ts.replace(' ', 'T') + (ts.includes('Z') ? '' : 'Z'));
-    return new Date(d.getTime() + RESET_SLA_HOURS * 3600 * 1000);
-  } catch { return null; }
+  const created = parseResetTimestamp(ts);
+  if (!created) return null;
+  const due = new Date(created.getTime() + RESET_SLA_HOURS * 3600 * 1000);
+  return Number.isFinite(due.getTime()) ? due : null;
 }
 
 export default function PasswordResetRequestsCard({ onChanged }) {
