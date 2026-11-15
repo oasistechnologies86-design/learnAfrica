@@ -74,6 +74,7 @@ export default function CustomLessonFrame({
   const [rate, setRate] = React.useState(1);
   const [speechSupported, setSpeechSupported] = React.useState(false);
   const [savedPosition, setSavedPosition] = React.useState(false);
+  const [readerStatus, setReaderStatus] = React.useState('Ready to read.');
 
   const getScrollContainer = () => {
     const article = readingRef.current;
@@ -138,6 +139,9 @@ export default function CustomLessonFrame({
     highlightSentence(index);
     const utterance = new window.SpeechSynthesisUtterance(sentence.text);
     utterance.rate = rateRef.current;
+    utterance.onstart = () => {
+      if (session === sessionRef.current) setReaderStatus('Reading aloud now.');
+    };
     utterance.onend = () => {
       if (session !== sessionRef.current) return;
       if (index + 1 < sentencesRef.current.length) speakAt(index + 1, session);
@@ -145,14 +149,23 @@ export default function CustomLessonFrame({
         setIsPlaying(false);
         setIsPaused(false);
         setCurrentSentence(Math.max(0, sentencesRef.current.length - 1));
+        setReaderStatus('Finished reading. Press Restart to listen again.');
       }
     };
     utterance.onerror = (event) => {
       if (session !== sessionRef.current || event.error === 'canceled' || event.error === 'interrupted') return;
       setIsPlaying(false);
       setIsPaused(false);
+      setReaderStatus('Your device stopped the audio. Please check its text-to-speech voice settings and try again.');
     };
-    window.speechSynthesis.speak(utterance);
+    try {
+      // Speak immediately inside the Play tap. Some mobile browsers block speech
+      // if it is delayed until after the tap has finished.
+      window.speechSynthesis.speak(utterance);
+    } catch {
+      setIsPlaying(false);
+      setReaderStatus('Audio could not start. Please try Play again.');
+    }
   }, [highlightSentence]);
 
   const playFrom = React.useCallback((index) => {
@@ -162,6 +175,9 @@ export default function CustomLessonFrame({
     window.speechSynthesis.cancel();
     setIsPaused(false);
     setIsPlaying(true);
+    setReaderStatus('Starting audio...');
+    // Do not defer this call: mobile browsers may require the speech request
+    // to happen directly from the user's tap.
     speakAt(Math.max(0, Math.min(index, sentencesRef.current.length - 1)), session);
   }, [speakAt]);
 
@@ -170,6 +186,7 @@ export default function CustomLessonFrame({
     if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
     setIsPlaying(false);
     setIsPaused(false);
+    setReaderStatus('Reading stopped.');
   }, []);
 
   React.useEffect(() => {
@@ -256,9 +273,17 @@ export default function CustomLessonFrame({
   }, [navigationOpen, lesson?.id]);
 
   const handlePlay = () => {
-    if (!speechSupported) return;
+    if (!speechSupported) {
+      setReaderStatus('Audio reading is not available in this browser. Try opening LearnAfrica in Chrome.');
+      return;
+    }
+    if (!sentencesRef.current.length) {
+      setReaderStatus('No lesson text was found to read aloud.');
+      return;
+    }
     if (isPaused && window.speechSynthesis) {
       window.speechSynthesis.resume();
+      setReaderStatus('Resuming audio...');
       setIsPaused(false);
       setIsPlaying(true);
       return;
@@ -305,6 +330,10 @@ export default function CustomLessonFrame({
         </div>
         {speechSupported ? (
           <>
+            <div className={`custom-lesson-reader-status ${isPlaying ? 'is-active' : ''} ${readerStatus === 'Starting audio...' ? 'is-starting' : ''}`} role="status" aria-live="polite">
+              <span className="custom-lesson-reader-indicator" aria-hidden="true"><i /><i /><i /><i /></span>
+              <span>{readerStatus}</span>
+            </div>
             <div className="custom-lesson-reader-actions">
               <button type="button" onClick={handlePlay} disabled={!sentences.length} aria-label={isPaused ? 'Resume reading' : 'Play reading'}>
                 <Play aria-hidden="true" /> {isPaused ? 'Resume' : 'Play'}

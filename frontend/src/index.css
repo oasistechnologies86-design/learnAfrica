@@ -586,6 +586,16 @@ button:disabled,
 .custom-lesson-reader-heading svg { width:17px; height:17px; color:var(--primary); }
 .custom-lesson-reader-heading small, .custom-lesson-reader-note,
 .custom-lesson-reader-timeline small { color:var(--muted-foreground); font-size:12px; }
+.custom-lesson-reader-status { display:flex; align-items:center; gap:9px; min-height:32px; margin:0 0 10px; color:var(--muted-foreground); font-size:13px; font-weight:600; }
+.custom-lesson-reader-status.is-active, .custom-lesson-reader-status.is-starting { color:var(--primary); }
+.custom-lesson-reader-indicator { display:inline-flex; align-items:center; gap:2px; width:20px; height:18px; opacity:.35; }
+.custom-lesson-reader-indicator i { display:block; width:3px; height:5px; border-radius:4px; background:currentColor; }
+.custom-lesson-reader-status.is-active .custom-lesson-reader-indicator, .custom-lesson-reader-status.is-starting .custom-lesson-reader-indicator { opacity:1; }
+.custom-lesson-reader-status.is-active .custom-lesson-reader-indicator i, .custom-lesson-reader-status.is-starting .custom-lesson-reader-indicator i { animation:custom-lesson-speaking .75s ease-in-out infinite alternate; }
+.custom-lesson-reader-indicator i:nth-child(2) { animation-delay:.15s !important; }
+.custom-lesson-reader-indicator i:nth-child(3) { animation-delay:.3s !important; }
+.custom-lesson-reader-indicator i:nth-child(4) { animation-delay:.45s !important; }
+@keyframes custom-lesson-speaking { from { height:4px; } to { height:17px; } }
 .custom-lesson-reader-actions { gap:8px; flex-wrap:wrap; }
 .custom-lesson-reader-actions > button {
   display:inline-flex; align-items:center; justify-content:center; gap:6px;
