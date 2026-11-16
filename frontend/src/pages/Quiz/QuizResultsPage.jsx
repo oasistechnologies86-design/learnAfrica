@@ -273,10 +273,11 @@ export function QuizResultsPage() {
           {/* ── Action buttons - Back to Lesson | Download (if cert) | Try Again ── */}
           <div className="flex flex-col sm:flex-row gap-3 pt-1">
             {/* Back to the exact lesson they came from */}
-            <Link to={backToLesson} className="flex-1">
-              <Button variant="outline" className="w-full gap-2">
-                <BookOpen className="h-4 w-4" /> Back to Lesson
-              </Button>
+            <Link
+              to={backToLesson}
+              className="flex-1 inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-input bg-background px-4 py-2 text-sm font-medium transition-all duration-200 hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <BookOpen className="h-4 w-4" /> Back to Lesson
             </Link>
 
             {/* Download cert shortcut - only if earned */}
