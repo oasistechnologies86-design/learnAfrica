@@ -221,7 +221,7 @@ export function QuizPage() {
     }
     const timer = setInterval(() => setTimeLeft(prev => Math.max(0, prev - 1)), 1000);
     return () => clearInterval(timer);
-  }, [quiz, isLoading, isSubmitting, timeLeft === null]);
+  }, [quiz, isLoading, isSubmitting, timeLeft]);
 
   const handleSubmit = async () => {
     if (submittedRef.current || isSubmitting) return;
