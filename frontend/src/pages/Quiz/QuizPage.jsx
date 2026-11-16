@@ -198,12 +198,30 @@ export function QuizPage() {
     setTimeLeft(explicit > 0 ? explicit : null);
   }, [quiz]);
 
-  // Countdown
+  // Keep the countdown aligned with the server-issued deadline. Browsers can
+  // pause timers while a phone is locked or another app is in the foreground,
+  // so recalculate from the deadline rather than losing seconds in the background.
   useEffect(() => {
     if (timeLeft === null || timeLeft <= 0 || isLoading || isSubmitting) return;
-    const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+    const deadline = quiz?._server_expires_at
+      ? new Date(quiz._server_expires_at).getTime()
+      : null;
+    if (deadline && Number.isFinite(deadline)) {
+      const syncRemaining = () => {
+        const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+        setTimeLeft(remaining);
+      };
+      syncRemaining();
+      const timer = setInterval(syncRemaining, 1000);
+      document.addEventListener('visibilitychange', syncRemaining);
+      return () => {
+        clearInterval(timer);
+        document.removeEventListener('visibilitychange', syncRemaining);
+      };
+    }
+    const timer = setInterval(() => setTimeLeft(prev => Math.max(0, prev - 1)), 1000);
     return () => clearInterval(timer);
-  }, [timeLeft, isLoading, isSubmitting]);
+  }, [quiz, isLoading, isSubmitting, timeLeft === null]);
 
   const handleSubmit = async () => {
     if (submittedRef.current || isSubmitting) return;
