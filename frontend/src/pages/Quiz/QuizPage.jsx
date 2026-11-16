@@ -36,6 +36,7 @@ export function QuizPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const [isFinalQuiz,  setIsFinalQuiz]  = useState(false);
   const [timeGate, setTimeGate] = useState(null); // {required_seconds, spent_seconds, message}
   const [attemptLimit, setAttemptLimit] = useState(false);
@@ -206,6 +207,7 @@ export function QuizPage() {
 
   const handleSubmit = async () => {
     if (submittedRef.current || isSubmitting) return;
+    setShowSubmitConfirm(false);
     submittedRef.current = true;
     setIsSubmitting(true);
     try {
@@ -336,18 +338,15 @@ export function QuizPage() {
   const handlePrev = () => currentQuestion > 0 && goToQuestion(currentQuestion - 1);
 
   const questions = quiz?.questions || [];
-  const answeredCount = Object.keys(answers).length;
-  const canSubmit = questions.every((q, idx) => {
-    const ans = answers[idx];
-    if (ans === undefined || ans === null) return false;
-    if ((q.question_type || 'mcq') === 'fill_blank') return String(ans).trim().length > 0;
-    if (q.question_type === 'mcq_multi') {
-      if (!Array.isArray(ans) || ans.length === 0) return false;
-      const required = Number(q.required_answers || 0);
-      return required > 0 ? ans.length === required : true;
-    }
-    return true;
-  });
+  const isAnswered = (question, answer) => {
+    if (answer === undefined || answer === null) return false;
+    if ((question?.question_type || 'mcq') === 'fill_blank') return String(answer).trim().length > 0;
+    if (question?.question_type === 'mcq_multi') return Array.isArray(answer) && answer.length > 0;
+    return answer !== '';
+  };
+  const answeredCount = questions.reduce((count, question, index) =>
+    count + (isAnswered(question, answers[index]) ? 1 : 0), 0);
+  const unansweredCount = Math.max(0, questions.length - answeredCount);
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (error || !quiz) return (
@@ -452,10 +451,10 @@ export function QuizPage() {
                   aria-current={currentQuestion === idx ? 'step' : undefined}
                   className={cn('relative flex h-10 w-10 items-center justify-center rounded-xl text-xs font-bold transition-all',
                     currentQuestion === idx ? 'bg-primary text-primary-foreground scale-110' :
-                    answers[idx] !== undefined ? 'bg-success/10 text-success border border-success/30' :
+                    isAnswered(questions[idx], answers[idx]) ? 'bg-success/10 text-success border border-success/30' :
                     'bg-card border border-border')}>
                   {idx + 1}
-                  {answers[idx] !== undefined && currentQuestion !== idx &&
+                  {isAnswered(questions[idx], answers[idx]) && currentQuestion !== idx &&
                     <CheckCircle2 className="absolute -top-1 -right-1 h-3 w-3 bg-background rounded-full fill-success text-white" />}
                 </button>
               ))}
@@ -476,18 +475,42 @@ export function QuizPage() {
               <ChevronLeft className="h-4 w-4" /> Previous
             </Button>
             <span className="text-xs text-muted-foreground self-center">{currentQuestion + 1} / {questions.length}</span>
-            {currentQuestion === questions.length - 1 ? (
-              <Button onClick={handleSubmit} disabled={!canSubmit || isSubmitting} className="rounded-xl px-5 font-bold shadow-lg shadow-primary/20 transition-transform hover:-translate-y-0.5">
-                {isSubmitting ? 'Submitting...' : (isFinalQuiz ? 'Submit Final Examination' : 'Submit Lesson Test')}
+            <div className="flex items-center gap-2">
+              {currentQuestion < questions.length - 1 && (
+                <Button onClick={handleNext} className="rounded-xl px-5 font-bold shadow-md transition-transform hover:-translate-y-0.5">Next <ChevronRight className="h-4 w-4" /></Button>
+              )}
+              <Button onClick={() => setShowSubmitConfirm(true)} disabled={isSubmitting} className="rounded-xl px-5 font-bold shadow-lg shadow-primary/20 transition-transform hover:-translate-y-0.5">
+                {isSubmitting ? 'Submitting...' : (isFinalQuiz ? 'Submit Final Examination' : 'Submit Test')}
               </Button>
-            ) : (
-              <Button onClick={handleNext} className="rounded-xl px-5 font-bold shadow-md transition-transform hover:-translate-y-0.5">Next <ChevronRight className="h-4 w-4" /></Button>
-            )}
+            </div>
           </div>
         </Card>
-        {!canSubmit && currentQuestion === questions.length - 1 && (
-          <div className="mt-4 p-3 bg-warning/10 text-sm rounded text-center">
-            Answer all {questions.length} questions before submitting.
+        {showSubmitConfirm && (
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-labelledby="quiz-submit-title">
+            <Card className="w-full max-w-md space-y-4 p-6 sm:p-7">
+              <div className="text-center space-y-2">
+                <h2 id="quiz-submit-title" className="text-xl font-bold">Submit your {isFinalQuiz ? 'Final Examination' : 'Test'}?</h2>
+                <p className="text-sm text-muted-foreground">You have answered {answeredCount} out of {questions.length} questions.</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-center">
+                <div className="rounded-xl bg-success/10 p-3">
+                  <p className="text-2xl font-bold text-success tabular-nums">{answeredCount}</p>
+                  <p className="text-xs text-muted-foreground">Answered</p>
+                </div>
+                <div className="rounded-xl bg-muted p-3">
+                  <p className="text-2xl font-bold tabular-nums">{unansweredCount}</p>
+                  <p className="text-xs text-muted-foreground">Unanswered</p>
+                </div>
+              </div>
+              {timeLeft !== null && (
+                <p className="rounded-lg bg-primary/5 p-3 text-center text-sm">Time remaining: <strong className="tabular-nums">{formatTime(timeLeft)}</strong></p>
+              )}
+              {unansweredCount > 0 && <p className="text-sm text-warning text-center">Unanswered questions will be marked incorrect. You can go back and finish them, or submit now.</p>}
+              <div className="flex flex-col-reverse gap-2 sm:flex-row">
+                <Button variant="outline" className="flex-1" onClick={() => setShowSubmitConfirm(false)}>Go back</Button>
+                <Button className="flex-1" onClick={handleSubmit} disabled={isSubmitting}>{isSubmitting ? 'Submitting...' : 'Yes, submit'}</Button>
+              </div>
+            </Card>
           </div>
         )}
 

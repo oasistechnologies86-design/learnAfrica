@@ -310,7 +310,11 @@ export function QuizResultsPage() {
           const questionTypeLabel = questionTypeLabels[qType] || 'Question';
           const correct = isCorrectForQuestion(q, idx);
           const serverCorrect = answerKeyAvailable
-            ? (qType === 'mcq_multi' && Array.isArray(correctAnswers[idx]) ? correctAnswers[idx].map(Number) : Number(correctAnswers[idx]))
+            ? (qType === 'fill_blank'
+                ? String(correctAnswers[idx] ?? '')
+                : qType === 'mcq_multi' && Array.isArray(correctAnswers[idx])
+                  ? correctAnswers[idx].map(Number)
+                  : Number(correctAnswers[idx]))
             : null;
           const userAns = answers[idx];
           const opts = Array.isArray(q.options) ? q.options : [];
