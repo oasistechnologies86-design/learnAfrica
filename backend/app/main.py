@@ -5775,8 +5775,10 @@ def create_app() -> Flask:
                 'SELECT lessons_completed,courses_completed,perfect_quizzes,streak,last_activity '
                 'FROM user_stats WHERE user_id=?', (uid,)
             ).fetchone()
-            if not stats:
-                return jsonify({'error': 'Your learning progress is still being prepared. Please refresh and try again.'}), 409
+            # A stats summary row is not the source of truth for badge eligibility.
+            # Older accounts may have valid lesson/enrolment records before their
+            # aggregate row has been created. Treat missing aggregates as zero and
+            # continue to derive each badge from its authoritative records.
 
             user = db.execute(
                 'SELECT name,bio,avatar FROM users WHERE id=?', (uid,)
@@ -5792,9 +5794,9 @@ def create_app() -> Flask:
                 'SELECT COUNT(*) AS c FROM user_enrollments WHERE user_id=? AND progress>=100',
                 (uid,)
             ).fetchone()['c']
-            perfect_count = int(stats['perfect_quizzes'] or 0)
-            streak_count = int(stats['streak'] or 0)
-            last_activity = str(stats['last_activity'] or '')[:10]
+            perfect_count = int((stats['perfect_quizzes'] if stats else 0) or 0)
+            streak_count = int((stats['streak'] if stats else 0) or 0)
+            last_activity = str((stats['last_activity'] if stats else '') or '')[:10]
             today = datetime.now().date()
             # A streak remains current through the following day. Older activity
             # means the streak has expired even if the stored counter is stale.
