@@ -2096,43 +2096,44 @@ def create_app() -> Flask:
         # Lesson text/video/resources are only released to enrolled students or
         # the course owner. Free courses stay previewable (as before); paid and
         # draft content is withheld from anonymous/other viewers.
-        can_view_content = owns_course or is_enrolled or (not is_paid)
         can_read_lesson_content = owns_course or is_enrolled or (not is_paid)
 
-        if not can_view_content:
-            # Strip the whole curriculum rather than leaking it.
+        # Paid-course visitors can inspect the curriculum outline before buying,
+        # but lesson bodies, video URLs, lesson resources and course downloads
+        # remain withheld until enrollment is confirmed.
+        if not can_read_lesson_content:
             cd.pop('video_url', None); cd.pop('video_file', None)
             cd.pop('content', None); cd.pop('text_content', None)
-            cd['sections'] = []
-            cd['lessons'] = []
-            cd['course_resources'] = []
-            cd['locked'] = True
-        else:
-            # Return sections with nested lessons (grouped)
-            sections = []
-            sec_rows = db.execute('SELECT * FROM curriculum_sections WHERE course_id=? ORDER BY "order"', (cid,)).fetchall()
-            all_lessons_flat = []
-            for sec in sec_rows:
-                sd = dict(sec)
-                sec_lessons = []
-                for l in db.execute("""SELECT l.* FROM lessons l
-                                        JOIN section_lessons sl ON sl.lesson_id=l.id
-                                        WHERE sl.section_id=? ORDER BY sl."order" """, (sec['id'],)).fetchall():
-                    ld = _shape_public_lesson(db, l, uid, cid, can_read_lesson_content)
-                    sec_lessons.append(ld)
-                    all_lessons_flat.append(ld)
-                sd['lessons'] = sec_lessons
-                sections.append(sd)
-            # Fallback: lessons not in any section
-            if not sections:
-                for l in db.execute('SELECT * FROM lessons WHERE course_id=? ORDER BY "order"',(cid,)).fetchall():
-                    ld = _shape_public_lesson(db, l, uid, cid, can_read_lesson_content)
-                    all_lessons_flat.append(ld)
-                sections = [{'id': 'default', 'title': 'Course Content', 'lessons': all_lessons_flat}]
-            cd['sections'] = sections
-            cd['lessons'] = all_lessons_flat  # keep flat list for LessonPage navigation
-            cd['course_resources'] = [dict(r) for r in db.execute('SELECT * FROM course_resources WHERE course_id=?',(cid,)).fetchall()] if can_read_lesson_content else []
-            cd['locked'] = not can_read_lesson_content
+
+        # Always return section and lesson metadata so the course page can show
+        # the curriculum outline, including for visitors viewing a locked course.
+        sections = []
+        sec_rows = db.execute('SELECT * FROM curriculum_sections WHERE course_id=? ORDER BY "order"', (cid,)).fetchall()
+        all_lessons_flat = []
+        for sec in sec_rows:
+            # Only expose the public outline fields for locked previews.
+            sd = dict(sec) if can_read_lesson_content else {
+                'id': sec['id'], 'title': sec['title'], 'order': sec['order']
+            }
+            sec_lessons = []
+            for l in db.execute("""SELECT l.* FROM lessons l
+                                    JOIN section_lessons sl ON sl.lesson_id=l.id
+                                    WHERE sl.section_id=? ORDER BY sl."order" """, (sec['id'],)).fetchall():
+                ld = _shape_public_lesson(db, l, uid, cid, can_read_lesson_content)
+                sec_lessons.append(ld)
+                all_lessons_flat.append(ld)
+            sd['lessons'] = sec_lessons
+            sections.append(sd)
+        # Fallback: lessons not assigned to a curriculum section.
+        if not sections:
+            for l in db.execute('SELECT * FROM lessons WHERE course_id=? ORDER BY "order"',(cid,)).fetchall():
+                ld = _shape_public_lesson(db, l, uid, cid, can_read_lesson_content)
+                all_lessons_flat.append(ld)
+            sections = [{'id': 'default', 'title': 'Course Content', 'lessons': all_lessons_flat}]
+        cd['sections'] = sections
+        cd['lessons'] = all_lessons_flat  # keep flat list for LessonPage navigation
+        cd['course_resources'] = [dict(r) for r in db.execute('SELECT * FROM course_resources WHERE course_id=?',(cid,)).fetchall()] if can_read_lesson_content else []
+        cd['locked'] = not can_read_lesson_content
         # Fetch instructor profile for display
         instructor = db.execute(
             'SELECT u.bio, u.location, u.website, u.instructor_title, u.instructor_field, '
