@@ -28,6 +28,38 @@ jobs:
       - name: Build frontend
         working-directory: frontend
         run: npm run build
+      - name: Install Chrome for browser checks
+        id: setup-chrome
+        uses: browser-actions/setup-chrome@v1
+      - name: Run frontend lint
+        working-directory: frontend
+        run: npm run lint
+      - name: Verify PDF output and geometry
+        working-directory: frontend
+        env:
+          CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+        run: npm run verify:pdf
+      - name: Verify certificate and badge documents
+        working-directory: frontend
+        env:
+          CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+        run: npm run verify:documents
+      - name: Verify mobile navigation
+        working-directory: frontend
+        env:
+          CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+        run: npm run verify:mobile
+      - name: Verify payment statement
+        working-directory: frontend
+        env:
+          CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+        run: npm run verify:statement
+      - name: Verify safe navigation
+        working-directory: frontend
+        run: npm run verify:navigation
+      - name: Verify product branding
+        working-directory: frontend
+        run: npm run verify:branding
 
   backend-syntax:
     name: Backend Python syntax
