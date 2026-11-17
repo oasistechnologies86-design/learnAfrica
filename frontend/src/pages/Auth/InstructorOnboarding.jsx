@@ -155,7 +155,7 @@ export default function InstructorOnboarding() {
           <p className="text-muted-foreground text-sm leading-relaxed">
             Your instructor application has been received and is now under review. Please allow up to
             <strong className="text-foreground"> 5 working days</strong> for the review process.
-            Learn Africa may contact you using the phone number or email address you provided if we
+            LearnAfrica may contact you using the phone number or email address you provided if we
             need more information. We may also contact you after the review to communicate the decision.
           </p>
           <div className="rounded-xl border border-border bg-muted/30 p-4 text-left space-y-1">
@@ -180,7 +180,7 @@ export default function InstructorOnboarding() {
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Professional Profile</h1>
           <p className="text-sm text-muted-foreground">
             Complete your instructor profile and submit it for review. Applications may take up to
-            5 working days to review. Learn Africa may contact you using the phone number or email you provide.
+            5 working days to review. LearnAfrica may contact you using the phone number or email you provide.
           </p>
         </div>
 
