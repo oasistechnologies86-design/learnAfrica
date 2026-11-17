@@ -82,7 +82,7 @@ def get_course_sections(db, course_id, use_postgres, user_id=None):
             ' FROM lessons l'
             ' JOIN section_lessons sl ON sl.lesson_id = l.id'
             ' JOIN curriculum_sections cs ON cs.id = sl.section_id'
-            ' WHERE cs.course_id=' + ph
+            ' WHERE cs.course_id=' + ph +
             ' ORDER BY cs."order", sl."order"',
             (course_id,)
         ).fetchall()
@@ -110,7 +110,7 @@ def get_course_sections(db, course_id, use_postgres, user_id=None):
                 ' WHERE EXISTS ('
                 ' SELECT 1 FROM section_lessons sl'
                 ' JOIN curriculum_sections cs ON cs.id = sl.section_id'
-                ' WHERE sl.lesson_id = lr.lesson_id AND cs.course_id=' + ph
+                ' WHERE sl.lesson_id = lr.lesson_id AND cs.course_id=' + ph +
                 ')',
                 (course_id,)
             ).fetchall()
