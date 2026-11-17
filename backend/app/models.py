@@ -64,33 +64,66 @@ def get_course_sections(db, course_id, use_postgres, user_id=None):
             if p.get('quiz_score') is not None:
                 quiz_scores[p['lesson_id']] = p['quiz_score']
 
-    sections    = []
+    # Load the curriculum with a fixed number of queries rather than issuing
+    # one lesson query per section and one resource query per lesson. This keeps
+    # the returned structure and ordering unchanged while reducing DB round trips.
+    section_rows = db.execute(
+        'SELECT * FROM curriculum_sections'
+        ' WHERE course_id=' + ph + ' ORDER BY "order"',
+        (course_id,)
+    ).fetchall()
+    sections = [dict(sec) for sec in section_rows]
+    lessons_by_section = {sec['id']: [] for sec in section_rows}
     all_lessons = []
 
-    sql_secs = ('SELECT * FROM curriculum_sections'
-                ' WHERE course_id=' + ph + ' ORDER BY "order"')
-    for sec in db.execute(sql_secs, (course_id,)).fetchall():
-        sd = dict(sec)
-        sec_lessons = []
+    if section_rows:
+        lesson_rows = db.execute(
+            'SELECT l.*, sl.section_id AS _curriculum_section_id'
+            ' FROM lessons l'
+            ' JOIN section_lessons sl ON sl.lesson_id = l.id'
+            ' JOIN curriculum_sections cs ON cs.id = sl.section_id'
+            ' WHERE cs.course_id=' + ph
+            ' ORDER BY cs."order", sl."order"',
+            (course_id,)
+        ).fetchall()
 
-        sql_les = ('SELECT l.* FROM lessons l'
-                   ' JOIN section_lessons sl ON sl.lesson_id = l.id'
-                   ' WHERE sl.section_id = ' + ph + ' ORDER BY sl."order"')
-        for l in db.execute(sql_les, (sec['id'],)).fetchall():
-            ld = dict(l)
+        lesson_ids = set()
+        for lesson in lesson_rows:
+            ld = dict(lesson)
+            section_id = ld.pop('_curriculum_section_id')
             ld['isCompleted']  = ld['id'] in completed_ids
             ld['is_completed'] = ld['isCompleted']
             ld['videoUrl']     = ld.get('video_url') or ''
             ld['is_final']     = bool(ld.get('is_final', 0))
             if ld['id'] in quiz_scores:
                 ld['quiz_score'] = quiz_scores[ld['id']]
-            sql_res = 'SELECT * FROM lesson_resources WHERE lesson_id=' + ph
-            ld['resources'] = [dict(r) for r in db.execute(sql_res, (ld['id'],)).fetchall()]
-            sec_lessons.append(ld)
+            ld['resources'] = []
+            lessons_by_section.setdefault(section_id, []).append(ld)
             all_lessons.append(ld)
+            lesson_ids.add(ld['id'])
 
-        sd['lessons'] = sec_lessons
-        sections.append(sd)
+        # EXISTS avoids a potentially large IN (...) list and returns each
+        # resource once even if a lesson is linked to more than one section.
+        if lesson_ids:
+            resource_rows = db.execute(
+                'SELECT * FROM lesson_resources lr'
+                ' WHERE EXISTS ('
+                ' SELECT 1 FROM section_lessons sl'
+                ' JOIN curriculum_sections cs ON cs.id = sl.section_id'
+                ' WHERE sl.lesson_id = lr.lesson_id AND cs.course_id=' + ph
+                ')',
+                (course_id,)
+            ).fetchall()
+            resources_by_lesson = {}
+            for resource in resource_rows:
+                resource_dict = dict(resource)
+                resources_by_lesson.setdefault(resource_dict['lesson_id'], []).append(resource_dict)
+
+            for lesson in all_lessons:
+                lesson['resources'] = resources_by_lesson.get(lesson['id'], [])
+
+    for section in sections:
+        section['lessons'] = lessons_by_section.get(section['id'], [])
 
     return sections, all_lessons
 
