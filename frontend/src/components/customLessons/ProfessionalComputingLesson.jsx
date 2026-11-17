@@ -178,7 +178,7 @@ function highlightLessonTerms(paragraph, terms) {
   const uniqueTerms = [...new Set((terms || []).filter(Boolean))].sort((a, b) => b.length - a.length);
   if (!uniqueTerms.length) return paragraph;
   const escaped = uniqueTerms.map((term) => term.replace(/[|\\{}()[\]^$+*?.-]/g, '\\$&'));
-  const expression = new RegExp('\\b(' + escaped.join('|') + ')\\b', 'gi');
+  const expression = new RegExp('(?<![A-Za-z0-9])(' + escaped.join('|') + ')(?![A-Za-z0-9])', 'gi');
   return String(paragraph).split(expression).map((part, index) => (
     index % 2 === 1 ? <strong className="custom-lesson-key-term" key={index}>{part}</strong> : part
   ));
