@@ -338,12 +338,6 @@ check('env ADMIN_PASSWORD re-asserted',
       row is not None and check_password_hash(row['password_hash'] or '', 'BrandNewPass123!'),
       dict(row) if row else None)
 
-print()
-if failures:
-    print(f'{len(failures)} FAILURE(S): {failures}')
-    sys.exit(1)
-print('All checks passed.')
-
 
 # ── Full database backup must export every real table ───────────────────────
 r = c.get('/api/admin/database/export', headers=sa_hdr)
@@ -356,11 +350,19 @@ if isinstance(backup_json, dict):
     check('backup includes quiz attempt history',
           'quiz_attempts' in exported_tables and 'quiz_attempt_sessions' in exported_tables,
           sorted(exported_tables.keys()))
-    check('backup includes certificates and messages',
-          'issued_certificates' in exported_tables and 'community_messages' in exported_tables,
+    check('backup includes certificates and lesson discussions',
+          'issued_certificates' in exported_tables and 'lesson_discussions' in exported_tables,
           sorted(exported_tables.keys()))
     check('backup table order covers every exported table',
           set(table_order) == set(exported_tables.keys()),
           {'ordered': len(table_order), 'exported': len(exported_tables)})
     check('backup reports no failed table exports',
           backup_json.get('errors') == [], backup_json.get('errors'))
+
+
+# Fail the process if any assertion above failed, including the backup checks.
+print()
+if failures:
+    print(f'{len(failures)} FAILURE(S): {failures}')
+    sys.exit(1)
+print('All checks passed.')
