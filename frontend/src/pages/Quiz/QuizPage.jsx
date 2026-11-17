@@ -497,9 +497,11 @@ export function QuizPage() {
               {currentQuestion < questions.length - 1 && (
                 <Button onClick={handleNext} className="rounded-xl px-5 font-bold shadow-md transition-transform hover:-translate-y-0.5">Next <ChevronRight className="h-4 w-4" /></Button>
               )}
-              <Button onClick={() => setShowSubmitConfirm(true)} disabled={isSubmitting} className="rounded-xl px-5 font-bold shadow-lg shadow-primary/20 transition-transform hover:-translate-y-0.5">
-                {isSubmitting ? 'Submitting...' : (isFinalQuiz ? 'Submit Final Examination' : 'Submit Test')}
-              </Button>
+              {currentQuestion === questions.length - 1 && (
+                <Button onClick={() => setShowSubmitConfirm(true)} disabled={isSubmitting} className="rounded-xl px-5 font-bold shadow-lg shadow-primary/20 transition-transform hover:-translate-y-0.5">
+                  {isSubmitting ? 'Submitting...' : (isFinalQuiz ? 'Submit Final Examination' : 'Submit Test')}
+                </Button>
+              )}
             </div>
           </div>
         </Card>
