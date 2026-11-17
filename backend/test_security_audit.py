@@ -272,7 +272,9 @@ with app.app_context():
 r = c.get('/api/courses/paid1/quizzes/les1', headers={'Authorization': f'Bearer {stu_tok}'})
 blob = str(r.get_json() or {})
 check('quiz endpoint does not return correct_answer', 'correct_answer' not in blob, blob[:160])
-check('quiz endpoint still returns the questions', '2+2' in blob, blob[:160])
+# Quiz metadata must not expose question text before a server-recorded attempt.
+# Questions are returned by POST /api/quizzes/<id>/start after enrolment/attempt checks.
+check('quiz metadata withholds questions until an attempt starts', '2+2' not in blob, blob[:160])
 
 # ── 15. Request body cap ─────────────────────────────────────────────────────
 check('request body cap is not 600MB', app.config['MAX_CONTENT_LENGTH'] < 600 * 1024 * 1024,
