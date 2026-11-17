@@ -51,7 +51,7 @@ export default function InstructorLayout() {
           <p className="text-muted-foreground max-w-md text-sm md:text-base leading-relaxed text-justify">
             Your instructor application has been received and is under review. Please allow up to
             <strong className="text-foreground"> 5 working days</strong> for the review process.
-            Learn Africa may contact you using the phone number or email address you submitted if
+            LearnAfrica may contact you using the phone number or email address you submitted if
             we need more information. We may also contact you after the review to communicate our decision.
             Please refresh this page from time to time to check whether your application has been approved.
           </p>

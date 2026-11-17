@@ -1,5 +1,5 @@
 /**
- * Learn Africa's themed Google sign-in control.
+ * LearnAfrica's themed Google sign-in control.
  *
  * The Google Identity Services button is rendered once per mounted control.
  * We deliberately do not rebuild its iframe on focus, visibility, or resize:

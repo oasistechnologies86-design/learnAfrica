@@ -760,7 +760,7 @@ export default function AdminPage() {
               <div className="rounded-xl border border-warning/30 bg-warning/10 p-4">
                 <p className="text-sm font-semibold text-foreground">Instructor application review</p>
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  Applicants are advised that review may take up to 5 working days. The Learn Africa team may
+                  Applicants are advised that review may take up to 5 working days. The LearnAfrica team may
                   contact them using the phone number or email they submitted, either before or after a decision.
                 </p>
               </div>
@@ -2747,7 +2747,7 @@ function AdminSettingsTab() {
 
 // ── Universal student dashboard tutorial settings ──────────────────────────
 function StudentTutorialSettingsCard() {
-  const [form,setForm]=useState({enabled:true,title:'How Learn Africa Works',description:'Listen to the guide or watch the steps to get started.',audio_items:[],video_items:[],default_audio_id:'',display_order:'audio'});
+  const [form,setForm]=useState({enabled:true,title:'How LearnAfrica Works',description:'Listen to the guide or watch the steps to get started.',audio_items:[],video_items:[],default_audio_id:'',display_order:'audio'});
   const [loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[uploading,setUploading]=useState(''),[preview,setPreview]=useState(false),[message,setMessage]=useState(null);
   const [audioTitle,setAudioTitle]=useState(''),[audioUrl,setAudioUrl]=useState(''),[videoTitle,setVideoTitle]=useState(''),[videoUrl,setVideoUrl]=useState('');
   const makeId=()=> 'guide-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);
@@ -2803,7 +2803,7 @@ function StudentTutorialSettingsCard() {
     <CardContent className="space-y-5">
       {loading?<div className="flex items-center justify-center py-6 text-muted-foreground"><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Loading tutorial settings…</div>:<>
         <label className="flex items-center gap-3 rounded-xl border border-border bg-muted/20 p-3"><input type="checkbox" className="h-4 w-4 accent-primary" checked={!!form.enabled} onChange={e=>update('enabled',e.target.checked)}/><span><span className="block text-sm font-semibold">Show guide to students</span><span className="block text-xs text-muted-foreground">Turn it off without deleting saved media.</span></span></label>
-        <div className="grid gap-3 sm:grid-cols-2"><label className="space-y-1.5"><span className="text-xs font-semibold">Guide title</span><Input value={form.title||''} onChange={e=>update('title',e.target.value)} placeholder="How Learn Africa Works"/></label><label className="space-y-1.5"><span className="text-xs font-semibold">Short introduction</span><Input value={form.description||''} onChange={e=>update('description',e.target.value)} placeholder="Listen or watch to get started."/></label></div>
+        <div className="grid gap-3 sm:grid-cols-2"><label className="space-y-1.5"><span className="text-xs font-semibold">Guide title</span><Input value={form.title||''} onChange={e=>update('title',e.target.value)} placeholder="How LearnAfrica Works"/></label><label className="space-y-1.5"><span className="text-xs font-semibold">Short introduction</span><Input value={form.description||''} onChange={e=>update('description',e.target.value)} placeholder="Listen or watch to get started."/></label></div>
         <section className="space-y-3 rounded-2xl border border-border bg-muted/20 p-3 sm:p-4">
           <div><h4 className="text-sm font-bold">Display order</h4><p className="text-xs text-muted-foreground">Choose which section appears first on the student dashboard.</p></div>
           <div className="grid gap-2 sm:grid-cols-2">
