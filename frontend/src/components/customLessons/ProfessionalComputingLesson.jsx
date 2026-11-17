@@ -174,16 +174,24 @@ const lessons = {
   }
 };
 
-function Section({ title, children }) {
+function highlightLessonTerms(paragraph, terms) {
+  const uniqueTerms = [...new Set((terms || []).filter(Boolean))].sort((a, b) => b.length - a.length);
+  if (!uniqueTerms.length) return paragraph;
+  const escaped = uniqueTerms.map((term) => term.replace(/[|\\{}()[\]^$+*?.-]/g, '\\$&'));
+  const expression = new RegExp('(?<![A-Za-z0-9])(' + escaped.join('|') + ')(?![A-Za-z0-9])', 'gi');
+  return String(paragraph).split(expression).map((part, index) => (
+    index % 2 === 1 ? <strong className="custom-lesson-key-term" key={index}>{part}</strong> : part
+  ));
+}
+
+function Section({ title, children, terms }) {
   const paragraphs = String(children || '').split(/\n\s*\n/).map((part) => part.trim()).filter(Boolean);
   return (
     <section className="custom-lesson-section">
       <h2>{title}</h2>
-      {paragraphs.map((paragraph, index) => {
-        // Emphasise a clear opening definition when the reading introduces a term.
-        const definition = paragraph.match(/^(.{2,65}?)\s+(is|are|means|refers to|describes|concerns|includes|occurs when|consists of|involves)\b(.*)$/i);
-        return <p key={index}>{definition ? <><strong>{definition[1]}</strong> {definition[2]}{definition[3]}</> : paragraph}</p>;
-      })}
+      {paragraphs.map((paragraph, index) => (
+        <p key={index}>{highlightLessonTerms(paragraph, terms)}</p>
+      ))}
     </section>
   );
 }
@@ -470,7 +478,7 @@ export default function ProfessionalComputingLesson({ lesson }) {
       <section className="custom-lesson-reading">
         <h2>Detailed lesson reading</h2>
         {[...data.sections, ...(expandedSections[number] || []), ...(assessmentCoverageSections[number] || []), ...(extendedTeachingSections[number] || [])].map((section,i)=>(
-          <Section key={i} title={section[0]}>{section[1]}</Section>
+          <Section key={i} title={section[0]} terms={data.terms.split(' • ')}>{section[1]}</Section>
         ))}
       </section>
 

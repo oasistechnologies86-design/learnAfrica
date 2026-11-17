@@ -15,32 +15,41 @@ function collectReadingSentences(root) {
   const nodes = [];
   let fullText = '';
   let current;
+  let previousBlock = null;
   while ((current = walker.nextNode())) {
     const value = current.nodeValue || '';
     if (!value.trim()) continue;
-    // Text nodes can be split by inline formatting elements. Add a real word
-    // boundary when adjacent nodes would otherwise run together.
-    if (fullText && value && !/\\s$/.test(fullText) && !/^\\s/.test(value)) fullText += ' ';
+    const block = current.parentElement.closest('h1, h2, h3, h4, h5, h6, p, li, blockquote') || current.parentElement;
+    if (previousBlock && block !== previousBlock) fullText += '\n';
+    previousBlock = block;
+    if (fullText && !fullText.endsWith('\n') && value && !/\s$/.test(fullText) && !/^\s/.test(value)) fullText += ' ';
     const start = fullText.length;
     nodes.push({ node: current, start, end: start + value.length });
     fullText += value;
   }
-  let parts = [];
-  if (typeof Intl !== 'undefined' && Intl.Segmenter) {
-    const segmenter = new Intl.Segmenter(undefined, { granularity: 'sentence' });
-    parts = Array.from(segmenter.segment(fullText), item => ({
-      text: item.segment.trim(), start: item.index, end: item.index + item.segment.length
-    })).filter(item => item.text);
-  } else {
-    const expression = /[^.!?]+[.!?]+|[^.!?]+$/g;
-    let match;
-    while ((match = expression.exec(fullText))) {
-      const text = match[0].trim();
-      if (text) {
-        const leading = match[0].indexOf(text);
-        parts.push({ text, start: match.index + leading, end: match.index + leading + text.length });
+  const parts = [];
+  const segmenter = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter(undefined, { granularity: 'sentence' }) : null;
+  let blockOffset = 0;
+  for (const blockText of fullText.split('\n')) {
+    if (blockText.trim()) {
+      if (segmenter) {
+        for (const item of segmenter.segment(blockText)) {
+          const text = item.segment.trim();
+          if (text) parts.push({ text, start: blockOffset + item.index, end: blockOffset + item.index + item.segment.length });
+        }
+      } else {
+        const expression = /[^.!?]+[.!?]+|[^.!?]+$/g;
+        let match;
+        while ((match = expression.exec(blockText))) {
+          const text = match[0].trim();
+          if (text) {
+            const leading = match[0].indexOf(text);
+            parts.push({ text, start: blockOffset + match.index + leading, end: blockOffset + match.index + leading + text.length });
+          }
+        }
       }
     }
+    blockOffset += blockText.length + 1;
   }
   return { sentences: parts, nodes };
 }
