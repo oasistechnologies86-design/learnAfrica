@@ -1572,7 +1572,7 @@ def create_app() -> Flask:
             # registration flow so the correct role, agreements and profile
             # checks are completed before an account is created.
             return jsonify({
-                'error': 'No Learn Africa account is registered with this Google email. Please sign up with your email address first.'
+                'error': 'No LearnAfrica account is registered with this Google email. Please sign up with your email address first.'
             }), 404
         created = False
         if u:
@@ -6126,7 +6126,7 @@ def create_app() -> Flask:
             except Exception:
                 value = {}
         defaults = {
-            'enabled': False, 'format': 'text', 'title': 'How Learn Africa Works',
+            'enabled': False, 'format': 'text', 'title': 'How LearnAfrica Works',
             'description': 'Listen to the guide or watch the steps to get started.',
             'content': '', 'media_url': '', 'audio_items': [], 'video_items': [],
             'default_audio_id': '', 'display_order': 'audio', 'updated_at': None,
