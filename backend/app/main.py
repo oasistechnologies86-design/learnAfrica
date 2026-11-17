@@ -755,12 +755,15 @@ def create_app() -> Flask:
     def _shape_public_lesson(db, row, uid, cid, include_content):
         """Shape a lesson for the public course endpoint.
 
-        Always returns id/title/order metadata so the curriculum outline renders,
-        but only includes the video URL, lesson text and resource links when the
-        viewer is allowed to consume the content (enrolled student, owner, admin,
-        or a free course). Draft/paid content is otherwise withheld.
+        Locked previews receive only safe curriculum-outline fields. Lesson
+        content, media, resources and instructor-only assessment settings remain
+        available only to viewers allowed to consume the course.
         """
-        ld = dict(row)
+        raw = dict(row)
+        ld = raw if include_content else {
+            key: raw[key] for key in ('id', 'title', 'order', 'type', 'duration', 'is_final')
+            if key in raw
+        }
         prog = None
         if uid:
             prog = db.execute(
