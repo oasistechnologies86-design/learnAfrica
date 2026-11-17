@@ -17,7 +17,7 @@ import { courseThumbnail } from '@/lib/courseThumbnail';
 import LiveSessionsSection from '@/components/common/LiveSessionsSection';
 
 // ── Section Accordion ──────────────────────────────────────────────────────
-function SectionAccordion({ section, course, sectionIndex, allLessons }) {
+function SectionAccordion({ section, course, sectionIndex, allLessons, contentLocked = false }) {
   const [open, setOpen] = useState(sectionIndex === 0);
   return (
     <Card className="overflow-hidden">
@@ -38,7 +38,8 @@ function SectionAccordion({ section, course, sectionIndex, allLessons }) {
         <div className="border-t">
           {(section.lessons || []).map((lesson) => {
             const globalIdx = allLessons.findIndex(l => l.id === lesson.id);
-            const locked = globalIdx > 0 && allLessons[globalIdx - 1] && !allLessons[globalIdx - 1].isCompleted;
+            const prerequisiteLocked = globalIdx > 0 && allLessons[globalIdx - 1] && !allLessons[globalIdx - 1].isCompleted;
+            const locked = contentLocked || prerequisiteLocked;
             const to = lesson.type === 'quiz'
               ? `/learn/course/${course.id}/quiz/${lesson.id}`
               : `/learn/course/${course.id}/lesson/${lesson.id}`;
@@ -526,12 +527,26 @@ export function CourseDetailPage() {
                   <p className="text-muted-foreground/60 text-xs mt-1">Check back soon!</p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {(course.sections || []).map((section, sIdx) => (
-                    <SectionAccordion key={section.id || sIdx} section={section}
-                      course={course} sectionIndex={sIdx} allLessons={lessons} />
-                  ))}
-                </div>
+                <>
+                  {course.locked && (
+                    <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
+                      <Lock className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold">Preview the course curriculum</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          You can view the lesson titles and course structure. Purchase this course to unlock lesson videos, materials and assessments.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  <div className="space-y-3">
+                    {(course.sections || []).map((section, sIdx) => (
+                      <SectionAccordion key={section.id || sIdx} section={section}
+                        course={course} sectionIndex={sIdx} allLessons={lessons}
+                        contentLocked={!!course.locked} />
+                    ))}
+                  </div>
+                </>
               )}
             </div>
 
