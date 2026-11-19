@@ -4904,15 +4904,11 @@ def create_app() -> Flask:
     
     # ── LEADERBOARD ───────────────────────────────────────────────────────────────
     @app.route('/api/leaderboard', methods=['GET'])
+    @token_required
     def leaderboard():
-        """Return the top learners, ranked by the selected all-time category.
-
-        Historical weekly/monthly point totals are not stored in the current
-        schema. The API therefore does not pretend that a date filter is
-        available; the client presents all-time rankings only until an event
-        ledger is introduced.
-        """
+        """Return anonymous all-time rankings; only the requesting learner sees their name."""
         db = get_db()
+        current_user_id = str(g.current_user.get('user_id') or '')
         category = (request.args.get('category') or 'Overall').strip().lower()
         sort_columns = {
             'overall': 'points',
@@ -4921,7 +4917,7 @@ def create_app() -> Flask:
             'streak': 'streak',
         }
         sort_key = sort_columns.get(category, 'points')
-        rows = db.execute('''SELECT u.id,u.name,u.avatar,
+        rows = db.execute('''SELECT u.id,u.name,
             COALESCE(s.lessons_completed,0)*50+COALESCE(s.courses_completed,0)*500+
             COALESCE(s.perfect_quizzes,0)*100+COALESCE(s.streak,0)*10 as points,
             COALESCE(s.courses_completed,0) as courses,
@@ -4933,11 +4929,32 @@ def create_app() -> Flask:
             rows,
             key=lambda row: (int(row[sort_key] or 0), int(row['points'] or 0), str(row['name'] or '').lower()),
             reverse=True,
-        )[:50]
-        return jsonify({'leaderboard':[{'id':r['id'],'rank':i+1,'name':r['name'],'points':r['points'],
-            'courses':r['courses'],'badges':r['badges'],'streak':r['streak'],
-            'avatar':r['avatar'],'initial':(r['name'] or 'U')[0].upper()} for i,r in enumerate(ranked)]})
-    
+        )
+        total_learners = len(ranked)
+        visible = ranked[:50]
+        my_row = next((row for row in ranked if str(row['id']) == current_user_id), None)
+        if my_row is not None and all(str(row['id']) != current_user_id for row in visible):
+            visible.append(my_row)
+
+        leaderboard_rows = []
+        for row in visible:
+            is_me = str(row['id']) == current_user_id
+            rank = next((index + 1 for index, candidate in enumerate(ranked)
+                         if str(candidate['id']) == str(row['id'])), None)
+            item = {
+                'rank': rank,
+                'is_me': is_me,
+                'display_name': (str(row['name'] or 'You') if is_me else f'Learner #{rank}'),
+                'initial': (str(row['name'] or 'Y')[0].upper() if is_me else 'A'),
+                'points': int(row['points'] or 0),
+                'courses': int(row['courses'] or 0),
+                'badges': int(row['badges'] or 0),
+                'streak': int(row['streak'] or 0),
+                'total_learners': total_learners,
+            }
+            leaderboard_rows.append(item)
+        return jsonify({'leaderboard': leaderboard_rows})
+
     # ── NOTIFICATIONS ─────────────────────────────────────────────────────────────
     @app.route('/api/notifications', methods=['GET'])
     @token_required
