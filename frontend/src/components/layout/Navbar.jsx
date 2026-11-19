@@ -9,7 +9,7 @@ import Logo from '../common/Logo';
 import LogoutButton from '../common/LogoutButton';
 import { cn } from '../../lib/utils';
 import {
-  X, ChevronRight, LayoutDashboard, BookOpen, Home, Shield,
+  X, ChevronRight, LayoutDashboard, BookOpen, Home, Shield, Trophy, Compass,
   GraduationCap, BarChart2, BookMarked, ShieldCheck, MessageSquare,
   Info, Menu, FileText
 } from 'lucide-react';
@@ -54,6 +54,15 @@ export default function Navbar() {
     user?.role === 'instructor' &&
     (user?.instructor_status === 'pending' || user?.instructor_status === 'rejected');
   const isPublicPage = location.pathname === '/';
+  const isStudentDashboard = isStudent && location.pathname === '/dashboard';
+
+  const scrollToDashboardSection = (sectionId) => {
+    const el = document.getElementById(sectionId);
+    if (!el) return;
+    const headerHeight = document.querySelector('header')?.getBoundingClientRect().height || 108;
+    const top = el.getBoundingClientRect().top + window.scrollY - headerHeight - 12;
+    window.scrollTo({ top, behavior: 'smooth' });
+  };
 
   // Nav links per role
   const navLinks = isAdmin ? [
@@ -197,6 +206,22 @@ export default function Navbar() {
             </button>
           </div>
         </div>
+        {isStudentDashboard && (
+          <nav aria-label="Dashboard sections" className="lg:hidden flex items-center justify-center gap-2 border-t border-border/70 px-3 py-1.5">
+            <button type="button" onClick={() => scrollToDashboardSection('continue-learning')}
+              className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-border bg-muted/70 px-3 py-1 text-xs font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+              <BookOpen className="h-3.5 w-3.5" /> Progress
+            </button>
+            <button type="button" onClick={() => scrollToDashboardSection('badges-section')}
+              className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-border bg-muted/70 px-3 py-1 text-xs font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+              <Trophy className="h-3.5 w-3.5" /> Badges
+            </button>
+            <button type="button" onClick={() => scrollToDashboardSection('recommendations')}
+              className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-border bg-muted/70 px-3 py-1 text-xs font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+              <Compass className="h-3.5 w-3.5" /> For You
+            </button>
+          </nav>
+        )}
       </header>
 
       {/* ── Mobile Menu Overlay ──
@@ -204,7 +229,7 @@ export default function Navbar() {
           hamburger/X toggle inside it — stays visible and clickable at all times. */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-x-0 bottom-0 top-16 z-50 bg-background lg:hidden flex flex-col"
+          className={cn("fixed inset-x-0 bottom-0 z-50 bg-background lg:hidden flex flex-col", isStudentDashboard ? "top-[6.75rem]" : "top-16")}
         >
           <div className="flex-1 overflow-y-auto">
             <div className="px-4 pt-6 pb-10 space-y-8 max-w-sm mx-auto">
