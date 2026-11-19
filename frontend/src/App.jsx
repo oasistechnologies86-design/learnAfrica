@@ -1,5 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { lazy, Suspense } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { lazy, Suspense, useEffect } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './components/common/Toast';
@@ -128,6 +128,26 @@ function AppGate({ children }) {
   return children;
 }
 
+// Reset the viewport when navigating between pages. React Router keeps the
+// previous scroll position by default, which can make a new page open near its
+// footer. Preserve intentional in-page anchors such as the community discussion.
+function ScrollToTop() {
+  const { pathname, hash } = useLocation();
+
+  useEffect(() => {
+    if (hash) {
+      const target = document.getElementById(decodeURIComponent(hash.slice(1)));
+      if (target) {
+        target.scrollIntoView({ block: 'start' });
+        return;
+      }
+    }
+    window.scrollTo(0, 0);
+  }, [pathname, hash]);
+
+  return null;
+}
+
 function AppRoutes() {
   return (
     <Suspense fallback={<RouteLoadingScreen />}>
@@ -143,7 +163,7 @@ function AppRoutes() {
         <Route path="blog/:slug" element={<BlogPostPage />} />
         <Route path="verify-credential" element={<VerifyCredentialPage />} />
         <Route path="verify" element={<Navigate to="/verify-credential" replace />} />
-        <Route path="community" element={<ProtectedRoute returnUrl="/community"><CommunityPage /></ProtectedRoute>} />
+        <Route path="community" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
       </Route>
 
       {/* ── Auth ── */}
@@ -247,6 +267,7 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <ScrollToTop />
       <ThemeProvider>
         <ToastProvider>
           <AuthProvider>
