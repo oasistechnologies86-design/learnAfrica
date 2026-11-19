@@ -564,7 +564,7 @@ export default function StudentDashboard() {
       </div>
 
       {/* ── Compact student quick access ── */}
-      <section aria-label="Quick access" className="space-y-1.5">
+      <section aria-label="Quick access" className="space-y-1 -mb-5">
         <h2 className="text-xs font-semibold text-muted-foreground">Quick Access</h2>
         <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
           <Link to="/receipts" className="group flex min-h-12 items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-2 transition-colors hover:border-primary/40 hover:bg-primary/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
@@ -582,7 +582,7 @@ export default function StudentDashboard() {
             onClick={() => setQuickAccessOpen(true)}
             aria-haspopup="dialog"
             aria-expanded={quickAccessOpen}
-            className="inline-flex min-h-8 items-center gap-1 rounded-md px-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="inline-flex min-h-6 items-center gap-1 rounded-md px-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             View More <ArrowRight className="h-3.5 w-3.5" />
           </button>
