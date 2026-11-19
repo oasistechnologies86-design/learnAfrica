@@ -540,11 +540,10 @@ export default function StudentDashboard() {
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.16em] text-primary mb-1">Welcome to your</p>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-            Student <span className="text-primary">Dashboard</span>
+          <h1 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+            Welcome, <span className="text-primary">{user?.name?.trim() || 'Student'}</span>!
           </h1>
-          <p className="text-muted-foreground mt-1 text-xs sm:text-sm">Your learning progress, courses and achievements in one place.</p>
+          <p className="text-muted-foreground mt-0.5 text-xs">Welcome back to your dashboard.</p>
 
         </div>
         <Link to="/courses" className="self-start sm:self-auto">
@@ -555,26 +554,24 @@ export default function StudentDashboard() {
       </div>
 
       {/* ── Compact student quick access ── */}
-      <section aria-label="Quick access" className="space-y-2">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-bold text-foreground">Quick Access</h2>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <Link to="/receipts" className="group flex min-h-[68px] items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-2.5 transition-colors hover:border-primary/40 hover:bg-primary/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Receipt className="h-4 w-4" /></span>
-            <span className="min-w-0"><span className="block text-xs font-semibold leading-tight">My Receipts</span><span className="mt-0.5 block text-[10px] text-muted-foreground">Payments</span></span>
+      <section aria-label="Quick access" className="space-y-1.5">
+        <h2 className="text-xs font-semibold text-muted-foreground">Quick Access</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
+          <Link to="/receipts" className="group flex min-h-12 items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-2 transition-colors hover:border-primary/40 hover:bg-primary/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"><Receipt className="h-3.5 w-3.5" /></span>
+            <span className="min-w-0 truncate text-xs font-semibold">My Receipts</span>
           </Link>
-          <Link to="/settings" className="group flex min-h-[68px] items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-2.5 transition-colors hover:border-primary/40 hover:bg-primary/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Settings className="h-4 w-4" /></span>
-            <span className="min-w-0"><span className="block text-xs font-semibold leading-tight">Settings</span><span className="mt-0.5 block text-[10px] text-muted-foreground">Account preferences</span></span>
+          <Link to="/settings" className="group flex min-h-12 items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-2 transition-colors hover:border-primary/40 hover:bg-primary/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"><Settings className="h-3.5 w-3.5" /></span>
+            <span className="min-w-0 truncate text-xs font-semibold">Settings</span>
           </Link>
-          <Link to="/my-certificates" className="group flex min-h-[68px] items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-2.5 transition-colors hover:border-primary/40 hover:bg-primary/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Award className="h-4 w-4" /></span>
-            <span className="min-w-0"><span className="block text-xs font-semibold leading-tight">Certificates</span><span className="mt-0.5 block text-[10px] text-muted-foreground">Achievements</span></span>
+          <Link to="/my-certificates" className="group flex min-h-12 items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-2 transition-colors hover:border-primary/40 hover:bg-primary/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"><Award className="h-3.5 w-3.5" /></span>
+            <span className="min-w-0 truncate text-xs font-semibold">Certificates</span>
           </Link>
-          <Link to="/profile" className="group flex min-h-[68px] items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-2.5 transition-colors hover:border-primary/40 hover:bg-primary/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><User className="h-4 w-4" /></span>
-            <span className="min-w-0"><span className="block text-xs font-semibold leading-tight">My Profile</span><span className="mt-0.5 block text-[10px] text-muted-foreground">Personal details</span></span>
+          <Link to="/profile" className="group flex min-h-12 items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-2 transition-colors hover:border-primary/40 hover:bg-primary/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"><User className="h-3.5 w-3.5" /></span>
+            <span className="min-w-0 truncate text-xs font-semibold">My Profile</span>
           </Link>
         </div>
       </section>
