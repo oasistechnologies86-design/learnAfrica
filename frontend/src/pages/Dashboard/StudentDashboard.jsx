@@ -360,46 +360,46 @@ function BadgeCard({ badge, userName }) {
   return (
     <>
     <div className={cn(
-      'relative flex flex-col items-center p-3 rounded-xl border transition-all duration-300 group',
+      'relative flex flex-col items-center p-2.5 rounded-xl border transition-all duration-300 group',
       earned
         ? `${cl.bg} ${cl.border} shadow-sm hover:shadow-md`
         : 'bg-muted/20 border-border/40 opacity-60 grayscale'
     )}>
       {/* Icon */}
       <div className={cn(
-        'flex h-10 w-10 items-center justify-center rounded-full mb-2 transition-transform duration-300 group-hover:scale-105',
+        'flex h-9 w-9 items-center justify-center rounded-full mb-1.5 transition-transform duration-300 group-hover:scale-105',
         earned ? `${cl.bg} ${cl.border} border-2` : 'bg-muted border-border border-2'
       )}>
-        <Icon className={cn('h-5 w-5', earned ? cl.text : 'text-muted-foreground')} strokeWidth={2} />
+        <Icon className={cn('h-4 w-4', earned ? cl.text : 'text-muted-foreground')} strokeWidth={1.8} />
       </div>
 
       {/* Text */}
-      <h4 className="font-bold text-xs text-center leading-tight mb-1">{badge.title}</h4>
-      <p className="text-[10px] text-muted-foreground text-center leading-snug mb-2 min-h-[2rem]">{badge.description}</p>
+      <h4 className="text-[11px] font-semibold text-center leading-tight mb-1">{badge.title}</h4>
+      <p className="text-[9px] text-muted-foreground text-center leading-snug mb-1.5 min-h-[1.75rem]">{badge.description}</p>
 
       {/* Progress / Earned state */}
       {earned ? (
         <div className="w-full space-y-1">
-          <div className={cn('w-full h-1.5 rounded-full overflow-hidden', cl.bg)}>
+          <div className={cn('w-full h-1 rounded-full overflow-hidden', cl.bg)}>
             <div className={cn('h-full rounded-full', cl.solid)} style={{ width: '100%' }} />
           </div>
           <button
             onClick={() => setShowPreview(true)}
             className={cn(
-              'w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-2xs font-bold transition-all',
+              'w-full flex items-center justify-center gap-1 py-1 rounded-lg text-[10px] font-semibold transition-all',
               cl.bg, cl.text, cl.border, 'border',
               'hover:opacity-80 active:scale-95'
             )}>
-            <Eye className="h-3 w-3" />View Badge
+            <Eye className="h-2.5 w-2.5" />View Badge
           </button>
         </div>
       ) : (
-        <div className="w-full space-y-1.5">
+        <div className="w-full space-y-1">
           <div className="flex justify-between text-3xs font-bold uppercase tracking-wide text-muted-foreground">
             <span>Progress</span>
             <span>{badge.currentProgress} / {badge.goal}</span>
           </div>
-          <div className="w-full h-1.5 rounded-full bg-border overflow-hidden">
+          <div className="w-full h-1 rounded-full bg-border overflow-hidden">
             <div
               className={cn(
                 'h-full rounded-full transition-all duration-1000 ease-out',
@@ -606,10 +606,10 @@ export default function StudentDashboard() {
       {/* ── Stats ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Suspense fallback={<><StatsCardSkeleton /><StatsCardSkeleton /><StatsCardSkeleton /><StatsCardSkeleton /></>}>
-          <StatsCard title="Enrolled"      value={enrolledCourses.length}       icon="BookOpen" />
-          <StatsCard title="Completed"     value={completedCourses.length}      icon="Award" />
-          <StatsCard title="Perfect Quizzes" value={stats.perfect_quizzes || 0} icon="Trophy" />
-          <StatsCard title="Day Streak"    value={`${stats.streak || 0} 🔥`}    icon="Zap"
+          <StatsCard title="Enrolled"      value={enrolledCourses.length}       icon="BookOpen" compact />
+          <StatsCard title="Completed"     value={completedCourses.length}      icon="Award" compact />
+          <StatsCard title="Perfect Quizzes" value={stats.perfect_quizzes || 0} icon="Trophy" compact />
+          <StatsCard title="Day Streak"    value={`${stats.streak || 0} 🔥`}    icon="Zap" compact
             trendValue={`${earnedCount}/${badgeConfig.length} badges`} />
         </Suspense>
       </div>
