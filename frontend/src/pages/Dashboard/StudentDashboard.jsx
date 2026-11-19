@@ -11,7 +11,7 @@ import { ScaleToFit } from '@/components/common/ScaleToFit';
 import {
   Award, Download, ExternalLink, Trophy, BookOpen, Target, Receipt, Settings, User,
   Flame, Compass, CheckCircle2, Star, Zap, Loader2,
-  ArrowRight, ArrowLeft, ChevronDown, ChevronUp, Book,
+  ArrowRight, ArrowLeft, ChevronDown, ChevronUp,
   Eye, EyeOff, Pencil, Check, X, Printer, Headphones, Video, Music2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -509,14 +509,6 @@ export default function StudentDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [completedCourses]);
   const recommendedCourses = useMemo(() => courses.filter(c => !c.isEnrolled).slice(0,3),[courses]);
-
-  const scrollToSection = (id) => {
-    const el = document.getElementById(id);
-    if (el) {
-      const top = el.getBoundingClientRect().top + window.scrollY - 80;
-      window.scrollTo({ top, behavior: 'smooth' });
-    }
-  };
 
   const liveBadges = useMemo(() => badgeConfig.map(cfg => {
     const hasKey = userBadges.includes(cfg.key);
