@@ -192,6 +192,8 @@ function AppRoutes() {
         <Route index element={<StudentDashboard />} />
         <Route path="leaderboard" element={<LeaderboardPage />} />
       </Route>
+      {/* Keep older bookmarks working while sending learners to the registered route. */}
+      <Route path="leaderboard" element={<Navigate to="/dashboard/leaderboard" replace />} />
 
       {/* ── Shared profile / settings (all authenticated) ── */}
       <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
