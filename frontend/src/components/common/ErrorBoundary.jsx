@@ -1,62 +1,43 @@
 import React from 'react';
-import { Button } from './Button';
-import { AlertTriangle } from 'lucide-react';
 
 export class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null, errorInfo: null };
+    this.state = { hasError: false, error: null };
   }
 
   static getDerivedStateFromError(error) {
-    return { hasError: true };
+    return { hasError: true, error };
   }
 
   componentDidCatch(error, errorInfo) {
-    this.setState({ error, errorInfo });
+    // Keep the diagnostic in the browser console for support without exposing
+    // internal error details to learners in production.
     console.error('Error caught by ErrorBoundary:', error, errorInfo);
   }
 
   handleReset = () => {
-    // A failed React subtree may still contain invalid in-memory state. A full
-    // reload gives the app, route and providers a clean start instead of merely
-    // hiding the fallback screen and rendering the same broken subtree again.
     window.location.reload();
   };
 
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-background p-4">
-          <div className="max-w-md w-full space-y-6 text-center">
-            <div className="flex justify-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
-                <AlertTriangle className="h-8 w-8 text-destructive" />
-              </div>
+        <main role="alert" className="min-h-screen w-full flex items-center justify-center bg-white px-5 py-12 text-slate-900">
+          <div className="w-full max-w-md space-y-5 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-amber-700" aria-hidden="true">
+              <span className="text-2xl font-bold">!</span>
             </div>
             <div className="space-y-2">
-              <h1 className="text-2xl font-bold text-foreground">Oops! Something went wrong</h1>
-              <p className="text-muted-foreground">
-                We encountered an unexpected error. Please try refreshing the page or going back.
-              </p>
+              <h1 className="text-2xl font-bold">This page ran into a problem</h1>
+              <p className="text-sm leading-6 text-slate-600">Your account and learning progress have not been deleted. Refresh the page or return to your dashboard.</p>
             </div>
-            {process.env.NODE_ENV === 'development' && this.state.error && (
-              <div className="rounded-lg bg-muted p-4 text-left">
-                <p className="text-xs font-mono text-destructive break-all">
-                  {this.state.error.toString()}
-                </p>
-              </div>
-            )}
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={() => window.location.href = '/'} className="flex-1">
-                Go Home
-              </Button>
-              <Button onClick={this.handleReset} className="flex-1">
-                Try Again
-              </Button>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <button type="button" onClick={() => { window.location.href = '/dashboard'; }} className="flex-1 rounded-lg border border-slate-300 px-4 py-3 font-semibold hover:bg-slate-50">Go to dashboard</button>
+              <button type="button" onClick={this.handleReset} className="flex-1 rounded-lg bg-emerald-700 px-4 py-3 font-semibold text-white hover:bg-emerald-800">Refresh page</button>
             </div>
           </div>
-        </div>
+        </main>
       );
     }
     return this.props.children;
