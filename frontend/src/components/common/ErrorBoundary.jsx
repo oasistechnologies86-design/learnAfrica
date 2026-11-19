@@ -18,7 +18,10 @@ export class ErrorBoundary extends React.Component {
   }
 
   handleReset = () => {
-    this.setState({ hasError: false, error: null, errorInfo: null });
+    // A failed React subtree may still contain invalid in-memory state. A full
+    // reload gives the app, route and providers a clean start instead of merely
+    // hiding the fallback screen and rendering the same broken subtree again.
+    window.location.reload();
   };
 
   render() {

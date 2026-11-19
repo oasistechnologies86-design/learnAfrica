@@ -5,9 +5,8 @@ import {
   ChevronDown, ChevronUp, MessageSquare, Send,
 } from 'lucide-react';
 import { Button } from '@/components/common/Button';
-import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
-import { API_BASE } from '@/lib/api';
+import { API_BASE, safeJson } from '@/lib/api';
 
 // ── Community Discussion — TikTok-style ──────────────────────────────────
 const COLORS = ['bg-primary','bg-accent','bg-purple-500','bg-emerald-500','bg-rose-500','bg-amber-500','bg-sky-500','bg-indigo-500'];
@@ -24,7 +23,24 @@ function timeAgo(s) {
   return new Date(s).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
 }
 function canEdit(createdAt) {
-  return Date.now()-new Date(createdAt)<24*60*60*1000;
+  const created = new Date(createdAt).getTime();
+  return Number.isFinite(created) && Date.now() - created < 24 * 60 * 60 * 1000;
+}
+
+// Validate and normalise server/socket data before it enters React state.
+// A malformed payload must never be able to crash the entire application.
+function normaliseComment(value, depth = 0) {
+  if (!value || typeof value !== 'object' || typeof value.id !== 'string' || typeof value.content !== 'string') return null;
+  const replies = depth < 4 && Array.isArray(value.replies)
+    ? value.replies.map(reply => normaliseComment(reply, depth + 1)).filter(Boolean)
+    : [];
+  return {
+    ...value,
+    replies,
+    likes_count: Number.isFinite(Number(value.likes_count)) ? Math.max(0, Number(value.likes_count)) : 0,
+    reply_count: Number.isFinite(Number(value.reply_count)) ? Math.max(replies.length, Number(value.reply_count)) : replies.length,
+    liked_by_me: Boolean(value.liked_by_me),
+  };
 }
 
 // Single comment card (recursive for replies)
@@ -226,8 +242,8 @@ export function CommentsSection({ user, isAuthenticated }) {
   const [text,        setText]       = useState('');
   const [posting,     setPosting]    = useState(false);
   const [error,       setError]      = useState('');
+  const [loadError,   setLoadError]  = useState('');
   const textareaRef   = useRef(null);
-  const { socket }    = useAuth?.() || {};
 
   const token = () => sessionStorage.getItem('auth_token');
   const headers = (json=true) => ({
@@ -237,12 +253,18 @@ export function CommentsSection({ user, isAuthenticated }) {
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const r = await fetch(`${API_BASE}/api/homepage/comments`, { headers: headers(false) });
-      const d = await r.json();
-      setComments(d.comments||[]);
-    } catch {}
-    setLoading(false);
+      const d = await safeJson(r);
+      if (!Array.isArray(d.comments)) throw new Error('The discussion returned an unexpected response. Please try again.');
+      setComments(d.comments.map(comment => normaliseComment(comment)).filter(Boolean));
+    } catch (e) {
+      setComments([]);
+      setLoadError(e?.message || 'Unable to load the discussion. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(()=>{ load(); }, [load]);
@@ -251,41 +273,37 @@ export function CommentsSection({ user, isAuthenticated }) {
   useEffect(() => {
     const s = window.__learnafricaSocket;
     if (!s) return;
-    const onNew = (comment) => {
+    const onNew = (payload) => {
+      const comment = normaliseComment(payload);
+      if (!comment) return;
       if (!comment.parent_id) {
-        // Dedupe: skip if a comment with this id is already in the list
-        // (the poster added it optimistically after their POST)
         setComments(prev => prev.some(c => c.id === comment.id) ? prev : [comment, ...prev]);
       } else {
-        setComments(prev => prev.map(c =>
-          c.id === comment.parent_id
-            ? {
-                ...c,
-                replies: (c.replies || []).some(r => r.id === comment.id)
-                  ? c.replies
-                  : [...(c.replies||[]), comment],
-                reply_count: (c.reply_count||0)+1
-              }
-            : c
-        ));
+        setComments(prev => prev.map(c => {
+          if (c.id !== comment.parent_id) return c;
+          const replies = Array.isArray(c.replies) ? c.replies : [];
+          if (replies.some(reply => reply.id === comment.id)) return c;
+          return { ...c, replies: [...replies, comment], reply_count: Math.max(replies.length + 1, Number(c.reply_count) || 0) };
+        }));
       }
     };
-    const onEdit = (updated) => {
+    const onEdit = (payload) => {
+      if (!payload || typeof payload.id !== 'string' || typeof payload.content !== 'string') return;
       setComments(prev => prev.map(c => {
-        if(c.id===updated.id) return {...c, content:updated.content, edited_at:updated.edited_at};
-        return {...c, replies:(c.replies||[]).map(r=>r.id===updated.id?{...r,content:updated.content,edited_at:updated.edited_at}:r)};
+        if(c.id===payload.id) return {...c, content:payload.content, edited_at:payload.edited_at};
+        return {...c, replies:(Array.isArray(c.replies)?c.replies:[]).map(r=>r.id===payload.id?{...r,content:payload.content,edited_at:payload.edited_at}:r)};
       }));
     };
-    const onDelete = ({id}) => {
-      setComments(prev => prev
-        .filter(c=>c.id!==id)
-        .map(c=>({...c, replies:(c.replies||[]).filter(r=>r.id!==id)}))
-      );
+    const onDelete = (payload) => {
+      if (!payload || typeof payload.id !== 'string') return;
+      setComments(prev => prev.filter(c=>c.id!==payload.id).map(c=>({...c, replies:(Array.isArray(c.replies)?c.replies:[]).filter(r=>r.id!==payload.id)})));
     };
-    const onLike = ({id, likes_count}) => {
+    const onLike = (payload) => {
+      if (!payload || typeof payload.id !== 'string' || !Number.isFinite(Number(payload.likes_count))) return;
+      const likes_count = Math.max(0, Number(payload.likes_count));
       setComments(prev => prev.map(c => {
-        if(c.id===id) return {...c, likes_count};
-        return {...c, replies:(c.replies||[]).map(r=>r.id===id?{...r,likes_count}:r)};
+        if(c.id===payload.id) return {...c, likes_count};
+        return {...c, replies:(Array.isArray(c.replies)?c.replies:[]).map(r=>r.id===payload.id?{...r,likes_count}:r)};
       }));
     };
     s.on('new_homepage_comment', onNew);
@@ -309,25 +327,25 @@ export function CommentsSection({ user, isAuthenticated }) {
         method:'POST', headers:headers(),
         body: JSON.stringify({content:text.trim()})
       });
-      const d = await r.json();
-      if(!r.ok) throw new Error(d.error||'Failed');
-      // Dedupe: only add if this comment isn't already in the list
-      // (the socket 'new_homepage_comment' event may have already added it)
-      setComments(prev => prev.some(c => c.id === d.comment.id) ? prev : [d.comment, ...prev]);
+      const d = await safeJson(r);
+      const comment = normaliseComment(d.comment);
+      if (!comment) throw new Error('The server did not return the new comment. Please refresh and try again.');
+      // The socket event may arrive before or after the HTTP response.
+      setComments(prev => prev.some(c => c.id === comment.id) ? prev : [comment, ...prev]);
       setText('');
       if(textareaRef.current) textareaRef.current.style.height='auto';
-    } catch(e){ setError(e.message); }
-    setPosting(false);
+    } catch(e){ setError(e?.message || 'Unable to post your comment. Please try again.'); }
+    finally { setPosting(false); }
   };
 
   const handleDelete = async (id) => {
     try {
-      await fetch(`${API_BASE}/api/homepage/comments/${id}`, {method:'DELETE',headers:headers(false)});
-      setComments(prev=>prev
-        .filter(c=>c.id!==id)
-        .map(c=>({...c,replies:(c.replies||[]).filter(r=>r.id!==id)}))
-      );
-    } catch {}
+      const r = await fetch(`${API_BASE}/api/homepage/comments/${id}`, {method:'DELETE',headers:headers(false)});
+      await safeJson(r);
+      setComments(prev=>prev.filter(c=>c.id!==id).map(c=>({...c,replies:(Array.isArray(c.replies)?c.replies:[]).filter(r=>r.id!==id)})));
+    } catch (e) {
+      setError(e?.message || 'Unable to delete the comment. Please try again.');
+    }
   };
 
   const handleEdit = async (id, content) => {
@@ -335,21 +353,21 @@ export function CommentsSection({ user, isAuthenticated }) {
       method:'PUT', headers:headers(),
       body:JSON.stringify({content})
     });
-    const d = await r.json();
-    if(!r.ok) throw new Error(d.error||'Failed');
+    const d = await safeJson(r);
+    if (!d.comment || typeof d.comment.content !== 'string') throw new Error('The server returned an invalid comment update.');
     setComments(prev=>prev.map(c=>{
       if(c.id===id) return {...c,content:d.comment.content,edited_at:d.comment.edited_at};
-      return {...c,replies:(c.replies||[]).map(rp=>rp.id===id?{...rp,content:d.comment.content,edited_at:d.comment.edited_at}:rp)};
+      return {...c,replies:(Array.isArray(c.replies)?c.replies:[]).map(rp=>rp.id===id?{...rp,content:d.comment.content,edited_at:d.comment.edited_at}:rp)};
     }));
   };
 
   const handleLike = async (id) => {
     const r = await fetch(`${API_BASE}/api/homepage/comments/${id}/like`, {method:'POST',headers:headers(false)});
-    const d = await r.json();
-    if(!r.ok) throw new Error(d.error||'Failed');
+    const d = await safeJson(r);
+    if (!Number.isFinite(Number(d.likes_count)) || typeof d.liked !== 'boolean') throw new Error('The server returned an invalid like update.');
     setComments(prev=>prev.map(c=>{
-      if(c.id===id) return {...c,likes_count:d.likes_count,liked_by_me:d.liked};
-      return {...c,replies:(c.replies||[]).map(rp=>rp.id===id?{...rp,likes_count:d.likes_count,liked_by_me:d.liked}:rp)};
+      if(c.id===id) return {...c,likes_count:Number(d.likes_count),liked_by_me:d.liked};
+      return {...c,replies:(Array.isArray(c.replies)?c.replies:[]).map(rp=>rp.id===id?{...rp,likes_count:Number(d.likes_count),liked_by_me:d.liked}:rp)};
     }));
   };
 
@@ -358,13 +376,15 @@ export function CommentsSection({ user, isAuthenticated }) {
       method:'POST', headers:headers(),
       body:JSON.stringify({content, parent_id:parentId})
     });
-    const d = await r.json();
-    if(!r.ok) throw new Error(d.error||'Failed');
-    // Dedupe: only add if this reply isn't already there (socket may have delivered it first)
+    const d = await safeJson(r);
+    const reply = normaliseComment(d.comment);
+    if (!reply) throw new Error('The server did not return the new reply. Please try again.');
+    // Dedupe: the socket event may arrive before or after the HTTP response.
     setComments(prev=>prev.map(c=> {
       if (c.id !== parentId) return c;
-      if ((c.replies || []).some(r => r.id === d.comment.id)) return c;
-      return {...c, replies:[...(c.replies||[]),d.comment], reply_count:(c.reply_count||0)+1};
+      const replies = Array.isArray(c.replies) ? c.replies : [];
+      if (replies.some(r => r.id === reply.id)) return c;
+      return {...c, replies:[...replies,reply], reply_count:Math.max(replies.length+1, Number(c.reply_count)||0)};
     }));
   };
 
@@ -374,7 +394,7 @@ export function CommentsSection({ user, isAuthenticated }) {
     e.target.style.height=Math.min(e.target.scrollHeight,140)+'px';
   };
 
-  const totalCount = comments.reduce((a,c)=>a+1+(c.replies||[]).length,0);
+  const totalCount = comments.reduce((a,c)=>a+1+(Array.isArray(c.replies)?c.replies.length:0),0);
 
   return (
     <section id="comments-section" className="py-14 sm:py-20 bg-muted/10 border-t border-border">
@@ -444,6 +464,11 @@ export function CommentsSection({ user, isAuthenticated }) {
         {loading ? (
           <div className="flex justify-center py-10">
             <Loader2 className="h-6 w-6 animate-spin text-primary/40" />
+          </div>
+        ) : loadError ? (
+          <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-center">
+            <p className="text-sm text-destructive">{loadError}</p>
+            <button type="button" onClick={load} className="mt-2 text-xs font-semibold text-primary hover:underline">Try loading again</button>
           </div>
         ) : comments.length===0 ? (
           <div className="text-center py-12 rounded-2xl border-2 border-dashed border-border/50">

@@ -163,7 +163,7 @@ function AppRoutes() {
         <Route path="blog/:slug" element={<BlogPostPage />} />
         <Route path="verify-credential" element={<VerifyCredentialPage />} />
         <Route path="verify" element={<Navigate to="/verify-credential" replace />} />
-        <Route path="community" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
+        <Route path="community" element={<ProtectedRoute><ErrorBoundary><CommunityPage /></ErrorBoundary></ProtectedRoute>} />
       </Route>
 
       {/* ── Auth ── */}

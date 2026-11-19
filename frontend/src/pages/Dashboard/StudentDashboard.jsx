@@ -548,10 +548,11 @@ export default function StudentDashboard() {
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-            Welcome back, {user?.name?.split(' ')[0] || 'Learner'}!
+          <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.16em] text-primary mb-1">Welcome to your</p>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+            Student <span className="text-primary">Dashboard</span>
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm">Keep up the momentum on your learning journey.</p>
+          <p className="text-muted-foreground mt-1 text-xs sm:text-sm">Your learning progress, courses and achievements in one place.</p>
         </div>
         <Link to="/courses" className="self-start sm:self-auto">
           <Button className="gap-2 whitespace-nowrap">
