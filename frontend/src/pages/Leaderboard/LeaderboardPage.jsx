@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Trophy, Star, Award, Loader2, BookOpen, Flame, Medal, RefreshCw, LockKeyhole } from 'lucide-react';
+import { Trophy, Loader2, BookOpen, Flame, Medal, RefreshCw, LockKeyhole } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/common/Card';
 import { cn } from '../../lib/utils';
 import { API_BASE } from '@/lib/api';
@@ -53,7 +53,6 @@ export default function LeaderboardPage() {
 
   const selected = categories.find(item => item.id === category) || categories[0];
   const myEntry = data.find(entry => entry.is_me);
-  const top3 = data.filter(entry => !entry.is_me || entry.rank <= 3).slice(0, 3);
   const rankedRows = useMemo(() => data.slice().sort((a, b) => a.rank - b.rank), [data]);
   const podium = useMemo(() => {
     const first = rankedRows.find(entry => entry.rank === 1);
