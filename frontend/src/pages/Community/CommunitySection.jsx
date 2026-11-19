@@ -5,7 +5,6 @@ import {
   ChevronDown, ChevronUp, MessageSquare, Send,
 } from 'lucide-react';
 import { Button } from '@/components/common/Button';
-import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import { API_BASE, safeJson } from '@/lib/api';
 
@@ -245,7 +244,6 @@ export function CommentsSection({ user, isAuthenticated }) {
   const [error,       setError]      = useState('');
   const [loadError,   setLoadError]  = useState('');
   const textareaRef   = useRef(null);
-  useAuth();
 
   const token = () => sessionStorage.getItem('auth_token');
   const headers = (json=true) => ({
