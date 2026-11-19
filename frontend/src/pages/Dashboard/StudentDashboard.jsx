@@ -619,7 +619,7 @@ export default function StudentDashboard() {
                 { to: "/profile", label: "My Profile", description: "View and update your personal details", Icon: User },
                 { to: "/settings", label: "Settings", description: "Manage your account preferences", Icon: Settings },
                 { to: "/courses", label: "My Courses", description: "Browse courses and continue learning", Icon: BookOpen },
-                { to: "/leaderboard", label: "Leaderboard", description: "See your learning position", Icon: Trophy },
+                { to: "/dashboard/leaderboard", label: "Leaderboard", description: "See your learning position", Icon: Trophy },
                 { to: "/community", label: "Community", description: "Connect with other learners", Icon: Compass },
               ].map(({ to, label, description, Icon }) => (
                 <Link
