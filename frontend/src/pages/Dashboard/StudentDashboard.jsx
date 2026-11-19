@@ -11,7 +11,7 @@ import { ScaleToFit } from '@/components/common/ScaleToFit';
 import {
   Award, Download, ExternalLink, Trophy, BookOpen, Target, Receipt, Settings, User,
   Flame, Compass, CheckCircle2, Star, Zap, Loader2,
-  ArrowRight, ArrowLeft, ChevronDown, ChevronUp, Book,
+  ArrowRight, ArrowLeft, ChevronDown, ChevronUp,
   Eye, EyeOff, Pencil, Check, X, Printer, Headphones, Video, Music2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -510,14 +510,6 @@ export default function StudentDashboard() {
   }, [completedCourses]);
   const recommendedCourses = useMemo(() => courses.filter(c => !c.isEnrolled).slice(0,3),[courses]);
 
-  const scrollToSection = (id) => {
-    const el = document.getElementById(id);
-    if (el) {
-      const top = el.getBoundingClientRect().top + window.scrollY - 80;
-      window.scrollTo({ top, behavior: 'smooth' });
-    }
-  };
-
   const liveBadges = useMemo(() => badgeConfig.map(cfg => {
     const hasKey = userBadges.includes(cfg.key);
     let current = 0;
@@ -544,22 +536,6 @@ export default function StudentDashboard() {
 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-8 pb-10 px-1 sm:px-0">
-
-      {/* Mobile section navigation: directly below the site header and above the welcome message. */}
-      <nav aria-label="Dashboard sections" className="sm:hidden -mt-2 mb-2 w-full flex items-center justify-center gap-3 rounded-xl border border-gray-200/80 bg-background/60 px-2 py-1 dark:border-border/60">
-        <button onClick={() => scrollToSection('continue-learning')}
-          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/70 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-          <Book className="h-3.5 w-3.5" /> Progress
-        </button>
-        <button onClick={() => scrollToSection('badges-section')}
-          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/70 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-          <Trophy className="h-3.5 w-3.5" /> Badges
-        </button>
-        <button onClick={() => scrollToSection('recommendations')}
-          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/70 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-          <Compass className="h-3.5 w-3.5" /> For You
-        </button>
-      </nav>
 
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
