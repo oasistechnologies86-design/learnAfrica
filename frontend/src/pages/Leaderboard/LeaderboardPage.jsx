@@ -12,25 +12,40 @@ export default function LeaderboardPage() {
   const { user } = useAuth();
   const [data, setData]           = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [retryCount, setRetryCount] = useState(0);
   const [timeframe, setTimeframe] = useState('All Time');
   const [category, setCategory]   = useState('Overall');
 
   useEffect(() => {
+    const controller = new AbortController();
     const load = async () => {
       setIsLoading(true);
+      setLoadError('');
       try {
         const token = sessionStorage.getItem('auth_token');
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        const res = await fetch(`${API_BASE}/api/leaderboard?timeframe=${encodeURIComponent(timeframe)}&category=${encodeURIComponent(category)}`,
-          { headers }
-        );
-        if (res.ok) setData((await res.json()).leaderboard || []);
-        else setData([]);
-      } catch { setData([]); }
-      setIsLoading(false);
+        const res = await fetch(`${API_BASE}/api/leaderboard?timeframe=${encodeURIComponent(timeframe)}&category=${encodeURIComponent(category)}`, {
+          headers,
+          signal: controller.signal,
+        });
+        if (!res.ok) throw new Error(`Leaderboard request failed (${res.status}).`);
+        const payload = await res.json();
+        if (!Array.isArray(payload?.leaderboard)) throw new Error('The leaderboard response was not in the expected format.');
+        setData(payload.leaderboard.filter(entry => entry && typeof entry === 'object'));
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          setData([]);
+          setLoadError('We could not load the leaderboard right now. Please try again.');
+          console.error('Leaderboard loading failed:', error);
+        }
+      } finally {
+        if (!controller.signal.aborted) setIsLoading(false);
+      }
     };
     load();
-  }, [timeframe, category]);
+    return () => controller.abort();
+  }, [timeframe, category, retryCount]);
 
   const getMedalColor = (rank) => {
     if (rank === 1) return 'bg-gradient-to-r from-yellow-400 to-amber-500 text-white';
@@ -140,6 +155,13 @@ export default function LeaderboardPage() {
               <p className="text-xs text-muted-foreground">pts</p>
             </Card>
           </div>
+        </div>
+      )}
+
+      {loadError && (
+        <div role="alert" className="mb-5 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-foreground">
+          <p>{loadError}</p>
+          <button type="button" onClick={() => setRetryCount(value => value + 1)} className="mt-2 font-semibold text-primary underline">Retry</button>
         </div>
       )}
 
