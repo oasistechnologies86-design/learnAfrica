@@ -4905,7 +4905,22 @@ def create_app() -> Flask:
     # ── LEADERBOARD ───────────────────────────────────────────────────────────────
     @app.route('/api/leaderboard', methods=['GET'])
     def leaderboard():
+        """Return the top learners, ranked by the selected all-time category.
+
+        Historical weekly/monthly point totals are not stored in the current
+        schema. The API therefore does not pretend that a date filter is
+        available; the client presents all-time rankings only until an event
+        ledger is introduced.
+        """
         db = get_db()
+        category = (request.args.get('category') or 'Overall').strip().lower()
+        sort_columns = {
+            'overall': 'points',
+            'courses': 'courses',
+            'badges': 'badges',
+            'streak': 'streak',
+        }
+        sort_key = sort_columns.get(category, 'points')
         rows = db.execute('''SELECT u.id,u.name,u.avatar,
             COALESCE(s.lessons_completed,0)*50+COALESCE(s.courses_completed,0)*500+
             COALESCE(s.perfect_quizzes,0)*100+COALESCE(s.streak,0)*10 as points,
@@ -4913,10 +4928,15 @@ def create_app() -> Flask:
             (SELECT COUNT(*) FROM user_badges WHERE user_id=u.id) as badges,
             COALESCE(s.streak,0) as streak
             FROM users u LEFT JOIN user_stats s ON s.user_id=u.id
-            WHERE u.is_active=1 ORDER BY points DESC LIMIT 50''').fetchall()
-        return jsonify({'leaderboard':[{'rank':i+1,'name':r['name'],'points':r['points'],
+            WHERE u.is_active=1''').fetchall()
+        ranked = sorted(
+            rows,
+            key=lambda row: (int(row[sort_key] or 0), int(row['points'] or 0), str(row['name'] or '').lower()),
+            reverse=True,
+        )[:50]
+        return jsonify({'leaderboard':[{'id':r['id'],'rank':i+1,'name':r['name'],'points':r['points'],
             'courses':r['courses'],'badges':r['badges'],'streak':r['streak'],
-            'avatar':r['avatar'],'initial':(r['name'] or 'U')[0].upper()} for i,r in enumerate(rows)]})
+            'avatar':r['avatar'],'initial':(r['name'] or 'U')[0].upper()} for i,r in enumerate(ranked)]})
     
     # ── NOTIFICATIONS ─────────────────────────────────────────────────────────────
     @app.route('/api/notifications', methods=['GET'])
