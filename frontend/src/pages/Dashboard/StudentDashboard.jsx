@@ -598,7 +598,7 @@ export default function StudentDashboard() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="quick-access-dialog-title"
-            className="max-h-[ min(80vh, 36rem)] w-full max-w-md overflow-y-auto rounded-t-2xl border border-border bg-card p-4 shadow-2xl sm:rounded-2xl sm:p-5"
+            className="max-h-[min(80vh,36rem)] w-full max-w-md overflow-y-auto rounded-t-2xl border border-border bg-card p-4 shadow-2xl sm:rounded-2xl sm:p-5"
           >
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
