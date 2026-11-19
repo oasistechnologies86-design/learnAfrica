@@ -483,8 +483,18 @@ export default function StudentDashboard() {
   const stats    = user?.stats || {};
   const userBadges = user?.badges || [];
   const [viewAllActive, setViewAllActive] = useState(false);
+  const [quickAccessOpen, setQuickAccessOpen] = useState(false);
   const [certificatesExpanded, setCertificatesExpanded] = useState(true);
   const [badgesExpanded, setBadgesExpanded] = useState(true);
+
+  useEffect(() => {
+    if (!quickAccessOpen) return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setQuickAccessOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [quickAccessOpen]);
 
   const enrolledCourses    = useMemo(() => courses.filter(c => c.isEnrolled),           [courses]);
   const completedCourses   = useMemo(() => courses.filter(c => c.progress === 100),     [courses]);
@@ -556,25 +566,82 @@ export default function StudentDashboard() {
       {/* ── Compact student quick access ── */}
       <section aria-label="Quick access" className="space-y-1.5">
         <h2 className="text-xs font-semibold text-muted-foreground">Quick Access</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
+        <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
           <Link to="/receipts" className="group flex min-h-12 items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-2 transition-colors hover:border-primary/40 hover:bg-primary/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"><Receipt className="h-3.5 w-3.5" /></span>
             <span className="min-w-0 truncate text-xs font-semibold">My Receipts</span>
-          </Link>
-          <Link to="/settings" className="group flex min-h-12 items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-2 transition-colors hover:border-primary/40 hover:bg-primary/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"><Settings className="h-3.5 w-3.5" /></span>
-            <span className="min-w-0 truncate text-xs font-semibold">Settings</span>
           </Link>
           <Link to="/my-certificates" className="group flex min-h-12 items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-2 transition-colors hover:border-primary/40 hover:bg-primary/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"><Award className="h-3.5 w-3.5" /></span>
             <span className="min-w-0 truncate text-xs font-semibold">Certificates</span>
           </Link>
-          <Link to="/profile" className="group flex min-h-12 items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-2 transition-colors hover:border-primary/40 hover:bg-primary/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"><User className="h-3.5 w-3.5" /></span>
-            <span className="min-w-0 truncate text-xs font-semibold">My Profile</span>
-          </Link>
+        </div>
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => setQuickAccessOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={quickAccessOpen}
+            className="inline-flex min-h-8 items-center gap-1 rounded-md px-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            View More <ArrowRight className="h-3.5 w-3.5" />
+          </button>
         </div>
       </section>
+
+      {quickAccessOpen && (
+        <div
+          className="fixed inset-0 z-[120] flex items-end justify-center bg-black/50 p-0 backdrop-blur-[2px] sm:items-center sm:p-4"
+          onMouseDown={(event) => { if (event.target === event.currentTarget) setQuickAccessOpen(false); }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="quick-access-dialog-title"
+            className="max-h-[ min(80vh, 36rem)] w-full max-w-md overflow-y-auto rounded-t-2xl border border-border bg-card p-4 shadow-2xl sm:rounded-2xl sm:p-5"
+          >
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <h3 id="quick-access-dialog-title" className="text-base font-semibold">More Quick Access</h3>
+                <p className="mt-0.5 text-xs text-muted-foreground">Shortcuts to your student account</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setQuickAccessOpen(false)}
+                aria-label="Close quick access menu"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="space-y-1">
+              {[
+                { to: "/profile", label: "My Profile", description: "View and update your personal details", Icon: User },
+                { to: "/settings", label: "Settings", description: "Manage your account preferences", Icon: Settings },
+                { to: "/courses", label: "My Courses", description: "Browse courses and continue learning", Icon: BookOpen },
+                { to: "/leaderboard", label: "Leaderboard", description: "See your learning position", Icon: Trophy },
+                { to: "/community", label: "Community", description: "Connect with other learners", Icon: Compass },
+              ].map(({ to, label, description, Icon }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  onClick={() => setQuickAccessOpen(false)}
+                  className="flex min-h-14 items-center gap-3 rounded-xl px-2.5 py-2 transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold">{label}</span>
+                    <span className="mt-0.5 block text-xs text-muted-foreground">{description}</span>
+                  </span>
+                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                </Link>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
 
       <StudentTutorialCard userId={user?.id} />
 
