@@ -5580,6 +5580,47 @@ def create_app() -> Flask:
         return jsonify({'students': safe_list(rows)})
     
     
+    @app.route('/api/admin/leaderboard', methods=['GET'])
+    @admin_required
+    def admin_leaderboard():
+        """Return the all-time student leaderboard with identities for admins only."""
+        db = get_db()
+        rows = db.execute('''
+            SELECT u.id, u.name, u.email,
+                   COALESCE(s.lessons_completed,0)*50+
+                   COALESCE(s.courses_completed,0)*500+
+                   COALESCE(s.perfect_quizzes,0)*100+
+                   COALESCE(s.streak,0)*10 AS points,
+                   COALESCE(s.courses_completed,0) AS courses,
+                   (SELECT COUNT(*) FROM user_badges ub WHERE ub.user_id=u.id) AS badges,
+                   COALESCE(s.streak,0) AS streak,
+                   (SELECT AVG(qa.score) FROM quiz_attempts qa WHERE qa.user_id=u.id) AS average_score
+            FROM users u
+            LEFT JOIN user_stats s ON s.user_id=u.id
+            WHERE u.role='student' AND u.is_active=1
+        ''').fetchall()
+        ranked = sorted(
+            rows,
+            key=lambda row: (int(row['points'] or 0), int(row['courses'] or 0),
+                             str(row['name'] or '').lower()),
+            reverse=True,
+        )
+        leaderboard_rows = []
+        for index, row in enumerate(ranked, start=1):
+            score = row['average_score']
+            leaderboard_rows.append({
+                'id': row['id'],
+                'rank': index,
+                'name': row['name'] or 'Student',
+                'email': row['email'] or '',
+                'points': int(row['points'] or 0),
+                'courses': int(row['courses'] or 0),
+                'badges': int(row['badges'] or 0),
+                'streak': int(row['streak'] or 0),
+                'average_score': round(float(score), 1) if score is not None else None,
+            })
+        return jsonify({'leaderboard': leaderboard_rows})
+
     # ── CERTIFICATE & BADGE VERIFICATION ─────────────────────────────────────────
     @app.route('/api/verify', methods=['GET'])
     def verify_credential():
