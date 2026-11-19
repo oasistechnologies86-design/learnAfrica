@@ -100,7 +100,7 @@ const ROLE_BADGE = ({ role }) => (
   </span>
 );
 
-const TABS = ['Overview', 'Students', 'Instructors', 'Courses', 'Applications', 'Broadcast', 'Blog', 'Earnings', 'Payouts', 'Receipts', 'Coupons', 'Credentials', 'Certificate Signature', 'Settings', 'Forgot Password Requests', 'Footer', 'Guide', 'Audit Log'];
+const TABS = ['Overview', 'Students', 'Leaderboard', 'Instructors', 'Courses', 'Applications', 'Broadcast', 'Blog', 'Earnings', 'Payouts', 'Receipts', 'Coupons', 'Credentials', 'Certificate Signature', 'Settings', 'Forgot Password Requests', 'Footer', 'Guide', 'Audit Log'];
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -116,6 +116,7 @@ export default function AdminPage() {
   const [applications, setApplications] = useState([]);
   const [users, setUsers] = useState([]);
   const [students, setStudents] = useState([]);
+  const [adminLeaderboard, setAdminLeaderboard] = useState([]);
   const [instructors, setInstructors] = useState([]);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -158,6 +159,7 @@ export default function AdminPage() {
     try {
       if (section === 'Overview')    { const d = await API('/api/admin/stats'); setStats(d); }
       else if (section === 'Students')    { const d = await API('/api/admin/students'); setStudents(d.students); }
+      else if (section === 'Leaderboard') { const d = await API('/api/admin/leaderboard'); setAdminLeaderboard(d.leaderboard || []); }
       else if (section === 'Instructors') { const d = await API('/api/admin/instructors'); setInstructors(d.instructors); }
       else if (section === 'Courses')     { const d = await API('/api/admin/courses'); setCourses(d.courses); }
       else if (section === 'Applications'){ const d = await API(`/api/admin/instructor-applications?status=${appFilter}`); setApplications(d.applications); }
@@ -481,6 +483,7 @@ export default function AdminPage() {
               tab === t ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground')}>
             {t === 'Overview' && <BarChart2 className="h-3.5 w-3.5" />}
             {t === 'Students' && <Users className="h-3.5 w-3.5" />}
+            {t === 'Leaderboard' && <Award className="h-3.5 w-3.5" />}
             {t === 'Instructors' && <GraduationCap className="h-3.5 w-3.5" />}
             {t === 'Courses' && <BookOpen className="h-3.5 w-3.5" />}
             {t === 'Applications' && <UserCheck className="h-3.5 w-3.5" />}
@@ -556,6 +559,42 @@ export default function AdminPage() {
                     </table>
                   </CardContent>
                 </Card>
+              </div>
+            </div>
+          )}
+
+          {tab === 'Leaderboard' && (
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-lg font-bold">Student Leaderboard</h2>
+                <p className="text-sm text-muted-foreground mt-1">Admin view with student names and learning activity. Select View to open the existing student profile details.</p>
+              </div>
+              <div className="overflow-x-auto rounded-xl border border-border">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/30 border-b border-border">
+                    <tr>
+                      <th className="p-3 text-left">Rank</th><th className="p-3 text-left">Student</th>
+                      <th className="p-3 text-right">Points</th><th className="p-3 text-right">Courses</th>
+                      <th className="p-3 text-right">Badges</th><th className="p-3 text-right">Streak</th>
+                      <th className="p-3 text-right">Avg. quiz score</th><th className="p-3 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {adminLeaderboard.map(row => (
+                      <tr key={row.id} className="border-b border-border/40 hover:bg-muted/20">
+                        <td className="p-3 font-semibold">#{row.rank}</td>
+                        <td className="p-3"><p className="font-medium">{row.name}</p><p className="text-xs text-muted-foreground">{row.email}</p></td>
+                        <td className="p-3 text-right tabular-nums">{row.points}</td>
+                        <td className="p-3 text-right tabular-nums">{row.courses}</td>
+                        <td className="p-3 text-right tabular-nums">{row.badges}</td>
+                        <td className="p-3 text-right tabular-nums">{row.streak}</td>
+                        <td className="p-3 text-right tabular-nums">{row.average_score == null ? '—' : row.average_score + '%'}</td>
+                        <td className="p-3 text-right"><Button size="sm" variant="outline" onClick={() => viewUserDetail(row.id)}>View</Button></td>
+                      </tr>
+                    ))}
+                    {adminLeaderboard.length === 0 && <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">No student activity to rank yet.</td></tr>}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
