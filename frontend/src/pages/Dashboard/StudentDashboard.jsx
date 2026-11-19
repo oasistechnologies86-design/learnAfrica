@@ -547,12 +547,26 @@ export default function StudentDashboard() {
 
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.16em] text-primary mb-1">Welcome to your</p>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
             Student <span className="text-primary">Dashboard</span>
           </h1>
           <p className="text-muted-foreground mt-1 text-xs sm:text-sm">Your learning progress, courses and achievements in one place.</p>
+          <nav aria-label="Dashboard sections" className="sm:hidden mt-3 flex flex-wrap items-center gap-2">
+            <button onClick={() => scrollToSection('continue-learning')}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/70 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+              <Book className="h-3.5 w-3.5" /> Progress
+            </button>
+            <button onClick={() => scrollToSection('badges-section')}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/70 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+              <Trophy className="h-3.5 w-3.5" /> Badges
+            </button>
+            <button onClick={() => scrollToSection('recommendations')}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/70 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+              <Compass className="h-3.5 w-3.5" /> For You
+            </button>
+          </nav>
         </div>
         <Link to="/courses" className="self-start sm:self-auto">
           <Button className="gap-2 whitespace-nowrap">
@@ -587,22 +601,6 @@ export default function StudentDashboard() {
       </section>
 
       <StudentTutorialCard userId={user?.id} />
-
-      {/* Mobile quick-nav strip */}
-      <div className="sm:hidden sticky top-[64px] z-20 w-full bg-background/95 backdrop-blur border-y border-border px-4 py-2.5 flex justify-center gap-2 shadow-sm">
-        <button onClick={() => scrollToSection('continue-learning')}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-xs font-semibold text-foreground hover:bg-primary/10 hover:text-primary transition-colors">
-          <Book className="w-3.5 h-3.5" /> Progress
-        </button>
-        <button onClick={() => scrollToSection('badges-section')}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-xs font-semibold text-foreground hover:bg-primary/10 hover:text-primary transition-colors">
-          <Trophy className="w-3.5 h-3.5" /> Badges
-        </button>
-        <button onClick={() => scrollToSection('recommendations')}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-xs font-semibold text-foreground hover:bg-primary/10 hover:text-primary transition-colors">
-          <Compass className="w-3.5 h-3.5" /> For You
-        </button>
-      </div>
 
       {/* ── Stats ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
