@@ -664,7 +664,7 @@ export function LandingPage() {
                 <li className="flex items-center gap-2 rounded-lg bg-muted/50 p-3"><Users className="h-4 w-4 shrink-0 text-primary" /> Share ideas</li>
                 <li className="flex items-center gap-2 rounded-lg bg-muted/50 p-3"><BookOpen className="h-4 w-4 shrink-0 text-primary" /> Learn together</li>
               </ul>
-              <Link to="/community" className="mt-5 inline-flex h-10 w-fit items-center gap-2 rounded-lg border border-border bg-background px-4 text-sm font-semibold transition hover:border-primary hover:text-primary">{isAuthenticated ? 'Open community' : 'Visit the community'} <ArrowRight className="h-4 w-4" /></Link>
+              <Link to="/community" className="mt-5 inline-flex h-10 w-fit items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90">{isAuthenticated ? 'Open community' : 'Visit the community'} <ArrowRight className="h-4 w-4" /></Link>
               <p className="mt-3 text-xs text-muted-foreground">Sign in to post, reply, and take part in discussions.</p>
             </article>
           </div>
