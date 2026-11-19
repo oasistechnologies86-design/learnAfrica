@@ -36,6 +36,9 @@ export default function VerifyCredentialPage() {
                 Enter the certificate or achievement badge ID to confirm that it was issued by LearnAfrica.
                 You do not need an account to check a credential.
               </p>
+              <a href="#verify-section" className="mt-6 inline-flex h-11 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90">
+                Enter certificate ID <ArrowUpRight className="h-4 w-4" />
+              </a>
               <div className="mt-6 flex flex-wrap gap-x-6 gap-y-3 text-sm text-muted-foreground">
                 <span className="inline-flex items-center gap-2"><LockKeyhole className="h-4 w-4 text-primary" /> No sign-in required</span>
                 <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Results from our records</span>
