@@ -1090,6 +1090,14 @@ export default function AdminPage() {
                         <p className="text-2xl font-bold text-warning">{formatPrice(earnings.registration_fees_total || 0)}</p>
                         <p className="text-xs text-muted-foreground mt-1">Instructor Registration Fees</p>
                       </div>
+                      <div className="text-center p-3 bg-muted/30 rounded-xl border border-border">
+                        <p className="text-2xl font-bold">{formatPrice(earnings.paystack_fees_total || 0)}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Actual Paystack Fees</p>
+                      </div>
+                      <div className="text-center p-3 bg-success/5 rounded-xl border border-success/20">
+                        <p className="text-2xl font-bold text-success">{formatPrice(earnings.net_after_paystack_total ?? earnings.total_gross ?? 0)}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Revenue After Paystack Fees</p>
+                      </div>
                     </div>
                   </div>
                   {(earnings.instructors||[]).length > 0 ? (
@@ -1100,6 +1108,8 @@ export default function AdminPage() {
                             <th className="text-left p-3 font-medium text-muted-foreground">Instructor</th>
                             <th className="text-center p-3 font-medium text-muted-foreground">Courses</th>
                             <th className="text-right p-3 font-medium text-muted-foreground">Gross</th>
+                            <th className="text-right p-3 font-medium text-muted-foreground">Paystack Fee</th>
+                            <th className="text-right p-3 font-medium text-muted-foreground">After Fee</th>
                             <th className="text-right p-3 font-medium text-muted-foreground">Their Share</th>
                             <th className="text-right p-3 font-medium text-muted-foreground">Platform Share</th>
                             <th className="text-left p-3 font-medium text-muted-foreground">Future Split Override</th>
@@ -1114,6 +1124,8 @@ export default function AdminPage() {
                               </td>
                               <td className="p-3 text-center">{inst.course_count}</td>
                               <td className="p-3 text-right font-medium">{formatPrice(inst.gross_revenue)}</td>
+                              <td className="p-3 text-right text-muted-foreground">{formatPrice(inst.paystack_fees || 0)}</td>
+                              <td className="p-3 text-right font-medium">{formatPrice(inst.net_after_paystack ?? inst.gross_revenue)}</td>
                               <td className="p-3 text-right font-bold text-primary">{formatPrice(inst.instructor_earnings)}</td>
                               <td className="p-3 text-right text-success">{formatPrice(inst.platform_earnings)}</td>
                               <td className="p-3 min-w-[190px]">
