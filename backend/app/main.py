@@ -7265,12 +7265,23 @@ def create_app() -> Flask:
             "SELECT COALESCE(SUM(amount), 0) as t FROM transactions"
             " WHERE type='instructor_registration' AND status='success'"
         ).fetchone()
+        registration_fee_row = db.execute(
+            "SELECT COALESCE(SUM(paystack_fee),0) AS fees, "
+            "COUNT(CASE WHEN COALESCE(paystack_fee_status,'unknown')<>'actual' THEN 1 END) AS unverified "
+            "FROM transactions WHERE provider='paystack' AND type='instructor_registration' AND status='success'"
+        ).fetchone() if fee_status_ready else {'fees': 0, 'unverified': 0}
+        course_fees_total = sum(float(row.get('paystack_fees') or 0) for row in result)
+        registration_fees_actual = float(registration_fee_row['fees'] or 0) if registration_fee_row else 0.0
+        registration_fee_unverified = int(registration_fee_row['unverified'] or 0) if registration_fee_row else 0
         return jsonify({
             'instructors': result,
             'total_gross': round(total_gross, 2),
-            'paystack_fees_total': round(sum(float(row.get('paystack_fees') or 0) for row in result), 2),
-            'paystack_fee_unverified_count': sum(int(row.get('paystack_fee_unverified_count') or 0) for row in result),
-            'net_after_paystack_total': round(max(0.0, total_gross - sum(float(row.get('paystack_fees') or 0) for row in result)), 2),
+            'course_paystack_fees_total': round(course_fees_total, 2),
+            'registration_paystack_fees_total': round(registration_fees_actual, 2),
+            'paystack_fees_total': round(course_fees_total + registration_fees_actual, 2),
+            'paystack_fee_unverified_count': sum(int(row.get('paystack_fee_unverified_count') or 0) for row in result) + registration_fee_unverified,
+            'registration_fee_unverified_count': registration_fee_unverified,
+            'net_after_paystack_total': round(max(0.0, total_gross - course_fees_total), 2),
             'platform_total': round(sum(float(row.get('platform_earnings') or 0) for row in result) + float(reg_row['t'] or 0), 2),
             'instructors_total': round(total_instr, 2),
             # Instructor registration fees are 100% platform income and belong
