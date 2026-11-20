@@ -1230,33 +1230,33 @@ export default function AdminPage() {
                     <h2 className="font-bold text-base">Platform Earnings Overview</h2>
                     <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 mt-4">
                       <div className="text-left p-3 bg-background rounded-xl border border-border">
-                        <p className="text-2xl font-bold">{formatPrice(earnings.total_gross || 0)}</p>
+                        <p className="text-lg font-bold">{formatPrice(earnings.total_gross || 0)}</p>
                         <p className="text-xs text-muted-foreground mt-1">Course gross revenue</p>
                       </div>
                       <div className="text-left p-3 bg-primary/5 rounded-xl border border-primary/20">
-                        <p className="text-2xl font-bold text-primary">{formatPrice(earnings.instructors_total || 0)}</p>
+                        <p className="text-lg font-bold text-primary">{formatPrice(earnings.instructors_total || 0)}</p>
                         <p className="text-xs text-muted-foreground mt-1">Instructor earnings</p>
                       </div>
                       <div className="text-left p-3 bg-success/5 rounded-xl border border-success/20">
-                        <p className="text-2xl font-bold text-success">{formatPrice(earnings.platform_total || 0)}</p>
+                        <p className="text-lg font-bold text-success">{formatPrice(earnings.platform_total || 0)}</p>
                         <p className="text-xs text-muted-foreground mt-1">Platform earnings</p>
                       </div>
                       <div className="text-left p-3 bg-warning/5 rounded-xl border border-warning/20">
-                        <p className="text-2xl font-bold text-warning">{formatPrice(earnings.registration_fees_total || 0)}</p>
+                        <p className="text-lg font-bold text-warning">{formatPrice(earnings.registration_fees_total || 0)}</p>
                         <p className="text-xs text-muted-foreground mt-1">Instructor registration fees</p>
                       </div>
                       <div className="text-left p-3 bg-muted/30 rounded-xl border border-border">
-                        <p className="text-2xl font-bold">{formatPrice(earnings.paystack_fees_total || 0)}</p>
+                        <p className="text-lg font-bold">{formatPrice(earnings.paystack_fees_total || 0)}</p>
                         <p className="text-xs text-muted-foreground mt-1">LearnAfrica platform fee</p>
                         <p className="text-[10px] text-muted-foreground mt-1">Calculated from the saved fee policy</p>
                         <p className="text-[10px] text-muted-foreground mt-1"></p>
                       </div>
                       <div className="text-left p-3 bg-warning/5 rounded-xl border border-warning/20">
-                        <p className="text-2xl font-bold text-warning">{Number(earnings.paystack_fee_unverified_count || 0).toLocaleString()}</p>
+                        <p className="text-lg font-bold text-warning">{Number(earnings.paystack_fee_unverified_count || 0).toLocaleString()}</p>
                         <p className="text-xs text-muted-foreground mt-1"></p>
                       </div>
                       <div className="text-left p-3 bg-success/5 rounded-xl border border-success/20">
-                        <p className="text-2xl font-bold text-success">{formatPrice(earnings.net_after_paystack_total ?? earnings.total_gross ?? 0)}</p>
+                        <p className="text-lg font-bold text-success">{formatPrice(earnings.net_after_paystack_total ?? earnings.total_gross ?? 0)}</p>
                         <p className="text-xs text-muted-foreground mt-1">Course revenue after LearnAfrica platform fee</p>
                       </div>
                     </div>
