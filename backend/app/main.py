@@ -4045,26 +4045,17 @@ def create_app() -> Flask:
             "SELECT COALESCE(SUM(platform_share), 0) as t FROM transactions"
             " WHERE instructor_id=? AND type IN ('purchase','quiz_extra_attempt') AND status='success'", (uid,)).fetchone()
         platform_share = round(float(platform_row['t'] or 0), 2) if platform_row else 0.0
+        # The fee recorded at purchase time is LearnAfrica's policy fee.
+        # Provider settlement fees are separate and never replace this amount.
+        ensure_column(db, 'transactions', 'paystack_fee_estimate', 'REAL DEFAULT 0')
         fee_rows = db.execute(
-            "SELECT amount, paystack_fee, paystack_fee_status, created_at FROM transactions"
-            " WHERE instructor_id=? AND provider='paystack' AND status='success'"
+            "SELECT paystack_fee_estimate FROM transactions"
+            " WHERE instructor_id=? AND status='success'"
             " AND type IN ('purchase','quiz_extra_attempt')",
             (uid,)
-        ).fetchall() if paystack_fee_ready else []
-        paystack_fees_actual = 0.0
-        paystack_fees_estimated = 0.0
-        paystack_fee_unverified_count = 0
-        for fee_tx in fee_rows:
-            if fee_status_ready and str(fee_tx['paystack_fee_status'] or 'unknown').lower() == 'actual':
-                paystack_fees_actual += float(fee_tx['paystack_fee'] or 0)
-            else:
-                paystack_fee_unverified_count += 1
-                resolved_fee = _effective_paystack_fee_policy(db, uid, str(fee_tx['created_at'] or datetime.utcnow().date().isoformat())[:10])
-                paystack_fees_estimated += round(float(fee_tx['amount'] or 0) * resolved_fee['rate_pct'] / 100.0, 2)
-        paystack_fees_actual = round(paystack_fees_actual, 2)
-        paystack_fees_estimated = round(paystack_fees_estimated, 2)
-        paystack_fees = round(paystack_fees_actual + paystack_fees_estimated, 2)
-        net_after_paystack = round(max(0.0, gross_revenue - paystack_fees), 2)
+        ).fetchall()
+        platform_fees = round(sum(float(row['paystack_fee_estimate'] or 0) for row in fee_rows), 2)
+        net_after_platform_fee = round(max(0.0, gross_revenue - platform_fees), 2)
         return jsonify({
             'total_courses': len(course_ids), 'total_students': total_students,
             'total_earnings': total_earnings, 'average_rating': final_avg_rating,
@@ -4072,11 +4063,13 @@ def create_app() -> Flask:
             'course_performance': course_perf, 'recent_students': safe_list(recent),
             'total_paid': total_paid, 'pending_payout': requested, 'available_to_request': available,
             'gross_revenue': gross_revenue, 'platform_share': platform_share,
-            'paystack_fees': paystack_fees,
-            'paystack_fees_actual': paystack_fees_actual,
-            'paystack_fees_estimated': paystack_fees_estimated,
-            'paystack_fee_unverified_count': paystack_fee_unverified_count,
-            'net_after_paystack': net_after_paystack,
+            'platform_fee': platform_fees,
+            'paystack_fees': platform_fees,  # legacy response key for older clients
+            'paystack_fees_actual': 0.0,
+            'paystack_fees_estimated': platform_fees,
+            'paystack_fee_unverified_count': 0,
+            'net_after_platform_fee': net_after_platform_fee,
+            'net_after_paystack': net_after_platform_fee,  # legacy response key
             'instructor_share_pct': _split['instructor_pct'],
             'platform_share_pct':   _split['admin_pct'],
             'split_configured':     _split['configured'],
