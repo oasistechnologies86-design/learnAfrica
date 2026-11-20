@@ -7385,8 +7385,8 @@ def create_app() -> Flask:
             totals = db.execute(
                 """SELECT
                      COALESCE(SUM(amount), 0) AS collected,
-                     COALESCE(SUM(instructor_share), 0) AS instructor_earned,
-                     COALESCE(SUM(platform_share), 0) AS platform_earned
+                     COALESCE(SUM(CASE WHEN type IN ('purchase','quiz_extra_attempt') THEN instructor_share ELSE 0 END), 0) AS instructor_earned,
+                     COALESCE(SUM(CASE WHEN type IN ('purchase','quiz_extra_attempt') THEN platform_share ELSE 0 END), 0) AS platform_earned
                    FROM transactions
                    WHERE status='success'
                      AND type IN ('purchase','quiz_extra_attempt','instructor_registration')
@@ -7399,12 +7399,17 @@ def create_app() -> Flask:
                      AND type IN ('purchase','quiz_extra_attempt')
                      AND payout_status='paid' AND DATE(created_at) >= ?""", (reporting_from,)
             ).fetchone()
+            # Outstanding is earned course revenue minus completed payouts.
+            # Do not rely only on payout_status='pending': legacy successful
+            # transactions may have NULL/older status values and would vanish
+            # from the liability total.
             outstanding = db.execute(
                 """SELECT COALESCE(SUM(instructor_share), 0) AS amount
                    FROM transactions
                    WHERE status='success'
                      AND type IN ('purchase','quiz_extra_attempt')
-                     AND payout_status='pending' AND DATE(created_at) >= ?""", (reporting_from,)
+                     AND COALESCE(payout_status, 'pending') <> 'paid'
+                     AND DATE(created_at) >= ?""", (reporting_from,)
             ).fetchone()
             records = db.execute(
                 """SELECT id, record_type, category, amount, description, reference, created_at
@@ -7457,6 +7462,9 @@ def create_app() -> Flask:
             # This is a ledger estimate, not a bank or Paystack balance.
             remaining = collected - paid_amount - expenses - withdrawals
             outstanding_amount = float(outstanding['amount'] or 0)
+            # Keep the liability within total instructor earnings and avoid
+            # negative liabilities from inconsistent legacy payout markers.
+            outstanding_amount = min(max(0.0, outstanding_amount), max(0.0, instructor_earned - paid_amount))
             after_obligations = remaining - outstanding_amount
             return jsonify({
                 'currency': 'GHS',
