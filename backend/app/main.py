@@ -8342,6 +8342,8 @@ def create_app() -> Flask:
             role = g.current_user['role']
             if role == 'instructor':
                 _normalize_unpaid_transaction_splits(db, instructor_id=uid)
+            elif role in ('admin', 'superadmin'):
+                _normalize_unpaid_transaction_splits(db)
 
             where = []
             params = []
