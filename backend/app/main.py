@@ -7346,6 +7346,9 @@ def create_app() -> Flask:
             db = get_db()
             ensure_transactions_table(db)
             fee_column_ready = ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
+            fee_status_ready = ensure_column(db, 'transactions', 'paystack_fee_status', "TEXT DEFAULT 'unknown'")
+            if fee_status_ready:
+                db.execute("UPDATE transactions SET paystack_fee_status='actual' WHERE COALESCE(paystack_fee,0)>0 AND paystack_fee_status='unknown'")
             ensure_admin_financial_records_table(db)
             policy_row = db.execute("SELECT key FROM platform_config WHERE key='paystack_fee_policy'").fetchone()
             reporting_from = str(_paystack_fee_policy_read(db).get('effective_from') or '0001-01-01') if policy_row else '0001-01-01'
