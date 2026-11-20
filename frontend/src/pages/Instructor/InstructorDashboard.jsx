@@ -225,7 +225,7 @@ function EarningsCard({ stats, onChanged }) {
             <span className="font-semibold text-foreground">{formatPrice(grossRevenue)}</span>
           </div>
           <div className="flex justify-between text-muted-foreground">
-            <span>LearnAfrica platform fee</span>
+            <span>Paystack fee</span>
             <span className="font-medium">−{formatPrice(stats?.paystack_fees || 0)}</span>
           </div>
           <p className="text-[11px] text-muted-foreground -mt-1">
@@ -239,7 +239,7 @@ function EarningsCard({ stats, onChanged }) {
             </div>
           )}
           <div className="flex justify-between text-muted-foreground">
-            <span>Revenue after LearnAfrica fee</span>
+            <span>Revenue after Paystack fee</span>
             <span className="font-semibold text-foreground">{formatPrice(stats?.net_after_paystack ?? grossRevenue)}</span>
           </div>
           <div className="flex justify-between">
