@@ -94,6 +94,11 @@ try:
                 "VALUES (?,?,'purchase',?,?,?,?,?,?,?,?,?)",
                 tx
             )
+        db.execute(
+            "INSERT INTO transactions (id,receipt_id,type,user_id,amount,instructor_share,"
+            "platform_share,status,provider,paystack_fee) "
+            "VALUES ('tx-refund','receipt-refund','instructor_registration','admin-1',20,0,20,'refunded','paystack',0)"
+        )
         db.commit()
 
     app_client = app.test_client()
@@ -125,6 +130,12 @@ try:
     response = app_client.get('/api/admin/instructors/instructor-a/students')
     payload = response.get_json() or {}
     check('admin instructor view includes only that instructor’s course enrolments', response.status_code == 200 and payload.get('count') == 3, payload.get('count'))
+
+    response = app_client.get('/api/admin/financial-records')
+    payload = response.get_json() or {}
+    check('admin financial overview reports transactions marked refunded separately',
+          response.status_code == 200 and payload.get('refunded_transaction_count') == 1
+          and payload.get('refunded_transaction_value') == 20.0, payload)
 
     # Instructor may see all their own students, but cannot open another
     # instructor's course student list.

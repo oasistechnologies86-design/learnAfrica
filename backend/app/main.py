@@ -7368,6 +7368,12 @@ def create_app() -> Flask:
             withdrawal_total = db.execute(
                 "SELECT COALESCE(SUM(amount), 0) AS amount FROM admin_financial_records WHERE record_type='withdrawal'"
             ).fetchone()
+            refunded = db.execute(
+                """SELECT COUNT(*) AS count, COALESCE(SUM(amount), 0) AS amount
+                   FROM transactions
+                   WHERE status='refunded'
+                     AND type IN ('purchase','quiz_extra_attempt','instructor_registration')"""
+            ).fetchone()
 
             collected = float(totals['collected'] or 0)
             instructor_earned = float(totals['instructor_earned'] or 0)
@@ -7395,6 +7401,10 @@ def create_app() -> Flask:
                 'other_expenses': round(other_expenses, 2),
                 'paystack_fees': round(paystack_fees, 2),
                 'owner_withdrawals': round(withdrawals, 2),
+                # This is the original value of transactions marked refunded,
+                # not an assumed partial-refund amount or a new cash movement.
+                'refunded_transaction_value': round(float(refunded['amount'] or 0), 2),
+                'refunded_transaction_count': int(refunded['count'] or 0),
                 'estimated_remaining': round(remaining, 2),
                 'records': safe_list(records),
             })

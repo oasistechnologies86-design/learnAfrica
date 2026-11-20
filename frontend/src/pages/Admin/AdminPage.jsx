@@ -987,6 +987,7 @@ export default function AdminPage() {
                         ['Instructor payments made', financialSummary.instructor_paid],
                         ['Outstanding instructor earnings', financialSummary.instructor_outstanding],
                         ['Paystack processing fees', financialSummary.paystack_fees],
+                        ['Payments marked refunded (original transaction value)', financialSummary.refunded_transaction_value],
                         ['Other business expenses', financialSummary.other_expenses],
                         ['Owner withdrawals', financialSummary.owner_withdrawals],
                       ].map(([label, value]) => (
