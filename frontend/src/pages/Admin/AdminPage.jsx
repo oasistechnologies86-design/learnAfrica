@@ -148,6 +148,9 @@ export default function AdminPage() {
   const [savingSplit, setSavingSplit]   = useState(false);
   const [instructorSplitEdits, setInstructorSplitEdits] = useState({});
   const [savingInstructorSplit, setSavingInstructorSplit] = useState('');
+  const [paystackFeePolicy, setPaystackFeePolicy] = useState({ default_rate_pct: 0, effective_from: new Date().toISOString().slice(0, 10), instructor_overrides: {}, history: [] });
+  const [feePreview, setFeePreview] = useState(null);
+  const [savingFeePolicy, setSavingFeePolicy] = useState(false);
 
   const showStatus = (type, msg) => {
     setGlobalStatus({ type, msg });
@@ -169,6 +172,12 @@ export default function AdminPage() {
           API('/api/admin/revenue-split'),
         ]);
         setEarnings(earnData);
+        try {
+          const feePolicy = await API('/api/admin/paystack-fee-policy');
+          setPaystackFeePolicy(feePolicy);
+        } catch (feePolicyError) {
+          showStatus('error', 'Could not load Paystack fee settings: ' + feePolicyError.message);
+        }
         setSplitForm({ instructor_share: splitData.instructor_share });
         setInstructorSplitEdits(Object.fromEntries((earnData.instructors || []).map(inst => [inst.id, String(inst.instructor_share_pct ?? splitData.instructor_share)])));
         // This is independent of the existing earnings request so a ledger error
@@ -1065,6 +1074,66 @@ export default function AdminPage() {
                     {actionLoading === 'split' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                     Save Revenue Split
                   </Button>
+                </div>
+              </Card>
+
+              {/* Paystack fee policy: configuration is separate from actual provider fees and revenue split */}
+              <Card className="p-5 space-y-4">
+                <div>
+                  <h2 className="font-bold text-base">Paystack Fee Policy</h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Set a planning rate and its effective date. Verified Paystack transaction fees remain the accounting source of truth.
+                    This setting does not rewrite completed transactions or paid instructor payouts.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                  <label className="text-sm space-y-1">
+                    <span className="font-medium">Default fee rate (%)</span>
+                    <input type="number" min="0" max="100" step="0.01"
+                      value={paystackFeePolicy.default_rate_pct ?? 0}
+                      onChange={e => setPaystackFeePolicy(p => ({ ...p, default_rate_pct: e.target.value }))}
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2" />
+                  </label>
+                  <label className="text-sm space-y-1">
+                    <span className="font-medium">Effective from</span>
+                    <input type="date" value={paystackFeePolicy.effective_from || ''}
+                      onChange={e => { setPaystackFeePolicy(p => ({ ...p, effective_from: e.target.value })); setFeePreview(null); }}
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2" />
+                  </label>
+                  <div className="flex gap-2">
+                    <Button variant="outline" className="flex-1"
+                      onClick={async () => {
+                        try {
+                          const preview = await API('/api/admin/paystack-fee-policy/preview', { method: 'POST', body: JSON.stringify({ effective_from: paystackFeePolicy.effective_from }) });
+                          setFeePreview(preview);
+                        } catch (e) { showStatus('error', e.message); }
+                      }}>Preview impact</Button>
+                    <Button className="flex-1" disabled={savingFeePolicy}
+                      onClick={async () => {
+                        setSavingFeePolicy(true);
+                        try {
+                          const saved = await API('/api/admin/paystack-fee-policy', { method: 'PUT', body: JSON.stringify({
+                            default_rate_pct: Number(paystackFeePolicy.default_rate_pct),
+                            effective_from: paystackFeePolicy.effective_from,
+                          }) });
+                          setPaystackFeePolicy(saved);
+                          showStatus('success', 'Paystack fee policy saved.');
+                        } catch (e) { showStatus('error', e.message); }
+                        setSavingFeePolicy(false);
+                      }}>{savingFeePolicy ? 'Saving…' : 'Save fee policy'}</Button>
+                  </div>
+                </div>
+                {feePreview && (
+                  <div className="rounded-lg border border-border bg-muted/20 p-3 text-sm space-y-1">
+                    <p className="font-semibold">Historical impact preview from {feePreview.effective_from}</p>
+                    <p>{Number(feePreview.transaction_count || 0).toLocaleString()} successful course/quiz transactions</p>
+                    <p>Gross amount: {formatPrice(feePreview.gross || 0)}</p>
+                    <p>Recorded actual Paystack fees: {formatPrice(feePreview.actual_paystack_fees || 0)}</p>
+                    <p className="text-muted-foreground">{feePreview.note}</p>
+                  </div>
+                )}
+                <div className="text-xs text-muted-foreground">
+                  Instructor-specific overrides are stored separately from the existing revenue split. Resetting an override returns that instructor to the platform default. Historical fee changes are preview-only; any correction to paid history must be recorded as a separate, reviewed adjustment.
                 </div>
               </Card>
 
