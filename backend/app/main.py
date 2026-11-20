@@ -6992,6 +6992,8 @@ def create_app() -> Flask:
                 (row['id'],)
             ).fetchone() if paystack_fee_ready else {'amount': 0}
             actual_fees = float(fee_row['amount'] or 0) if fee_row else 0.0
+            if row['role'] in ('admin', 'superadmin'):
+                recorded_platform_share = max(0.0, gross - actual_fees)
             result.append({
                 'id': row['id'],
                 'name': row['name'],
@@ -7016,7 +7018,7 @@ def create_app() -> Flask:
             'total_gross': round(total_gross, 2),
             'paystack_fees_total': round(sum(float(row.get('paystack_fees') or 0) for row in result), 2),
             'net_after_paystack_total': round(max(0.0, total_gross - sum(float(row.get('paystack_fees') or 0) for row in result)), 2),
-            'platform_total': round(sum(float(row.get('platform_earnings') or 0) for row in result) + registration_fees_total, 2),
+            'platform_total': round(sum(float(row.get('platform_earnings') or 0) for row in result) + float(reg_row['t'] or 0), 2),
             'instructors_total': round(total_instr, 2),
             # Instructor registration fees are 100% platform income and belong
             # to no instructor, so they are reported as their own figure rather
