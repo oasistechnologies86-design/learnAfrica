@@ -183,7 +183,7 @@ export default function AdminPage() {
           setFeeOverrideEdits(Object.fromEntries(Object.entries(feePolicy.instructor_overrides || {}).map(([id, value]) => [id, String(value.rate_pct)])));
           setFeeOverrideDates(Object.fromEntries(Object.entries(feePolicy.instructor_overrides || {}).map(([id, value]) => [id, String(value.effective_from || feePolicy.effective_from || '')])));
         } catch (feePolicyError) {
-          showStatus('error', 'Could not load LearnAfrica platform fee settings: ' + feePolicyError.message);
+          showStatus('error', 'Could not load Paystack fee settings: ' + feePolicyError.message);
         }
         setSplitForm({ instructor_share: splitData.instructor_share });
         setInstructorSplitEdits(Object.fromEntries((earnData.instructors || []).map(inst => [inst.id, String(inst.instructor_share_pct ?? splitData.instructor_share)])));
@@ -1027,7 +1027,7 @@ export default function AdminPage() {
                     </select>
                     <input required maxLength={80} value={financialForm.category}
                       onChange={e => setFinancialForm(prev => ({ ...prev, category: e.target.value }))}
-                      placeholder="Category (e.g. LearnAfrica platform fees, hosting)"
+                      placeholder="Category (e.g. hosting, internet, equipment)"
                       className="h-10 rounded-lg border border-border bg-background px-3 text-sm" />
                     <input required type="number" min="0.01" step="0.01" value={financialForm.amount}
                       onChange={e => setFinancialForm(prev => ({ ...prev, amount: e.target.value }))}
@@ -1234,10 +1234,6 @@ export default function AdminPage() {
                         <p className="text-[10px] text-muted-foreground mt-1">Calculated from the saved fee policy</p>
                         <p className="text-[10px] text-muted-foreground mt-1"></p>
                       </div>
-                      <div className="text-left p-3 bg-warning/5 rounded-xl border border-warning/20">
-                        <p className="text-lg font-bold text-warning">{Number(earnings.paystack_fee_unverified_count || 0).toLocaleString()}</p>
-                        <p className="text-xs text-muted-foreground mt-1"></p>
-                      </div>
                       <div className="text-left p-3 bg-success/5 rounded-xl border border-success/20">
                         <p className="text-lg font-bold text-success">{formatPrice(earnings.net_after_paystack_total ?? earnings.total_gross ?? 0)}</p>
                         <p className="text-xs text-muted-foreground mt-1">Course revenue after Paystack fees</p>
@@ -1271,12 +1267,6 @@ export default function AdminPage() {
                               <td className="p-3 text-right font-medium">{formatPrice(inst.gross_revenue)}</td>
                               <td className="p-3 text-right text-muted-foreground">
                                 {formatPrice(inst.paystack_fees || 0)}
-                                {(Number(inst.paystack_fees_actual || 0) > 0 || Number(inst.paystack_fees_estimated || 0) > 0) && (
-                                  <p className="text-[10px] text-muted-foreground mt-1">Actual {formatPrice(inst.paystack_fees_actual || 0)} · Est. {formatPrice(inst.paystack_fees_estimated || 0)}</p>
-                                )}
-                                {Number(inst.paystack_fee_unverified_count || 0) > 0 && (
-                                  <p className="text-[10px] text-warning mt-1">{Number(inst.paystack_fee_unverified_count).toLocaleString()} missing verified fee</p>
-                                )}
                               </td>
                               <td className="p-3 text-right font-medium">{formatPrice(inst.net_after_paystack ?? inst.gross_revenue)}</td>
                               <td className="p-3 text-right font-bold text-primary">{formatPrice(inst.instructor_earnings)}</td>
@@ -1321,7 +1311,7 @@ export default function AdminPage() {
                                         onChange={e => setFeeOverrideEdits(prev => ({ ...prev, [inst.id]: e.target.value }))}
                                         className="w-24 rounded-md border border-border bg-background px-2 py-1 text-sm tabular-nums" />
                                       <span className="text-xs text-muted-foreground">%</span>
-                                      <input type="date" aria-label={"LearnAfrica platform fee effective date for " + inst.name}
+                                      <input type="date" aria-label={"Paystack fee effective date for " + inst.name}
                                         value={feeOverrideDates[inst.id] ?? paystackFeePolicy.effective_from ?? ''}
                                         onChange={e => setFeeOverrideDates(prev => ({ ...prev, [inst.id]: e.target.value }))}
                                         className="rounded-md border border-border bg-background px-2 py-1 text-xs" />
@@ -1862,7 +1852,7 @@ export default function AdminPage() {
                   </div>
                   <div className="rounded-xl bg-muted/30 p-3 text-center">
                     <p className="text-lg font-bold">{formatPrice(selectedUser.paystack_fees || 0)}</p>
-                    <p className="text-xs text-muted-foreground">LearnAfrica platform fees</p>
+                    <p className="text-xs text-muted-foreground">Paystack fees</p>
                   </div>
                   <div className="rounded-xl bg-muted/30 p-3 text-center">
                     <p className="text-lg font-bold">{formatPrice(selectedUser.net_after_paystack || 0)}</p>
@@ -1915,7 +1905,7 @@ export default function AdminPage() {
                               {c.price ? ` · Course price ${formatPrice(c.price)}` : ''}
                             </p>
                             <p className="mt-1 text-xs text-muted-foreground">
-                              Gross {formatPrice(c.gross_revenue || 0)} · LearnAfrica platform fees {formatPrice(c.paystack_fees || 0)}
+                              Gross {formatPrice(c.gross_revenue || 0)} · Paystack feess {formatPrice(c.paystack_fees || 0)}
                             </p>
                             <p className="text-xs text-muted-foreground">
                               After Paystack {formatPrice(c.net_after_paystack || 0)} · Instructor {formatPrice(c.instructor_earnings || 0)} · Platform {formatPrice(c.platform_earnings || 0)}
