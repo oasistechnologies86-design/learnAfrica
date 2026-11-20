@@ -9193,6 +9193,10 @@ def create_app() -> Flask:
                                     "UPDATE transactions SET paystack_fee=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
                                     (fee_amount, tx['id'])
                                 )
+                                # Deduct the actual provider fee before applying
+                                # the transaction's original instructor/platform
+                                # split, but never rewrite an already-paid payout.
+                                _apply_verified_paystack_fee_to_unpaid_shares(db, tx['id'], fee_amount)
                                 db.commit()
                             except (TypeError, ValueError):
                                 app.logger.warning('Invalid Paystack fee amount for transaction %s', tx['id'])
@@ -10080,6 +10084,43 @@ def create_app() -> Flask:
                 if db and hasattr(db, '_conn'): db._conn.rollback()
             except Exception: pass
             return jsonify({'error': 'Failed'}), 500
+
+
+    def _apply_verified_paystack_fee_to_unpaid_shares(db, transaction_id, fee_amount):
+        """Allocate the provider-confirmed fee before the existing split.
+
+        The original transaction's instructor/platform ratio is the split
+        snapshot, so later changes to platform settings cannot alter it.
+        Paid payouts are intentionally immutable; they need a separately
+        approved adjustment rather than a silent rewrite.
+        """
+        from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+        row = db.execute(
+            "SELECT amount, instructor_share, platform_share, payout_status, type "
+            "FROM transactions WHERE id=?",
+            (transaction_id,)
+        ).fetchone()
+        if not row or row['type'] not in ('purchase', 'quiz_extra_attempt'):
+            return False
+        if str(row['payout_status'] or '').lower() == 'paid':
+            return False
+        try:
+            gross = Decimal(str(row['amount'] or 0)).quantize(Decimal('0.01'))
+            fee = Decimal(str(fee_amount or 0)).quantize(Decimal('0.01'))
+            old_instructor = Decimal(str(row['instructor_share'] or 0))
+        except (InvalidOperation, TypeError, ValueError):
+            return False
+        if gross <= 0 or fee < 0 or fee > gross:
+            return False
+        net = (gross - fee).quantize(Decimal('0.01'))
+        ratio = max(Decimal('0'), min(Decimal('1'), old_instructor / gross))
+        instructor_net = (net * ratio).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        platform_net = (net - instructor_net).quantize(Decimal('0.01'))
+        db.execute(
+            "UPDATE transactions SET instructor_share=?, platform_share=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+            (float(instructor_net), float(platform_net), transaction_id)
+        )
+        return True
 
 
     # ── PAYSTACK FEE POLICY — configuration and auditable preview only
