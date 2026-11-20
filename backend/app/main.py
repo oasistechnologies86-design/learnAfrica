@@ -3139,13 +3139,20 @@ def create_app() -> Flask:
     @instructor_required
     def instructor_courses():
         db = get_db()
+        ensure_transactions_table(db)
+        ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
         rows = db.execute('''SELECT c.*,
                                   u.bio as instructor_bio,
                                   u.instructor_title,
                                   u.instructor_field as instructor_specialization,
                                   (SELECT COUNT(*) FROM user_enrollments WHERE course_id=c.id) as student_count,
                                   (SELECT COUNT(*) FROM lessons WHERE course_id=c.id) as lesson_count,
-                                  (SELECT ROUND(AVG(rating),1) FROM reviews WHERE course_id=c.id) as real_rating
+                                  (SELECT ROUND(AVG(rating),1) FROM reviews WHERE course_id=c.id) as real_rating,
+                                  (SELECT COALESCE(SUM(t.amount),0) FROM transactions t WHERE t.course_id=c.id AND t.type IN ('purchase','quiz_extra_attempt') AND t.status='success') AS gross_revenue,
+                                  (SELECT COALESCE(SUM(CASE WHEN t.provider='paystack' THEN COALESCE(t.paystack_fee,0) ELSE 0 END),0) FROM transactions t WHERE t.course_id=c.id AND t.type IN ('purchase','quiz_extra_attempt') AND t.status='success') AS paystack_fees,
+                                  (SELECT COALESCE(SUM(t.amount),0) - COALESCE(SUM(CASE WHEN t.provider='paystack' THEN COALESCE(t.paystack_fee,0) ELSE 0 END),0) FROM transactions t WHERE t.course_id=c.id AND t.type IN ('purchase','quiz_extra_attempt') AND t.status='success') AS net_after_paystack,
+                                  (SELECT COALESCE(SUM(t.instructor_share),0) FROM transactions t WHERE t.course_id=c.id AND t.type IN ('purchase','quiz_extra_attempt') AND t.status='success') AS instructor_earnings,
+                                  (SELECT COALESCE(SUM(t.platform_share),0) FROM transactions t WHERE t.course_id=c.id AND t.type IN ('purchase','quiz_extra_attempt') AND t.status='success') AS platform_earnings
                              FROM courses c
                              LEFT JOIN users u ON u.id=c.instructor_id
                              WHERE c.instructor_id=? ORDER BY c.created_at DESC''',
@@ -3939,7 +3946,7 @@ def create_app() -> Flask:
                 'total_courses': 0, 'total_students': 0, 'total_earnings': 0,
                 'average_rating': 0, 'completion_rate': 0,
                 'monthly_enrollments': [], 'course_performance': [], 'recent_students': [],
-                'gross_revenue': 0, 'platform_share': 0,
+                'gross_revenue': 0, 'platform_share': 0, 'paystack_fees': 0, 'net_after_paystack': 0,
                 'instructor_share_pct': _split['instructor_pct'],
                 'platform_share_pct':   _split['admin_pct'],
                 'split_configured':     _split['configured'],
@@ -3990,14 +3997,31 @@ def create_app() -> Flask:
         mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
         monthly_enrollments = [{'month': mn[int(r['m'])-1], 'enrollments': r['c']} for r in monthly]
         course_perf = []
-        for r in db.execute('SELECT id,title,rating FROM courses WHERE id IN (' + ph + ') LIMIT 5', course_ids).fetchall():
+        for r in db.execute('SELECT id,title,rating FROM courses WHERE id IN (' + ph + ') ORDER BY title', course_ids).fetchall():
             p = db.execute('SELECT COUNT(*) as t, COUNT(CASE WHEN progress=100 THEN 1 END) as d FROM user_enrollments WHERE course_id=?',(r['id'],)).fetchone()
             t_c = int(p['t'] or 0) if p else 0
             d_c = int(p['d'] or 0) if p else 0
-            course_perf.append({'id': r['id'], 'title':r['title'],'name':r['title'],'students':t_c,
+            course_revenue = db.execute(
+                "SELECT COALESCE(SUM(amount), 0) AS gross, "
+                "COALESCE(SUM(CASE WHEN provider='paystack' THEN COALESCE(paystack_fee, 0) ELSE 0 END), 0) AS fees, "
+                "COALESCE(SUM(instructor_share), 0) AS instructor_share, "
+                "COALESCE(SUM(platform_share), 0) AS platform_share "
+                "FROM transactions WHERE course_id=? AND type IN ('purchase','quiz_extra_attempt') AND status='success'",
+                (r['id'],)
+            ).fetchone()
+            course_gross = float(course_revenue['gross'] or 0) if course_revenue else 0.0
+            course_fees = float(course_revenue['fees'] or 0) if course_revenue else 0.0
+            course_perf.append({
+                'id': r['id'], 'title': r['title'], 'name': r['title'], 'students': t_c,
                 'completion_rate': int((d_c/t_c)*100) if t_c else 0,
                 'completion': int((d_c/t_c)*100) if t_c else 0,
-                'rating': float(r['rating'] or 0)})
+                'rating': float(r['rating'] or 0),
+                'gross_revenue': round(course_gross, 2),
+                'paystack_fees': round(course_fees, 2),
+                'net_after_paystack': round(max(0.0, course_gross-course_fees), 2),
+                'instructor_earnings': round(float(course_revenue['instructor_share'] or 0), 2) if course_revenue else 0.0,
+                'platform_earnings': round(float(course_revenue['platform_share'] or 0), 2) if course_revenue else 0.0,
+            })
         all_e = db.execute('SELECT COUNT(*) as t, COUNT(CASE WHEN progress=100 THEN 1 END) as d FROM user_enrollments WHERE course_id IN (' + ph + ')', course_ids).fetchone()
         completion_rate = int((all_e['d']/all_e['t'])*100) if all_e and all_e['t'] else 0
         recent = db.execute(
@@ -4095,13 +4119,27 @@ def create_app() -> Flask:
         try:
             db = get_db()
             uid = g.current_user['user_id']
+            ensure_transactions_table(db)
             rows = db.execute(
-                """SELECT ue.user_id AS student_id, u.name, u.email, u.phone,
-                          c.id AS course_id, c.title AS course_title,
-                          ue.progress, CAST(ue.enrolled_at AS TEXT) AS enrolled_at
+                """SELECT ue.user_id AS student_id, u.name, u.email, u.phone, u.avatar,
+                          c.id AS course_id, c.title AS course_title, c.is_free,
+                          ue.progress, CAST(ue.enrolled_at AS TEXT) AS enrolled_at,
+                          CAST(ue.expires_at AS TEXT) AS expires_at,
+                          CASE WHEN ue.expires_at IS NOT NULL AND ue.expires_at < CURRENT_TIMESTAMP
+                               THEN 'expired' ELSE 'active' END AS enrollment_status,
+                          tx.status AS transaction_status, tx.amount AS payment_amount,
+                          tx.currency AS payment_currency, tx.payment_method,
+                          tx.provider AS payment_provider, tx.receipt_id,
+                          CAST(tx.created_at AS TEXT) AS payment_date
                    FROM user_enrollments ue
                    JOIN users u ON u.id = ue.user_id
                    JOIN courses c ON c.id = ue.course_id
+                   LEFT JOIN transactions tx ON tx.id = (
+                       SELECT t2.id FROM transactions t2
+                       WHERE t2.user_id = ue.user_id AND t2.course_id = ue.course_id
+                         AND t2.type = 'purchase'
+                       ORDER BY t2.created_at DESC, t2.id DESC LIMIT 1
+                   )
                    WHERE c.instructor_id = ?
                    ORDER BY ue.enrolled_at DESC, u.name ASC
                    LIMIT 5000""",
@@ -4112,6 +4150,14 @@ def create_app() -> Flask:
                 item = dict(row)
                 item['progress'] = max(0, min(100, int(item.get('progress') or 0)))
                 item['completed'] = item['progress'] >= 100
+                item['progress_status'] = 'completed' if item['progress'] >= 100 else ('not_started' if item['progress'] <= 0 else 'in_progress')
+                if item.get('is_free'):
+                    item['payment_status'] = 'not_required'
+                elif not item.get('transaction_status'):
+                    item['payment_status'] = 'no_payment'
+                else:
+                    item['payment_status'] = str(item['transaction_status']).lower()
+                item.pop('is_free', None)
                 students.append(item)
             return jsonify({'students': students, 'count': len(students)})
         except Exception as e:
@@ -4843,13 +4889,20 @@ def create_app() -> Flask:
     @admin_required
     def admin_courses():
         db = get_db()
+        ensure_transactions_table(db)
+        ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
         # Optional ?instructor_id= lets an admin list one instructor's courses
         # when supervising a specific account.
         instructor_id = request.args.get('instructor_id')
         sql = (
             'SELECT c.*, u.name as instructor_name,'
             ' COALESCE(e.cnt, 0) as student_count,'
-            ' COALESCE(rv.avg_r, 0) as real_rating'
+            ' COALESCE(rv.avg_r, 0) as real_rating,'
+            " COALESCE((SELECT SUM(t.amount) FROM transactions t WHERE t.course_id=c.id AND t.type IN ('purchase','quiz_extra_attempt') AND t.status='success'),0) AS gross_revenue,"
+            " COALESCE((SELECT SUM(CASE WHEN t.provider='paystack' THEN COALESCE(t.paystack_fee,0) ELSE 0 END) FROM transactions t WHERE t.course_id=c.id AND t.type IN ('purchase','quiz_extra_attempt') AND t.status='success'),0) AS paystack_fees,"
+            " COALESCE((SELECT SUM(t.amount) - SUM(CASE WHEN t.provider='paystack' THEN COALESCE(t.paystack_fee,0) ELSE 0 END) FROM transactions t WHERE t.course_id=c.id AND t.type IN ('purchase','quiz_extra_attempt') AND t.status='success'),0) AS net_after_paystack,"
+            " COALESCE((SELECT SUM(t.instructor_share) FROM transactions t WHERE t.course_id=c.id AND t.type IN ('purchase','quiz_extra_attempt') AND t.status='success'),0) AS instructor_earnings,"
+            " COALESCE((SELECT SUM(t.platform_share) FROM transactions t WHERE t.course_id=c.id AND t.type IN ('purchase','quiz_extra_attempt') AND t.status='success'),0) AS platform_earnings"
             ' FROM courses c'
             ' JOIN users u ON u.id = c.instructor_id'
             ' LEFT JOIN (SELECT course_id, COUNT(*) as cnt'
@@ -4867,6 +4920,176 @@ def create_app() -> Flask:
         rows = db.execute(sql, params).fetchall()
         return jsonify({'courses': safe_list(rows)})
     
+    # Student records are returned as enrolments, not collapsed into one row per person.
+    # This lets an instructor see a learner under each course they joined.
+    def _student_enrolment_page(db, scope_sql, scope_params):
+        ensure_transactions_table(db)
+        try:
+            page = max(1, int(request.args.get('page', 1)))
+        except (TypeError, ValueError):
+            page = 1
+        try:
+            per_page = min(50, max(5, int(request.args.get('per_page', 10))))
+        except (TypeError, ValueError):
+            per_page = 10
+
+        where_parts = [scope_sql]
+        params = list(scope_params)
+        search_term = (request.args.get('search') or '').strip()[:120]
+        if search_term:
+            where_parts.append(
+                "(LOWER(COALESCE(u.name, '')) LIKE ? OR LOWER(COALESCE(u.email, '')) LIKE ? "
+                "OR LOWER(COALESCE(c.title, '')) LIKE ?)"
+            )
+            like = '%' + search_term.lower() + '%'
+            params.extend([like, like, like])
+
+        progress_filter = (request.args.get('progress') or 'all').lower()
+        if progress_filter == 'completed':
+            where_parts.append('COALESCE(ue.progress, 0) >= 100')
+        elif progress_filter == 'in_progress':
+            where_parts.append('COALESCE(ue.progress, 0) > 0 AND COALESCE(ue.progress, 0) < 100')
+        elif progress_filter == 'not_started':
+            where_parts.append('COALESCE(ue.progress, 0) <= 0')
+
+        payment_filter = (request.args.get('payment') or 'all').lower()
+        if payment_filter == 'paid':
+            where_parts.append("COALESCE(c.is_free, 0) <> 1 AND LOWER(COALESCE(tx.status, '')) IN ('success','completed','paid')")
+        elif payment_filter == 'pending':
+            where_parts.append("COALESCE(c.is_free, 0) <> 1 AND LOWER(COALESCE(tx.status, '')) = 'pending'")
+        elif payment_filter == 'failed':
+            where_parts.append("COALESCE(c.is_free, 0) <> 1 AND LOWER(COALESCE(tx.status, '')) IN ('failed','cancelled','abandoned','reversed','refunded')")
+        elif payment_filter == 'not_required':
+            where_parts.append('COALESCE(c.is_free, 0) = 1')
+        elif payment_filter == 'no_payment':
+            where_parts.append("COALESCE(c.is_free, 0) <> 1 AND tx.id IS NULL")
+
+        enrollment_filter = (request.args.get('enrollment') or 'all').lower()
+        if enrollment_filter == 'expired':
+            where_parts.append('ue.expires_at IS NOT NULL AND ue.expires_at < CURRENT_TIMESTAMP')
+        elif enrollment_filter == 'active':
+            where_parts.append('(ue.expires_at IS NULL OR ue.expires_at >= CURRENT_TIMESTAMP)')
+
+        from_sql = """
+            FROM user_enrollments ue
+            JOIN users u ON u.id = ue.user_id
+            JOIN courses c ON c.id = ue.course_id
+            LEFT JOIN transactions tx ON tx.id = (
+                SELECT t2.id FROM transactions t2
+                WHERE t2.user_id = ue.user_id AND t2.course_id = ue.course_id
+                  AND t2.type = 'purchase'
+                ORDER BY t2.created_at DESC, t2.id DESC LIMIT 1
+            )
+        """
+        where_sql = ' WHERE ' + ' AND '.join(where_parts)
+        total_row = db.execute('SELECT COUNT(*) AS total ' + from_sql + where_sql, params).fetchone()
+        total = int(total_row['total'] or 0) if total_row else 0
+        offset = (page - 1) * per_page
+        rows = db.execute(
+            """
+            SELECT ue.user_id AS student_id, u.name, u.email, u.phone, u.avatar,
+                   c.id AS course_id, c.title AS course_title, c.is_free,
+                   ue.progress, CAST(ue.enrolled_at AS TEXT) AS enrolled_at,
+                   CAST(ue.expires_at AS TEXT) AS expires_at,
+                   CASE WHEN COALESCE(ue.progress, 0) >= 100 THEN 'completed'
+                        WHEN COALESCE(ue.progress, 0) <= 0 THEN 'not_started'
+                        ELSE 'in_progress' END AS progress_status,
+                   CASE WHEN ue.expires_at IS NOT NULL AND ue.expires_at < CURRENT_TIMESTAMP
+                        THEN 'expired' ELSE 'active' END AS enrollment_status,
+                   CASE WHEN COALESCE(c.is_free, 0) = 1 THEN 'not_required'
+                        WHEN tx.id IS NULL THEN 'no_payment'
+                        ELSE LOWER(COALESCE(tx.status, 'pending')) END AS payment_status,
+                   tx.status AS transaction_status, tx.amount AS payment_amount,
+                   tx.currency AS payment_currency, tx.payment_method,
+                   tx.provider AS payment_provider, tx.receipt_id,
+                   CAST(tx.created_at AS TEXT) AS payment_date
+            """ + from_sql + where_sql +
+            ' ORDER BY ue.enrolled_at DESC, u.name ASC LIMIT ? OFFSET ?',
+            params + [per_page, offset]
+        ).fetchall()
+        students = []
+        for row in rows:
+            item = dict(row)
+            item['progress'] = max(0, min(100, int(item.get('progress') or 0)))
+            item['completed'] = item['progress'] >= 100
+            item.pop('is_free', None)
+            students.append(item)
+        return {
+            'students': safe_list(students),
+            'count': total,
+            'page': page,
+            'per_page': per_page,
+            'total_pages': max(1, (total + per_page - 1) // per_page),
+        }
+
+    @app.route('/api/admin/courses/<cid>/students', methods=['GET'])
+    @admin_required
+    def admin_course_students(cid):
+        db = get_db()
+        course = db.execute(
+            'SELECT id, title, instructor_id, price, is_free FROM courses WHERE id=?', (cid,)
+        ).fetchone()
+        if not course:
+            return jsonify({'error': 'Course not found'}), 404
+        ensure_transactions_table(db)
+        ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
+        financial = db.execute(
+            """SELECT COALESCE(SUM(amount), 0) AS gross,
+                      COALESCE(SUM(CASE WHEN provider='paystack' THEN COALESCE(paystack_fee, 0) ELSE 0 END), 0) AS fees,
+                      COALESCE(SUM(instructor_share), 0) AS instructor_share,
+                      COALESCE(SUM(platform_share), 0) AS platform_share,
+                      COUNT(*) AS transaction_count
+               FROM transactions
+               WHERE course_id=? AND type IN ('purchase','quiz_extra_attempt') AND status='success'""",
+            (cid,)
+        ).fetchone()
+        summary = {
+            'gross_revenue': round(float(financial['gross'] or 0), 2),
+            'paystack_fees': round(float(financial['fees'] or 0), 2),
+            'net_after_paystack': round(max(0.0, float(financial['gross'] or 0) - float(financial['fees'] or 0)), 2),
+            'instructor_earnings': round(float(financial['instructor_share'] or 0), 2),
+            'platform_earnings': round(float(financial['platform_share'] or 0), 2),
+            'transaction_count': int(financial['transaction_count'] or 0),
+            'student_count': int(db.execute(
+                'SELECT COUNT(*) AS total FROM user_enrollments WHERE course_id=?', (cid,)
+            ).fetchone()['total'] or 0),
+        }
+        return jsonify({
+            'course': safe_dict(course),
+            'summary': summary,
+            **_student_enrolment_page(db, 'ue.course_id=?', [cid]),
+        })
+
+    @app.route('/api/admin/instructors/<uid>/students', methods=['GET'])
+    @admin_required
+    def admin_instructor_students(uid):
+        db = get_db()
+        instructor = db.execute(
+            "SELECT id, name, email FROM users WHERE id=? AND role='instructor'", (uid,)
+        ).fetchone()
+        if not instructor:
+            return jsonify({'error': 'Instructor not found'}), 404
+        return jsonify({
+            'instructor': safe_dict(instructor),
+            **_student_enrolment_page(db, 'c.instructor_id=?', [uid]),
+        })
+
+    @app.route('/api/instructor/courses/<cid>/students', methods=['GET'])
+    @instructor_required
+    def instructor_course_students(cid):
+        db = get_db()
+        course = db.execute(
+            'SELECT id, title, instructor_id FROM courses WHERE id=?', (cid,)
+        ).fetchone()
+        if not course:
+            return jsonify({'error': 'Course not found'}), 404
+        if course['instructor_id'] != g.current_user['user_id'] and g.current_user['role'] not in ('admin', 'superadmin'):
+            return jsonify({'error': 'Forbidden'}), 403
+        return jsonify({
+            'course': {'id': course['id'], 'title': course['title']},
+            **_student_enrolment_page(db, 'ue.course_id=?', [cid]),
+        })
+
     @app.route('/api/admin/courses/<cid>/status', methods=['PUT'])
     @admin_required
     def set_course_status(cid):
@@ -5331,9 +5554,18 @@ def create_app() -> Flask:
         # Instructor-specific extras: courses taught + total earnings/students
         if ud.get('role') == 'instructor':
             try:
+                ensure_transactions_table(db)
+                ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
                 cr = db.execute(
-                    'SELECT id, title, enrollments, rating, price, COALESCE(status,'
-                    " 'published') as status FROM courses WHERE instructor_id=? ORDER BY created_at DESC",
+                    """SELECT c.id, c.title,
+                              (SELECT COUNT(*) FROM user_enrollments ue WHERE ue.course_id=c.id) AS student_count,
+                              c.enrollments, c.rating, c.price, COALESCE(c.status, 'published') AS status,
+                              COALESCE((SELECT SUM(t.amount) FROM transactions t WHERE t.course_id=c.id AND t.type IN ('purchase','quiz_extra_attempt') AND t.status='success'),0) AS gross_revenue,
+                              COALESCE((SELECT SUM(CASE WHEN t.provider='paystack' THEN COALESCE(t.paystack_fee,0) ELSE 0 END) FROM transactions t WHERE t.course_id=c.id AND t.type IN ('purchase','quiz_extra_attempt') AND t.status='success'),0) AS paystack_fees,
+                              COALESCE((SELECT SUM(t.amount) - SUM(CASE WHEN t.provider='paystack' THEN COALESCE(t.paystack_fee,0) ELSE 0 END) FROM transactions t WHERE t.course_id=c.id AND t.type IN ('purchase','quiz_extra_attempt') AND t.status='success'),0) AS net_after_paystack,
+                              COALESCE((SELECT SUM(t.instructor_share) FROM transactions t WHERE t.course_id=c.id AND t.type IN ('purchase','quiz_extra_attempt') AND t.status='success'),0) AS instructor_earnings,
+                              COALESCE((SELECT SUM(t.platform_share) FROM transactions t WHERE t.course_id=c.id AND t.type IN ('purchase','quiz_extra_attempt') AND t.status='success'),0) AS platform_earnings
+                       FROM courses c WHERE c.instructor_id=? ORDER BY c.created_at DESC""",
                     (uid,)
                 ).fetchall()
                 ud['courses_taught'] = [dict(r) for r in cr]
@@ -5351,11 +5583,20 @@ def create_app() -> Flask:
                     ud['courses_taught'] = []
             try:
                 earn = db.execute(
-                    "SELECT COALESCE(SUM(instructor_share),0) as earned FROM transactions"
-                    " WHERE instructor_id=? AND status IN ('success','completed','paid')",
+                    """SELECT COALESCE(SUM(amount),0) AS gross,
+                              COALESCE(SUM(CASE WHEN provider='paystack' THEN COALESCE(paystack_fee,0) ELSE 0 END),0) AS fees,
+                              COALESCE(SUM(instructor_share),0) AS earned,
+                              COALESCE(SUM(platform_share),0) AS platform
+                       FROM transactions
+                       WHERE instructor_id=? AND type IN ('purchase','quiz_extra_attempt')
+                         AND status IN ('success','completed','paid')""",
                     (uid,)
                 ).fetchone()
-                ud['total_earned'] = float(earn['earned']) if earn else 0.0
+                ud['gross_revenue'] = round(float(earn['gross'] or 0), 2) if earn else 0.0
+                ud['paystack_fees'] = round(float(earn['fees'] or 0), 2) if earn else 0.0
+                ud['net_after_paystack'] = round(max(0.0, ud['gross_revenue'] - ud['paystack_fees']), 2)
+                ud['total_earned'] = round(float(earn['earned'] or 0), 2) if earn else 0.0
+                ud['platform_earnings'] = round(float(earn['platform'] or 0), 2) if earn else 0.0
             except Exception:
                 ud['total_earned'] = 0.0
             try:

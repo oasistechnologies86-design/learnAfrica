@@ -461,7 +461,11 @@ export function InstructorDashboard() {
   const [studentsError, setStudentsError] = useState('');
   const [studentSearch, setStudentSearch] = useState('');
   const [studentCourse, setStudentCourse] = useState('all');
-  const ITEMS_PER_PAGE = 5;
+  const [studentProgress, setStudentProgress] = useState('all');
+  const [studentPayment, setStudentPayment] = useState('all');
+  const [studentEnrollment, setStudentEnrollment] = useState('all');
+  const [studentPage, setStudentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   const getInitials = n => n ? n.split(' ').map(x=>x[0]).join('').toUpperCase().slice(0,2) : '??';
 
@@ -515,8 +519,16 @@ export function InstructorDashboard() {
     const matchesSearch = !query || [
       student.name, student.email, student.phone, student.course_title,
     ].some(value => String(value || '').toLowerCase().includes(query));
-    return matchesSearch && (studentCourse === 'all' || student.course_id === studentCourse);
+    const matchesCourse = studentCourse === 'all' || student.course_id === studentCourse;
+    const matchesProgress = studentProgress === 'all' || student.progress_status === studentProgress;
+    const matchesPayment = studentPayment === 'all' || student.payment_status === studentPayment;
+    const matchesEnrollment = studentEnrollment === 'all' || student.enrollment_status === studentEnrollment;
+    return matchesSearch && matchesCourse && matchesProgress && matchesPayment && matchesEnrollment;
   });
+  const studentTotalPages = Math.max(1, Math.ceil(filteredMyStudents.length / ITEMS_PER_PAGE));
+  const paginatedMyStudents = filteredMyStudents.slice(
+    (studentPage - 1) * ITEMS_PER_PAGE, studentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <div className="space-y-8 pb-10">
@@ -601,6 +613,11 @@ export function InstructorDashboard() {
                   <th className="text-left p-3 font-medium text-muted-foreground">Course</th>
                   <th className="text-center p-3 font-medium text-muted-foreground">Students</th>
                   <th className="text-center p-3 font-medium text-muted-foreground">Completion</th>
+                  <th className="text-right p-3 font-medium text-muted-foreground">Gross</th>
+                  <th className="text-right p-3 font-medium text-muted-foreground">Paystack fees</th>
+                  <th className="text-right p-3 font-medium text-muted-foreground">After fees</th>
+                  <th className="text-right p-3 font-medium text-muted-foreground">Your share</th>
+                  <th className="text-right p-3 font-medium text-muted-foreground">Platform share</th>
                   <th className="text-center p-3 font-medium text-muted-foreground">Rating</th>
                 </tr>
               </thead>
@@ -610,9 +627,15 @@ export function InstructorDashboard() {
                     <td className="p-3 font-medium max-w-[180px] truncate">{c.title}</td>
                     <td className="p-3 text-center">{c.students}</td>
                     <td className="p-3 text-center">{c.completion_rate}%</td>
-                    <td className="p-3 text-center flex items-center justify-center gap-1">
-                      <Star className="h-3 w-3 fill-warning text-warning" />
-                      {c.rating || '—'}
+                    <td className="p-3 text-right tabular-nums">{formatPrice(c.gross_revenue || 0)}</td>
+                    <td className="p-3 text-right tabular-nums">{formatPrice(c.paystack_fees || 0)}</td>
+                    <td className="p-3 text-right tabular-nums">{formatPrice(c.net_after_paystack || 0)}</td>
+                    <td className="p-3 text-right font-semibold tabular-nums">{formatPrice(c.instructor_earnings || 0)}</td>
+                    <td className="p-3 text-right tabular-nums">{formatPrice(c.platform_earnings || 0)}</td>
+                    <td className="p-3 text-center">
+                      <span className="inline-flex items-center justify-center gap-1">
+                        <Star className="h-3 w-3 fill-warning text-warning" />{c.rating || '—'}
+                      </span>
                     </td>
                   </tr>
                 ))}
@@ -660,7 +683,7 @@ export function InstructorDashboard() {
       )}
 
       {/* Full student directory, restricted by the backend to this instructor's courses */}
-      <Card className="border-border/50 shadow-sm overflow-hidden">
+      <Card id="my-students" className="border-border/50 shadow-sm overflow-hidden">
         <CardHeader className="border-b border-border pb-3">
           <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
             My Students
@@ -668,17 +691,39 @@ export function InstructorDashboard() {
           <p className="text-xs text-muted-foreground">Students enrolled in your courses.</p>
         </CardHeader>
         <CardContent className="p-4 space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input value={studentSearch} onChange={e => setStudentSearch(e.target.value)}
+              <input value={studentSearch} onChange={e => { setStudentSearch(e.target.value); setStudentPage(1); }}
                 placeholder="Search name, email, phone or course"
                 className="h-10 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-sm" />
             </div>
-            <select value={studentCourse} onChange={e => setStudentCourse(e.target.value)}
+            <select value={studentCourse} onChange={e => { setStudentCourse(e.target.value); setStudentPage(1); }}
               className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
               <option value="all">All my courses</option>
               {studentCourses.map(course => <option key={course.id} value={course.id}>{course.title}</option>)}
+            </select>
+            <select value={studentProgress} onChange={e => { setStudentProgress(e.target.value); setStudentPage(1); }}
+              className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
+              <option value="all">All progress</option>
+              <option value="not_started">Not started</option>
+              <option value="in_progress">In progress</option>
+              <option value="completed">Completed</option>
+            </select>
+            <select value={studentPayment} onChange={e => { setStudentPayment(e.target.value); setStudentPage(1); }}
+              className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
+              <option value="all">All payment statuses</option>
+              <option value="paid">Paid</option>
+              <option value="pending">Pending</option>
+              <option value="failed">Failed</option>
+              <option value="not_required">Not required</option>
+              <option value="no_payment">No payment record</option>
+            </select>
+            <select value={studentEnrollment} onChange={e => { setStudentEnrollment(e.target.value); setStudentPage(1); }}
+              className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
+              <option value="all">All enrolments</option>
+              <option value="active">Active</option>
+              <option value="expired">Expired</option>
             </select>
           </div>
           {studentsLoading ? (
@@ -691,10 +736,10 @@ export function InstructorDashboard() {
                 <thead><tr className="border-b border-border text-left text-xs text-muted-foreground">
                   <th className="py-2 pr-3">Student</th><th className="py-2 pr-3">Course</th>
                   <th className="py-2 pr-3">Enrolled</th><th className="py-2 pr-3 text-right">Progress</th>
-                  <th className="py-2 text-right">Status</th>
+                  <th className="py-2 pr-3 text-right">Payment</th><th className="py-2 text-right">Status</th>
                 </tr></thead>
                 <tbody>
-                  {filteredMyStudents.map((student, index) => (
+                  {paginatedMyStudents.map((student, index) => (
                     <tr key={student.student_id + ':' + student.course_id + ':' + index} className="border-b border-border/40">
                       <td className="py-3 pr-3">
                         <p className="font-medium">{student.name || 'Student'}</p>
@@ -703,9 +748,21 @@ export function InstructorDashboard() {
                       <td className="py-3 pr-3">{student.course_title}</td>
                       <td className="py-3 pr-3 text-xs text-muted-foreground">{student.enrolled_at ? String(student.enrolled_at).slice(0, 10) : '—'}</td>
                       <td className="py-3 pr-3 text-right tabular-nums">{student.progress}%</td>
+                      <td className="py-3 pr-3 text-right">
+                        <span className={cn('rounded-full px-2 py-1 text-2xs font-semibold',
+                          ['success','completed','paid'].includes(student.payment_status) ? 'bg-success/10 text-success' :
+                          student.payment_status === 'pending' ? 'bg-warning/10 text-warning' :
+                          ['failed','cancelled','refunded','reversed'].includes(student.payment_status) ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground')}>
+                          {student.payment_status === 'not_required' ? 'Not required' :
+                            student.payment_status === 'no_payment' ? 'No record' :
+                            student.payment_status === 'success' ? 'Paid' : (student.payment_status || 'Unknown').replace(/_/g, ' ')}
+                        </span>
+                      </td>
                       <td className="py-3 text-right">
-                        <span className={cn('rounded-full px-2 py-1 text-2xs font-semibold', student.completed ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground')}>
-                          {student.completed ? 'Completed' : 'In progress'}
+                        <span className={cn('rounded-full px-2 py-1 text-2xs font-semibold',
+                          student.enrollment_status === 'expired' ? 'bg-destructive/10 text-destructive' :
+                          student.completed ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground')}>
+                          {student.enrollment_status === 'expired' ? 'Expired' : student.completed ? 'Completed' : 'Active'}
                         </span>
                       </td>
                     </tr>
@@ -718,7 +775,20 @@ export function InstructorDashboard() {
               {myStudents.length ? 'No students match your search.' : 'No students are enrolled in your courses yet.'}
             </p>
           )}
-          <p className="text-xs text-muted-foreground">{filteredMyStudents.length} enrolment record(s)</p>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-xs text-muted-foreground">{filteredMyStudents.length} enrolment record(s)</p>
+            {filteredMyStudents.length > ITEMS_PER_PAGE && (
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => setStudentPage(p => Math.max(1, p - 1))}
+                  disabled={studentPage <= 1}
+                  className="rounded-lg border border-border px-3 py-1.5 text-xs disabled:opacity-40">Previous</button>
+                <span className="text-xs text-muted-foreground">Page {studentPage} of {studentTotalPages}</span>
+                <button type="button" onClick={() => setStudentPage(p => Math.min(studentTotalPages, p + 1))}
+                  disabled={studentPage >= studentTotalPages}
+                  className="rounded-lg border border-border px-3 py-1.5 text-xs disabled:opacity-40">Next</button>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
