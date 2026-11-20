@@ -151,6 +151,8 @@ export default function AdminPage() {
   const [paystackFeePolicy, setPaystackFeePolicy] = useState({ default_rate_pct: 0, effective_from: new Date().toISOString().slice(0, 10), instructor_overrides: {}, history: [] });
   const [feePreview, setFeePreview] = useState(null);
   const [savingFeePolicy, setSavingFeePolicy] = useState(false);
+  const [feeOverrideEdits, setFeeOverrideEdits] = useState({});
+  const [savingFeeOverride, setSavingFeeOverride] = useState('');
 
   const showStatus = (type, msg) => {
     setGlobalStatus({ type, msg });
@@ -175,6 +177,7 @@ export default function AdminPage() {
         try {
           const feePolicy = await API('/api/admin/paystack-fee-policy');
           setPaystackFeePolicy(feePolicy);
+          setFeeOverrideEdits(Object.fromEntries(Object.entries(feePolicy.instructor_overrides || {}).map(([id, value]) => [id, String(value.rate_pct)])));
         } catch (feePolicyError) {
           showStatus('error', 'Could not load Paystack fee settings: ' + feePolicyError.message);
         }
@@ -1182,6 +1185,7 @@ export default function AdminPage() {
                             <th className="text-right p-3 font-medium text-muted-foreground">Their Share</th>
                             <th className="text-right p-3 font-medium text-muted-foreground">Platform Share</th>
                             <th className="text-left p-3 font-medium text-muted-foreground">Future Split Override</th>
+                            <th className="text-left p-3 font-medium text-muted-foreground">Paystack Fee Override</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1225,6 +1229,47 @@ export default function AdminPage() {
                                 ) : (
                                   <span className="text-xs text-muted-foreground">Platform-owned account</span>
                                 )}
+                              </td>
+                              <td className="p-3 min-w-[190px]">
+                                {inst.role === 'instructor' ? (
+                                  <>
+                                    <div className="flex items-center gap-2">
+                                      <input type="number" min="0" max="100" step="0.01"
+                                        aria-label={"Paystack fee rate for " + inst.name}
+                                        value={feeOverrideEdits[inst.id] ?? ''}
+                                        placeholder={String(paystackFeePolicy.default_rate_pct ?? 0)}
+                                        onChange={e => setFeeOverrideEdits(prev => ({ ...prev, [inst.id]: e.target.value }))}
+                                        className="w-24 rounded-md border border-border bg-background px-2 py-1 text-sm tabular-nums" />
+                                      <span className="text-xs text-muted-foreground">%</span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1 mt-2">
+                                      <Button size="sm" disabled={savingFeeOverride === inst.id || feeOverrideEdits[inst.id] === undefined || feeOverrideEdits[inst.id] === ''}
+                                        onClick={async () => {
+                                          setSavingFeeOverride(inst.id);
+                                          try {
+                                            await API('/api/admin/instructors/' + inst.id + '/paystack-fee-policy', { method: 'PUT', body: JSON.stringify({ rate_pct: Number(feeOverrideEdits[inst.id]), effective_from: paystackFeePolicy.effective_from }) });
+                                            setPaystackFeePolicy(p => ({ ...p, instructor_overrides: { ...(p.instructor_overrides || {}), [inst.id]: { rate_pct: Number(feeOverrideEdits[inst.id]), effective_from: p.effective_from } } }));
+                                            showStatus('success', 'Instructor fee override saved.');
+                                          } catch (e) { showStatus('error', e.message); }
+                                          setSavingFeeOverride('');
+                                        }}>{savingFeeOverride === inst.id ? 'Saving…' : 'Save'}</Button>
+                                      {(paystackFeePolicy.instructor_overrides || {})[inst.id] && (
+                                        <Button size="sm" variant="outline" disabled={savingFeeOverride === inst.id}
+                                          onClick={async () => {
+                                            setSavingFeeOverride(inst.id);
+                                            try {
+                                              await API('/api/admin/instructors/' + inst.id + '/paystack-fee-policy', { method: 'PUT', body: JSON.stringify({ reset_to_default: true }) });
+                                              setPaystackFeePolicy(p => { const next = { ...(p.instructor_overrides || {}) }; delete next[inst.id]; return { ...p, instructor_overrides: next }; });
+                                              setFeeOverrideEdits(prev => { const next = { ...prev }; delete next[inst.id]; return next; });
+                                              showStatus('success', 'Instructor now uses the platform default.');
+                                            } catch (e) { showStatus('error', e.message); }
+                                            setSavingFeeOverride('');
+                                          }}>Reset</Button>
+                                      )}
+                                    </div>
+                                    <p className="text-[11px] text-muted-foreground mt-1">{(paystackFeePolicy.instructor_overrides || {})[inst.id] ? 'Custom fee rate' : 'Using platform default'}</p>
+                                  </>
+                                ) : <span className="text-xs text-muted-foreground">Not applicable</span>}
                               </td>
                             </tr>
                           ))}
