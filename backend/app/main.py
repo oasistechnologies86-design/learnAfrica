@@ -4004,16 +4004,18 @@ def create_app() -> Flask:
             'SELECT ue.user_id, u.name, c.title as course_title, ue.progress, CAST(ue.enrolled_at AS TEXT) as enrolled_at'
             ' FROM user_enrollments ue JOIN users u ON u.id=ue.user_id JOIN courses c ON c.id=ue.course_id'
             ' WHERE ue.course_id IN (' + ph + ') ORDER BY ue.enrolled_at DESC LIMIT 10', course_ids).fetchall()
-        # Gross = everything students paid for this instructor's courses; the
-        # platform's cut is the remainder after the instructor's recorded share,
-        # so the two always reconcile to the stored transaction records. The
-        # percentages come from the admin config, never a hardcoded default.
+        # Keep the stored platform share distinct from the provider fee.
+        # After Paystack settlement, instructor_share + platform_share equals
+        # the amount remaining after the actual fee; gross is reported separately.
         _split = resolve_instructor_revenue_split(db, uid, g.current_user.get('role') in ('admin', 'superadmin'))
         gross_row = db.execute(
             "SELECT COALESCE(SUM(amount), 0) as t FROM transactions"
             " WHERE instructor_id=? AND type IN ('purchase','quiz_extra_attempt') AND status='success'", (uid,)).fetchone()
         gross_revenue = round(float(gross_row['t'] or 0), 2) if gross_row else 0.0
-        platform_share = round(gross_revenue - total_earnings, 2)
+        platform_row = db.execute(
+            "SELECT COALESCE(SUM(platform_share), 0) as t FROM transactions"
+            " WHERE instructor_id=? AND type IN ('purchase','quiz_extra_attempt') AND status='success'", (uid,)).fetchone()
+        platform_share = round(float(platform_row['t'] or 0), 2) if platform_row else 0.0
         fee_row = db.execute(
             "SELECT COALESCE(SUM(paystack_fee), 0) as t FROM transactions"
             " WHERE instructor_id=? AND provider='paystack' AND status='success'"
