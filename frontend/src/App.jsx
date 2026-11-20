@@ -60,18 +60,7 @@ const CommunityPage            = lazy(() => import('./pages/Community/CommunityP
 // below instead of each one inventing its own behavior (previously
 // ProtectedRoute showed a spinner while PublicOnlyRoute/StudentOnlyRoute
 // silently rendered nothing, an inconsistent, confusing experience).
-function RouteLoadingScreen() {
-  return (
-    <div className="h-screen w-full flex items-center justify-center bg-background">
-      <div className="text-center space-y-3">
-        <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-        <p className="text-sm text-muted-foreground animate-pulse">Please wait...</p>
-      </div>
-    </div>
-  );
-}
-
-// ── Route Guards ──────────────────────────────────────────────────────────────
+function RouteLoadingScreen() {\n  return <AfricaMapLoader />;\n}\n\n// ── Route Guards ──────────────────────────────────────────────────────────────
 function ProtectedRoute({ children, allowedRoles, returnUrl }) {
   const { isAuthenticated, isLoading, user } = useAuth();
   if (isLoading) return <RouteLoadingScreen />;
