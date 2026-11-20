@@ -4051,12 +4051,12 @@ def create_app() -> Flask:
         # Provider settlement fees are separate and never replace this amount.
         ensure_column(db, 'transactions', 'paystack_fee_estimate', 'REAL DEFAULT 0')
         fee_rows = db.execute(
-            "SELECT paystack_fee_estimate FROM transactions"
+            "SELECT amount, instructor_id, created_at, paystack_fee_estimate FROM transactions"
             " WHERE instructor_id=? AND status='success'"
             " AND type IN ('purchase','quiz_extra_attempt')",
             (uid,)
         ).fetchall()
-        platform_fees = round(sum(float(row['paystack_fee_estimate'] or 0) for row in fee_rows), 2)
+        platform_fees = round(sum(_paystack_fee_for_transaction(db, row) for row in fee_rows), 2)
         net_after_platform_fee = round(max(0.0, gross_revenue - platform_fees), 2)
         return jsonify({
             'total_courses': len(course_ids), 'total_students': total_students,
@@ -7248,13 +7248,13 @@ def create_app() -> Flask:
                 (row['id'], reporting_from)
             ).fetchone()
             recorded_platform_share = float(platform_row['amount'] or 0) if platform_row else 0.0
-            fee_rows = db.execute(
-                "SELECT COALESCE(SUM(paystack_fee_estimate), 0) AS fee FROM transactions"
+            fee_transactions = db.execute(
+                "SELECT amount, instructor_id, created_at, paystack_fee_estimate FROM transactions"
                 " WHERE instructor_id=? AND status='success'"
                 " AND type IN ('purchase','quiz_extra_attempt') AND DATE(created_at) >= ?",
                 (row['id'], reporting_from)
-            ).fetchone()
-            reported_fees = round(float(fee_rows['fee'] or 0), 2) if fee_rows else 0.0
+            ).fetchall()
+            reported_fees = round(sum(_paystack_fee_for_transaction(db, tx) for tx in fee_transactions), 2)
             if row['role'] in ('admin', 'superadmin'):
                 recorded_platform_share = max(0.0, gross - reported_fees)
             result.append({
@@ -7428,14 +7428,16 @@ def create_app() -> Flask:
                    WHERE record_type='expense' AND LOWER(category) = 'paystack fees' AND DATE(created_at) >= ?""", (reporting_from,)
             ).fetchone()
             # Sum LearnAfrica's saved fee snapshots across payment providers.
-            automatic_paystack_fee_rows = db.execute(
-                """SELECT COALESCE(SUM(paystack_fee_estimate), 0) AS total
+            automatic_fee_rows = db.execute(
+                """SELECT amount, instructor_id, created_at, paystack_fee_estimate
                    FROM transactions WHERE status='success'
                      AND type IN ('purchase','quiz_extra_attempt') AND DATE(created_at) >= ?""",
                 (reporting_from,)
-            ).fetchone()
+            ).fetchall()
             automatic_actual_paystack_fees = 0.0
-            automatic_estimated_paystack_fees = float(automatic_paystack_fee_rows['total'] or 0) if automatic_paystack_fee_rows else 0.0
+            automatic_estimated_paystack_fees = sum(
+                _paystack_fee_for_transaction(db, tx) for tx in automatic_fee_rows
+            )
             withdrawal_total = db.execute(
                 "SELECT COALESCE(SUM(amount), 0) AS amount FROM admin_financial_records WHERE record_type='withdrawal' AND DATE(created_at) >= ?", (reporting_from,)
             ).fetchone()
@@ -7461,7 +7463,7 @@ def create_app() -> Flask:
                 instructor_earned += float(tx['instructor_share'] or 0)
                 owner = db.execute('SELECT role FROM users WHERE id=?', (tx['instructor_id'],)).fetchone() if tx['instructor_id'] else None
                 if owner and str(owner['role'] or '').lower() in ('admin', 'superadmin'):
-                    platform_fee = float(tx['paystack_fee_estimate'] or 0)
+                    platform_fee = _paystack_fee_for_transaction(db, tx)
                     platform_earned += max(0.0, amount - platform_fee)
                 else:
                     platform_earned += float(tx['platform_share'] or 0)
@@ -10584,6 +10586,23 @@ def create_app() -> Flask:
         rate = max(0.0, min(100.0, rate))
         return {'rate_pct': rate, 'source': source, 'effective_from': effective}
 
+    def _paystack_fee_for_transaction(db, tx):
+        """Calculate the configured Paystack fee, including legacy zero snapshots."""
+        try:
+            snapshot = round(max(0.0, float(tx['paystack_fee_estimate'] or 0)), 2)
+        except (KeyError, TypeError, ValueError):
+            snapshot = 0.0
+        if snapshot > 0:
+            return snapshot
+        amount = max(0.0, float(tx['amount'] or 0))
+        if amount <= 0:
+            return 0.0
+        policy = _effective_paystack_fee_policy(
+            db, tx['instructor_id'], str(tx['created_at'] or '')[:10] or None
+        )
+        return round(min(amount, amount * policy['rate_pct'] / 100.0), 2)
+
+
     @app.route('/api/admin/paystack-fee-policy', methods=['GET'])
     @admin_required
     def get_paystack_fee_policy():
@@ -10614,7 +10633,7 @@ def create_app() -> Flask:
                 """SELECT instructor_id, amount, paystack_fee, paystack_fee_status,
                           CAST(created_at AS TEXT) AS created_at
                    FROM transactions
-                   WHERE provider='paystack' AND type IN ('purchase','quiz_extra_attempt')
+                   WHERE type IN ('purchase','quiz_extra_attempt')
                      AND status='success' AND DATE(created_at) >= ?""", (effective_from,)
             ).fetchall()
             gross = sum(float(r['amount'] or 0) for r in rows)
@@ -10655,10 +10674,7 @@ def create_app() -> Flask:
                 datetime.strptime(effective_from, '%Y-%m-%d')
             except ValueError:
                 return jsonify({'error': 'Choose a valid effective date (YYYY-MM-DD).'}), 400
-            # The effective date is also the administrator's reporting baseline.
-            # Retroactive policy dates change estimates and report inclusion only:
-            # verified Paystack fees, recorded shares, transactions and paid payouts
-            # are never rewritten by this configuration change.
+            # The selected date is the reporting baseline for Paystack fees calculated by LearnAfrica. It does not rewrite recorded transaction shares or completed payouts.
             db = get_db()
             policy = _paystack_fee_policy_read(db)
             old_rate = float(policy.get('default_rate_pct') or 0)
@@ -10667,7 +10683,7 @@ def create_app() -> Flask:
                 'old_rate_pct': old_rate, 'new_rate_pct': rate,
                 'effective_from': effective_from, 'changed_by': actor,
                 'changed_at': datetime.utcnow().isoformat() + 'Z',
-                'scope': 'reporting_and_provisional_estimates_from_effective_date',
+                'scope': 'learnafrica_calculated_paystack_fees_from_effective_date',
             }
             policy['default_rate_pct'] = rate
             policy['effective_from'] = effective_from
@@ -10746,7 +10762,7 @@ def create_app() -> Flask:
                 'scheduled_default': scheduled_default,
                 'editable': False,
                 'actual_paystack_fee_source': 'verified Paystack transaction fee',
-                'policy_rate_is_estimate_only': True,
+                'policy_rate_is_calculated_by_learnafrica': True,
             })
         except Exception as e:
             app.logger.error(f'instructor_paystack_fee_policy: {e}')
