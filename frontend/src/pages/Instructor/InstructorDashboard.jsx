@@ -48,6 +48,7 @@ function EarningsCard({ stats, onChanged }) {
   const [busy,    setBusy]      = useState(false);
   const [msg,     setMsg]       = useState(null);
   const [payoutMethod, setPayoutMethod] = useState(null);
+  const [feePolicy, setFeePolicy] = useState(null);
   const grossRevenue   = stats?.gross_revenue   || 0;
   const myEarnings     = stats?.total_earnings  || 0;
   const platformShare  = stats?.platform_share  || 0;
@@ -65,6 +66,9 @@ function EarningsCard({ stats, onChanged }) {
       .catch(() => {});
   };
   useEffect(() => { loadSummary(); }, []);
+  useEffect(() => {
+    api('/api/instructor/paystack-fee-policy').then(setFeePolicy).catch(() => setFeePolicy(null));
+  }, []);
   useEffect(() => {
     api('/api/users/me/payment-method')
       .then(d => setPayoutMethod(d?.configured ? d : null))
@@ -224,6 +228,12 @@ function EarningsCard({ stats, onChanged }) {
             <span>Paystack processing fees (actual)</span>
             <span className="font-medium">−{formatPrice(stats?.paystack_fees || 0)}</span>
           </div>
+          {feePolicy && (
+            <div className="flex justify-between text-muted-foreground">
+              <span>Configured fee rate ({feePolicy.source === 'instructor_override' ? 'instructor override' : 'platform default'})</span>
+              <span className="font-medium">{Number(feePolicy.rate_pct || 0).toFixed(2)}% · from {feePolicy.effective_from || '—'}</span>
+            </div>
+          )}
           <div className="flex justify-between text-muted-foreground">
             <span>Revenue after Paystack fees</span>
             <span className="font-semibold text-foreground">{formatPrice(stats?.net_after_paystack ?? grossRevenue)}</span>
