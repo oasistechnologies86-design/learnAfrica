@@ -1230,7 +1230,8 @@ export default function AdminPage() {
                       </div>
                       <div className="text-center p-3 bg-muted/30 rounded-xl border border-border">
                         <p className="text-2xl font-bold">{formatPrice(earnings.paystack_fees_total || 0)}</p>
-                        <p className="text-xs text-muted-foreground mt-1">Verified Paystack Fees</p>
+                        <p className="text-xs text-muted-foreground mt-1">Verified Paystack Fees · all payment types</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">Includes {formatPrice(earnings.registration_paystack_fees_total || 0)} from instructor registrations</p>
                       </div>
                       <div className="text-center p-3 bg-warning/5 rounded-xl border border-warning/20">
                         <p className="text-2xl font-bold text-warning">{Number(earnings.paystack_fee_unverified_count || 0).toLocaleString()}</p>
@@ -1238,7 +1239,7 @@ export default function AdminPage() {
                       </div>
                       <div className="text-center p-3 bg-success/5 rounded-xl border border-success/20">
                         <p className="text-2xl font-bold text-success">{formatPrice(earnings.net_after_paystack_total ?? earnings.total_gross ?? 0)}</p>
-                        <p className="text-xs text-muted-foreground mt-1">Revenue After Paystack Fees</p>
+                        <p className="text-xs text-muted-foreground mt-1">Course revenue after Paystack fees</p>
                       </div>
                     </div>
                   </div>
