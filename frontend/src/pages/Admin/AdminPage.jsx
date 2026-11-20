@@ -996,6 +996,11 @@ export default function AdminPage() {
                         <div key={label} className="rounded-xl border border-border bg-muted/20 p-3">
                           <p className="text-xs text-muted-foreground">{label}</p>
                           <p className="text-lg font-bold mt-1 tabular-nums">{formatPrice(value || 0)}</p>
+                          {label === 'Paystack processing fees (actual + estimated)' && (
+                            <p className="text-[10px] text-muted-foreground mt-1">
+                              Actual {formatPrice(financialSummary.paystack_fees_actual || 0)} · Estimated {formatPrice(financialSummary.paystack_fees_estimated || 0)}
+                            </p>
+                          )}
                         </div>
                       ))}
                       <div className="rounded-xl border border-success/30 bg-success/5 p-3">
