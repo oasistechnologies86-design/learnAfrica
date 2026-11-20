@@ -9433,18 +9433,15 @@ def create_app() -> Flask:
                     'detail': _err_detail(error_msg),
                 }), 502
 
-            fee_policy_snapshot = {'rate_pct': 0.0, 'source': 'not_paystack', 'effective_from': None}
-            fee_estimate = 0.0
-            if pay.get('provider') == 'paystack':
-                fee_policy_snapshot = _effective_paystack_fee_policy(db, course['instructor_id'])
-                fee_estimate = min(float(amount), max(0.0, round(float(amount) * fee_policy_snapshot['rate_pct'] / 100.0, 2)))
-                # Deduct the policy estimate provisionally, preserving the
-                # configured instructor/platform split ratio. Settlement will
-                # replace it with the exact fee returned by Paystack.
-                if fee_estimate > 0:
-                    provisional_net = round(float(amount) - fee_estimate, 2)
-                    split_pct = 100.0 if instructor_is_admin else effective_split['instructor_pct']
-                    instr_share, plat_share = compute_split(provisional_net, split_pct)
+            # LearnAfrica's configured platform fee is independent of the
+            # payment provider. Snapshot it on each new paid course transaction
+            # and apply it once before the existing revenue-sharing split.
+            fee_policy_snapshot = _effective_paystack_fee_policy(db, course['instructor_id'])
+            fee_estimate = min(float(amount), max(0.0, round(float(amount) * fee_policy_snapshot['rate_pct'] / 100.0, 2)))
+            if fee_estimate > 0:
+                provisional_net = round(float(amount) - fee_estimate, 2)
+                split_pct = 100.0 if instructor_is_admin else effective_split['instructor_pct']
+                instr_share, plat_share = compute_split(provisional_net, split_pct)
             db.execute(
                 '''INSERT INTO transactions
                    (id, receipt_id, type, user_id, user_name, user_email,
@@ -9462,7 +9459,7 @@ def create_app() -> Flask:
                  payment_method, json.dumps(payment_details), payout_status,
                  applied_coupon['code'] if applied_coupon else None,
                  discount_applied, original_amount, fee_estimate,
-                 'estimated' if pay.get('provider') == 'paystack' else 'not_applicable')
+                 'policy_applied')
             )
 
             # Increment coupon uses if a coupon was applied
@@ -9590,7 +9587,7 @@ def create_app() -> Flask:
                                 fee_amount = round(float(fee_minor) / 100, 2)
                                 # Reconcile shares against the previous recorded fee
                                 # before replacing it, making duplicate webhooks idempotent.
-                                _apply_verified_paystack_fee_to_unpaid_shares(db, tx['id'], fee_amount)
+                                # Provider fee is stored separately for reconciliation; it must not alter LearnAfrica's fee or revenue split.
                                 db.execute(
                                     "UPDATE transactions SET paystack_fee=?, paystack_fee_status='actual', updated_at=CURRENT_TIMESTAMP WHERE id=?",
                                     (fee_amount, tx['id'])
@@ -10057,7 +10054,7 @@ def create_app() -> Flask:
                         ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
                         ensure_column(db, 'transactions', 'paystack_fee_estimate', 'REAL DEFAULT 0')
                         ensure_column(db, 'transactions', 'paystack_fee_status', "TEXT DEFAULT 'unknown'")
-                        _apply_verified_paystack_fee_to_unpaid_shares(db, tx['id'], fee_amount)
+                        # Provider fee is stored separately for reconciliation; it must not alter LearnAfrica's fee or revenue split.
                         db.execute(
                             "UPDATE transactions SET paystack_fee=?, paystack_fee_status='actual', updated_at=CURRENT_TIMESTAMP WHERE id=?",
                             (fee_amount, tx['id'])
