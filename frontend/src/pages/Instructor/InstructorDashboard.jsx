@@ -737,8 +737,13 @@ export function InstructorDashboard() {
                 </thead>
                 <tbody>
                   {paginatedTransactions.map((tx, index) => {
-                    const fee = tx.provider === 'paystack' && Number(tx.paystack_fee || 0) > 0
-                      ? formatPrice(tx.paystack_fee) : tx.provider === 'paystack' ? 'Not recorded' : '—';
+                    const actualFee = Number(tx.paystack_fee || 0);
+                    const calculatedFee = Number(tx.paystack_fee_estimate || 0);
+                    const fee = actualFee > 0
+                      ? formatPrice(actualFee)
+                      : calculatedFee > 0
+                        ? `${formatPrice(calculatedFee)} (calculated)`
+                        : '—';
                     const status = String(tx.status || 'unknown').toLowerCase();
                     return (
                       <tr key={tx.id || tx.receipt_id || index} className="border-b border-border/40">
