@@ -9,6 +9,7 @@ os.environ.setdefault('SECRET_KEY', 'student-view-test-secret')
 
 from app import create_app  # noqa: E402
 import app.main as main_module  # noqa: E402
+import app.payments as payments_module  # noqa: E402
 import app.security as security_module  # noqa: E402
 from app.database import init_db, get_db  # noqa: E402
 
@@ -133,6 +134,31 @@ try:
     check('instructor without override inherits the platform default',
           default_policy.get('rate_pct') == 1.95 and default_policy.get('source') == 'platform_default',
           default_policy)
+
+    # A new Paystack course purchase uses the active global policy provisionally.
+    original_initiate_payment = payments_module.initiate_payment
+    payments_module.initiate_payment = lambda **kwargs: {
+        'id': 'paystack-estimate-test', 'receipt_id': 'receipt-estimate-test',
+        'provider': 'paystack', 'provider_ref': 'ref-estimate-test',
+        'checkout_url': 'https://checkout.example.test', 'status': 'pending'
+    }
+    current_user = {'user_id': 'student-4', 'email': 'four@example.test', 'role': 'student'}
+    purchase_response = app_client.post('/api/courses/course-a/purchase', json={'payment_method': 'card'})
+    with app.app_context():
+        estimate_tx = get_db().execute(
+            "SELECT paystack_fee_estimate, paystack_fee_status, instructor_share, platform_share "
+            "FROM transactions WHERE id='paystack-estimate-test'"
+        ).fetchone()
+        check('new Paystack purchase stores a provisional fee estimate',
+              purchase_response.status_code in (200, 201) and estimate_tx is not None
+              and round(float(estimate_tx['paystack_fee_estimate'] or 0), 2) == 1.95
+              and estimate_tx['paystack_fee_status'] == 'estimated',
+              dict(estimate_tx) if estimate_tx else purchase_response.get_json())
+        check('provisional fee is deducted before the existing revenue split',
+              estimate_tx is not None and round(float(estimate_tx['instructor_share'] or 0)
+              + float(estimate_tx['platform_share'] or 0), 2) == 98.05,
+              dict(estimate_tx) if estimate_tx else '')
+    payments_module.initiate_payment = original_initiate_payment
 
     current_user = {'user_id': 'admin-1', 'email': 'admin@example.test', 'role': 'admin'}
     response = app_client.get('/api/admin/courses')
