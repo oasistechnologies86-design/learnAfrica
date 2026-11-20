@@ -110,7 +110,7 @@ try:
 
     # Dated Paystack fee policy applies platform-wide unless an instructor override is active.
     policy_response = app_client.put('/api/admin/paystack-fee-policy', json={
-        'default_rate_pct': 1.95, 'effective_from': '2099-01-01'
+        'default_rate_pct': 1.95, 'effective_from': __import__('datetime').datetime.utcnow().date().isoformat()
     })
     check('admin can save a dated global Paystack fee rate', policy_response.status_code == 200, policy_response.get_json())
     policy_payload = app_client.get('/api/admin/paystack-fee-policy').get_json() or {}
@@ -125,8 +125,8 @@ try:
           override_response.status_code == 200, override_response.get_json())
     current_user = {'user_id': 'instructor-a', 'email': 'a@example.test', 'role': 'instructor'}
     instructor_policy = app_client.get('/api/instructor/paystack-fee-policy').get_json() or {}
-    check('instructor policy exposes its override and effective date',
-          instructor_policy.get('rate_pct') == 2.5 and instructor_policy.get('effective_from') == '2099-02-01',
+    check('instructor sees the active default and its scheduled custom override',
+          instructor_policy.get('rate_pct') == 1.95 and (instructor_policy.get('scheduled_override') or {}).get('rate_pct') == 2.5 and (instructor_policy.get('scheduled_override') or {}).get('effective_from') == '2099-02-01',
           instructor_policy)
     current_user = {'user_id': 'instructor-b', 'email': 'b@example.test', 'role': 'instructor'}
     default_policy = app_client.get('/api/instructor/paystack-fee-policy').get_json() or {}
