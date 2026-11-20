@@ -963,14 +963,15 @@ export default function AdminPage() {
                     <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
                       {[
                         ['Total collected', financialSummary.total_collected],
-                        ['Platform share (before expenses)', financialSummary.platform_earned],
+                        ['Paystack fees', financialSummary.paystack_fees],
+                        ['Amount after Paystack fees', financialSummary.net_after_paystack],
                         ['Instructor earnings', financialSummary.instructor_earned],
+                        ['Platform share (after Paystack fees, before other expenses)', financialSummary.platform_earned],
                         ['Instructor payments made', financialSummary.instructor_paid],
                         ['Outstanding instructor earnings', financialSummary.instructor_outstanding],
-                        ['Paystack fees', financialSummary.paystack_fees],
-                        ['Payments marked refunded (original transaction value)', financialSummary.refunded_transaction_value],
                         ['Other business expenses', financialSummary.other_expenses],
                         ['Owner withdrawals', financialSummary.owner_withdrawals],
+                        ['Payments marked refunded (original transaction value)', financialSummary.refunded_transaction_value],
                       ].map(([label, value]) => (
                         <div key={label} className="rounded-xl border border-border bg-muted/20 p-3">
                           <p className="text-xs text-muted-foreground">{label}</p>
@@ -988,18 +989,18 @@ export default function AdminPage() {
                         </div>
                       ))}
                       <div className="rounded-xl border border-success/30 bg-success/5 p-3">
-                        <p className="text-xs text-muted-foreground">Estimated remaining funds</p>
+                        <p className="text-xs text-muted-foreground">Estimated remaining funds after fees, instructor payments and expenses</p>
                         <p className="text-lg font-bold text-success mt-1 tabular-nums">{formatPrice(financialSummary.estimated_remaining || 0)}</p>
                       </div>
                       <div className="rounded-xl border border-border bg-muted/20 p-3">
-                        <p className="text-xs text-muted-foreground">After unpaid instructor earnings</p>
+                        <p className="text-xs text-muted-foreground">Available after outstanding instructor earnings</p>
                         <p className={cn('text-lg font-bold mt-1 tabular-nums', Number(financialSummary.available_after_instructor_obligations || 0) < 0 ? 'text-destructive' : 'text-foreground')}>
                           {formatPrice(financialSummary.available_after_instructor_obligations || 0)}
                         </p>
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Paystack fees shown here are calculated by LearnAfrica from the rate you configure. They are not taken from a provider fee report. A transfer to your bank is an owner withdrawal, not a business expense.
+                      Paystack fees are calculated once by LearnAfrica using your saved fee rate. Do not add them again as a manual business expense. A transfer to your bank is an owner withdrawal, not a business expense.
                     </p>
                   </>
                 ) : (
