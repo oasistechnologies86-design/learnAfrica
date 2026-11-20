@@ -15,6 +15,7 @@ import InstructorLayout from './layouts/InstructorLayout';
 // first-time visitor no longer downloads the admin panel, the course editor
 // and the certificate renderer before seeing the homepage.
 const LandingPage              = lazy(() => import('./pages/Landing/LandingPage').then(m => ({ default: m.LandingPage })));
+const AboutPage                 = lazy(() => import('./pages/About/AboutPage'));
 const LoginPage                = lazy(() => import('./pages/Auth/LoginPage').then(m => ({ default: m.LoginPage })));
 const SignupPage               = lazy(() => import('./pages/Auth/SignupPage').then(m => ({ default: m.SignupPage })));
 const ForgotPasswordPage       = lazy(() => import('./pages/Auth/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
@@ -155,6 +156,7 @@ function AppRoutes() {
       {/* ── Public ── */}
       <Route path="/" element={<MainLayout />}>
         <Route index element={<LandingPage />} />
+        <Route path="about" element={<AboutPage />} />
         <Route path="courses" element={<CatalogRoute><CoursesPage /></CatalogRoute>} />
         <Route path="courses/:courseId" element={<CourseDetailPage />} />
         <Route path="instructors" element={<InstructorsPage />} />
