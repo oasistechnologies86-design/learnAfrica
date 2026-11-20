@@ -7233,13 +7233,21 @@ def create_app() -> Flask:
                 (row['id'], reporting_from)
             ).fetchone()
             recorded_platform_share = float(platform_row['amount'] or 0) if platform_row else 0.0
-            fee_row = db.execute(
-                "SELECT COALESCE(SUM(paystack_fee), 0) as amount FROM transactions"
+            fee_rows = db.execute(
+                "SELECT amount, paystack_fee, paystack_fee_status, created_at FROM transactions"
                 " WHERE instructor_id=? AND provider='paystack' AND status='success'"
                 " AND type IN ('purchase','quiz_extra_attempt') AND DATE(created_at) >= ?",
                 (row['id'], reporting_from)
-            ).fetchone() if paystack_fee_ready else {'amount': 0}
-            actual_fees = float(fee_row['amount'] or 0) if fee_row else 0.0
+            ).fetchall() if paystack_fee_ready else []
+            actual_fees = 0.0
+            estimated_fees = 0.0
+            for fee_tx in fee_rows:
+                if str(fee_tx['paystack_fee_status'] or 'unknown').lower() == 'actual':
+                    actual_fees += float(fee_tx['paystack_fee'] or 0)
+                else:
+                    resolved_fee = _effective_paystack_fee_policy(db, row['id'], str(fee_tx['created_at'] or reporting_from)[:10])
+                    estimated_fees += float(fee_tx['amount'] or 0) * resolved_fee['rate_pct'] / 100.0
+            reported_fees = actual_fees + estimated_fees
             unverified_row = db.execute(
                 "SELECT COUNT(*) AS count FROM transactions WHERE instructor_id=? AND provider='paystack' "
                 "AND status='success' AND type IN ('purchase','quiz_extra_attempt') "
@@ -7255,9 +7263,11 @@ def create_app() -> Flask:
                 'role': row['role'],
                 'course_count': row['course_count'],
                 'gross_revenue': round(gross, 2),
-                'paystack_fees': round(actual_fees, 2),
+                'paystack_fees': round(reported_fees, 2),
+                'paystack_fees_actual': round(actual_fees, 2),
+                'paystack_fees_estimated': round(estimated_fees, 2),
                 'paystack_fee_unverified_count': unverified_count,
-                'net_after_paystack': round(max(0.0, gross - actual_fees), 2),
+                'net_after_paystack': round(max(0.0, gross - reported_fees), 2),
                 'instructor_earnings': round(instr, 2),
                 'platform_earnings':   round(recorded_platform_share, 2),
                 'instructor_share_pct': effective_split['instructor_pct'],
@@ -7268,21 +7278,37 @@ def create_app() -> Flask:
             "SELECT COALESCE(SUM(amount), 0) as t FROM transactions"
             " WHERE type='instructor_registration' AND status='success' AND DATE(created_at) >= ?", (reporting_from,)
         ).fetchone()
-        registration_fee_row = db.execute(
-            "SELECT COALESCE(SUM(paystack_fee),0) AS fees, "
-            "COUNT(CASE WHEN COALESCE(paystack_fee_status,'unknown')<>'actual' THEN 1 END) AS unverified "
-            "FROM transactions WHERE provider='paystack' AND type='instructor_registration' AND status='success' AND DATE(created_at) >= ?", (reporting_from,)
-        ).fetchone() if fee_status_ready else {'fees': 0, 'unverified': 0}
-        course_fees_total = sum(float(row.get('paystack_fees') or 0) for row in result)
-        registration_fees_actual = float(registration_fee_row['fees'] or 0) if registration_fee_row else 0.0
-        registration_fee_unverified = int(registration_fee_row['unverified'] or 0) if registration_fee_row else 0
+        registration_fee_rows = db.execute(
+            "SELECT amount, paystack_fee, paystack_fee_status, created_at FROM transactions "
+            "WHERE provider='paystack' AND type='instructor_registration' AND status='success' AND DATE(created_at) >= ?",
+            (reporting_from,)
+        ).fetchall() if fee_status_ready else []
+        registration_fees_actual = 0.0
+        registration_fees_estimated = 0.0
+        for fee_tx in registration_fee_rows:
+            if str(fee_tx['paystack_fee_status'] or 'unknown').lower() == 'actual':
+                registration_fees_actual += float(fee_tx['paystack_fee'] or 0)
+            else:
+                resolved_fee = _effective_paystack_fee_policy(db, None, str(fee_tx['created_at'] or reporting_from)[:10])
+                registration_fees_estimated += float(fee_tx['amount'] or 0) * resolved_fee['rate_pct'] / 100.0
+        registration_fee_unverified = sum(1 for fee_tx in registration_fee_rows if str(fee_tx['paystack_fee_status'] or 'unknown').lower() != 'actual')
+        course_fees_actual = sum(float(row.get('paystack_fees_actual') or 0) for row in result)
+        course_fees_estimated = sum(float(row.get('paystack_fees_estimated') or 0) for row in result)
+        course_fees_total = course_fees_actual + course_fees_estimated
+        registration_fees_total = registration_fees_actual + registration_fees_estimated
         return jsonify({
             'reporting_from': reporting_from,
             'instructors': result,
             'total_gross': round(total_gross, 2),
             'course_paystack_fees_total': round(course_fees_total, 2),
-            'registration_paystack_fees_total': round(registration_fees_actual, 2),
-            'paystack_fees_total': round(course_fees_total + registration_fees_actual, 2),
+            'registration_paystack_fees_total': round(registration_fees_total, 2),
+            'registration_paystack_fees_actual': round(registration_fees_actual, 2),
+            'registration_paystack_fees_estimated': round(registration_fees_estimated, 2),
+            'course_paystack_fees_actual': round(course_fees_actual, 2),
+            'course_paystack_fees_estimated': round(course_fees_estimated, 2),
+            'paystack_fees_total': round(course_fees_total + registration_fees_total, 2),
+            'paystack_fees_actual_total': round(course_fees_actual + registration_fees_actual, 2),
+            'paystack_fees_estimated_total': round(course_fees_estimated + registration_fees_estimated, 2),
             'paystack_fee_unverified_count': sum(int(row.get('paystack_fee_unverified_count') or 0) for row in result) + registration_fee_unverified,
             'registration_fee_unverified_count': registration_fee_unverified,
             'net_after_paystack_total': round(max(0.0, total_gross - course_fees_total), 2),
@@ -7389,12 +7415,19 @@ def create_app() -> Flask:
                 """SELECT COALESCE(SUM(amount), 0) AS amount FROM admin_financial_records
                    WHERE record_type='expense' AND LOWER(category) = 'paystack fees' AND DATE(created_at) >= ?""", (reporting_from,)
             ).fetchone()
-            automatic_paystack_fees = (
-                db.execute(
-                    """SELECT COALESCE(SUM(paystack_fee), 0) AS amount FROM transactions
-                       WHERE status='success' AND provider='paystack' AND DATE(created_at) >= ?""", (reporting_from,)
-                ).fetchone() if fee_column_ready else {'amount': 0}
-            )
+            automatic_paystack_fee_rows = db.execute(
+                """SELECT amount, paystack_fee, paystack_fee_status, instructor_id, created_at
+                   FROM transactions WHERE status='success' AND provider='paystack' AND DATE(created_at) >= ?""",
+                (reporting_from,)
+            ).fetchall() if fee_column_ready else []
+            automatic_actual_paystack_fees = 0.0
+            automatic_estimated_paystack_fees = 0.0
+            for fee_tx in automatic_paystack_fee_rows:
+                if str(fee_tx['paystack_fee_status'] or 'unknown').lower() == 'actual':
+                    automatic_actual_paystack_fees += float(fee_tx['paystack_fee'] or 0)
+                else:
+                    resolved_fee = _effective_paystack_fee_policy(db, fee_tx['instructor_id'], str(fee_tx['created_at'] or reporting_from)[:10])
+                    automatic_estimated_paystack_fees += float(fee_tx['amount'] or 0) * resolved_fee['rate_pct'] / 100.0
             withdrawal_total = db.execute(
                 "SELECT COALESCE(SUM(amount), 0) AS amount FROM admin_financial_records WHERE record_type='withdrawal' AND DATE(created_at) >= ?", (reporting_from,)
             ).fetchone()
@@ -7413,7 +7446,9 @@ def create_app() -> Flask:
             platform_earned = float(totals['platform_earned'] or 0)
             paid_amount = float(paid['amount'] or 0)
             other_expenses = float(expense_total['amount'] or 0)
-            paystack_fees = float(automatic_paystack_fees['amount'] or 0) + float(manual_paystack_fees['amount'] or 0)
+            paystack_fees_actual = automatic_actual_paystack_fees + float(manual_paystack_fees['amount'] or 0)
+            paystack_fees_estimated = automatic_estimated_paystack_fees
+            paystack_fees = paystack_fees_actual + paystack_fees_estimated
             expenses = other_expenses + paystack_fees
             withdrawals = float(withdrawal_total['amount'] or 0)
             # This is a ledger estimate, not a bank or Paystack balance.
@@ -7432,6 +7467,9 @@ def create_app() -> Flask:
                 'expenses': round(expenses, 2),
                 'other_expenses': round(other_expenses, 2),
                 'paystack_fees': round(paystack_fees, 2),
+                'paystack_fees_actual': round(paystack_fees_actual, 2),
+                'paystack_fees_estimated': round(paystack_fees_estimated, 2),
+                'paystack_fee_unverified_count': sum(1 for fee_tx in automatic_paystack_fee_rows if str(fee_tx['paystack_fee_status'] or 'unknown').lower() != 'actual'),
                 'owner_withdrawals': round(withdrawals, 2),
                 # This is the original value of transactions marked refunded,
                 # not an assumed partial-refund amount or a new cash movement.
