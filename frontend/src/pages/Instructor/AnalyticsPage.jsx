@@ -140,9 +140,9 @@ export function AnalyticsPage() {
               <p className="text-2xs text-muted-foreground mt-1">{instructorPctLabel}% of revenue after the platform fee</p>
             </div>
             <div className="p-4 rounded-xl bg-muted/30 border border-border text-center">
-              <p className="text-3xs font-bold uppercase text-muted-foreground tracking-widest mb-1">Platform Fee</p>
+              <p className="text-3xs font-bold uppercase text-muted-foreground tracking-widest mb-1">Platform Share</p>
               <p className="text-xl font-bold text-muted-foreground">{formatPrice(platformCut)}</p>
-              <p className="text-2xs text-muted-foreground mt-1">{adminPct}% of gross</p>
+              <p className="text-2xs text-muted-foreground mt-1">{adminPct}% of revenue after the LearnAfrica fee</p>
             </div>
           </div>
         </CardContent>
