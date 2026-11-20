@@ -1,5 +1,3 @@
-import React from 'react';
-
 /** Presentation-only loader; React Suspense and route guards control its lifetime. */
 export default function AfricaMapLoader() {
   return (
