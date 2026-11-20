@@ -360,7 +360,7 @@ function BadgeCard({ badge, userName }) {
   return (
     <>
     <div className={cn(
-      'relative flex aspect-[4/5] min-w-0 flex-col items-center justify-center p-2.5 rounded-xl border transition-all duration-300 group',
+      'col-span-2 relative flex aspect-[4/5] min-w-0 flex-col items-center justify-center p-2.5 rounded-xl border transition-all duration-300 group',
       earned
         ? `${cl.bg} ${cl.border} shadow-sm hover:shadow-md`
         : 'bg-muted/20 border-border/40 opacity-60 grayscale'
@@ -782,7 +782,7 @@ export default function StudentDashboard() {
           className={cn("grid transition-[grid-template-rows,opacity] duration-300 ease-in-out", badgesExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")}
         >
           <div className="min-h-0 overflow-hidden">
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(112px,144px))] justify-start gap-2 pt-1">
+            <div className="grid grid-cols-6 gap-5 pt-1 [&>*:nth-last-child(2)]:col-span-3 [&>*:last-child]:col-span-3 md:grid-cols-10 md:[&>*:nth-last-child(2)]:col-span-2 md:[&>*:last-child]:col-span-2">
               {liveBadges.map(badge => (
                 <BadgeCard key={badge.id} badge={badge} userName={user?.name} />
               ))}
