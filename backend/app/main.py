@@ -7195,6 +7195,8 @@ def create_app() -> Flask:
     def admin_earnings():
         """Detailed earnings breakdown per instructor."""
         db = get_db()
+        policy_row = db.execute("SELECT key FROM platform_config WHERE key='paystack_fee_policy'").fetchone()
+        reporting_from = str(_paystack_fee_policy_read(db).get('effective_from') or '0001-01-01') if policy_row else '0001-01-01'
         instructor_pct, admin_pct = get_revenue_split(db)
         ensure_transactions_table(db)
         paystack_fee_ready = ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
@@ -7210,10 +7212,11 @@ def create_app() -> Flask:
             FROM users u
             LEFT JOIN transactions t
               ON t.instructor_id=u.id AND t.type IN ('purchase','quiz_extra_attempt') AND t.status='success'
+                 AND DATE(t.created_at) >= ?
             WHERE u.role IN ('instructor','admin','superadmin')
             GROUP BY u.id, u.name, u.email, u.avatar, u.role
             ORDER BY gross DESC
-        ''').fetchall()
+        ''', (reporting_from,)).fetchall()
         result = []
         total_gross = 0.0
         total_instr = 0.0
@@ -7226,21 +7229,21 @@ def create_app() -> Flask:
             effective_split = resolve_instructor_revenue_split(db, row['id'], row['role'] in ('admin', 'superadmin'))
             platform_row = db.execute(
                 "SELECT COALESCE(SUM(platform_share), 0) as amount FROM transactions"
-                " WHERE instructor_id=? AND type IN ('purchase','quiz_extra_attempt') AND status='success'",
-                (row['id'],)
+                " WHERE instructor_id=? AND type IN ('purchase','quiz_extra_attempt') AND status='success' AND DATE(created_at) >= ?",
+                (row['id'], reporting_from)
             ).fetchone()
             recorded_platform_share = float(platform_row['amount'] or 0) if platform_row else 0.0
             fee_row = db.execute(
                 "SELECT COALESCE(SUM(paystack_fee), 0) as amount FROM transactions"
                 " WHERE instructor_id=? AND provider='paystack' AND status='success'"
-                " AND type IN ('purchase','quiz_extra_attempt')",
-                (row['id'],)
+                " AND type IN ('purchase','quiz_extra_attempt') AND DATE(created_at) >= ?",
+                (row['id'], reporting_from)
             ).fetchone() if paystack_fee_ready else {'amount': 0}
             actual_fees = float(fee_row['amount'] or 0) if fee_row else 0.0
             unverified_row = db.execute(
                 "SELECT COUNT(*) AS count FROM transactions WHERE instructor_id=? AND provider='paystack' "
                 "AND status='success' AND type IN ('purchase','quiz_extra_attempt') "
-                "AND COALESCE(paystack_fee_status,'unknown')<>'actual'", (row['id'],)
+                "AND COALESCE(paystack_fee_status,'unknown')<>'actual' AND DATE(created_at) >= ?", (row['id'], reporting_from)
             ).fetchone() if fee_status_ready else {'count': 0}
             unverified_count = int(unverified_row['count'] or 0) if unverified_row else 0
             if row['role'] in ('admin', 'superadmin'):
@@ -7274,6 +7277,7 @@ def create_app() -> Flask:
         registration_fees_actual = float(registration_fee_row['fees'] or 0) if registration_fee_row else 0.0
         registration_fee_unverified = int(registration_fee_row['unverified'] or 0) if registration_fee_row else 0
         return jsonify({
+            'reporting_from': reporting_from,
             'instructors': result,
             'total_gross': round(total_gross, 2),
             'course_paystack_fees_total': round(course_fees_total, 2),
@@ -7317,6 +7321,8 @@ def create_app() -> Flask:
             ensure_transactions_table(db)
             fee_column_ready = ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
             ensure_admin_financial_records_table(db)
+            policy_row = db.execute("SELECT key FROM platform_config WHERE key='paystack_fee_policy'").fetchone()
+            reporting_from = str(_paystack_fee_policy_read(db).get('effective_from') or '0001-01-01') if policy_row else '0001-01-01'
 
             if request.method == 'POST':
                 data = request.get_json(silent=True) or {}
@@ -7414,6 +7420,7 @@ def create_app() -> Flask:
             after_obligations = remaining - outstanding_amount
             return jsonify({
                 'currency': 'GHS',
+                'reporting_from': reporting_from,
                 'total_collected': round(collected, 2),
                 'instructor_earned': round(instructor_earned, 2),
                 'platform_earned': round(platform_earned, 2),
