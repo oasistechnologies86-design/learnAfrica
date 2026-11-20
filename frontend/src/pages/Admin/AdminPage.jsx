@@ -1230,7 +1230,11 @@ export default function AdminPage() {
                       </div>
                       <div className="text-center p-3 bg-muted/30 rounded-xl border border-border">
                         <p className="text-2xl font-bold">{formatPrice(earnings.paystack_fees_total || 0)}</p>
-                        <p className="text-xs text-muted-foreground mt-1">Actual Paystack Fees</p>
+                        <p className="text-xs text-muted-foreground mt-1">Verified Paystack Fees</p>
+                      </div>
+                      <div className="text-center p-3 bg-warning/5 rounded-xl border border-warning/20">
+                        <p className="text-2xl font-bold text-warning">{Number(earnings.paystack_fee_unverified_count || 0).toLocaleString()}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Transactions missing a verified fee</p>
                       </div>
                       <div className="text-center p-3 bg-success/5 rounded-xl border border-success/20">
                         <p className="text-2xl font-bold text-success">{formatPrice(earnings.net_after_paystack_total ?? earnings.total_gross ?? 0)}</p>
@@ -1263,7 +1267,12 @@ export default function AdminPage() {
                               </td>
                               <td className="p-3 text-center">{inst.course_count}</td>
                               <td className="p-3 text-right font-medium">{formatPrice(inst.gross_revenue)}</td>
-                              <td className="p-3 text-right text-muted-foreground">{formatPrice(inst.paystack_fees || 0)}</td>
+                              <td className="p-3 text-right text-muted-foreground">
+                                {formatPrice(inst.paystack_fees || 0)}
+                                {Number(inst.paystack_fee_unverified_count || 0) > 0 && (
+                                  <p className="text-[10px] text-warning mt-1">{Number(inst.paystack_fee_unverified_count).toLocaleString()} unverified</p>
+                                )}
+                              </td>
                               <td className="p-3 text-right font-medium">{formatPrice(inst.net_after_paystack ?? inst.gross_revenue)}</td>
                               <td className="p-3 text-right font-bold text-primary">{formatPrice(inst.instructor_earnings)}</td>
                               <td className="p-3 text-right text-success">{formatPrice(inst.platform_earnings)}</td>
