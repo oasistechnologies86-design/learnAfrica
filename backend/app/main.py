@@ -7369,6 +7369,8 @@ def create_app() -> Flask:
                     return jsonify({'error': 'Choose an expense or owner withdrawal.'}), 400
                 if not category:
                     return jsonify({'error': 'Enter a category.'}), 400
+                if record_type == 'expense' and category.casefold() == 'paystack fees':
+                    return jsonify({'error': 'Paystack fees are calculated automatically from your saved fee policy. Do not record them manually.'}), 400
                 if not (amount > 0 and amount < 1000000000000):
                     return jsonify({'error': 'Amount must be greater than zero.'}), 400
 
@@ -7414,16 +7416,17 @@ def create_app() -> Flask:
                      AND DATE(t.created_at) >= ?""", (reporting_from,)
             ).fetchone()
             records = db.execute(
-                """SELECT id, record_type, category, amount, description, reference, created_at
-                   FROM admin_financial_records WHERE DATE(created_at) >= ? ORDER BY created_at DESC LIMIT 100""", (reporting_from,)
+                """SELECT id, record_type,
+                          CASE WHEN LOWER(category) = 'paystack fees'
+                               THEN 'Legacy Paystack fee (not included; calculated automatically)'
+                               ELSE category END AS category,
+                          amount, description, reference, created_at
+                   FROM admin_financial_records WHERE DATE(created_at) >= ?
+                   ORDER BY created_at DESC, id DESC LIMIT 100""", (reporting_from,)
             ).fetchall()
             expense_total = db.execute(
                 """SELECT COALESCE(SUM(amount), 0) AS amount FROM admin_financial_records
                    WHERE record_type='expense' AND LOWER(category) <> 'paystack fees' AND DATE(created_at) >= ?""", (reporting_from,)
-            ).fetchone()
-            manual_paystack_fees = db.execute(
-                """SELECT COALESCE(SUM(amount), 0) AS amount FROM admin_financial_records
-                   WHERE record_type='expense' AND LOWER(category) = 'paystack fees' AND DATE(created_at) >= ?""", (reporting_from,)
             ).fetchone()
             # Sum LearnAfrica's saved fee snapshots across payment providers.
             automatic_fee_rows = db.execute(
@@ -7471,7 +7474,10 @@ def create_app() -> Flask:
             platform_earned = round(platform_earned, 2)
             paid_amount = float(paid['amount'] or 0)
             other_expenses = float(expense_total['amount'] or 0)
-            paystack_fees_actual = automatic_actual_paystack_fees + float(manual_paystack_fees['amount'] or 0)
+            # Paystack fees are calculated once from the saved policy snapshots.
+            # Manual Paystack-fee entries are no longer accepted because adding
+            # them to these automatic calculations would count the same fee twice.
+            paystack_fees_actual = automatic_actual_paystack_fees
             paystack_fees_estimated = automatic_estimated_paystack_fees
             paystack_fees = paystack_fees_actual + paystack_fees_estimated
             expenses = other_expenses + paystack_fees
@@ -7495,7 +7501,9 @@ def create_app() -> Flask:
                 'expenses': round(expenses, 2),
                 'other_expenses': round(other_expenses, 2),
                 'paystack_fees': round(paystack_fees, 2),
-                'paystack_fees_actual': 0.0,
+                'net_after_paystack': round(max(0.0, collected - paystack_fees), 2),
+                'total_allocated_to_instructor_and_platform': round(instructor_earned + platform_earned, 2),
+                'paystack_fees_actual': round(paystack_fees_actual, 2),
                 'paystack_fees_estimated': round(paystack_fees_estimated, 2),
                 'platform_fee': round(paystack_fees_estimated, 2),
                 'paystack_fee_unverified_count': 0,
