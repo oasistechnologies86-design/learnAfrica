@@ -360,7 +360,7 @@ function BadgeCard({ badge, userName }) {
   return (
     <>
     <div className={cn(
-      'relative flex flex-col items-center p-2.5 rounded-xl border transition-all duration-300 group',
+      'relative flex aspect-[4/5] min-w-0 flex-col items-center justify-center p-2.5 rounded-xl border transition-all duration-300 group',
       earned
         ? `${cl.bg} ${cl.border} shadow-sm hover:shadow-md`
         : 'bg-muted/20 border-border/40 opacity-60 grayscale'
@@ -566,23 +566,21 @@ export default function StudentDashboard() {
       {/* ── Compact student quick access ── */}
       <section aria-label="Quick access" className="space-y-1">
         <h2 className="text-xs font-semibold text-muted-foreground">Quick Access</h2>
-        <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
-          <Link to="/receipts" className="group flex min-h-12 items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-2 transition-colors hover:border-primary/40 hover:bg-primary/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+        <div className="flex w-full items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
+          <Link to="/receipts" className="group flex min-h-11 shrink-0 items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 transition-colors hover:border-primary/40 hover:bg-primary/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"><Receipt className="h-3.5 w-3.5" /></span>
-            <span className="min-w-0 truncate text-xs font-semibold">My Receipts</span>
+            <span className="whitespace-nowrap text-xs font-semibold">My Receipts</span>
           </Link>
-          <Link to="/my-certificates" className="group flex min-h-12 items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-2 transition-colors hover:border-primary/40 hover:bg-primary/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+          <Link to="/my-certificates" className="group flex min-h-11 shrink-0 items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 transition-colors hover:border-primary/40 hover:bg-primary/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"><Award className="h-3.5 w-3.5" /></span>
-            <span className="min-w-0 truncate text-xs font-semibold">Certificates</span>
+            <span className="whitespace-nowrap text-xs font-semibold">Certificates</span>
           </Link>
-        </div>
-        <div className="flex justify-end">
           <button
             type="button"
             onClick={() => setQuickAccessOpen(true)}
             aria-haspopup="dialog"
             aria-expanded={quickAccessOpen}
-            className="inline-flex min-h-6 items-center gap-1 rounded-md px-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-md px-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             View More <ArrowRight className="h-3.5 w-3.5" />
           </button>
@@ -621,6 +619,8 @@ export default function StudentDashboard() {
                 { to: "/courses", label: "My Courses", description: "Browse courses and continue learning", Icon: BookOpen },
                 { to: "/dashboard/leaderboard", label: "Leaderboard", description: "See your learning position", Icon: Trophy },
                 { to: "/community", label: "Community", description: "Connect with other learners", Icon: Compass },
+                { to: "/verify-credential", label: "Verified Certificate", description: "Check a certificate or badge", Icon: CheckCircle2 },
+                { to: "/about", label: "About", description: "Learn about LearnAfrica", Icon: Award },
               ].map(({ to, label, description, Icon }) => (
                 <Link
                   key={to}
