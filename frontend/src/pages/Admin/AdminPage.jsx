@@ -136,7 +136,6 @@ export default function AdminPage() {
   const [globalStatus, setGlobalStatus] = useState(null);
   const [earnings, setEarnings]         = useState(null);
   const [financialSummary, setFinancialSummary] = useState(null);
-  const [paystackBalance, setPaystackBalance] = useState(null);
   const [financialForm, setFinancialForm] = useState({
     record_type: 'expense', category: 'Other business expense', amount: '', description: '', reference: '',
   });
@@ -193,11 +192,6 @@ export default function AdminPage() {
           setFinancialSummary(await API('/api/admin/financial-records'));
         } catch (financeError) {
           setFinancialSummary({ error: financeError.message });
-        }
-        try {
-          setPaystackBalance(await API('/api/admin/paystack/balance'));
-        } catch {
-          setPaystackBalance({ available: false, message: 'Paystack balance could not be refreshed.' });
         }
       }
       else if (section === 'Guide') {
