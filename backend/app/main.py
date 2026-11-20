@@ -10235,8 +10235,8 @@ def create_app() -> Flask:
             # Deliberately reject retroactive mutation. Preview is available above;
             # any historical correction requires a separately reviewed adjustment.
             today = datetime.utcnow().date().isoformat()
-            if effective_from < today and d.get('change_mode') == 'rewrite_history':
-                return jsonify({'error': 'Historical transactions and paid payouts cannot be rewritten. Use a separately approved adjustment.'}), 409
+            if effective_from < today:
+                return jsonify({'error': 'Choose today or a future date. Historical transactions and paid payouts are not rewritten by fee-policy changes.'}), 409
             db = get_db()
             policy = _paystack_fee_policy_read(db)
             old_rate = float(policy.get('default_rate_pct') or 0)
@@ -10283,6 +10283,8 @@ def create_app() -> Flask:
                     datetime.strptime(effective_from, '%Y-%m-%d')
                 except ValueError:
                     return jsonify({'error': 'Choose a valid effective date.'}), 400
+                if effective_from < datetime.utcnow().date().isoformat():
+                    return jsonify({'error': 'Choose today or a future date. Historical instructor earnings are not rewritten.'}), 409
                 overrides[uid] = {'rate_pct': rate, 'effective_from': effective_from}
                 action = 'override'
             policy['instructor_overrides'] = overrides
