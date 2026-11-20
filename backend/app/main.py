@@ -3963,6 +3963,8 @@ def create_app() -> Flask:
         # Keep it separate from revenue-split percentages and never estimate it.
         paystack_fee_ready = ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
         fee_status_ready = ensure_column(db, 'transactions', 'paystack_fee_status', "TEXT DEFAULT 'unknown'")
+        if fee_status_ready:
+            db.execute("UPDATE transactions SET paystack_fee_status='actual' WHERE COALESCE(paystack_fee,0)>0 AND paystack_fee_status='unknown'")
         earnings_row = db.execute(
             "SELECT COALESCE(SUM(instructor_share), 0) as t FROM transactions"
             " WHERE instructor_id=? AND type IN ('purchase','quiz_extra_attempt') AND status='success'", (uid,)).fetchone()
