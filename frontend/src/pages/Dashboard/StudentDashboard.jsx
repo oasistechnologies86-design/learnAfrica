@@ -782,7 +782,7 @@ export default function StudentDashboard() {
           className={cn("grid transition-[grid-template-rows,opacity] duration-300 ease-in-out", badgesExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")}
         >
           <div className="min-h-0 overflow-hidden">
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(124px,158px))] justify-start gap-2 pt-1">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(124px,158px))] justify-center gap-3 pt-1">
               {liveBadges.map(badge => (
                 <BadgeCard key={badge.id} badge={badge} userName={user?.name} />
               ))}
