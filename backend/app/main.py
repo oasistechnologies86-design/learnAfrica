@@ -6959,8 +6959,7 @@ def create_app() -> Flask:
             SELECT u.id, u.name, u.email, u.avatar, u.role,
                    (SELECT COUNT(*) FROM courses c WHERE c.instructor_id=u.id) as course_count,
                    COALESCE(SUM(t.amount), 0) as gross,
-                   COALESCE(SUM(t.instructor_share), 0) as instr,
-                   COALESCE(SUM(CASE WHEN t.provider='paystack' THEN t.paystack_fee ELSE 0 END), 0) as paystack_fees
+                   COALESCE(SUM(t.instructor_share), 0) as instr
             FROM users u
             LEFT JOIN transactions t
               ON t.instructor_id=u.id AND t.type IN ('purchase','quiz_extra_attempt') AND t.status='success'
@@ -6978,7 +6977,13 @@ def create_app() -> Flask:
             total_gross += gross
             total_instr += instr
             effective_split = resolve_instructor_revenue_split(db, row['id'], row['role'] in ('admin', 'superadmin'))
-            actual_fees = float(row['paystack_fees'] or 0) if paystack_fee_ready else 0.0
+            fee_row = db.execute(
+                "SELECT COALESCE(SUM(paystack_fee), 0) as amount FROM transactions"
+                " WHERE instructor_id=? AND provider='paystack' AND status='success'"
+                " AND type IN ('purchase','quiz_extra_attempt')",
+                (row['id'],)
+            ).fetchone() if paystack_fee_ready else {'amount': 0}
+            actual_fees = float(fee_row['amount'] or 0) if fee_row else 0.0
             result.append({
                 'id': row['id'],
                 'name': row['name'],
