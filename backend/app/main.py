@@ -8338,6 +8338,8 @@ def create_app() -> Flask:
             ensure_transactions_table(db)
             uid = g.current_user['user_id']
             role = g.current_user['role']
+            if role == 'instructor':
+                _normalize_unpaid_transaction_splits(db, instructor_id=uid)
 
             where = []
             params = []
@@ -8567,6 +8569,7 @@ def create_app() -> Flask:
             db = get_db()
             ensure_transactions_table(db)
             uid = g.current_user['user_id']
+            _normalize_unpaid_transaction_splits(db, instructor_id=uid)
             pending = db.execute(
                 """SELECT COALESCE(SUM(instructor_share), 0) as total FROM transactions
                    WHERE instructor_id=? AND type IN ('purchase','quiz_extra_attempt')
@@ -8602,6 +8605,7 @@ def create_app() -> Flask:
         try:
             db = get_db()
             ensure_transactions_table(db)
+            _normalize_unpaid_transaction_splits(db)
             rows = db.execute(
                 """SELECT instructor_id, COALESCE(SUM(instructor_share), 0) as pending
                    FROM transactions
@@ -9121,6 +9125,7 @@ def create_app() -> Flask:
             if req['status'] != 'requested':
                 return jsonify({'error': f'This request is already {req["status"]}.'}), 409
             iid = req['instructor_id']
+            _normalize_unpaid_transaction_splits(db, instructor_id=iid)
 
             # Pay out the instructor's pending purchase rows (manual — no
             # Paystack transfer). This is the same bookkeeping the automated
