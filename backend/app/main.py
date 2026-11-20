@@ -10634,13 +10634,24 @@ def create_app() -> Flask:
             if g.current_user.get('role') != 'instructor':
                 return jsonify({'error': 'Instructor access required'}), 403
             policy = _paystack_fee_policy_read(db)
+            active = _effective_paystack_fee_policy(db, uid)
             override = (policy.get('instructor_overrides') or {}).get(uid)
+            scheduled_override = override if isinstance(override, dict) and str(override.get('effective_from') or '') > datetime.utcnow().date().isoformat() else None
+            scheduled_default = None
+            if str(policy.get('effective_from') or '') > datetime.utcnow().date().isoformat():
+                scheduled_default = {
+                    'rate_pct': policy.get('default_rate_pct', 1.95),
+                    'effective_from': policy.get('effective_from'),
+                }
             return jsonify({
-                'rate_pct': override.get('rate_pct') if override else policy.get('default_rate_pct', 0),
-                'effective_from': override.get('effective_from') if override else policy.get('effective_from'),
-                'source': 'instructor_override' if override else 'platform_default',
+                'rate_pct': active['rate_pct'],
+                'effective_from': active['effective_from'],
+                'source': active['source'],
+                'scheduled_override': scheduled_override,
+                'scheduled_default': scheduled_default,
                 'editable': False,
                 'actual_paystack_fee_source': 'verified Paystack transaction fee',
+                'policy_rate_is_estimate_only': True,
             })
         except Exception as e:
             app.logger.error(f'instructor_paystack_fee_policy: {e}')
