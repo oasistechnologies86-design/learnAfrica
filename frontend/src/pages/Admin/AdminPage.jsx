@@ -2047,6 +2047,22 @@ function AdminReceiptsTab() {
 
   const [rows,    setRows]    = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null);
+
+  const deleteStatement = async (transaction) => {
+    if (!transaction?.id || deletingId) return;
+    const label = transaction.receipt_id || transaction.id;
+    if (!window.confirm(`Delete statement ${label} from receipt views? The financial audit record will be retained.`)) return;
+    setDeletingId(transaction.id);
+    try {
+      await API(`/api/transactions/${encodeURIComponent(transaction.id)}`, { method: 'DELETE' });
+      setRows(current => current.filter(row => row.id !== transaction.id));
+      if (found?.id === transaction.id) setFound(null);
+      setMsg({ type: 'success', text: 'Statement deleted from receipt views.' });
+    } catch (e) {
+      setMsg({ type: 'error', text: e.message || 'Could not delete this statement.' });
+    } finally { setDeletingId(null); }
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -2181,13 +2197,14 @@ function AdminReceiptsTab() {
                   <th className="px-2 py-2 text-left">Course</th>
                   <th className="px-2 py-2 text-right">Amount</th>
                   <th className="px-2 py-2 text-left">Status</th>
+                  <th className="px-2 py-2 text-right">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={7} className="text-center py-6 text-muted-foreground">Loading…</td></tr>
+                  <tr><td colSpan={8} className="text-center py-6 text-muted-foreground">Loading…</td></tr>
                 ) : rows.length === 0 ? (
-                  <tr><td colSpan={7} className="text-center py-6 text-muted-foreground">No transactions yet.</td></tr>
+                  <tr><td colSpan={8} className="text-center py-6 text-muted-foreground">No transactions yet.</td></tr>
                 ) : rows.slice(0, 50).map(t => (
                   <tr key={t.id} className="border-b border-border/50 hover:bg-muted/20">
                     <td className="px-2 py-2 font-mono text-2xs">{t.receipt_id}</td>
@@ -2205,6 +2222,14 @@ function AdminReceiptsTab() {
                                                   'bg-warning/10 text-warning')}>
                         {t.status}
                       </span>
+                    </td>
+                    <td className="px-2 py-2 text-right">
+                      <Button type="button" size="sm" variant="ghost"
+                        disabled={deletingId === t.id}
+                        onClick={() => deleteStatement(t)}
+                        aria-label={`Delete statement ${t.receipt_id || t.id}`}>
+                        {deletingId === t.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                      </Button>
                     </td>
                   </tr>
                 ))}
