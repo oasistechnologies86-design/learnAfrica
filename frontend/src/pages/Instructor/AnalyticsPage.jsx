@@ -82,6 +82,30 @@ export function AnalyticsPage() {
             <TrendingUp className="h-8 w-8 text-muted-foreground/30" />
           </div>
 
+          <div className="rounded-xl border border-border bg-background p-4 space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Paystack fees (actual + estimated)</span>
+              <span className="font-semibold">{formatPrice(stats?.paystack_fees || 0)}</span>
+            </div>
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Confirmed by Paystack</span>
+              <span>{formatPrice(stats?.paystack_fees_actual || 0)}</span>
+            </div>
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Estimated, awaiting confirmation</span>
+              <span>{formatPrice(stats?.paystack_fees_estimated || 0)}</span>
+            </div>
+            <div className="flex items-center justify-between border-t border-border pt-2 text-sm">
+              <span className="font-medium">Revenue after Paystack fees</span>
+              <span className="font-bold">{formatPrice(stats?.net_after_paystack ?? gross)}</span>
+            </div>
+            {Number(stats?.paystack_fee_unverified_count || 0) > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {stats.paystack_fee_unverified_count} transactions are awaiting provider fee confirmation. Estimates are not confirmed Paystack charges.
+              </p>
+            )}
+          </div>
+
           {/* Split bar */}
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs font-bold uppercase tracking-widest text-muted-foreground">
