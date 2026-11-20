@@ -88,11 +88,11 @@ export function AnalyticsPage() {
               <span className="font-semibold">{formatPrice(stats?.paystack_fees || 0)}</span>
             </div>
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>Configured fee applied by LearnAfrica</span>
+              <span>Provider-reported Paystack fee</span>
               <span>{formatPrice(stats?.paystack_fees_actual || 0)}</span>
             </div>
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>Fee calculated from the saved policy</span>
+              <span>Calculated Paystack fee (saved policy)</span>
               <span>{formatPrice(stats?.paystack_fees_estimated || 0)}</span>
             </div>
             <div className="flex items-center justify-between border-t border-border pt-2 text-sm">
@@ -101,7 +101,7 @@ export function AnalyticsPage() {
             </div>
             {Number(stats?.paystack_fee_unverified_count || 0) > 0 && (
               <p className="text-xs text-muted-foreground">
-                {stats.paystack_fee_unverified_count} transactions have a Paystack fee is calculated using the saved fee policy.
+                {stats.paystack_fee_unverified_count} transactions use a calculated Paystack fee because a provider-reported fee is not available.
               </p>
             )}
           </div>
