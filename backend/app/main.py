@@ -10384,6 +10384,8 @@ def create_app() -> Flask:
         from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
         ensure_column(db, 'transactions', 'paystack_fee_estimate', 'REAL DEFAULT 0')
         ensure_column(db, 'transactions', 'paystack_fee_status', "TEXT DEFAULT 'unknown'")
+        # Backfill historical rows whose non-zero provider fee was already recorded.
+        db.execute("UPDATE transactions SET paystack_fee_status='actual' WHERE COALESCE(paystack_fee,0)>0 AND paystack_fee_status='unknown'")
         row = db.execute(
             "SELECT amount, instructor_share, platform_share, payout_status, type, paystack_fee, "
             "paystack_fee_estimate, paystack_fee_status "
@@ -10497,6 +10499,7 @@ def create_app() -> Flask:
             ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
             ensure_column(db, 'transactions', 'paystack_fee_estimate', 'REAL DEFAULT 0')
             ensure_column(db, 'transactions', 'paystack_fee_status', "TEXT DEFAULT 'unknown'")
+            db.execute("UPDATE transactions SET paystack_fee_status='actual' WHERE COALESCE(paystack_fee,0)>0 AND paystack_fee_status='unknown'")
             rows = db.execute(
                 """SELECT instructor_id, amount, paystack_fee, paystack_fee_status
                    FROM transactions
