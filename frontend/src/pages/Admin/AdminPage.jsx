@@ -150,7 +150,8 @@ export default function AdminPage() {
   const [savingSplit, setSavingSplit]   = useState(false);
   const [instructorSplitEdits, setInstructorSplitEdits] = useState({});
   const [savingInstructorSplit, setSavingInstructorSplit] = useState('');
-  const [paystackFeePolicy, setPaystackFeePolicy] = useState({ default_rate_pct: 0, effective_from: new Date().toISOString().slice(0, 10), instructor_overrides: {}, history: [] });
+  const [paystackFeePolicy, setPaystackFeePolicy] = useState({ default_rate_pct: 1.95, effective_from: new Date().toISOString().slice(0, 10), apply_scope: 'all_instructors', instructor_overrides: {}, history: [] });
+  const [feeOverrideDates, setFeeOverrideDates] = useState({});
   const [feePreview, setFeePreview] = useState(null);
   const [savingFeePolicy, setSavingFeePolicy] = useState(false);
   const [feeOverrideEdits, setFeeOverrideEdits] = useState({});
@@ -180,6 +181,7 @@ export default function AdminPage() {
           const feePolicy = await API('/api/admin/paystack-fee-policy');
           setPaystackFeePolicy(feePolicy);
           setFeeOverrideEdits(Object.fromEntries(Object.entries(feePolicy.instructor_overrides || {}).map(([id, value]) => [id, String(value.rate_pct)])));
+          setFeeOverrideDates(Object.fromEntries(Object.entries(feePolicy.instructor_overrides || {}).map(([id, value]) => [id, String(value.effective_from || feePolicy.effective_from || '')])));
         } catch (feePolicyError) {
           showStatus('error', 'Could not load Paystack fee settings: ' + feePolicyError.message);
         }
@@ -1129,13 +1131,12 @@ export default function AdminPage() {
                 <div>
                   <h2 className="font-bold text-base">Paystack Fee Policy</h2>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Set a planning rate and its effective date. Verified Paystack transaction fees remain the accounting source of truth.
-                    This setting does not rewrite completed transactions or paid instructor payouts.
+                    This default rate applies to all instructors from the selected date, unless an instructor has a separate rate and date. It is used for provisional allocation only. Paystack's verified fee replaces the estimate when payment settles.
                   </p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
                   <label className="text-sm space-y-1">
-                    <span className="font-medium">Default fee rate (%)</span>
+                    <span className="font-medium">Default fee rate (%) · applies to all</span>
                     <input type="number" min="0" max="100" step="0.01"
                       value={paystackFeePolicy.default_rate_pct ?? 0}
                       onChange={e => setPaystackFeePolicy(p => ({ ...p, default_rate_pct: e.target.value }))}
@@ -1172,10 +1173,12 @@ export default function AdminPage() {
                 </div>
                 {feePreview && (
                   <div className="rounded-lg border border-border bg-muted/20 p-3 text-sm space-y-1">
-                    <p className="font-semibold">Historical impact preview from {feePreview.effective_from}</p>
-                    <p>{Number(feePreview.transaction_count || 0).toLocaleString()} successful course/quiz transactions</p>
+                    <p className="font-semibold">Impact preview from {feePreview.effective_from}</p>
+                    <p>{Number(feePreview.transaction_count || 0).toLocaleString()} successful Paystack course/quiz transactions</p>
                     <p>Gross amount: {formatPrice(feePreview.gross || 0)}</p>
                     <p>Recorded actual Paystack fees: {formatPrice(feePreview.actual_paystack_fees || 0)}</p>
+                    <p>Estimated fees at the selected policy: {formatPrice(feePreview.estimated_policy_fees || 0)}</p>
+                    <p>Transactions missing a verified fee: {Number(feePreview.transactions_missing_actual_fee || 0).toLocaleString()}</p>
                     <p className="text-muted-foreground">{feePreview.note}</p>
                   </div>
                 )}
@@ -1296,7 +1299,7 @@ export default function AdminPage() {
                               <td className="p-3 min-w-[190px]">
                                 {inst.role === 'instructor' ? (
                                   <>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex flex-wrap items-center gap-2">
                                       <input type="number" min="0" max="100" step="0.01"
                                         aria-label={"Paystack fee rate for " + inst.name}
                                         value={feeOverrideEdits[inst.id] ?? ''}
@@ -1304,14 +1307,18 @@ export default function AdminPage() {
                                         onChange={e => setFeeOverrideEdits(prev => ({ ...prev, [inst.id]: e.target.value }))}
                                         className="w-24 rounded-md border border-border bg-background px-2 py-1 text-sm tabular-nums" />
                                       <span className="text-xs text-muted-foreground">%</span>
+                                      <input type="date" aria-label={"Paystack fee effective date for " + inst.name}
+                                        value={feeOverrideDates[inst.id] ?? paystackFeePolicy.effective_from ?? ''}
+                                        onChange={e => setFeeOverrideDates(prev => ({ ...prev, [inst.id]: e.target.value }))}
+                                        className="rounded-md border border-border bg-background px-2 py-1 text-xs" />
                                     </div>
                                     <div className="flex flex-wrap gap-1 mt-2">
                                       <Button size="sm" disabled={savingFeeOverride === inst.id || feeOverrideEdits[inst.id] === undefined || feeOverrideEdits[inst.id] === ''}
                                         onClick={async () => {
                                           setSavingFeeOverride(inst.id);
                                           try {
-                                            await API('/api/admin/instructors/' + inst.id + '/paystack-fee-policy', { method: 'PUT', body: JSON.stringify({ rate_pct: Number(feeOverrideEdits[inst.id]), effective_from: paystackFeePolicy.effective_from }) });
-                                            setPaystackFeePolicy(p => ({ ...p, instructor_overrides: { ...(p.instructor_overrides || {}), [inst.id]: { rate_pct: Number(feeOverrideEdits[inst.id]), effective_from: p.effective_from } } }));
+                                            await API('/api/admin/instructors/' + inst.id + '/paystack-fee-policy', { method: 'PUT', body: JSON.stringify({ rate_pct: Number(feeOverrideEdits[inst.id]), effective_from: feeOverrideDates[inst.id] || paystackFeePolicy.effective_from }) });
+                                            setPaystackFeePolicy(p => ({ ...p, instructor_overrides: { ...(p.instructor_overrides || {}), [inst.id]: { rate_pct: Number(feeOverrideEdits[inst.id]), effective_from: feeOverrideDates[inst.id] || p.effective_from } } }));
                                             showStatus('success', 'Instructor fee override saved.');
                                           } catch (e) { showStatus('error', e.message); }
                                           setSavingFeeOverride('');
@@ -1324,6 +1331,7 @@ export default function AdminPage() {
                                               await API('/api/admin/instructors/' + inst.id + '/paystack-fee-policy', { method: 'PUT', body: JSON.stringify({ reset_to_default: true }) });
                                               setPaystackFeePolicy(p => { const next = { ...(p.instructor_overrides || {}) }; delete next[inst.id]; return { ...p, instructor_overrides: next }; });
                                               setFeeOverrideEdits(prev => { const next = { ...prev }; delete next[inst.id]; return next; });
+                                              setFeeOverrideDates(prev => { const next = { ...prev }; delete next[inst.id]; return next; });
                                               showStatus('success', 'Instructor now uses the platform default.');
                                             } catch (e) { showStatus('error', e.message); }
                                             setSavingFeeOverride('');
