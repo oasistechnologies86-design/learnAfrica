@@ -9189,14 +9189,13 @@ def create_app() -> Flask:
                         if fee_minor is not None and paystack_fee_column_ready:
                             try:
                                 fee_amount = round(float(fee_minor) / 100, 2)
+                                # Reconcile shares against the previous recorded fee
+                                # before replacing it, making duplicate webhooks idempotent.
+                                _apply_verified_paystack_fee_to_unpaid_shares(db, tx['id'], fee_amount)
                                 db.execute(
                                     "UPDATE transactions SET paystack_fee=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
                                     (fee_amount, tx['id'])
                                 )
-                                # Deduct the actual provider fee before applying
-                                # the transaction's original instructor/platform
-                                # split, but never rewrite an already-paid payout.
-                                _apply_verified_paystack_fee_to_unpaid_shares(db, tx['id'], fee_amount)
                                 db.commit()
                             except (TypeError, ValueError):
                                 app.logger.warning('Invalid Paystack fee amount for transaction %s', tx['id'])
@@ -9657,11 +9656,11 @@ def create_app() -> Flask:
                     fee_amount = round(float(result.get('fees') or 0), 2)
                     if 0 <= fee_amount <= float(tx['amount'] or 0):
                         ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
+                        _apply_verified_paystack_fee_to_unpaid_shares(db, tx['id'], fee_amount)
                         db.execute(
                             "UPDATE transactions SET paystack_fee=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
                             (fee_amount, tx['id'])
                         )
-                        _apply_verified_paystack_fee_to_unpaid_shares(db, tx['id'], fee_amount)
                 db.execute("UPDATE transactions SET status='success', updated_at=CURRENT_TIMESTAMP WHERE id=?", (tx['id'],))
                 if tx['type'] == 'quiz_extra_attempt':
                     settle_extra_attempt(db, tx['id'])
@@ -10105,7 +10104,7 @@ def create_app() -> Flask:
         """
         from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
         row = db.execute(
-            "SELECT amount, instructor_share, platform_share, payout_status, type "
+            "SELECT amount, instructor_share, platform_share, payout_status, type, paystack_fee "
             "FROM transactions WHERE id=?",
             (transaction_id,)
         ).fetchone()
