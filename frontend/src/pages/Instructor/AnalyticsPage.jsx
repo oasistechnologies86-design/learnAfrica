@@ -84,24 +84,24 @@ export function AnalyticsPage() {
 
           <div className="rounded-xl border border-border bg-background p-4 space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Paystack fees (actual + estimated)</span>
+              <span className="text-muted-foreground">LearnAfrica platform fee</span>
               <span className="font-semibold">{formatPrice(stats?.paystack_fees || 0)}</span>
             </div>
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>Confirmed by Paystack</span>
+              <span>Configured fee applied by LearnAfrica</span>
               <span>{formatPrice(stats?.paystack_fees_actual || 0)}</span>
             </div>
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>Estimated, awaiting confirmation</span>
+              <span>Fee calculated from the saved policy</span>
               <span>{formatPrice(stats?.paystack_fees_estimated || 0)}</span>
             </div>
             <div className="flex items-center justify-between border-t border-border pt-2 text-sm">
-              <span className="font-medium">Revenue after Paystack fees</span>
+              <span className="font-medium">Revenue after LearnAfrica fee</span>
               <span className="font-bold">{formatPrice(stats?.net_after_paystack ?? gross)}</span>
             </div>
             {Number(stats?.paystack_fee_unverified_count || 0) > 0 && (
               <p className="text-xs text-muted-foreground">
-                {stats.paystack_fee_unverified_count} transactions are awaiting provider fee confirmation. Estimates are not confirmed Paystack charges.
+                {stats.paystack_fee_unverified_count} transactions are The platform fee is calculated by LearnAfrica using the saved fee policy.
               </p>
             )}
           </div>
@@ -137,7 +137,7 @@ export function AnalyticsPage() {
             <div className="p-4 rounded-xl bg-success/5 border border-success/20 text-center">
               <p className="text-3xs font-bold uppercase text-success/70 tracking-widest mb-1">Your Earnings</p>
               <p className="text-xl font-bold text-success">{formatPrice(myEarnings)}</p>
-              <p className="text-2xs text-muted-foreground mt-1">{instructorPctLabel}% of gross</p>
+              <p className="text-2xs text-muted-foreground mt-1">{instructorPctLabel}% of revenue after the platform fee</p>
             </div>
             <div className="p-4 rounded-xl bg-muted/30 border border-border text-center">
               <p className="text-3xs font-bold uppercase text-muted-foreground tracking-widest mb-1">Platform Fee</p>
