@@ -7396,7 +7396,7 @@ def create_app() -> Flask:
                 ).fetchone() if fee_column_ready else {'amount': 0}
             )
             withdrawal_total = db.execute(
-                "SELECT COALESCE(SUM(amount), 0) AS amount FROM admin_financial_records WHERE record_type='withdrawal' AND DATE(created_at) >= ?"
+                "SELECT COALESCE(SUM(amount), 0) AS amount FROM admin_financial_records WHERE record_type='withdrawal' AND DATE(created_at) >= ?", (reporting_from,)
             ).fetchone()
             refunded = db.execute(
                 """SELECT COUNT(*) AS count, COALESCE(SUM(amount), 0) AS amount
