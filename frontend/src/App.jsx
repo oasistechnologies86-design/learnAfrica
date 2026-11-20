@@ -3,7 +3,7 @@ import { lazy, Suspense, useEffect } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './components/common/Toast';
-import { Loader2 } from 'lucide-react';
+import AfricaMapLoader from './components/common/AfricaMapLoader';
 import ErrorBoundary from './components/common/ErrorBoundary';
 
 import MainLayout    from './layouts/MainLayout';
@@ -61,14 +61,7 @@ const CommunityPage            = lazy(() => import('./pages/Community/CommunityP
 // ProtectedRoute showed a spinner while PublicOnlyRoute/StudentOnlyRoute
 // silently rendered nothing, an inconsistent, confusing experience).
 function RouteLoadingScreen() {
-  return (
-    <div className="h-screen w-full flex items-center justify-center bg-background">
-      <div className="text-center space-y-3">
-        <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-        <p className="text-sm text-muted-foreground animate-pulse">Please wait...</p>
-      </div>
-    </div>
-  );
+  return <AfricaMapLoader />;
 }
 
 // ── Route Guards ──────────────────────────────────────────────────────────────

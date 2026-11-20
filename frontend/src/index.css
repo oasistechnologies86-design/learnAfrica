@@ -625,3 +625,29 @@ button:disabled,
   .custom-lesson-reader-timeline { display:grid; grid-template-columns:1fr auto; gap:7px 10px; }
   .custom-lesson-reader-timeline input { grid-column:1 / -1; grid-row:2; width:100%; }
 }
+
+
+/* LearnAfrica Africa-map loading screen */
+.la-africa-loader{min-height:100vh;min-height:100dvh;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;overflow:hidden;background:radial-gradient(ellipse at 50% 46%,color-mix(in oklab,var(--primary) 9%,var(--background)) 0%,var(--background) 62%);color:var(--foreground)}
+.la-africa-loader__visual{width:clamp(150px,32vmin,230px);aspect-ratio:1;display:grid;place-items:center}
+.la-africa-loader__art{width:100%;height:100%;overflow:visible}
+.la-africa-loader__orbit{fill:none;stroke:color-mix(in oklab,var(--primary) 48%,transparent);stroke-width:.8;stroke-dasharray:2 5;transform-origin:120px 116px;animation:la-orbit-spin 24s linear infinite}
+.la-africa-loader__orbit--gold{stroke:#d99b27;stroke-width:1;stroke-dasharray:18 9 2 9;animation-direction:reverse;animation-duration:18s}
+.la-africa-loader__continent{filter:drop-shadow(0 5px 12px color-mix(in oklab,var(--primary) 28%,transparent))}
+.la-africa-loader__coast{fill:none;stroke:color-mix(in oklab,var(--primary) 85%,white);stroke-width:1.35;stroke-linejoin:round;stroke-dasharray:410;stroke-dashoffset:410;animation:la-coast-trace 3.2s ease-in-out infinite alternate}
+.la-africa-loader__map-lines{fill:none;stroke:rgba(111,226,170,.34);stroke-width:.75;stroke-linecap:round}
+.la-africa-loader__madagascar{fill:#075238;stroke:rgba(111,226,170,.7);stroke-width:1}
+.la-africa-loader__particles{fill:#75e6b0}
+.la-africa-loader__particles circle{animation:la-particle-pulse 2.2s ease-in-out infinite}
+.la-africa-loader__particles circle:nth-child(2n){animation-delay:-.8s}
+.la-africa-loader__particles circle:nth-child(3n){animation-delay:-1.4s}
+.la-africa-loader__sweep{fill:none;stroke:#e7b54a;stroke-width:1.6;stroke-dasharray:58 627;stroke-linecap:round;transform-origin:120px 116px;transform:rotate(-90deg);animation:la-sweep-spin 4.8s linear infinite;filter:drop-shadow(0 0 4px rgba(231,181,74,.8))}
+.la-africa-loader__satellite{fill:#8be9b7;filter:drop-shadow(0 0 5px #49c98b);transform-origin:120px 116px;animation:la-orbit-spin 4.8s linear infinite}
+.la-africa-loader__satellite--gold{fill:#f0c45e;animation-duration:7s;animation-direction:reverse}
+.la-africa-loader__label{color:var(--muted-foreground);font-size:.875rem;font-weight:500;letter-spacing:.025em;animation:la-label-breathe 1.8s ease-in-out infinite}
+@keyframes la-orbit-spin{to{transform:rotate(360deg)}}
+@keyframes la-sweep-spin{to{transform:rotate(270deg)}}
+@keyframes la-coast-trace{from{stroke-dashoffset:410;opacity:.55}to{stroke-dashoffset:0;opacity:1}}
+@keyframes la-particle-pulse{0%,100%{opacity:.35}50%{opacity:1}}
+@keyframes la-label-breathe{0%,100%{opacity:.68}50%{opacity:1}}
+@media(prefers-reduced-motion:reduce){.la-africa-loader__orbit,.la-africa-loader__coast,.la-africa-loader__particles circle,.la-africa-loader__sweep,.la-africa-loader__satellite,.la-africa-loader__label{animation:none!important}.la-africa-loader__coast{stroke-dashoffset:0}.la-africa-loader__sweep{stroke-dasharray:0}}
