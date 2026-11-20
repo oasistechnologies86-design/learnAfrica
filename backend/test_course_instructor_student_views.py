@@ -107,6 +107,34 @@ try:
 
     # Admin course list feeds the View Students financial summary.
     current_user = {'user_id': 'admin-1', 'email': 'admin@example.test', 'role': 'admin'}
+
+    # Dated Paystack fee policy applies platform-wide unless an instructor override is active.
+    policy_response = app_client.put('/api/admin/paystack-fee-policy', json={
+        'default_rate_pct': 1.95, 'effective_from': '2099-01-01'
+    })
+    check('admin can save a dated global Paystack fee rate', policy_response.status_code == 200, policy_response.get_json())
+    policy_payload = app_client.get('/api/admin/paystack-fee-policy').get_json() or {}
+    check('global Paystack policy is explicitly scoped to all instructors',
+          policy_payload.get('default_rate_pct') == 1.95 and policy_payload.get('apply_scope') == 'all_instructors',
+          policy_payload)
+
+    override_response = app_client.put('/api/admin/instructors/instructor-a/paystack-fee-policy', json={
+        'rate_pct': 2.5, 'effective_from': '2099-02-01'
+    })
+    check('admin can save an instructor-specific fee and effective date',
+          override_response.status_code == 200, override_response.get_json())
+    current_user = {'user_id': 'instructor-a', 'email': 'a@example.test', 'role': 'instructor'}
+    instructor_policy = app_client.get('/api/instructor/paystack-fee-policy').get_json() or {}
+    check('instructor policy exposes its override and effective date',
+          instructor_policy.get('rate_pct') == 2.5 and instructor_policy.get('effective_from') == '2099-02-01',
+          instructor_policy)
+    current_user = {'user_id': 'instructor-b', 'email': 'b@example.test', 'role': 'instructor'}
+    default_policy = app_client.get('/api/instructor/paystack-fee-policy').get_json() or {}
+    check('instructor without override inherits the platform default',
+          default_policy.get('rate_pct') == 1.95 and default_policy.get('source') == 'platform_default',
+          default_policy)
+
+    current_user = {'user_id': 'admin-1', 'email': 'admin@example.test', 'role': 'admin'}
     response = app_client.get('/api/admin/courses')
     course_list = response.get_json() or {}
     course_a = next((c for c in course_list.get('courses', []) if c['id'] == 'course-a'), {})
