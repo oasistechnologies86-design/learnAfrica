@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { API_BASE } from '@/lib/api';
 import { formatPrice } from '@/lib/money';
 import { courseThumbnail } from '@/lib/courseThumbnail';
+import StudentsListModal from '@/components/admin/StudentsListModal';
 
 const api = async (endpoint, options = {}) => {
   const token = sessionStorage.getItem('auth_token');
@@ -24,6 +25,7 @@ export default function ManageCoursesPage() {
   const [deletingId, setDeletingId] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [status, setStatus] = useState(null);
+  const [studentsView, setStudentsView] = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -142,6 +144,22 @@ export default function ManageCoursesPage() {
                     <Link to={`/instructor/preview/${c.id}`} className="min-w-0">
                       <Button variant="outline" size="sm" className="w-full gap-1.5 whitespace-nowrap text-xs sm:w-auto"><Eye className="h-3.5 w-3.5" />Preview</Button>
                     </Link>
+                    <Button variant="outline" size="sm" className="w-full gap-1.5 whitespace-nowrap text-xs sm:w-auto"
+                      onClick={() => setStudentsView({
+                        endpoint: `/api/instructor/courses/${c.id}/students`,
+                        title: `${c.title} · Students`,
+                        subtitle: 'Students enrolled in this course.',
+                        summary: {
+                          gross_revenue: c.gross_revenue || 0,
+                          paystack_fees: c.paystack_fees || 0,
+                          net_after_paystack: c.net_after_paystack || 0,
+                          instructor_earnings: c.instructor_earnings || 0,
+                          platform_earnings: c.platform_earnings || 0,
+                          student_count: c.student_count || c.enrollments || 0,
+                        },
+                      })}>
+                      <Users className="h-3.5 w-3.5" />Students
+                    </Button>
                     <Link to={`/instructor/courses/edit/${c.id}`} className="min-w-0">
                       <Button variant="outline" size="sm" className="w-full gap-1.5 whitespace-nowrap text-xs sm:w-auto"><Edit2 className="h-3.5 w-3.5" />Edit</Button>
                     </Link>
@@ -161,6 +179,15 @@ export default function ManageCoursesPage() {
             </Card>
           ))}
         </div>
+      )}
+      {studentsView && (
+        <StudentsListModal
+          endpoint={studentsView.endpoint}
+          title={studentsView.title}
+          subtitle={studentsView.subtitle}
+          summary={studentsView.summary}
+          onClose={() => setStudentsView(null)}
+        />
       )}
     </div>
   );

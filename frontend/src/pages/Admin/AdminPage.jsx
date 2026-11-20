@@ -15,6 +15,7 @@ import EmailUsageCard from '@/components/common/EmailUsageCard';
 import { ScaleToFit } from '@/components/common/ScaleToFit';
 import { CertificateDocument, CERT_DESIGN_WIDTH, CERT_DESIGN_HEIGHT } from '@/pages/Certificate/CertificatePage';
 import { mergeFooterConfig, SOCIAL_NAMES, AUDIENCES } from '@/lib/footerConfig';
+import StudentsListModal from '@/components/admin/StudentsListModal';
 import {
   Users, BookOpen, TrendingUp, Shield, CheckCircle2, XCircle, Loader2, Bell,
   Clock, AlertTriangle, UserCheck, UserX, BarChart2, Send, Eye, Trash2,
@@ -126,6 +127,7 @@ export default function AdminPage() {
   const [broadcast, setBroadcast] = useState({ title: '', message: '', role: '', type: 'system' });
   const [broadcastStatus, setBroadcastStatus] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [studentsView, setStudentsView] = useState(null);
   const [identityForm, setIdentityForm] = useState(null); // admin edit of frozen country/ID
   const [savingIdentity, setSavingIdentity] = useState(false);
   const [identityEditOpen, setIdentityEditOpen] = useState(false);
@@ -148,6 +150,11 @@ export default function AdminPage() {
   const [savingSplit, setSavingSplit]   = useState(false);
   const [instructorSplitEdits, setInstructorSplitEdits] = useState({});
   const [savingInstructorSplit, setSavingInstructorSplit] = useState('');
+  const [paystackFeePolicy, setPaystackFeePolicy] = useState({ default_rate_pct: 0, effective_from: new Date().toISOString().slice(0, 10), instructor_overrides: {}, history: [] });
+  const [feePreview, setFeePreview] = useState(null);
+  const [savingFeePolicy, setSavingFeePolicy] = useState(false);
+  const [feeOverrideEdits, setFeeOverrideEdits] = useState({});
+  const [savingFeeOverride, setSavingFeeOverride] = useState('');
 
   const showStatus = (type, msg) => {
     setGlobalStatus({ type, msg });
@@ -169,6 +176,13 @@ export default function AdminPage() {
           API('/api/admin/revenue-split'),
         ]);
         setEarnings(earnData);
+        try {
+          const feePolicy = await API('/api/admin/paystack-fee-policy');
+          setPaystackFeePolicy(feePolicy);
+          setFeeOverrideEdits(Object.fromEntries(Object.entries(feePolicy.instructor_overrides || {}).map(([id, value]) => [id, String(value.rate_pct)])));
+        } catch (feePolicyError) {
+          showStatus('error', 'Could not load Paystack fee settings: ' + feePolicyError.message);
+        }
         setSplitForm({ instructor_share: splitData.instructor_share });
         setInstructorSplitEdits(Object.fromEntries((earnData.instructors || []).map(inst => [inst.id, String(inst.instructor_share_pct ?? splitData.instructor_share)])));
         // This is independent of the existing earnings request so a ledger error
@@ -291,6 +305,38 @@ export default function AdminPage() {
         id_number: d.user?.instructor_application?.id_number || d.user?.id_number || '',
       });
     } catch (e) { showStatus('error', e.message); }
+  };
+
+  const viewCourseStudents = (course) => {
+    setStudentsView({
+      endpoint: `/api/admin/courses/${course.id}/students`,
+      title: `${course.title} · Students`,
+      subtitle: `Enrolments for ${course.title}. Financial figures show successful course payments only.`,
+      summary: {
+        gross_revenue: course.gross_revenue || 0,
+        paystack_fees: course.paystack_fees || 0,
+        net_after_paystack: course.net_after_paystack || 0,
+        instructor_earnings: course.instructor_earnings || 0,
+        platform_earnings: course.platform_earnings || 0,
+        student_count: course.student_count || 0,
+      },
+    });
+  };
+
+  const viewInstructorStudents = (instructor) => {
+    setStudentsView({
+      endpoint: `/api/admin/instructors/${instructor.id}/students`,
+      title: `${instructor.name || 'Instructor'} · Students`,
+      subtitle: 'All enrolment records across this instructor’s courses.',
+      summary: {
+        gross_revenue: instructor.gross_revenue,
+        paystack_fees: instructor.paystack_fees,
+        net_after_paystack: instructor.net_after_paystack,
+        instructor_earnings: instructor.total_earned,
+        platform_earnings: instructor.platform_earnings,
+        student_count: instructor.total_students,
+      },
+    });
   };
 
   const saveIdentityEdit = async () => {
@@ -696,6 +742,10 @@ export default function AdminPage() {
                           className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-border text-muted-foreground hover:bg-muted hover:text-primary transition-colors">
                           <Eye className="h-3.5 w-3.5" />View
                         </button>
+                        <button onClick={() => viewInstructorStudents(inst)} title="View all students enrolled in this instructor’s courses"
+                          className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-primary/30 text-primary hover:bg-primary/5 transition-colors">
+                          <Users className="h-3.5 w-3.5" />View Students
+                        </button>
                         <button onClick={() => toggleSuspend(inst.id)}
                           disabled={actionLoading === inst.id + 'suspend'}
                           className={cn('flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors',
@@ -761,6 +811,11 @@ export default function AdminPage() {
                               title="Manage course content and quiz settings"
                               className="flex items-center gap-1 px-2 py-1 text-xs rounded border border-primary/30 text-primary hover:bg-primary/5 transition-colors">
                               Manage
+                            </button>
+                            <button onClick={() => viewCourseStudents(c)}
+                              title="View students and course financial breakdown"
+                              className="flex items-center gap-1 px-2 py-1 text-xs rounded border border-primary/30 text-primary hover:bg-primary/5 transition-colors">
+                              <Users className="h-3.5 w-3.5" />Students
                             </button>
                             <button onClick={() => navigate(`/instructor/preview/${c.id}`)}
                               title="Preview this course as a student"
@@ -932,6 +987,7 @@ export default function AdminPage() {
                         ['Instructor payments made', financialSummary.instructor_paid],
                         ['Outstanding instructor earnings', financialSummary.instructor_outstanding],
                         ['Paystack processing fees', financialSummary.paystack_fees],
+                        ['Payments marked refunded (original transaction value)', financialSummary.refunded_transaction_value],
                         ['Other business expenses', financialSummary.other_expenses],
                         ['Owner withdrawals', financialSummary.owner_withdrawals],
                       ].map(([label, value]) => (
@@ -1068,6 +1124,85 @@ export default function AdminPage() {
                 </div>
               </Card>
 
+              {/* Paystack fee policy: configuration is separate from actual provider fees and revenue split */}
+              <Card className="p-5 space-y-4">
+                <div>
+                  <h2 className="font-bold text-base">Paystack Fee Policy</h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Set a planning rate and its effective date. Verified Paystack transaction fees remain the accounting source of truth.
+                    This setting does not rewrite completed transactions or paid instructor payouts.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                  <label className="text-sm space-y-1">
+                    <span className="font-medium">Default fee rate (%)</span>
+                    <input type="number" min="0" max="100" step="0.01"
+                      value={paystackFeePolicy.default_rate_pct ?? 0}
+                      onChange={e => setPaystackFeePolicy(p => ({ ...p, default_rate_pct: e.target.value }))}
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2" />
+                  </label>
+                  <label className="text-sm space-y-1">
+                    <span className="font-medium">Effective from</span>
+                    <input type="date" value={paystackFeePolicy.effective_from || ''}
+                      onChange={e => { setPaystackFeePolicy(p => ({ ...p, effective_from: e.target.value })); setFeePreview(null); }}
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2" />
+                  </label>
+                  <div className="flex gap-2">
+                    <Button variant="outline" className="flex-1"
+                      onClick={async () => {
+                        try {
+                          const preview = await API('/api/admin/paystack-fee-policy/preview', { method: 'POST', body: JSON.stringify({ effective_from: paystackFeePolicy.effective_from }) });
+                          setFeePreview(preview);
+                        } catch (e) { showStatus('error', e.message); }
+                      }}>Preview impact</Button>
+                    <Button className="flex-1" disabled={savingFeePolicy}
+                      onClick={async () => {
+                        setSavingFeePolicy(true);
+                        try {
+                          const saved = await API('/api/admin/paystack-fee-policy', { method: 'PUT', body: JSON.stringify({
+                            default_rate_pct: Number(paystackFeePolicy.default_rate_pct),
+                            effective_from: paystackFeePolicy.effective_from,
+                          }) });
+                          setPaystackFeePolicy(saved);
+                          showStatus('success', 'Paystack fee policy saved.');
+                        } catch (e) { showStatus('error', e.message); }
+                        setSavingFeePolicy(false);
+                      }}>{savingFeePolicy ? 'Saving…' : 'Save fee policy'}</Button>
+                  </div>
+                </div>
+                {feePreview && (
+                  <div className="rounded-lg border border-border bg-muted/20 p-3 text-sm space-y-1">
+                    <p className="font-semibold">Historical impact preview from {feePreview.effective_from}</p>
+                    <p>{Number(feePreview.transaction_count || 0).toLocaleString()} successful course/quiz transactions</p>
+                    <p>Gross amount: {formatPrice(feePreview.gross || 0)}</p>
+                    <p>Recorded actual Paystack fees: {formatPrice(feePreview.actual_paystack_fees || 0)}</p>
+                    <p className="text-muted-foreground">{feePreview.note}</p>
+                  </div>
+                )}
+                {(paystackFeePolicy.history || []).length > 0 && (
+                  <div className="border-t border-border pt-3 space-y-2">
+                    <h3 className="font-semibold text-sm">Recent fee-policy changes</h3>
+                    <div className="max-h-48 overflow-y-auto space-y-2">
+                      {[...(paystackFeePolicy.history || [])].slice(-8).reverse().map((entry, index) => (
+                        <div key={entry.changed_at || index} className="text-xs rounded-md bg-muted/20 p-2 flex flex-wrap justify-between gap-2">
+                          <span>
+                            {entry.action === 'override' ? 'Instructor override' : entry.action === 'reset_to_default' ? 'Instructor reset' : 'Default rate change'}
+                            {entry.instructor_id ? ' · Instructor ' + entry.instructor_id : ''}
+                          </span>
+                          <span className="text-muted-foreground">
+                            {entry.old_rate_pct !== undefined ? Number(entry.old_rate_pct).toFixed(2) + '% → ' + Number(entry.new_rate_pct).toFixed(2) + '%' : entry.rate_pct !== null && entry.rate_pct !== undefined ? Number(entry.rate_pct).toFixed(2) + '%' : 'Reset to default'}
+                            {' · '}{entry.changed_at ? new Date(entry.changed_at).toLocaleString() : 'Date unavailable'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div className="text-xs text-muted-foreground">
+                  Instructor-specific overrides are stored separately from the existing revenue split. Resetting an override returns that instructor to the platform default. Historical fee changes are preview-only; any correction to paid history must be recorded as a separate, reviewed adjustment.
+                </div>
+              </Card>
+
               {/* Earnings breakdown per instructor */}
               {earnings && (
                 <Card className="overflow-hidden">
@@ -1090,6 +1225,14 @@ export default function AdminPage() {
                         <p className="text-2xl font-bold text-warning">{formatPrice(earnings.registration_fees_total || 0)}</p>
                         <p className="text-xs text-muted-foreground mt-1">Instructor Registration Fees</p>
                       </div>
+                      <div className="text-center p-3 bg-muted/30 rounded-xl border border-border">
+                        <p className="text-2xl font-bold">{formatPrice(earnings.paystack_fees_total || 0)}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Actual Paystack Fees</p>
+                      </div>
+                      <div className="text-center p-3 bg-success/5 rounded-xl border border-success/20">
+                        <p className="text-2xl font-bold text-success">{formatPrice(earnings.net_after_paystack_total ?? earnings.total_gross ?? 0)}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Revenue After Paystack Fees</p>
+                      </div>
                     </div>
                   </div>
                   {(earnings.instructors||[]).length > 0 ? (
@@ -1100,9 +1243,12 @@ export default function AdminPage() {
                             <th className="text-left p-3 font-medium text-muted-foreground">Instructor</th>
                             <th className="text-center p-3 font-medium text-muted-foreground">Courses</th>
                             <th className="text-right p-3 font-medium text-muted-foreground">Gross</th>
+                            <th className="text-right p-3 font-medium text-muted-foreground">Paystack Fee</th>
+                            <th className="text-right p-3 font-medium text-muted-foreground">After Fee</th>
                             <th className="text-right p-3 font-medium text-muted-foreground">Their Share</th>
                             <th className="text-right p-3 font-medium text-muted-foreground">Platform Share</th>
                             <th className="text-left p-3 font-medium text-muted-foreground">Future Split Override</th>
+                            <th className="text-left p-3 font-medium text-muted-foreground">Paystack Fee Override</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1114,6 +1260,8 @@ export default function AdminPage() {
                               </td>
                               <td className="p-3 text-center">{inst.course_count}</td>
                               <td className="p-3 text-right font-medium">{formatPrice(inst.gross_revenue)}</td>
+                              <td className="p-3 text-right text-muted-foreground">{formatPrice(inst.paystack_fees || 0)}</td>
+                              <td className="p-3 text-right font-medium">{formatPrice(inst.net_after_paystack ?? inst.gross_revenue)}</td>
                               <td className="p-3 text-right font-bold text-primary">{formatPrice(inst.instructor_earnings)}</td>
                               <td className="p-3 text-right text-success">{formatPrice(inst.platform_earnings)}</td>
                               <td className="p-3 min-w-[190px]">
@@ -1144,6 +1292,47 @@ export default function AdminPage() {
                                 ) : (
                                   <span className="text-xs text-muted-foreground">Platform-owned account</span>
                                 )}
+                              </td>
+                              <td className="p-3 min-w-[190px]">
+                                {inst.role === 'instructor' ? (
+                                  <>
+                                    <div className="flex items-center gap-2">
+                                      <input type="number" min="0" max="100" step="0.01"
+                                        aria-label={"Paystack fee rate for " + inst.name}
+                                        value={feeOverrideEdits[inst.id] ?? ''}
+                                        placeholder={String(paystackFeePolicy.default_rate_pct ?? 0)}
+                                        onChange={e => setFeeOverrideEdits(prev => ({ ...prev, [inst.id]: e.target.value }))}
+                                        className="w-24 rounded-md border border-border bg-background px-2 py-1 text-sm tabular-nums" />
+                                      <span className="text-xs text-muted-foreground">%</span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1 mt-2">
+                                      <Button size="sm" disabled={savingFeeOverride === inst.id || feeOverrideEdits[inst.id] === undefined || feeOverrideEdits[inst.id] === ''}
+                                        onClick={async () => {
+                                          setSavingFeeOverride(inst.id);
+                                          try {
+                                            await API('/api/admin/instructors/' + inst.id + '/paystack-fee-policy', { method: 'PUT', body: JSON.stringify({ rate_pct: Number(feeOverrideEdits[inst.id]), effective_from: paystackFeePolicy.effective_from }) });
+                                            setPaystackFeePolicy(p => ({ ...p, instructor_overrides: { ...(p.instructor_overrides || {}), [inst.id]: { rate_pct: Number(feeOverrideEdits[inst.id]), effective_from: p.effective_from } } }));
+                                            showStatus('success', 'Instructor fee override saved.');
+                                          } catch (e) { showStatus('error', e.message); }
+                                          setSavingFeeOverride('');
+                                        }}>{savingFeeOverride === inst.id ? 'Saving…' : 'Save'}</Button>
+                                      {(paystackFeePolicy.instructor_overrides || {})[inst.id] && (
+                                        <Button size="sm" variant="outline" disabled={savingFeeOverride === inst.id}
+                                          onClick={async () => {
+                                            setSavingFeeOverride(inst.id);
+                                            try {
+                                              await API('/api/admin/instructors/' + inst.id + '/paystack-fee-policy', { method: 'PUT', body: JSON.stringify({ reset_to_default: true }) });
+                                              setPaystackFeePolicy(p => { const next = { ...(p.instructor_overrides || {}) }; delete next[inst.id]; return { ...p, instructor_overrides: next }; });
+                                              setFeeOverrideEdits(prev => { const next = { ...prev }; delete next[inst.id]; return next; });
+                                              showStatus('success', 'Instructor now uses the platform default.');
+                                            } catch (e) { showStatus('error', e.message); }
+                                            setSavingFeeOverride('');
+                                          }}>Reset</Button>
+                                      )}
+                                    </div>
+                                    <p className="text-[11px] text-muted-foreground mt-1">{(paystackFeePolicy.instructor_overrides || {})[inst.id] ? 'Custom fee rate' : 'Using platform default'}</p>
+                                  </>
+                                ) : <span className="text-xs text-muted-foreground">Not applicable</span>}
                               </td>
                             </tr>
                           ))}
@@ -1636,18 +1825,40 @@ export default function AdminPage() {
 
               {/* Stats — differ for student vs instructor */}
               {selectedUser.role === 'instructor' ? (
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="text-center p-3 bg-muted/30 rounded-xl">
-                    <p className="text-xl font-bold">{selectedUser.courses_taught?.length || 0}</p>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <div className="rounded-xl bg-muted/30 p-3 text-center">
+                    <p className="text-lg font-bold">{selectedUser.courses_taught?.length || 0}</p>
                     <p className="text-xs text-muted-foreground">Courses</p>
                   </div>
-                  <div className="text-center p-3 bg-muted/30 rounded-xl">
-                    <p className="text-xl font-bold">{selectedUser.total_students ?? 0}</p>
+                  <div className="rounded-xl bg-muted/30 p-3 text-center">
+                    <p className="text-lg font-bold">{selectedUser.total_students ?? 0}</p>
                     <p className="text-xs text-muted-foreground">Students</p>
                   </div>
-                  <div className="text-center p-3 bg-muted/30 rounded-xl">
-                    <p className="text-xl font-bold text-primary">{formatPrice(selectedUser.total_earned || 0)}</p>
-                    <p className="text-xs text-muted-foreground">Earned</p>
+                  <div className="rounded-xl bg-muted/30 p-3 text-center">
+                    <p className="text-lg font-bold">{formatPrice(selectedUser.gross_revenue || 0)}</p>
+                    <p className="text-xs text-muted-foreground">Gross revenue</p>
+                  </div>
+                  <div className="rounded-xl bg-muted/30 p-3 text-center">
+                    <p className="text-lg font-bold">{formatPrice(selectedUser.paystack_fees || 0)}</p>
+                    <p className="text-xs text-muted-foreground">Paystack fees</p>
+                  </div>
+                  <div className="rounded-xl bg-muted/30 p-3 text-center">
+                    <p className="text-lg font-bold">{formatPrice(selectedUser.net_after_paystack || 0)}</p>
+                    <p className="text-xs text-muted-foreground">After Paystack</p>
+                  </div>
+                  <div className="rounded-xl bg-muted/30 p-3 text-center">
+                    <p className="text-lg font-bold text-primary">{formatPrice(selectedUser.total_earned || 0)}</p>
+                    <p className="text-xs text-muted-foreground">Instructor earnings</p>
+                  </div>
+                  <div className="rounded-xl bg-muted/30 p-3 text-center">
+                    <p className="text-lg font-bold">{formatPrice(selectedUser.platform_earnings || 0)}</p>
+                    <p className="text-xs text-muted-foreground">Platform share</p>
+                  </div>
+                  <div className="flex items-center justify-center">
+                    <button type="button" onClick={() => viewInstructorStudents(selectedUser)}
+                      className="w-full rounded-lg border border-primary/30 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/5">
+                      <Users className="mr-1 inline h-3.5 w-3.5" />View all students
+                    </button>
                   </div>
                 </div>
               ) : (
@@ -1670,14 +1881,29 @@ export default function AdminPage() {
               {/* Instructor: courses taught */}
               {selectedUser.role === 'instructor' && selectedUser.courses_taught?.length > 0 && (
                 <div>
-                  <p className="text-sm font-semibold mb-2">Courses Taught</p>
-                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                  <p className="mb-2 text-sm font-semibold">Courses Taught</p>
+                  <div className="max-h-64 space-y-2 overflow-y-auto">
                     {selectedUser.courses_taught.map(c => (
-                      <div key={c.id} className="flex items-center justify-between p-2 bg-muted/20 rounded-lg text-sm">
-                        <span className="font-medium truncate">{c.title}</span>
-                        <span className="text-muted-foreground shrink-0 ml-2">
-                          {c.enrollments ?? 0} students{c.price ? ` · ${formatPrice(c.price)}` : ''}
-                        </span>
+                      <div key={c.id} className="rounded-lg border border-border/60 bg-muted/20 p-3">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold">{c.title}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {c.student_count ?? c.enrollments ?? 0} students
+                              {c.price ? ` · Course price ${formatPrice(c.price)}` : ''}
+                            </p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              Gross {formatPrice(c.gross_revenue || 0)} · Paystack fees {formatPrice(c.paystack_fees || 0)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              After Paystack {formatPrice(c.net_after_paystack || 0)} · Instructor {formatPrice(c.instructor_earnings || 0)} · Platform {formatPrice(c.platform_earnings || 0)}
+                            </p>
+                          </div>
+                          <button type="button" onClick={() => viewCourseStudents(c)}
+                            className="shrink-0 rounded-lg border border-primary/30 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/5">
+                            <Users className="mr-1 inline h-3.5 w-3.5" />View Students
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1776,6 +2002,16 @@ export default function AdminPage() {
             </div>
           </Card>
         </div>
+      )}
+
+      {studentsView && (
+        <StudentsListModal
+          endpoint={studentsView.endpoint}
+          title={studentsView.title}
+          subtitle={studentsView.subtitle}
+          summary={studentsView.summary}
+          onClose={() => setStudentsView(null)}
+        />
       )}
 
       {emergencyTarget && (

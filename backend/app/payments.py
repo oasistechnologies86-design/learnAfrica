@@ -281,6 +281,8 @@ def _paystack_verify(reference):
             'amount':   float(data.get('amount', 0)) / 100.0,  # convert pesewas → GHS
             'currency': data.get('currency', 'GHS'),
             'channel':  data.get('channel', ''),
+            # Paystack returns fees in the currency's minor unit (pesewas for GHS).
+            'fees':     float(data['fees']) / 100.0 if data.get('fees') is not None else None,
             'message':  f'Paystack status: {pstat}',
         }
     except Exception as e:
