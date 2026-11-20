@@ -4008,14 +4008,18 @@ def create_app() -> Flask:
             d_c = int(p['d'] or 0) if p else 0
             course_revenue = db.execute(
                 "SELECT COALESCE(SUM(amount), 0) AS gross, "
-                "COALESCE(SUM(COALESCE(paystack_fee_estimate, 0)), 0) AS fees, "
                 "COALESCE(SUM(instructor_share), 0) AS instructor_share, "
                 "COALESCE(SUM(platform_share), 0) AS platform_share "
                 "FROM transactions WHERE course_id=? AND type IN ('purchase','quiz_extra_attempt') AND status='success'",
                 (r['id'],)
             ).fetchone()
+            course_fee_rows = db.execute(
+                "SELECT amount, instructor_id, created_at, paystack_fee_estimate FROM transactions "
+                "WHERE course_id=? AND type IN ('purchase','quiz_extra_attempt') AND status='success'",
+                (r['id'],)
+            ).fetchall()
             course_gross = float(course_revenue['gross'] or 0) if course_revenue else 0.0
-            course_fees = float(course_revenue['fees'] or 0) if course_revenue else 0.0
+            course_fees = round(sum(_paystack_fee_for_transaction(db, tx) for tx in course_fee_rows), 2)
             course_perf.append({
                 'id': r['id'], 'title': r['title'], 'name': r['title'], 'students': t_c,
                 'completion_rate': int((d_c/t_c)*100) if t_c else 0,
@@ -7397,23 +7401,25 @@ def create_app() -> Flask:
                      AND DATE(created_at) >= ?""", (reporting_from,)
             ).fetchall()
             paid = db.execute(
-                """SELECT COALESCE(SUM(instructor_share), 0) AS amount
-                   FROM transactions
-                   WHERE status='success'
-                     AND type IN ('purchase','quiz_extra_attempt')
-                     AND payout_status='paid' AND DATE(created_at) >= ?""", (reporting_from,)
+                """SELECT COALESCE(SUM(t.instructor_share), 0) AS amount
+                   FROM transactions t
+                   JOIN users owner ON owner.id=t.instructor_id AND owner.role='instructor'
+                   WHERE t.status='success'
+                     AND t.type IN ('purchase','quiz_extra_attempt')
+                     AND t.payout_status='paid' AND DATE(t.created_at) >= ?""", (reporting_from,)
             ).fetchone()
             # Outstanding is earned course revenue minus completed payouts.
             # Do not rely only on payout_status='pending': legacy successful
             # transactions may have NULL/older status values and would vanish
             # from the liability total.
             outstanding = db.execute(
-                """SELECT COALESCE(SUM(instructor_share), 0) AS amount
-                   FROM transactions
-                   WHERE status='success'
-                     AND type IN ('purchase','quiz_extra_attempt')
-                     AND COALESCE(payout_status, 'pending') <> 'paid'
-                     AND DATE(created_at) >= ?""", (reporting_from,)
+                """SELECT COALESCE(SUM(t.instructor_share), 0) AS amount
+                   FROM transactions t
+                   JOIN users owner ON owner.id=t.instructor_id AND owner.role='instructor'
+                   WHERE t.status='success'
+                     AND t.type IN ('purchase','quiz_extra_attempt')
+                     AND COALESCE(t.payout_status, 'pending') <> 'paid'
+                     AND DATE(t.created_at) >= ?""", (reporting_from,)
             ).fetchone()
             records = db.execute(
                 """SELECT id, record_type, category, amount, description, reference, created_at
@@ -7460,12 +7466,13 @@ def create_app() -> Flask:
                     # Registration payments belong entirely to the platform.
                     platform_earned += amount
                     continue
-                instructor_earned += float(tx['instructor_share'] or 0)
                 owner = db.execute('SELECT role FROM users WHERE id=?', (tx['instructor_id'],)).fetchone() if tx['instructor_id'] else None
                 if owner and str(owner['role'] or '').lower() in ('admin', 'superadmin'):
+                    # Admin-owned courses are platform revenue, not an instructor liability.
                     platform_fee = _paystack_fee_for_transaction(db, tx)
                     platform_earned += max(0.0, amount - platform_fee)
                 else:
+                    instructor_earned += float(tx['instructor_share'] or 0)
                     platform_earned += float(tx['platform_share'] or 0)
             collected = round(collected, 2)
             instructor_earned = round(instructor_earned, 2)
