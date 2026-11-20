@@ -7387,7 +7387,7 @@ def create_app() -> Flask:
             # Use the same successful transaction types as the Earnings tab.
             totals = db.execute(
                 """SELECT amount, instructor_share, platform_share, type, instructor_id,
-                          provider, paystack_fee, paystack_fee_status, created_at
+                          provider, paystack_fee, paystack_fee_status, paystack_fee_estimate, created_at
                    FROM transactions
                    WHERE status='success'
                      AND type IN ('purchase','quiz_extra_attempt','instructor_registration')
@@ -7424,19 +7424,15 @@ def create_app() -> Flask:
                 """SELECT COALESCE(SUM(amount), 0) AS amount FROM admin_financial_records
                    WHERE record_type='expense' AND LOWER(category) = 'paystack fees' AND DATE(created_at) >= ?""", (reporting_from,)
             ).fetchone()
+            # Sum LearnAfrica's saved fee snapshots across payment providers.
             automatic_paystack_fee_rows = db.execute(
-                """SELECT amount, paystack_fee, paystack_fee_status, instructor_id, created_at
-                   FROM transactions WHERE status='success' AND provider='paystack' AND DATE(created_at) >= ?""",
+                """SELECT COALESCE(SUM(paystack_fee_estimate), 0) AS total
+                   FROM transactions WHERE status='success'
+                     AND type IN ('purchase','quiz_extra_attempt') AND DATE(created_at) >= ?""",
                 (reporting_from,)
-            ).fetchall() if fee_column_ready else []
+            ).fetchone()
             automatic_actual_paystack_fees = 0.0
-            automatic_estimated_paystack_fees = 0.0
-            for fee_tx in automatic_paystack_fee_rows:
-                if str(fee_tx['paystack_fee_status'] or 'unknown').lower() == 'actual':
-                    automatic_actual_paystack_fees += float(fee_tx['paystack_fee'] or 0)
-                else:
-                    resolved_fee = _effective_paystack_fee_policy(db, fee_tx['instructor_id'], str(fee_tx['created_at'] or reporting_from)[:10])
-                    automatic_estimated_paystack_fees += round(float(fee_tx['amount'] or 0) * resolved_fee['rate_pct'] / 100.0, 2)
+            automatic_estimated_paystack_fees = float(automatic_paystack_fee_rows['total'] or 0) if automatic_paystack_fee_rows else 0.0
             withdrawal_total = db.execute(
                 "SELECT COALESCE(SUM(amount), 0) AS amount FROM admin_financial_records WHERE record_type='withdrawal' AND DATE(created_at) >= ?", (reporting_from,)
             ).fetchone()
@@ -7462,15 +7458,8 @@ def create_app() -> Flask:
                 instructor_earned += float(tx['instructor_share'] or 0)
                 owner = db.execute('SELECT role FROM users WHERE id=?', (tx['instructor_id'],)).fetchone() if tx['instructor_id'] else None
                 if owner and str(owner['role'] or '').lower() in ('admin', 'superadmin'):
-                    if str(tx['provider'] or '').lower() == 'paystack':
-                        if str(tx['paystack_fee_status'] or 'unknown').lower() == 'actual':
-                            provider_fee = float(tx['paystack_fee'] or 0)
-                        else:
-                            fee_policy = _effective_paystack_fee_policy(db, tx['instructor_id'], str(tx['created_at'] or reporting_from)[:10])
-                            provider_fee = round(amount * fee_policy['rate_pct'] / 100.0, 2)
-                    else:
-                        provider_fee = 0.0
-                    platform_earned += max(0.0, amount - provider_fee)
+                    platform_fee = float(tx['paystack_fee_estimate'] or 0)
+                    platform_earned += max(0.0, amount - platform_fee)
                 else:
                     platform_earned += float(tx['platform_share'] or 0)
             collected = round(collected, 2)
