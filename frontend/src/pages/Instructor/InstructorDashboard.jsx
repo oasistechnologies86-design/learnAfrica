@@ -220,6 +220,14 @@ function EarningsCard({ stats, onChanged }) {
             <span>Gross Revenue (all sales)</span>
             <span className="font-semibold text-foreground">{formatPrice(grossRevenue)}</span>
           </div>
+          <div className="flex justify-between text-muted-foreground">
+            <span>Paystack processing fees (actual)</span>
+            <span className="font-medium">−{formatPrice(stats?.paystack_fees || 0)}</span>
+          </div>
+          <div className="flex justify-between text-muted-foreground">
+            <span>Revenue after Paystack fees</span>
+            <span className="font-semibold text-foreground">{formatPrice(stats?.net_after_paystack ?? grossRevenue)}</span>
+          </div>
           <div className="flex justify-between">
             <span className="text-success font-medium">Your share ({instructorPctLabel}%)</span>
             <span className="font-bold text-success">{formatPrice(myEarnings)}</span>
