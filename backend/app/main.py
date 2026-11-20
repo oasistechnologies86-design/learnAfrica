@@ -3161,6 +3161,19 @@ def create_app() -> Flask:
         courses = []
         for r in rows:
             d = dict(r)
+            # The course list must use the same saved Paystack fee policy as
+            # the instructor dashboard and admin financial overview.
+            course_fee_rows = db.execute(
+                "SELECT amount, instructor_id, created_at, paystack_fee_estimate FROM transactions "
+                "WHERE course_id=? AND type IN ('purchase','quiz_extra_attempt') AND status='success'",
+                (d['id'],)
+            ).fetchall()
+            course_fees = round(sum(_paystack_fee_for_transaction(db, tx) for tx in course_fee_rows), 2)
+            gross = round(float(d.get('gross_revenue') or 0), 2)
+            d['paystack_fees'] = course_fees
+            d['platform_fee'] = course_fees
+            d['net_after_paystack'] = round(max(0.0, gross - course_fees), 2)
+            d['net_after_platform_fee'] = d['net_after_paystack']
             # Use real student_count, not the cached enrollments column
             d['enrollments'] = d['student_count'] or 0
             d['thumbnail'] = default_thumbnail_for(d)
@@ -8381,6 +8394,8 @@ def create_app() -> Flask:
             out = []
             for r in rows:
                 d = dict(r)
+                if d.get('type') in ('purchase', 'quiz_extra_attempt') and d.get('status') == 'success':
+                    d['paystack_fee_estimate'] = _paystack_fee_for_transaction(db, d)
                 # Parse payment_details JSON for display (admin only)
                 if role in ('admin', 'superadmin') and d.get('payment_details'):
                     try:
