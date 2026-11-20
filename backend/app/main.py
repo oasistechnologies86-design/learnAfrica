@@ -10081,6 +10081,174 @@ def create_app() -> Flask:
             except Exception: pass
             return jsonify({'error': 'Failed'}), 500
 
+
+    # ── PAYSTACK FEE POLICY — configuration and auditable preview only
+    # Actual Paystack fees captured from verified provider events remain the
+    # accounting source of truth. This policy never rewrites paid transactions.
+    def _paystack_fee_policy_read(db):
+        row = db.execute("SELECT value FROM platform_config WHERE key='paystack_fee_policy'").fetchone()
+        try:
+            value = json.loads(row['value']) if row and row['value'] else {}
+        except Exception:
+            value = {}
+        if not isinstance(value, dict):
+            value = {}
+        value.setdefault('default_rate_pct', 0)
+        value.setdefault('effective_from', datetime.utcnow().date().isoformat())
+        value.setdefault('instructor_overrides', {})
+        value.setdefault('history', [])
+        return value
+
+    def _paystack_fee_policy_write(db, policy):
+        payload = json.dumps(policy)
+        row = db.execute("SELECT key FROM platform_config WHERE key='paystack_fee_policy'").fetchone()
+        if row:
+            db.execute("UPDATE platform_config SET value=? WHERE key='paystack_fee_policy'", (payload,))
+        else:
+            db.execute("INSERT INTO platform_config (key, value) VALUES ('paystack_fee_policy', ?)", (payload,))
+        db.commit()
+
+    @app.route('/api/admin/paystack-fee-policy', methods=['GET'])
+    @admin_required
+    def get_paystack_fee_policy():
+        try:
+            db = get_db()
+            return jsonify(_paystack_fee_policy_read(db))
+        except Exception as e:
+            app.logger.error(f'get_paystack_fee_policy: {e}')
+            return jsonify({'error': 'Could not load Paystack fee policy'}), 500
+
+    @app.route('/api/admin/paystack-fee-policy/preview', methods=['POST'])
+    @admin_required
+    def preview_paystack_fee_policy():
+        try:
+            d = request.get_json() or {}
+            effective_from = str(d.get('effective_from') or '').strip()
+            try:
+                datetime.strptime(effective_from, '%Y-%m-%d')
+            except ValueError:
+                return jsonify({'error': 'Choose a valid effective date (YYYY-MM-DD).'}), 400
+            db = get_db()
+            ensure_transactions_table(db)
+            row = db.execute(
+                """SELECT COUNT(*) AS transaction_count,
+                          COALESCE(SUM(amount),0) AS gross,
+                          COALESCE(SUM(paystack_fee),0) AS actual_paystack_fees
+                   FROM transactions
+                   WHERE type IN ('purchase','quiz_extra_attempt') AND status='success'
+                     AND DATE(created_at) >= ?""", (effective_from,)
+            ).fetchone()
+            return jsonify({
+                'effective_from': effective_from,
+                'transaction_count': int(row['transaction_count'] or 0),
+                'gross': round(float(row['gross'] or 0), 2),
+                'actual_paystack_fees': round(float(row['actual_paystack_fees'] or 0), 2),
+                'note': 'Preview only. Existing transactions and completed payouts are not changed.'
+            })
+        except Exception as e:
+            app.logger.error(f'preview_paystack_fee_policy: {e}')
+            return jsonify({'error': 'Could not prepare the fee-policy preview'}), 500
+
+    @app.route('/api/admin/paystack-fee-policy', methods=['PUT'])
+    @admin_required
+    def update_paystack_fee_policy():
+        try:
+            d = request.get_json() or {}
+            try:
+                rate = float(d.get('default_rate_pct'))
+            except (TypeError, ValueError):
+                return jsonify({'error': 'Fee percentage must be a number.'}), 400
+            if not 0 <= rate <= 100:
+                return jsonify({'error': 'Fee percentage must be between 0 and 100.'}), 400
+            effective_from = str(d.get('effective_from') or '').strip()
+            try:
+                datetime.strptime(effective_from, '%Y-%m-%d')
+            except ValueError:
+                return jsonify({'error': 'Choose a valid effective date (YYYY-MM-DD).'}), 400
+            # Deliberately reject retroactive mutation. Preview is available above;
+            # any historical correction requires a separately reviewed adjustment.
+            today = datetime.utcnow().date().isoformat()
+            if effective_from < today and d.get('change_mode') == 'rewrite_history':
+                return jsonify({'error': 'Historical transactions and paid payouts cannot be rewritten. Use a separately approved adjustment.'}), 409
+            db = get_db()
+            policy = _paystack_fee_policy_read(db)
+            old_rate = float(policy.get('default_rate_pct') or 0)
+            actor = g.current_user.get('user_id') if isinstance(g.current_user, dict) else None
+            entry = {
+                'old_rate_pct': old_rate, 'new_rate_pct': rate,
+                'effective_from': effective_from, 'changed_by': actor,
+                'changed_at': datetime.utcnow().isoformat() + 'Z',
+                'scope': 'new_transactions_from_effective_date',
+            }
+            policy['default_rate_pct'] = rate
+            policy['effective_from'] = effective_from
+            policy['history'] = (policy.get('history') or []) + [entry]
+            _paystack_fee_policy_write(db, policy)
+            return jsonify({'message': 'Fee policy saved. Actual Paystack fees remain authoritative; existing transactions and paid payouts were not changed.', **policy})
+        except Exception as e:
+            app.logger.error(f'update_paystack_fee_policy: {e}')
+            return jsonify({'error': 'Could not save Paystack fee policy'}), 500
+
+    @app.route('/api/admin/instructors/<uid>/paystack-fee-policy', methods=['PUT'])
+    @admin_required
+    def update_instructor_paystack_fee_policy(uid):
+        try:
+            d = request.get_json() or {}
+            db = get_db()
+            target = db.execute("SELECT id, role FROM users WHERE id=?", (uid,)).fetchone()
+            if not target or target['role'] != 'instructor':
+                return jsonify({'error': 'Instructor not found'}), 404
+            policy = _paystack_fee_policy_read(db)
+            overrides = policy.get('instructor_overrides') or {}
+            if d.get('reset_to_default'):
+                overrides.pop(uid, None)
+                action = 'reset_to_default'
+                rate = None
+            else:
+                try:
+                    rate = float(d.get('rate_pct'))
+                except (TypeError, ValueError):
+                    return jsonify({'error': 'Instructor fee percentage must be a number.'}), 400
+                if not 0 <= rate <= 100:
+                    return jsonify({'error': 'Fee percentage must be between 0 and 100.'}), 400
+                effective_from = str(d.get('effective_from') or policy.get('effective_from'))
+                try:
+                    datetime.strptime(effective_from, '%Y-%m-%d')
+                except ValueError:
+                    return jsonify({'error': 'Choose a valid effective date.'}), 400
+                overrides[uid] = {'rate_pct': rate, 'effective_from': effective_from}
+                action = 'override'
+            policy['instructor_overrides'] = overrides
+            policy['history'] = (policy.get('history') or []) + [{
+                'action': action, 'instructor_id': uid, 'rate_pct': rate,
+                'changed_by': g.current_user.get('user_id') if isinstance(g.current_user, dict) else None,
+                'changed_at': datetime.utcnow().isoformat() + 'Z',
+            }]
+            _paystack_fee_policy_write(db, policy)
+            return jsonify({'message': 'Instructor fee policy saved.', 'override': overrides.get(uid)})
+        except Exception as e:
+            app.logger.error(f'update_instructor_paystack_fee_policy: {e}')
+            return jsonify({'error': 'Could not save instructor fee policy'}), 500
+
+    @app.route('/api/instructor/paystack-fee-policy', methods=['GET'])
+    @token_required
+    def instructor_paystack_fee_policy():
+        try:
+            db = get_db()
+            uid = g.current_user['user_id']
+            policy = _paystack_fee_policy_read(db)
+            override = (policy.get('instructor_overrides') or {}).get(uid)
+            return jsonify({
+                'rate_pct': override.get('rate_pct') if override else policy.get('default_rate_pct', 0),
+                'effective_from': override.get('effective_from') if override else policy.get('effective_from'),
+                'source': 'instructor_override' if override else 'platform_default',
+                'editable': False,
+                'actual_paystack_fee_source': 'verified Paystack transaction fee',
+            })
+        except Exception as e:
+            app.logger.error(f'instructor_paystack_fee_policy: {e}')
+            return jsonify({'error': 'Could not load your fee policy'}), 500
+
     @app.route('/api/keepalive', methods=['GET', 'HEAD'])
     def keepalive():
         """
