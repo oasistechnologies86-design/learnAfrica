@@ -1202,7 +1202,7 @@ export default function AdminPage() {
                   </div>
                 )}
                 <div className="text-xs text-muted-foreground">
-                  Instructor-specific overrides are stored separately from the existing revenue split. Resetting an override returns that instructor to the platform default. Historical fee changes are preview-only; any correction to paid history must be recorded as a separate, reviewed adjustment.
+                  Instructor-specific overrides are stored separately from the existing revenue split. Resetting an override returns that instructor to the platform default. The selected date is the reporting baseline for Earnings and Financial Records. Transactions before it are excluded from those summaries. Historical estimates do not overwrite verified Paystack fees, recorded transaction shares, or payouts already paid.
                 </div>
               </Card>
 
