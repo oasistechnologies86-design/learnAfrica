@@ -1135,6 +1135,25 @@ export default function AdminPage() {
                     <p className="text-muted-foreground">{feePreview.note}</p>
                   </div>
                 )}
+                {(paystackFeePolicy.history || []).length > 0 && (
+                  <div className="border-t border-border pt-3 space-y-2">
+                    <h3 className="font-semibold text-sm">Recent fee-policy changes</h3>
+                    <div className="max-h-48 overflow-y-auto space-y-2">
+                      {[...(paystackFeePolicy.history || [])].slice(-8).reverse().map((entry, index) => (
+                        <div key={entry.changed_at || index} className="text-xs rounded-md bg-muted/20 p-2 flex flex-wrap justify-between gap-2">
+                          <span>
+                            {entry.action === 'override' ? 'Instructor override' : entry.action === 'reset_to_default' ? 'Instructor reset' : 'Default rate change'}
+                            {entry.instructor_id ? ' · Instructor ' + entry.instructor_id : ''}
+                          </span>
+                          <span className="text-muted-foreground">
+                            {entry.old_rate_pct !== undefined ? Number(entry.old_rate_pct).toFixed(2) + '% → ' + Number(entry.new_rate_pct).toFixed(2) + '%' : entry.rate_pct !== null && entry.rate_pct !== undefined ? Number(entry.rate_pct).toFixed(2) + '%' : 'Reset to default'}
+                            {' · '}{entry.changed_at ? new Date(entry.changed_at).toLocaleString() : 'Date unavailable'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div className="text-xs text-muted-foreground">
                   Instructor-specific overrides are stored separately from the existing revenue split. Resetting an override returns that instructor to the platform default. Historical fee changes are preview-only; any correction to paid history must be recorded as a separate, reviewed adjustment.
                 </div>
