@@ -4216,7 +4216,9 @@ def create_app() -> Flask:
             ).fetchone()
             # Use settled transaction amounts, not list price × enrolments. This
             # correctly includes discounts and the split that was active at purchase.
-            revenue = round(float((revenue_row['gross'] if is_admin else revenue_row['instructor']) or 0), 2)
+            # Admin-owned courses also show the post-fee amount. Their full
+            # distributable share is stored in instructor_share with payout_status='n/a'.
+            revenue = round(float(revenue_row['instructor'] or 0), 2)
             results.append({
                 'course_id':      c['id'],
                 'title':          c['title'],
@@ -10665,7 +10667,7 @@ def create_app() -> Flask:
         ).fetchall()
         changed = 0
         for tx in rows:
-            if str(tx['payout_status'] or '').lower() in ('paid', 'n/a'):
+            if str(tx['payout_status'] or '').lower() == 'paid':
                 continue
             try:
                 gross = Decimal(str(tx['amount'] or 0)).quantize(Decimal('0.01'))
@@ -10685,7 +10687,7 @@ def create_app() -> Flask:
             new_p = (net - new_i).quantize(Decimal('0.01'))
             db.execute(
                 "UPDATE transactions SET instructor_share=?, platform_share=?, "
-                "updated_at=CURRENT_TIMESTAMP WHERE id=? AND COALESCE(payout_status,'pending') NOT IN ('paid','n/a')",
+                "updated_at=CURRENT_TIMESTAMP WHERE id=? AND COALESCE(payout_status,'pending') <> 'paid'",
                 (float(new_i), float(new_p), tx['id'])
             )
             changed += 1
