@@ -4929,7 +4929,7 @@ def create_app() -> Flask:
         except (TypeError, ValueError):
             page = 1
         try:
-            per_page = min(50, max(5, int(request.args.get('per_page', 10))))
+            per_page = min(50, max(1, int(request.args.get('per_page', 10))))
         except (TypeError, ValueError):
             per_page = 10
 
