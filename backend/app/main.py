@@ -3141,6 +3141,7 @@ def create_app() -> Flask:
         db = get_db()
         ensure_transactions_table(db)
         ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
+        _normalize_unpaid_transaction_splits(db, instructor_id=g.current_user['user_id'])
         rows = db.execute('''SELECT c.*,
                                   u.bio as instructor_bio,
                                   u.instructor_title,
@@ -3959,6 +3960,7 @@ def create_app() -> Flask:
             course_ids).fetchone()
         total_students = int(st['t'] or 0) if st else 0
         ensure_transactions_table(db)
+        _normalize_unpaid_transaction_splits(db, instructor_id=uid)
         # Paystack's actual provider fee is captured by the verified webhook.
         # Keep it separate from revenue-split percentages and never estimate it.
         paystack_fee_ready = ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
@@ -4193,6 +4195,7 @@ def create_app() -> Flask:
         uid = g.current_user['user_id']
         u = db.execute('SELECT role FROM users WHERE id=?', (uid,)).fetchone()
         is_admin = bool(u and u['role'] in ('admin', 'superadmin'))
+        _normalize_unpaid_transaction_splits(db, instructor_id=uid)
         courses = db.execute(
             'SELECT id, title, price, rating FROM courses WHERE instructor_id=? ORDER BY created_at DESC',
             (uid,)
@@ -8657,6 +8660,7 @@ def create_app() -> Flask:
 
     def _do_payout_for_instructor(db, instructor_id):
         """Internal helper: pay one instructor their pending balance."""
+        _normalize_unpaid_transaction_splits(db, instructor_id=instructor_id)
         from .payments import process_payout
         pending_rows = db.execute(
             """SELECT id, instructor_share FROM transactions
@@ -8742,6 +8746,7 @@ def create_app() -> Flask:
 
     def _manual_payout_for_instructor(db, instructor_id, reference, note, admin_id):
         """Admin pays an instructor from their own account and records it here.
+        _normalize_unpaid_transaction_splits(db, instructor_id=instructor_id)
         No Paystack transfer. Marks the instructor's pending earnings as paid and
         closes any open payout request. Returns (ok, amount, error)."""
         pending_rows = db.execute(
@@ -8919,6 +8924,7 @@ def create_app() -> Flask:
         because an admin already receives 100% of their own course revenue
         directly; those must never count toward a payable balance.
         """
+        _normalize_unpaid_transaction_splits(db, instructor_id=instructor_id)
         earned_row = db.execute(
             "SELECT COALESCE(SUM(instructor_share), 0) as t FROM transactions"
             " WHERE instructor_id=? AND type IN ('purchase','quiz_extra_attempt') AND status='success'"
@@ -10631,6 +10637,55 @@ def create_app() -> Flask:
         )
         return round(min(amount, amount * policy['rate_pct'] / 100.0), 2)
 
+
+
+    def _normalize_unpaid_transaction_splits(db, instructor_id=None, course_id=None):
+        """Normalize legacy unpaid shares to the saved post-fee amount."""
+        from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+        ensure_transactions_table(db)
+        ensure_column(db, 'transactions', 'paystack_fee_estimate', 'REAL DEFAULT 0')
+        clauses = ["status='success'", "type IN ('purchase','quiz_extra_attempt')"]
+        params = []
+        if instructor_id is not None:
+            clauses.append("instructor_id=?")
+            params.append(instructor_id)
+        if course_id is not None:
+            clauses.append("course_id=?")
+            params.append(course_id)
+        rows = db.execute(
+            "SELECT id, amount, instructor_id, created_at, instructor_share, "
+            "platform_share, payout_status, paystack_fee_estimate FROM transactions WHERE "
+            + " AND ".join(clauses), params
+        ).fetchall()
+        changed = 0
+        for tx in rows:
+            if str(tx['payout_status'] or '').lower() in ('paid', 'n/a'):
+                continue
+            try:
+                gross = Decimal(str(tx['amount'] or 0)).quantize(Decimal('0.01'))
+                fee = Decimal(str(_paystack_fee_for_transaction(db, tx) or 0)).quantize(Decimal('0.01'))
+                old_i = Decimal(str(tx['instructor_share'] or 0))
+                old_p = Decimal(str(tx['platform_share'] or 0))
+            except (InvalidOperation, TypeError, ValueError):
+                continue
+            if gross <= 0 or fee < 0 or fee > gross:
+                continue
+            net = (gross - fee).quantize(Decimal('0.01'))
+            old_total = old_i + old_p
+            if old_total <= 0 or abs(old_total - net) <= Decimal('0.01'):
+                continue
+            ratio = max(Decimal('0'), min(Decimal('1'), old_i / old_total))
+            new_i = (net * ratio).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            new_p = (net - new_i).quantize(Decimal('0.01'))
+            db.execute(
+                "UPDATE transactions SET instructor_share=?, platform_share=?, "
+                "updated_at=CURRENT_TIMESTAMP WHERE id=? AND COALESCE(payout_status,'pending') NOT IN ('paid','n/a')",
+                (float(new_i), float(new_p), tx['id'])
+            )
+            changed += 1
+        if changed:
+            db.commit()
+        return changed
 
     @app.route('/api/admin/paystack-fee-policy', methods=['GET'])
     @admin_required
