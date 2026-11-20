@@ -3950,6 +3950,9 @@ def create_app() -> Flask:
             course_ids).fetchone()
         total_students = int(st['t'] or 0) if st else 0
         ensure_transactions_table(db)
+        # Paystack's actual provider fee is captured by the verified webhook.
+        # Keep it separate from revenue-split percentages and never estimate it.
+        paystack_fee_ready = ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
         earnings_row = db.execute(
             "SELECT COALESCE(SUM(instructor_share), 0) as t FROM transactions"
             " WHERE instructor_id=? AND type IN ('purchase','quiz_extra_attempt') AND status='success'", (uid,)).fetchone()
@@ -4011,6 +4014,14 @@ def create_app() -> Flask:
             " WHERE instructor_id=? AND type IN ('purchase','quiz_extra_attempt') AND status='success'", (uid,)).fetchone()
         gross_revenue = round(float(gross_row['t'] or 0), 2) if gross_row else 0.0
         platform_share = round(gross_revenue - total_earnings, 2)
+        fee_row = db.execute(
+            "SELECT COALESCE(SUM(paystack_fee), 0) as t FROM transactions"
+            " WHERE instructor_id=? AND provider='paystack' AND status='success'"
+            " AND type IN ('purchase','quiz_extra_attempt')",
+            (uid,)
+        ).fetchone() if paystack_fee_ready else {'t': 0}
+        paystack_fees = round(float(fee_row['t'] or 0), 2) if fee_row else 0.0
+        net_after_paystack = round(max(0.0, gross_revenue - paystack_fees), 2)
         return jsonify({
             'total_courses': len(course_ids), 'total_students': total_students,
             'total_earnings': total_earnings, 'average_rating': final_avg_rating,
@@ -4018,6 +4029,8 @@ def create_app() -> Flask:
             'course_performance': course_perf, 'recent_students': safe_list(recent),
             'total_paid': total_paid, 'pending_payout': requested, 'available_to_request': available,
             'gross_revenue': gross_revenue, 'platform_share': platform_share,
+            'paystack_fees': paystack_fees,
+            'net_after_paystack': net_after_paystack,
             'instructor_share_pct': _split['instructor_pct'],
             'platform_share_pct':   _split['admin_pct'],
             'split_configured':     _split['configured'],
@@ -6941,11 +6954,13 @@ def create_app() -> Flask:
         db = get_db()
         instructor_pct, admin_pct = get_revenue_split(db)
         ensure_transactions_table(db)
+        paystack_fee_ready = ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
         instructors = db.execute('''
             SELECT u.id, u.name, u.email, u.avatar, u.role,
                    (SELECT COUNT(*) FROM courses c WHERE c.instructor_id=u.id) as course_count,
                    COALESCE(SUM(t.amount), 0) as gross,
-                   COALESCE(SUM(t.instructor_share), 0) as instr
+                   COALESCE(SUM(t.instructor_share), 0) as instr,
+                   COALESCE(SUM(CASE WHEN t.provider='paystack' THEN t.paystack_fee ELSE 0 END), 0) as paystack_fees
             FROM users u
             LEFT JOIN transactions t
               ON t.instructor_id=u.id AND t.type IN ('purchase','quiz_extra_attempt') AND t.status='success'
@@ -6963,6 +6978,7 @@ def create_app() -> Flask:
             total_gross += gross
             total_instr += instr
             effective_split = resolve_instructor_revenue_split(db, row['id'], row['role'] in ('admin', 'superadmin'))
+            actual_fees = float(row['paystack_fees'] or 0) if paystack_fee_ready else 0.0
             result.append({
                 'id': row['id'],
                 'name': row['name'],
@@ -6970,6 +6986,8 @@ def create_app() -> Flask:
                 'role': row['role'],
                 'course_count': row['course_count'],
                 'gross_revenue': round(gross, 2),
+                'paystack_fees': round(actual_fees, 2),
+                'net_after_paystack': round(max(0.0, gross - actual_fees), 2),
                 'instructor_earnings': round(instr, 2),
                 'platform_earnings':   round(gross - instr, 2),
                 'instructor_share_pct': effective_split['instructor_pct'],
@@ -6983,6 +7001,8 @@ def create_app() -> Flask:
         return jsonify({
             'instructors': result,
             'total_gross': round(total_gross, 2),
+            'paystack_fees_total': round(sum(float(row.get('paystack_fees') or 0) for row in result), 2),
+            'net_after_paystack_total': round(max(0.0, total_gross - sum(float(row.get('paystack_fees') or 0) for row in result)), 2),
             'platform_total': round(total_gross - total_instr, 2),
             'instructors_total': round(total_instr, 2),
             # Instructor registration fees are 100% platform income and belong
