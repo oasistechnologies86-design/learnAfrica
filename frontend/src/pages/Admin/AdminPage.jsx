@@ -138,7 +138,7 @@ export default function AdminPage() {
   const [financialSummary, setFinancialSummary] = useState(null);
   const [paystackBalance, setPaystackBalance] = useState(null);
   const [financialForm, setFinancialForm] = useState({
-    record_type: 'expense', category: 'Paystack fees', amount: '', description: '', reference: '',
+    record_type: 'expense', category: 'LearnAfrica platform fees', amount: '', description: '', reference: '',
   });
   const [savingFinancialRecord, setSavingFinancialRecord] = useState(false);
   const [splitForm, setSplitForm]       = useState({ instructor_share: 50 });
@@ -183,7 +183,7 @@ export default function AdminPage() {
           setFeeOverrideEdits(Object.fromEntries(Object.entries(feePolicy.instructor_overrides || {}).map(([id, value]) => [id, String(value.rate_pct)])));
           setFeeOverrideDates(Object.fromEntries(Object.entries(feePolicy.instructor_overrides || {}).map(([id, value]) => [id, String(value.effective_from || feePolicy.effective_from || '')])));
         } catch (feePolicyError) {
-          showStatus('error', 'Could not load Paystack fee settings: ' + feePolicyError.message);
+          showStatus('error', 'Could not load LearnAfrica platform fee settings: ' + feePolicyError.message);
         }
         setSplitForm({ instructor_share: splitData.instructor_share });
         setInstructorSplitEdits(Object.fromEntries((earnData.instructors || []).map(inst => [inst.id, String(inst.instructor_share_pct ?? splitData.instructor_share)])));
@@ -988,7 +988,7 @@ export default function AdminPage() {
                         ['Instructor earnings', financialSummary.instructor_earned],
                         ['Instructor payments made', financialSummary.instructor_paid],
                         ['Outstanding instructor earnings', financialSummary.instructor_outstanding],
-                        ['Paystack processing fees (actual + estimated)', financialSummary.paystack_fees],
+                        ['LearnAfrica platform fees', financialSummary.paystack_fees],
                         ['Payments marked refunded (original transaction value)', financialSummary.refunded_transaction_value],
                         ['Other business expenses', financialSummary.other_expenses],
                         ['Owner withdrawals', financialSummary.owner_withdrawals],
@@ -996,7 +996,7 @@ export default function AdminPage() {
                         <div key={label} className="rounded-xl border border-border bg-muted/20 p-3">
                           <p className="text-xs text-muted-foreground">{label}</p>
                           <p className="text-lg font-bold mt-1 tabular-nums">{formatPrice(value || 0)}</p>
-                          {label === 'Paystack processing fees (actual + estimated)' && (
+                          {label === 'LearnAfrica platform fees' && (
                             <>
                               <p className="text-[10px] text-muted-foreground mt-1">
                                 Actual {formatPrice(financialSummary.paystack_fees_actual || 0)} · Estimated {formatPrice(financialSummary.paystack_fees_estimated || 0)}
@@ -1033,7 +1033,7 @@ export default function AdminPage() {
                       value={financialForm.record_type}
                       onChange={e => setFinancialForm(prev => ({
                         ...prev, record_type: e.target.value,
-                        category: e.target.value === 'withdrawal' ? 'Owner withdrawal' : 'Paystack fees',
+                        category: e.target.value === 'withdrawal' ? 'Owner withdrawal' : 'LearnAfrica platform fees',
                       }))}
                       className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
                     >
@@ -1042,7 +1042,7 @@ export default function AdminPage() {
                     </select>
                     <input required maxLength={80} value={financialForm.category}
                       onChange={e => setFinancialForm(prev => ({ ...prev, category: e.target.value }))}
-                      placeholder="Category (e.g. Paystack fees, hosting)"
+                      placeholder="Category (e.g. LearnAfrica platform fees, hosting)"
                       className="h-10 rounded-lg border border-border bg-background px-3 text-sm" />
                     <input required type="number" min="0.01" step="0.01" value={financialForm.amount}
                       onChange={e => setFinancialForm(prev => ({ ...prev, amount: e.target.value }))}
@@ -1136,10 +1136,10 @@ export default function AdminPage() {
                 </div>
               </Card>
 
-              {/* Paystack fee policy: configuration is separate from actual provider fees and revenue split */}
+              {/* LearnAfrica platform fee policy: configuration is separate from actual provider fees and revenue split */}
               <Card className="p-5 space-y-4">
                 <div>
-                  <h2 className="font-bold text-base">Paystack Fee Policy</h2>
+                  <h2 className="font-bold text-base">LearnAfrica Platform Fee Policy</h2>
                   <p className="text-sm text-muted-foreground mt-1">
                     This default rate applies to all instructors from the selected date, unless an instructor has a separate rate and date. It is used for provisional allocation only. Paystack's verified fee replaces the estimate when payment settles.
                   </p>
@@ -1182,7 +1182,7 @@ export default function AdminPage() {
                           ]);
                           setEarnings(updatedEarnings);
                           setFinancialSummary(updatedFinancialSummary);
-                          showStatus('success', 'Paystack fee policy saved and financial figures refreshed.');
+                          showStatus('success', 'LearnAfrica platform fee policy saved and financial figures refreshed.');
                         } catch (e) { showStatus('error', e.message); }
                         setSavingFeePolicy(false);
                       }}>{savingFeePolicy ? 'Saving…' : 'Save fee policy'}</Button>
@@ -1193,7 +1193,7 @@ export default function AdminPage() {
                     <p className="font-semibold">Impact preview from {feePreview.effective_from}</p>
                     <p>{Number(feePreview.transaction_count || 0).toLocaleString()} successful Paystack course/quiz transactions</p>
                     <p>Gross amount: {formatPrice(feePreview.gross || 0)}</p>
-                    <p>Recorded actual Paystack fees: {formatPrice(feePreview.actual_paystack_fees || 0)}</p>
+                    <p>Recorded actual LearnAfrica platform fees: {formatPrice(feePreview.actual_paystack_fees || 0)}</p>
                     <p>Estimated fees at the selected policy: {formatPrice(feePreview.estimated_policy_fees || 0)}</p>
                     <p>Transactions missing a verified fee: {Number(feePreview.transactions_missing_actual_fee || 0).toLocaleString()}</p>
                     <p className="text-muted-foreground">{feePreview.note}</p>
@@ -1219,7 +1219,7 @@ export default function AdminPage() {
                   </div>
                 )}
                 <div className="text-xs text-muted-foreground">
-                  Instructor-specific overrides are stored separately from the existing revenue split. Resetting an override returns that instructor to the platform default. The selected date is the reporting baseline for Earnings and Financial Records. Transactions before it are excluded from those summaries. Historical estimates do not overwrite verified Paystack fees, recorded transaction shares, or payouts already paid.
+                  Instructor-specific overrides are stored separately from the existing revenue split. Resetting an override returns that instructor to the platform default. The selected date is the reporting baseline for Earnings and Financial Records. Transactions before it are excluded from those summaries. Historical estimates do not overwrite verified LearnAfrica platform fees, recorded transaction shares, or payouts already paid.
                 </div>
               </Card>
 
@@ -1257,7 +1257,7 @@ export default function AdminPage() {
                       </div>
                       <div className="text-center p-3 bg-success/5 rounded-xl border border-success/20">
                         <p className="text-2xl font-bold text-success">{formatPrice(earnings.net_after_paystack_total ?? earnings.total_gross ?? 0)}</p>
-                        <p className="text-xs text-muted-foreground mt-1">Course revenue after Paystack fees</p>
+                        <p className="text-xs text-muted-foreground mt-1">Course revenue after LearnAfrica platform fees</p>
                       </div>
                     </div>
                   </div>
@@ -1332,13 +1332,13 @@ export default function AdminPage() {
                                   <>
                                     <div className="flex flex-wrap items-center gap-2">
                                       <input type="number" min="0" max="100" step="0.01"
-                                        aria-label={"Paystack fee rate for " + inst.name}
+                                        aria-label={"LearnAfrica platform fee rate for " + inst.name}
                                         value={feeOverrideEdits[inst.id] ?? ''}
                                         placeholder={String(paystackFeePolicy.default_rate_pct ?? 0)}
                                         onChange={e => setFeeOverrideEdits(prev => ({ ...prev, [inst.id]: e.target.value }))}
                                         className="w-24 rounded-md border border-border bg-background px-2 py-1 text-sm tabular-nums" />
                                       <span className="text-xs text-muted-foreground">%</span>
-                                      <input type="date" aria-label={"Paystack fee effective date for " + inst.name}
+                                      <input type="date" aria-label={"LearnAfrica platform fee effective date for " + inst.name}
                                         value={feeOverrideDates[inst.id] ?? paystackFeePolicy.effective_from ?? ''}
                                         onChange={e => setFeeOverrideDates(prev => ({ ...prev, [inst.id]: e.target.value }))}
                                         className="rounded-md border border-border bg-background px-2 py-1 text-xs" />
@@ -1879,7 +1879,7 @@ export default function AdminPage() {
                   </div>
                   <div className="rounded-xl bg-muted/30 p-3 text-center">
                     <p className="text-lg font-bold">{formatPrice(selectedUser.paystack_fees || 0)}</p>
-                    <p className="text-xs text-muted-foreground">Paystack fees</p>
+                    <p className="text-xs text-muted-foreground">LearnAfrica platform fees</p>
                   </div>
                   <div className="rounded-xl bg-muted/30 p-3 text-center">
                     <p className="text-lg font-bold">{formatPrice(selectedUser.net_after_paystack || 0)}</p>
@@ -1932,7 +1932,7 @@ export default function AdminPage() {
                               {c.price ? ` · Course price ${formatPrice(c.price)}` : ''}
                             </p>
                             <p className="mt-1 text-xs text-muted-foreground">
-                              Gross {formatPrice(c.gross_revenue || 0)} · Paystack fees {formatPrice(c.paystack_fees || 0)}
+                              Gross {formatPrice(c.gross_revenue || 0)} · LearnAfrica platform fees {formatPrice(c.paystack_fees || 0)}
                             </p>
                             <p className="text-xs text-muted-foreground">
                               After Paystack {formatPrice(c.net_after_paystack || 0)} · Instructor {formatPrice(c.instructor_earnings || 0)} · Platform {formatPrice(c.platform_earnings || 0)}
