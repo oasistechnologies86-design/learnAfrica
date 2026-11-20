@@ -7401,15 +7401,13 @@ def create_app() -> Flask:
 
             # Use the same successful transaction types as the Earnings tab.
             totals = db.execute(
-                """SELECT
-                     COALESCE(SUM(amount), 0) AS collected,
-                     COALESCE(SUM(CASE WHEN type IN ('purchase','quiz_extra_attempt') THEN instructor_share ELSE 0 END), 0) AS instructor_earned,
-                     COALESCE(SUM(CASE WHEN type IN ('purchase','quiz_extra_attempt') THEN platform_share ELSE 0 END), 0) AS platform_earned
+                """SELECT amount, instructor_share, platform_share, type, instructor_id,
+                          provider, paystack_fee, paystack_fee_status, created_at
                    FROM transactions
                    WHERE status='success'
                      AND type IN ('purchase','quiz_extra_attempt','instructor_registration')
                      AND DATE(created_at) >= ?""", (reporting_from,)
-            ).fetchone()
+            ).fetchall()
             paid = db.execute(
                 """SELECT COALESCE(SUM(instructor_share), 0) AS amount
                    FROM transactions
@@ -7465,11 +7463,34 @@ def create_app() -> Flask:
                      AND DATE(created_at) >= ?""", (reporting_from,)
             ).fetchone()
 
-            collected = float(totals['collected'] or 0)
-            instructor_earned = float(totals['instructor_earned'] or 0)
-            # Registration-fee transactions already store their full amount in
-            # platform_share, so do not add them a second time here.
-            platform_earned = float(totals['platform_earned'] or 0)
+            collected = 0.0
+            instructor_earned = 0.0
+            platform_earned = 0.0
+            for tx in totals:
+                amount = float(tx['amount'] or 0)
+                collected += amount
+                tx_type = str(tx['type'] or '')
+                if tx_type == 'instructor_registration':
+                    # Registration payments belong entirely to the platform.
+                    platform_earned += amount
+                    continue
+                instructor_earned += float(tx['instructor_share'] or 0)
+                owner = db.execute('SELECT role FROM users WHERE id=?', (tx['instructor_id'],)).fetchone() if tx['instructor_id'] else None
+                if owner and str(owner['role'] or '').lower() in ('admin', 'superadmin'):
+                    if str(tx['provider'] or '').lower() == 'paystack':
+                        if str(tx['paystack_fee_status'] or 'unknown').lower() == 'actual':
+                            provider_fee = float(tx['paystack_fee'] or 0)
+                        else:
+                            fee_policy = _effective_paystack_fee_policy(db, tx['instructor_id'], str(tx['created_at'] or reporting_from)[:10])
+                            provider_fee = round(amount * fee_policy['rate_pct'] / 100.0, 2)
+                    else:
+                        provider_fee = 0.0
+                    platform_earned += max(0.0, amount - provider_fee)
+                else:
+                    platform_earned += float(tx['platform_share'] or 0)
+            collected = round(collected, 2)
+            instructor_earned = round(instructor_earned, 2)
+            platform_earned = round(platform_earned, 2)
             paid_amount = float(paid['amount'] or 0)
             other_expenses = float(expense_total['amount'] or 0)
             paystack_fees_actual = automatic_actual_paystack_fees + float(manual_paystack_fees['amount'] or 0)
