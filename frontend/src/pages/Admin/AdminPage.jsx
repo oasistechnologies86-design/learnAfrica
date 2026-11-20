@@ -988,7 +988,7 @@ export default function AdminPage() {
                         ['Instructor earnings', financialSummary.instructor_earned],
                         ['Instructor payments made', financialSummary.instructor_paid],
                         ['Outstanding instructor earnings', financialSummary.instructor_outstanding],
-                        ['Paystack processing fees', financialSummary.paystack_fees],
+                        ['Paystack processing fees (actual + estimated)', financialSummary.paystack_fees],
                         ['Payments marked refunded (original transaction value)', financialSummary.refunded_transaction_value],
                         ['Other business expenses', financialSummary.other_expenses],
                         ['Owner withdrawals', financialSummary.owner_withdrawals],
@@ -1010,7 +1010,7 @@ export default function AdminPage() {
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      The Paystack figure is fetched read-only from Paystack. Fees from new successful Paystack webhook events are recorded from the provider's fee amount. For older transactions or fees not included in a webhook, record the actual fee once as a “Paystack fees” expense. Do not enter a fee twice. A transfer to your bank is not an expense.
+                      The Paystack available balance is fetched read-only. Processing fees combine provider-confirmed fees with estimates at the saved rate for transactions that have no verified fee yet. The actual and estimated amounts are shown separately in the Earnings breakdown. Do not also enter the same estimated fee as a manual expense. A transfer to your bank is not an expense.
                     </p>
                   </>
                 ) : (
@@ -1165,7 +1165,14 @@ export default function AdminPage() {
                             effective_from: paystackFeePolicy.effective_from,
                           }) });
                           setPaystackFeePolicy(saved);
-                          showStatus('success', 'Paystack fee policy saved.');
+                          // Refresh both financial views immediately so the selected date/rate is reflected in the displayed amounts.
+                          const [updatedEarnings, updatedFinancialSummary] = await Promise.all([
+                            API('/api/admin/earnings'),
+                            API('/api/admin/financial-records'),
+                          ]);
+                          setEarnings(updatedEarnings);
+                          setFinancialSummary(updatedFinancialSummary);
+                          showStatus('success', 'Paystack fee policy saved and financial figures refreshed.');
                         } catch (e) { showStatus('error', e.message); }
                         setSavingFeePolicy(false);
                       }}>{savingFeePolicy ? 'Saving…' : 'Save fee policy'}</Button>
@@ -1230,7 +1237,8 @@ export default function AdminPage() {
                       </div>
                       <div className="text-center p-3 bg-muted/30 rounded-xl border border-border">
                         <p className="text-2xl font-bold">{formatPrice(earnings.paystack_fees_total || 0)}</p>
-                        <p className="text-xs text-muted-foreground mt-1">Verified Paystack Fees · all payment types</p>
+                        <p className="text-xs text-muted-foreground mt-1">Processing fees · actual + estimated</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">Actual: {formatPrice(earnings.paystack_fees_actual_total || 0)} · Estimated: {formatPrice(earnings.paystack_fees_estimated_total || 0)}</p>
                         <p className="text-[10px] text-muted-foreground mt-1">Includes {formatPrice(earnings.registration_paystack_fees_total || 0)} from instructor registrations</p>
                       </div>
                       <div className="text-center p-3 bg-warning/5 rounded-xl border border-warning/20">
@@ -1270,8 +1278,11 @@ export default function AdminPage() {
                               <td className="p-3 text-right font-medium">{formatPrice(inst.gross_revenue)}</td>
                               <td className="p-3 text-right text-muted-foreground">
                                 {formatPrice(inst.paystack_fees || 0)}
+                                {(Number(inst.paystack_fees_actual || 0) > 0 || Number(inst.paystack_fees_estimated || 0) > 0) && (
+                                  <p className="text-[10px] text-muted-foreground mt-1">Actual {formatPrice(inst.paystack_fees_actual || 0)} · Est. {formatPrice(inst.paystack_fees_estimated || 0)}</p>
+                                )}
                                 {Number(inst.paystack_fee_unverified_count || 0) > 0 && (
-                                  <p className="text-[10px] text-warning mt-1">{Number(inst.paystack_fee_unverified_count).toLocaleString()} unverified</p>
+                                  <p className="text-[10px] text-warning mt-1">{Number(inst.paystack_fee_unverified_count).toLocaleString()} missing verified fee</p>
                                 )}
                               </td>
                               <td className="p-3 text-right font-medium">{formatPrice(inst.net_after_paystack ?? inst.gross_revenue)}</td>
