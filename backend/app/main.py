@@ -9653,6 +9653,15 @@ def create_app() -> Flask:
                     return jsonify({'error': 'Payment verification mismatch'}), 400
 
             if new_status == 'success':
+                if tx['provider'] == 'paystack' and result.get('fees') is not None:
+                    fee_amount = round(float(result.get('fees') or 0), 2)
+                    if 0 <= fee_amount <= float(tx['amount'] or 0):
+                        ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
+                        db.execute(
+                            "UPDATE transactions SET paystack_fee=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                            (fee_amount, tx['id'])
+                        )
+                        _apply_verified_paystack_fee_to_unpaid_shares(db, tx['id'], fee_amount)
                 db.execute("UPDATE transactions SET status='success', updated_at=CURRENT_TIMESTAMP WHERE id=?", (tx['id'],))
                 if tx['type'] == 'quiz_extra_attempt':
                     settle_extra_attempt(db, tx['id'])
