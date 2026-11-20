@@ -179,16 +179,6 @@ def purchase_extra_attempt(quiz_id):
         else:
             effective_split = resolve_instructor_revenue_split(db, course["instructor_id"])
             instructor_share, platform_share = compute_split(amount, effective_split["instructor_pct"])
-        fee_estimate = 0.0
-        fee_rate = 0.0
-        fee_source = 'not_paystack'
-        if pay.get('provider') == 'paystack':
-            fee_rate, fee_source, _fee_default_date = _active_paystack_fee_rate(db, course['instructor_id'])
-            fee_estimate = min(amount, max(0.0, round(amount * fee_rate / 100.0, 2)))
-            if fee_estimate > 0:
-                provisional_net = round(amount - fee_estimate, 2)
-                split_pct = 100.0 if instructor_is_admin else effective_split['instructor_pct']
-                instructor_share, platform_share = compute_split(provisional_net, split_pct)
         user = db.execute("SELECT id,name,email FROM users WHERE id=?", (uid,)).fetchone()
         if not user:
             return jsonify({"error": "Student account not found."}), 404
@@ -211,6 +201,15 @@ def purchase_extra_attempt(quiz_id):
         )
         if pay.get("error") or (pay.get("provider") == "paystack" and not pay.get("checkout_url")):
             return jsonify({"error": pay.get("error") or "Payment checkout could not be started."}), 502
+
+        fee_estimate = 0.0
+        if pay.get('provider') == 'paystack':
+            fee_rate, _fee_source, _fee_default_date = _active_paystack_fee_rate(db, course['instructor_id'])
+            fee_estimate = min(amount, max(0.0, round(amount * fee_rate / 100.0, 2)))
+            if fee_estimate > 0:
+                provisional_net = round(amount - fee_estimate, 2)
+                split_pct = 100.0 if instructor_is_admin else effective_split['instructor_pct']
+                instructor_share, platform_share = compute_split(provisional_net, split_pct)
         tx_details = dict(details)
         tx_details["purpose"] = "quiz_extra_attempt"
         db.execute(
