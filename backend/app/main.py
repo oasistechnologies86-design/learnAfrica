@@ -7285,20 +7285,12 @@ def create_app() -> Flask:
             "SELECT COALESCE(SUM(amount), 0) as t FROM transactions"
             " WHERE type='instructor_registration' AND status='success' AND DATE(created_at) >= ?", (reporting_from,)
         ).fetchone()
-        registration_fee_rows = db.execute(
-            "SELECT amount, paystack_fee, paystack_fee_status, created_at FROM transactions "
-            "WHERE provider='paystack' AND type='instructor_registration' AND status='success' AND DATE(created_at) >= ?",
-            (reporting_from,)
-        ).fetchall() if fee_status_ready else []
+        # Instructor registration fees are reported as platform income separately.
+        # The configurable Paystack fee calculation applies to course and extra-attempt
+        # transactions only; provider-reported registration charges are not substituted.
         registration_fees_actual = 0.0
         registration_fees_estimated = 0.0
-        for fee_tx in registration_fee_rows:
-            if str(fee_tx['paystack_fee_status'] or 'unknown').lower() == 'actual':
-                registration_fees_actual += float(fee_tx['paystack_fee'] or 0)
-            else:
-                resolved_fee = _effective_paystack_fee_policy(db, None, str(fee_tx['created_at'] or reporting_from)[:10])
-                registration_fees_estimated += round(float(fee_tx['amount'] or 0) * resolved_fee['rate_pct'] / 100.0, 2)
-        registration_fee_unverified = sum(1 for fee_tx in registration_fee_rows if str(fee_tx['paystack_fee_status'] or 'unknown').lower() != 'actual')
+        registration_fee_unverified = 0
         course_fees_actual = sum(float(row.get('paystack_fees_actual') or 0) for row in result)
         course_fees_estimated = sum(float(row.get('paystack_fees_estimated') or 0) for row in result)
         course_fees_total = course_fees_actual + course_fees_estimated
