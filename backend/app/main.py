@@ -6979,6 +6979,12 @@ def create_app() -> Flask:
             total_gross += gross
             total_instr += instr
             effective_split = resolve_instructor_revenue_split(db, row['id'], row['role'] in ('admin', 'superadmin'))
+            platform_row = db.execute(
+                "SELECT COALESCE(SUM(platform_share), 0) as amount FROM transactions"
+                " WHERE instructor_id=? AND type IN ('purchase','quiz_extra_attempt') AND status='success'",
+                (row['id'],)
+            ).fetchone()
+            recorded_platform_share = float(platform_row['amount'] or 0) if platform_row else 0.0
             fee_row = db.execute(
                 "SELECT COALESCE(SUM(paystack_fee), 0) as amount FROM transactions"
                 " WHERE instructor_id=? AND provider='paystack' AND status='success'"
@@ -6996,7 +7002,7 @@ def create_app() -> Flask:
                 'paystack_fees': round(actual_fees, 2),
                 'net_after_paystack': round(max(0.0, gross - actual_fees), 2),
                 'instructor_earnings': round(instr, 2),
-                'platform_earnings':   round(gross - instr, 2),
+                'platform_earnings':   round(recorded_platform_share, 2),
                 'instructor_share_pct': effective_split['instructor_pct'],
                 'admin_share_pct': effective_split['admin_pct'],
                 'has_custom_split': effective_split['has_override'],
@@ -7010,7 +7016,7 @@ def create_app() -> Flask:
             'total_gross': round(total_gross, 2),
             'paystack_fees_total': round(sum(float(row.get('paystack_fees') or 0) for row in result), 2),
             'net_after_paystack_total': round(max(0.0, total_gross - sum(float(row.get('paystack_fees') or 0) for row in result)), 2),
-            'platform_total': round(total_gross - total_instr, 2),
+            'platform_total': round(sum(float(row.get('platform_earnings') or 0) for row in result) + registration_fees_total, 2),
             'instructors_total': round(total_instr, 2),
             # Instructor registration fees are 100% platform income and belong
             # to no instructor, so they are reported as their own figure rather
@@ -10123,7 +10129,14 @@ def create_app() -> Flask:
         if gross <= 0 or fee < 0 or fee > gross:
             return False
         net = (gross - fee).quantize(Decimal('0.01'))
-        ratio = max(Decimal('0'), min(Decimal('1'), old_instructor / gross))
+        # Shares already include the previously recorded fee when this is a
+        # duplicate webhook. Recover the original split ratio from the prior
+        # net amount, otherwise retries would progressively reduce earnings.
+        previous_fee = Decimal(str(row['paystack_fee'] or 0)).quantize(Decimal('0.01'))
+        previous_net = gross - previous_fee
+        if previous_net <= 0:
+            return False
+        ratio = max(Decimal('0'), min(Decimal('1'), old_instructor / previous_net))
         instructor_net = (net * ratio).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         platform_net = (net - instructor_net).quantize(Decimal('0.01'))
         db.execute(
@@ -10288,6 +10301,8 @@ def create_app() -> Flask:
         try:
             db = get_db()
             uid = g.current_user['user_id']
+            if g.current_user.get('role') != 'instructor':
+                return jsonify({'error': 'Instructor access required'}), 403
             policy = _paystack_fee_policy_read(db)
             override = (policy.get('instructor_overrides') or {}).get(uid)
             return jsonify({
