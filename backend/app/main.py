@@ -7266,12 +7266,12 @@ def create_app() -> Flask:
             })
         reg_row = db.execute(
             "SELECT COALESCE(SUM(amount), 0) as t FROM transactions"
-            " WHERE type='instructor_registration' AND status='success'"
+            " WHERE type='instructor_registration' AND status='success' AND DATE(created_at) >= ?", (reporting_from,)
         ).fetchone()
         registration_fee_row = db.execute(
             "SELECT COALESCE(SUM(paystack_fee),0) AS fees, "
             "COUNT(CASE WHEN COALESCE(paystack_fee_status,'unknown')<>'actual' THEN 1 END) AS unverified "
-            "FROM transactions WHERE provider='paystack' AND type='instructor_registration' AND status='success'"
+            "FROM transactions WHERE provider='paystack' AND type='instructor_registration' AND status='success' AND DATE(created_at) >= ?", (reporting_from,)
         ).fetchone() if fee_status_ready else {'fees': 0, 'unverified': 0}
         course_fees_total = sum(float(row.get('paystack_fees') or 0) for row in result)
         registration_fees_actual = float(registration_fee_row['fees'] or 0) if registration_fee_row else 0.0
