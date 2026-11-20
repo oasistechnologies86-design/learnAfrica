@@ -10462,9 +10462,20 @@ def create_app() -> Flask:
         value.setdefault('instructor_overrides', {})
         value.setdefault('history', [])
         value.setdefault('apply_scope', 'all_instructors')
-        # Upgrade the old uninitialized 0% default, but preserve an explicit
-        # zero-rate choice when it has an audit-history entry.
-        if float(value.get('default_rate_pct') or 0) == 0 and not value.get('history'):
+        # Upgrade the old uninitialized 0% default. Preserve zero only when
+        # the audit history shows an intentional change from a positive rate.
+        default_history = [
+            entry for entry in (value.get('history') or [])
+            if isinstance(entry, dict) and entry.get('action') not in ('override', 'reset_to_default')
+        ]
+        explicit_zero_choice = any(
+            isinstance(entry.get('old_rate_pct'), (int, float))
+            and entry.get('old_rate_pct') > 0
+            and isinstance(entry.get('new_rate_pct'), (int, float))
+            and entry.get('new_rate_pct') == 0
+            for entry in default_history
+        )
+        if float(value.get('default_rate_pct') or 0) == 0 and not explicit_zero_choice:
             value['default_rate_pct'] = 1.95
         return value
 
