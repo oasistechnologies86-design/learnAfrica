@@ -10501,7 +10501,8 @@ def create_app() -> Flask:
             ensure_column(db, 'transactions', 'paystack_fee_status', "TEXT DEFAULT 'unknown'")
             db.execute("UPDATE transactions SET paystack_fee_status='actual' WHERE COALESCE(paystack_fee,0)>0 AND paystack_fee_status='unknown'")
             rows = db.execute(
-                """SELECT instructor_id, amount, paystack_fee, paystack_fee_status
+                """SELECT instructor_id, amount, paystack_fee, paystack_fee_status,
+                          CAST(created_at AS TEXT) AS created_at
                    FROM transactions
                    WHERE provider='paystack' AND type IN ('purchase','quiz_extra_attempt')
                      AND status='success' AND DATE(created_at) >= ?""", (effective_from,)
@@ -10511,7 +10512,7 @@ def create_app() -> Flask:
             estimated_fees = 0.0
             missing_actual = 0
             for tx in rows:
-                resolved = _effective_paystack_fee_policy(db, tx['instructor_id'], effective_from)
+                resolved = _effective_paystack_fee_policy(db, tx['instructor_id'], str(tx['created_at'] or effective_from)[:10])
                 estimated_fees += float(tx['amount'] or 0) * resolved['rate_pct'] / 100.0
                 if str(tx['paystack_fee_status'] or '').lower() != 'actual':
                     missing_actual += 1
