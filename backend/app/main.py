@@ -10130,6 +10130,7 @@ def create_app() -> Flask:
                 return jsonify({'error': 'Choose a valid effective date (YYYY-MM-DD).'}), 400
             db = get_db()
             ensure_transactions_table(db)
+            ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
             row = db.execute(
                 """SELECT COUNT(*) AS transaction_count,
                           COALESCE(SUM(amount),0) AS gross,
