@@ -566,7 +566,7 @@ export default function StudentDashboard() {
       {/* ── Compact student quick access ── */}
       <section aria-label="Quick access" className="space-y-1">
         <h2 className="text-xs font-semibold text-muted-foreground">Quick Access</h2>
-        <div className="flex w-full items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
+        <div className="flex w-full flex-nowrap items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:thin] md:flex-wrap md:overflow-visible">
           <Link to="/receipts" className="group flex min-h-11 shrink-0 items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 transition-colors hover:border-primary/40 hover:bg-primary/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"><Receipt className="h-3.5 w-3.5" /></span>
             <span className="whitespace-nowrap text-xs font-semibold">My Receipts</span>
@@ -575,12 +575,26 @@ export default function StudentDashboard() {
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"><Award className="h-3.5 w-3.5" /></span>
             <span className="whitespace-nowrap text-xs font-semibold">Certificates</span>
           </Link>
+          {[
+            { to: "/profile", label: "My Profile", Icon: User },
+            { to: "/settings", label: "Settings", Icon: Settings },
+            { to: "/courses", label: "My Courses", Icon: BookOpen },
+            { to: "/dashboard/leaderboard", label: "Leaderboard", Icon: Trophy },
+            { to: "/community", label: "Community", Icon: Compass },
+            { to: "/verify-credential", label: "Verified Certificate", Icon: CheckCircle2 },
+            { to: "/about", label: "About", Icon: Award },
+          ].map(({ to, label, Icon }) => (
+            <Link key={to} to={to} className="hidden min-h-11 shrink-0 items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold transition-colors hover:border-primary/40 hover:bg-primary/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:inline-flex">
+              <Icon className="h-3.5 w-3.5 text-primary" />
+              <span className="whitespace-nowrap">{label}</span>
+            </Link>
+          ))}
           <button
             type="button"
             onClick={() => setQuickAccessOpen(true)}
             aria-haspopup="dialog"
             aria-expanded={quickAccessOpen}
-            className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-md px-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-md px-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:basis-full md:justify-start"
           >
             View More <ArrowRight className="h-3.5 w-3.5" />
           </button>
@@ -768,7 +782,7 @@ export default function StudentDashboard() {
           className={cn("grid transition-[grid-template-rows,opacity] duration-300 ease-in-out", badgesExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")}
         >
           <div className="min-h-0 overflow-hidden">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-1">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(112px,144px))] justify-start gap-2 pt-1">
               {liveBadges.map(badge => (
                 <BadgeCard key={badge.id} badge={badge} userName={user?.name} />
               ))}

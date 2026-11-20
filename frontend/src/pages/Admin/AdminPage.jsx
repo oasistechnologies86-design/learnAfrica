@@ -2040,6 +2040,7 @@ export default function AdminPage() {
 // ── Admin: Receipts tab — verify-by-ID + full transaction table
 // ─────────────────────────────────────────────────────────────────────────
 function AdminReceiptsTab() {
+  const navigate = useNavigate();
   const [lookup, setLookup]   = useState('');
   const [found,  setFound]    = useState(null);
   const [busy,   setBusy]     = useState(false);
@@ -2223,7 +2224,12 @@ function AdminReceiptsTab() {
                         {t.status}
                       </span>
                     </td>
-                    <td className="px-2 py-2 text-right">
+                    <td className="px-2 py-2 text-right whitespace-nowrap">
+                      <Button type="button" size="sm" variant="ghost"
+                        onClick={() => navigate(`/receipts/${encodeURIComponent(t.id)}`)}
+                        aria-label={`View statement ${t.receipt_id || t.id}`}>
+                        <Eye className="h-4 w-4" />
+                      </Button>
                       <Button type="button" size="sm" variant="ghost"
                         disabled={deletingId === t.id}
                         onClick={() => deleteStatement(t)}
