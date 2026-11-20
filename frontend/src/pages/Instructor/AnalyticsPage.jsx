@@ -38,11 +38,9 @@ export function AnalyticsPage() {
   const adminPct      = splitConfigured ? Number(stats.admin_share_pct ?? stats.platform_share_pct) : null;
   const instructorPctLabel = instructorPct == null ? '—' : instructorPct;
   const adminPctLabel      = adminPct == null ? '—' : adminPct;
-  const gross         = stats?.gross_revenue        ?? 0;
-  const myEarnings    = stats?.total_earnings       ?? 0;
-  const platformCut   = stats ? round2(gross - myEarnings) : 0;
-
-  function round2(n) { return Math.round(n * 100) / 100; }
+  const gross         = Number(stats?.gross_revenue ?? 0);
+  const myEarnings    = Number(stats?.total_earnings ?? 0);
+  const platformCut   = Number(stats?.platform_share ?? 0);
 
   if (loading) return (
     <div className="flex h-64 items-center justify-center">
@@ -78,7 +76,7 @@ export function AnalyticsPage() {
           <div className="flex items-center justify-between p-4 rounded-xl bg-background border border-border">
             <div>
               <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest">Gross Revenue</p>
-              <p className="text-2xl font-bold mt-0.5">${gross.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</p>
+              <p className="text-2xl font-bold mt-0.5">{formatPrice(gross)}</p>
               <p className="text-xs text-muted-foreground mt-0.5">Total paid by students for your courses</p>
             </div>
             <TrendingUp className="h-8 w-8 text-muted-foreground/30" />
@@ -114,12 +112,12 @@ export function AnalyticsPage() {
           <div className="grid grid-cols-2 gap-3">
             <div className="p-4 rounded-xl bg-success/5 border border-success/20 text-center">
               <p className="text-3xs font-bold uppercase text-success/70 tracking-widest mb-1">Your Earnings</p>
-              <p className="text-xl font-bold text-success">${myEarnings.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</p>
+              <p className="text-xl font-bold text-success">{formatPrice(myEarnings)}</p>
               <p className="text-2xs text-muted-foreground mt-1">{instructorPctLabel}% of gross</p>
             </div>
             <div className="p-4 rounded-xl bg-muted/30 border border-border text-center">
               <p className="text-3xs font-bold uppercase text-muted-foreground tracking-widest mb-1">Platform Fee</p>
-              <p className="text-xl font-bold text-muted-foreground">${platformCut.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</p>
+              <p className="text-xl font-bold text-muted-foreground">{formatPrice(platformCut)}</p>
               <p className="text-2xs text-muted-foreground mt-1">{adminPct}% of gross</p>
             </div>
           </div>
@@ -195,16 +193,14 @@ export function AnalyticsPage() {
               </thead>
               <tbody>
                 {stats.course_performance.map((c, idx) => {
-                  const courseGross = (c.avg_price || 0) * (c.students || 0);
-                  const myCut = round2(courseGross * (instructorPct / 100));
                   return (
                     <tr key={c.id || `course-${idx}`} className="border-b border-border/40 hover:bg-muted/20 transition-colors">
                       <td className="py-2.5 pr-4 font-medium max-w-[180px] truncate">{c.title}</td>
                       <td className="py-2.5 pr-4">{c.students}</td>
                       <td className="py-2.5 pr-4">{c.completion_rate}%</td>
                       <td className="py-2.5 pr-4">{c.rating ? Number(c.rating).toFixed(1) : '—'}</td>
-                      <td className="py-2.5 pr-4 text-muted-foreground">${courseGross.toFixed(2)}</td>
-                      <td className="py-2.5 font-bold text-success">${myCut.toFixed(2)}</td>
+                      <td className="py-2.5 pr-4 text-muted-foreground">{formatPrice(c.gross_revenue ?? 0)}</td>
+                      <td className="py-2.5 font-bold text-success">{formatPrice(c.instructor_earnings ?? 0)}</td>
                     </tr>
                   );
                 })}
