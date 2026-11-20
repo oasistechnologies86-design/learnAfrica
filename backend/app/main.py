@@ -9512,7 +9512,7 @@ def create_app() -> Flask:
                  payment_method, json.dumps(payment_details), payout_status,
                  applied_coupon['code'] if applied_coupon else None,
                  discount_applied, original_amount, fee_estimate,
-                 'policy_applied')
+                 'estimated')
             )
 
             # Increment coupon uses if a coupon was applied
@@ -10680,10 +10680,13 @@ def create_app() -> Flask:
 
 
     def _normalize_unpaid_transaction_splits(db, instructor_id=None, course_id=None):
-        """Deprecated no-op: historical financial splits are immutable on reads.
+        """Read-only compatibility shim that ensures fee columns exist.
 
-        Any approved repair must be an explicit, previewed and audited operation.
+        Historical transaction shares are immutable during page reads. Any
+        approved repair must be an explicit, previewed and audited operation.
         """
+        ensure_transactions_table(db)
+        ensure_column(db, 'transactions', 'paystack_fee_estimate', 'REAL DEFAULT 0')
         return 0
 
 
