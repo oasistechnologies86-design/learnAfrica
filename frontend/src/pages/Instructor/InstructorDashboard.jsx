@@ -465,7 +465,14 @@ export function InstructorDashboard() {
   const [studentPayment, setStudentPayment] = useState('all');
   const [studentEnrollment, setStudentEnrollment] = useState('all');
   const [studentPage, setStudentPage] = useState(1);
+  const [saleTransactions, setSaleTransactions] = useState([]);
+  const [transactionsLoading, setTransactionsLoading] = useState(true);
+  const [transactionsError, setTransactionsError] = useState('');
+  const [transactionSearch, setTransactionSearch] = useState('');
+  const [transactionStatus, setTransactionStatus] = useState('all');
+  const [transactionPage, setTransactionPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
+  const TRANSACTIONS_PER_PAGE = 10;
 
   const getInitials = n => n ? n.split(' ').map(x=>x[0]).join('').toUpperCase().slice(0,2) : '??';
 
@@ -493,6 +500,30 @@ export function InstructorDashboard() {
       .then(d => setPaymentConfigured(!!d?.configured))
       .catch(() => { /* silent */ });
   }, []);
+
+  useEffect(() => {
+    const instructorId = user?.id || user?.user_id;
+    if (!instructorId) return;
+    let active = true;
+    setTransactionsLoading(true);
+    api('/api/transactions')
+      .then(data => {
+        if (!active) return;
+        const ownSales = (data.transactions || []).filter(tx =>
+          tx.instructor_id === instructorId &&
+          ['purchase', 'quiz_extra_attempt'].includes(String(tx.type || '').toLowerCase())
+        );
+        setSaleTransactions(ownSales);
+        setTransactionsError('');
+      })
+      .catch(error => {
+        if (!active) return;
+        setSaleTransactions([]);
+        setTransactionsError(error.message || 'Could not load transaction history.');
+      })
+      .finally(() => { if (active) setTransactionsLoading(false); });
+    return () => { active = false; };
+  }, [user?.id, user?.user_id]);
 
   const refreshStats = () => {
     api('/api/instructor/stats').then(setStats).catch(() => {});
@@ -528,6 +559,19 @@ export function InstructorDashboard() {
   const studentTotalPages = Math.max(1, Math.ceil(filteredMyStudents.length / ITEMS_PER_PAGE));
   const paginatedMyStudents = filteredMyStudents.slice(
     (studentPage - 1) * ITEMS_PER_PAGE, studentPage * ITEMS_PER_PAGE
+  );
+  const filteredTransactions = saleTransactions.filter(tx => {
+    const query = transactionSearch.trim().toLowerCase();
+    const matchesSearch = !query || [
+      tx.course_title, tx.user_name, tx.user_email, tx.receipt_id, tx.type,
+    ].some(value => String(value || '').toLowerCase().includes(query));
+    const matchesStatus = transactionStatus === 'all' || String(tx.status || '').toLowerCase() === transactionStatus;
+    return matchesSearch && matchesStatus;
+  });
+  const transactionTotalPages = Math.max(1, Math.ceil(filteredTransactions.length / TRANSACTIONS_PER_PAGE));
+  const paginatedTransactions = filteredTransactions.slice(
+    (transactionPage - 1) * TRANSACTIONS_PER_PAGE,
+    transactionPage * TRANSACTIONS_PER_PAGE
   );
 
   return (
@@ -644,6 +688,103 @@ export function InstructorDashboard() {
           </CardContent>
         </Card>
       )}
+
+      {/* Sales transaction history */}
+      <Card className="border-border/50 shadow-sm overflow-hidden">
+        <CardHeader className="border-b border-border pb-3">
+          <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+            Course Payment Transactions
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">Sales and paid extra-attempt transactions for your courses.</p>
+        </CardHeader>
+        <CardContent className="space-y-3 p-4">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <input value={transactionSearch}
+              onChange={e => { setTransactionSearch(e.target.value); setTransactionPage(1); }}
+              placeholder="Search course, student or receipt"
+              className="h-10 rounded-lg border border-border bg-background px-3 text-sm" />
+            <select value={transactionStatus}
+              onChange={e => { setTransactionStatus(e.target.value); setTransactionPage(1); }}
+              className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
+              <option value="all">All transaction statuses</option>
+              <option value="success">Successful</option>
+              <option value="pending">Pending</option>
+              <option value="failed">Failed</option>
+              <option value="refunded">Refunded</option>
+            </select>
+          </div>
+          {transactionsLoading ? (
+            <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-primary/50" /></div>
+          ) : transactionsError ? (
+            <p className="py-6 text-center text-sm text-destructive">{transactionsError}</p>
+          ) : paginatedTransactions.length ? (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[850px] text-sm">
+                <thead>
+                  <tr className="border-b border-border text-left text-xs text-muted-foreground">
+                    <th className="py-2 pr-3">Date / Receipt</th>
+                    <th className="py-2 pr-3">Student / Course</th>
+                    <th className="py-2 pr-3 text-right">Gross</th>
+                    <th className="py-2 pr-3 text-right">Paystack fee</th>
+                    <th className="py-2 pr-3 text-right">Your share</th>
+                    <th className="py-2 pr-3 text-right">Platform share</th>
+                    <th className="py-2 text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedTransactions.map((tx, index) => {
+                    const fee = tx.provider === 'paystack' && Number(tx.paystack_fee || 0) > 0
+                      ? formatPrice(tx.paystack_fee) : tx.provider === 'paystack' ? 'Not recorded' : '—';
+                    const status = String(tx.status || 'unknown').toLowerCase();
+                    return (
+                      <tr key={tx.id || tx.receipt_id || index} className="border-b border-border/40">
+                        <td className="py-3 pr-3">
+                          <p className="whitespace-nowrap text-xs">{tx.created_at ? new Date(tx.created_at).toLocaleDateString() : '—'}</p>
+                          <p className="max-w-[140px] truncate text-2xs text-muted-foreground">{tx.receipt_id || tx.id || '—'}</p>
+                        </td>
+                        <td className="py-3 pr-3">
+                          <p className="max-w-[180px] truncate font-medium">{tx.user_name || tx.user_email || 'Student'}</p>
+                          <p className="max-w-[180px] truncate text-xs text-muted-foreground">{tx.course_title || (tx.type === 'quiz_extra_attempt' ? 'Extra quiz attempt' : 'Course')}</p>
+                        </td>
+                        <td className="py-3 pr-3 text-right tabular-nums">{formatPrice(tx.amount || 0)}</td>
+                        <td className="py-3 pr-3 text-right text-xs tabular-nums">{fee}</td>
+                        <td className="py-3 pr-3 text-right font-semibold tabular-nums">{formatPrice(tx.instructor_share || 0)}</td>
+                        <td className="py-3 pr-3 text-right tabular-nums">{formatPrice(tx.platform_share || 0)}</td>
+                        <td className="py-3 text-right">
+                          <span className={cn('rounded-full px-2 py-1 text-2xs font-semibold',
+                            ['success','completed','paid'].includes(status) ? 'bg-success/10 text-success' :
+                            status === 'pending' ? 'bg-warning/10 text-warning' :
+                            ['failed','cancelled','refunded','reversed'].includes(status) ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground')}>
+                            {status.replace(/_/g, ' ')}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              {saleTransactions.length ? 'No transactions match your search or status filter.' : 'No course payment transactions are available yet.'}
+            </p>
+          )}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
+            <p className="text-xs text-muted-foreground">{filteredTransactions.length} transaction(s)</p>
+            {filteredTransactions.length > TRANSACTIONS_PER_PAGE && (
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => setTransactionPage(p => Math.max(1, p - 1))}
+                  disabled={transactionPage <= 1}
+                  className="rounded-lg border border-border px-3 py-1.5 text-xs disabled:opacity-40">Previous</button>
+                <span className="text-xs text-muted-foreground">Page {transactionPage} of {transactionTotalPages}</span>
+                <button type="button" onClick={() => setTransactionPage(p => Math.min(transactionTotalPages, p + 1))}
+                  disabled={transactionPage >= transactionTotalPages}
+                  className="rounded-lg border border-border px-3 py-1.5 text-xs disabled:opacity-40">Next</button>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Recent students */}
       {(stats?.recent_students || []).length > 0 && (
