@@ -7360,48 +7360,50 @@ def create_app() -> Flask:
                      COALESCE(SUM(platform_share), 0) AS platform_earned
                    FROM transactions
                    WHERE status='success'
-                     AND type IN ('purchase','quiz_extra_attempt','instructor_registration')"""
+                     AND type IN ('purchase','quiz_extra_attempt','instructor_registration')
+                     AND DATE(created_at) >= ?""", (reporting_from,)
             ).fetchone()
             paid = db.execute(
                 """SELECT COALESCE(SUM(instructor_share), 0) AS amount
                    FROM transactions
                    WHERE status='success'
                      AND type IN ('purchase','quiz_extra_attempt')
-                     AND payout_status='paid'"""
+                     AND payout_status='paid' AND DATE(created_at) >= ?""", (reporting_from,)
             ).fetchone()
             outstanding = db.execute(
                 """SELECT COALESCE(SUM(instructor_share), 0) AS amount
                    FROM transactions
                    WHERE status='success'
                      AND type IN ('purchase','quiz_extra_attempt')
-                     AND payout_status='pending'"""
+                     AND payout_status='pending' AND DATE(created_at) >= ?""", (reporting_from,)
             ).fetchone()
             records = db.execute(
                 """SELECT id, record_type, category, amount, description, reference, created_at
-                   FROM admin_financial_records ORDER BY created_at DESC LIMIT 100"""
+                   FROM admin_financial_records WHERE DATE(created_at) >= ? ORDER BY created_at DESC LIMIT 100""", (reporting_from,)
             ).fetchall()
             expense_total = db.execute(
                 """SELECT COALESCE(SUM(amount), 0) AS amount FROM admin_financial_records
-                   WHERE record_type='expense' AND LOWER(category) <> 'paystack fees'"""
+                   WHERE record_type='expense' AND LOWER(category) <> 'paystack fees' AND DATE(created_at) >= ?""", (reporting_from,)
             ).fetchone()
             manual_paystack_fees = db.execute(
                 """SELECT COALESCE(SUM(amount), 0) AS amount FROM admin_financial_records
-                   WHERE record_type='expense' AND LOWER(category) = 'paystack fees'"""
+                   WHERE record_type='expense' AND LOWER(category) = 'paystack fees' AND DATE(created_at) >= ?""", (reporting_from,)
             ).fetchone()
             automatic_paystack_fees = (
                 db.execute(
                     """SELECT COALESCE(SUM(paystack_fee), 0) AS amount FROM transactions
-                       WHERE status='success' AND provider='paystack'"""
+                       WHERE status='success' AND provider='paystack' AND DATE(created_at) >= ?""", (reporting_from,)
                 ).fetchone() if fee_column_ready else {'amount': 0}
             )
             withdrawal_total = db.execute(
-                "SELECT COALESCE(SUM(amount), 0) AS amount FROM admin_financial_records WHERE record_type='withdrawal'"
+                "SELECT COALESCE(SUM(amount), 0) AS amount FROM admin_financial_records WHERE record_type='withdrawal' AND DATE(created_at) >= ?"
             ).fetchone()
             refunded = db.execute(
                 """SELECT COUNT(*) AS count, COALESCE(SUM(amount), 0) AS amount
                    FROM transactions
                    WHERE status='refunded'
-                     AND type IN ('purchase','quiz_extra_attempt','instructor_registration')"""
+                     AND type IN ('purchase','quiz_extra_attempt','instructor_registration')
+                     AND DATE(created_at) >= ?""", (reporting_from,)
             ).fetchone()
 
             collected = float(totals['collected'] or 0)
