@@ -225,9 +225,13 @@ function EarningsCard({ stats, onChanged }) {
             <span className="font-semibold text-foreground">{formatPrice(grossRevenue)}</span>
           </div>
           <div className="flex justify-between text-muted-foreground">
-            <span>Paystack processing fees (actual)</span>
+            <span>Paystack processing fees (actual + estimated)</span>
             <span className="font-medium">−{formatPrice(stats?.paystack_fees || 0)}</span>
           </div>
+          <p className="text-[11px] text-muted-foreground -mt-1">
+            Actual {formatPrice(stats?.paystack_fees_actual || 0)} · Estimated {formatPrice(stats?.paystack_fees_estimated || 0)}
+            {Number(stats?.paystack_fee_unverified_count || 0) > 0 ? ` · ${stats.paystack_fee_unverified_count} awaiting verification` : ''}
+          </p>
           {feePolicy && (
             <div className="flex justify-between text-muted-foreground">
               <span>Configured fee rate ({feePolicy.source === 'instructor_override' ? 'instructor override' : 'platform default'})</span>
