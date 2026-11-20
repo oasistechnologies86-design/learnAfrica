@@ -7198,6 +7198,10 @@ def create_app() -> Flask:
         instructor_pct, admin_pct = get_revenue_split(db)
         ensure_transactions_table(db)
         paystack_fee_ready = ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
+        ensure_column(db, 'transactions', 'paystack_fee_estimate', 'REAL DEFAULT 0')
+        fee_status_ready = ensure_column(db, 'transactions', 'paystack_fee_status', "TEXT DEFAULT 'unknown'")
+        if fee_status_ready:
+            db.execute("UPDATE transactions SET paystack_fee_status='actual' WHERE COALESCE(paystack_fee,0)>0 AND paystack_fee_status='unknown'")
         instructors = db.execute('''
             SELECT u.id, u.name, u.email, u.avatar, u.role,
                    (SELECT COUNT(*) FROM courses c WHERE c.instructor_id=u.id) as course_count,
@@ -7233,6 +7237,12 @@ def create_app() -> Flask:
                 (row['id'],)
             ).fetchone() if paystack_fee_ready else {'amount': 0}
             actual_fees = float(fee_row['amount'] or 0) if fee_row else 0.0
+            unverified_row = db.execute(
+                "SELECT COUNT(*) AS count FROM transactions WHERE instructor_id=? AND provider='paystack' "
+                "AND status='success' AND type IN ('purchase','quiz_extra_attempt') "
+                "AND COALESCE(paystack_fee_status,'unknown')<>'actual'", (row['id'],)
+            ).fetchone() if fee_status_ready else {'count': 0}
+            unverified_count = int(unverified_row['count'] or 0) if unverified_row else 0
             if row['role'] in ('admin', 'superadmin'):
                 recorded_platform_share = max(0.0, gross - actual_fees)
             result.append({
@@ -7243,6 +7253,7 @@ def create_app() -> Flask:
                 'course_count': row['course_count'],
                 'gross_revenue': round(gross, 2),
                 'paystack_fees': round(actual_fees, 2),
+                'paystack_fee_unverified_count': unverified_count,
                 'net_after_paystack': round(max(0.0, gross - actual_fees), 2),
                 'instructor_earnings': round(instr, 2),
                 'platform_earnings':   round(recorded_platform_share, 2),
@@ -7258,6 +7269,7 @@ def create_app() -> Flask:
             'instructors': result,
             'total_gross': round(total_gross, 2),
             'paystack_fees_total': round(sum(float(row.get('paystack_fees') or 0) for row in result), 2),
+            'paystack_fee_unverified_count': sum(int(row.get('paystack_fee_unverified_count') or 0) for row in result),
             'net_after_paystack_total': round(max(0.0, total_gross - sum(float(row.get('paystack_fees') or 0) for row in result)), 2),
             'platform_total': round(sum(float(row.get('platform_earnings') or 0) for row in result) + float(reg_row['t'] or 0), 2),
             'instructors_total': round(total_instr, 2),
