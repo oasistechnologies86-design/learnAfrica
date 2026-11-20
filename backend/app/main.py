@@ -10643,7 +10643,7 @@ def create_app() -> Flask:
                     datetime.strptime(effective_from, '%Y-%m-%d')
                 except ValueError:
                     return jsonify({'error': 'Choose a valid effective date.'}), 400
-                                overrides[uid] = {'rate_pct': rate, 'effective_from': effective_from}
+                overrides[uid] = {'rate_pct': rate, 'effective_from': effective_from}
                 action = 'override'
             policy['instructor_overrides'] = overrides
             policy['history'] = (policy.get('history') or []) + [{
