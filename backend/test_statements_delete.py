@@ -1,7 +1,6 @@
 """Tests for statement (transaction) deletion.
 
-Statements are financial records, so deletion is a soft delete: the row stays,
-hidden from the owner, and admins can still see it. These checks boot the real
+Statements disappear from all receipt views after deletion; the financial row remains for audit. These checks boot the real
 app and exercise the real routes.
 
     python backend/test_statements_delete.py
@@ -66,6 +65,20 @@ stu1 = login('stu@example.com')
 stu2 = login('kofi@example.com')
 adm = login('admin@example.com')
 
+# ── Student receipt access is buyer-only ──────────────────────────────────────
+with app.app_context():
+    db = get_db()
+    db.execute("INSERT INTO transactions (id,receipt_id,type,user_id,user_name,user_email,"
+               "course_id,course_title,instructor_id,amount,currency,status,provider,deleted_by_user)"
+               " VALUES ('leak1','LA-RCP-LEAK','purchase','stu2','Kofi','kofi@example.com',"
+               "'c1','Python','stu1',100,'GHS','success','stub',0)")
+    db.commit()
+r = c.get('/api/transactions', headers={'Authorization': f'Bearer {stu1}'})
+ids = [x['id'] for x in (r.get_json() or {}).get('transactions', [])]
+check('student cannot see another buyer transaction via instructor_id', 'leak1' not in ids, ids)
+r = c.get('/api/transactions/leak1', headers={'Authorization': f'Bearer {stu1}'})
+check('student cannot open another buyer transaction by ID', r.status_code == 404, r.status_code)
+
 # ── Ownership enforced ───────────────────────────────────────────────────────
 r = c.delete('/api/transactions/t1', headers={'Authorization': f'Bearer {stu2}'})
 check('another user cannot delete your statement', r.status_code == 403, r.status_code)
@@ -85,14 +98,14 @@ check('deleted statement is gone from the owner list', 't1' not in ids, ids)
 with app.app_context():
     db = get_db()
     row = db.execute("SELECT deleted_by_user FROM transactions WHERE id='t1'").fetchone()
-check('row is preserved (soft delete, not hard delete)', row is not None)
-check('row is flagged deleted_by_user=1', row is not None and int(row['deleted_by_user']) == 1)
+check('financial audit row is preserved', row is not None)
+check('financial audit row is flagged deleted', row is not None and int(row['deleted_by_user']) == 1)
 
 r = c.get('/api/transactions/t1', headers={'Authorization': f'Bearer {adm}'})
-check('admin can still open a deleted statement', r.status_code == 200, r.status_code)
+check('admin cannot open a deleted statement', r.status_code == 404, r.status_code)
 r = c.get('/api/transactions', headers={'Authorization': f'Bearer {adm}'})
 ids = [t['id'] for t in (r.get_json() or {}).get('transactions', [])]
-check('admin list still includes the deleted statement', 't1' in ids, ids)
+check('admin list excludes deleted statements', 't1' not in ids, ids)
 
 # ── The old ?hard=1 escape hatch no longer physically deletes ────────────────
 r = c.delete('/api/transactions/t1?hard=1', headers={'Authorization': f'Bearer {adm}'})

@@ -7557,7 +7557,7 @@ def create_app() -> Flask:
                 'records': safe_list(records),
             })
         except Exception as e:
-            app.logger.error(f'admin_financial_records: {e}')
+            app.logger.exception('admin_financial_records failed')
             try:
                 db = getattr(g, '_db', None)
                 if db and hasattr(db, '_conn'): db._conn.rollback()
@@ -8353,21 +8353,24 @@ def create_app() -> Flask:
             ensure_transactions_table(db)
             uid = g.current_user['user_id']
             role = g.current_user['role']
-            if role == 'instructor':
-                _normalize_unpaid_transaction_splits(db, instructor_id=uid)
-            elif role in ('admin', 'superadmin'):
-                _normalize_unpaid_transaction_splits(db)
-
-            where = []
+            # Receipt reads must never rewrite financial allocations.
+            # Hidden statements are excluded from every receipt view.
+            where = ["COALESCE(deleted_by_user, 0)=0"]
             params = []
 
             if role in ('admin', 'superadmin'):
-                pass  # see all
+                pass
+            elif role == 'instructor':
+                where.append(
+                    "type IN ('purchase','quiz_extra_attempt') AND EXISTS ("
+                    "SELECT 1 FROM courses c WHERE c.id=transactions.course_id "
+                    "AND c.instructor_id=?)"
+                )
+                params.append(uid)
             else:
-                # Everyone else: only their own transactions (as buyer OR as instructor receiving)
-                where.append('(user_id=? OR instructor_id=?)')
-                params.extend([uid, uid])
-                where.append('deleted_by_user=0')
+                # Students and other non-admin roles see only their own purchases.
+                where.append('user_id=?')
+                params.append(uid)
 
             # Filters
             df = request.args.get('date_from')
@@ -8438,8 +8441,16 @@ def create_app() -> Flask:
             if not row:
                 return jsonify({'error': 'Not found'}), 404
 
-            # Owner (buyer or instructor) or admin may hide their statement.
-            owns = (row['user_id'] == uid) or (row['instructor_id'] == uid) or role in ('admin', 'superadmin')
+            # Students delete only their own receipts. Instructors delete
+            # purchase receipts for courses they own. Admins can delete any.
+            owns = role in ('admin', 'superadmin') or (role == 'student' and row['user_id'] == uid)
+            if role == 'instructor':
+                owned = db.execute(
+                    "SELECT 1 FROM transactions t JOIN courses c ON c.id=t.course_id "
+                    "WHERE t.id=? AND t.type IN ('purchase','quiz_extra_attempt') AND c.instructor_id=?",
+                    (tid, uid)
+                ).fetchone()
+                owns = bool(owned)
             if not owns:
                 return jsonify({'error': 'Forbidden'}), 403
 
@@ -8452,7 +8463,7 @@ def create_app() -> Flask:
                 db.commit()
                 audit('delete_transaction', 'transaction', tid, row['receipt_id'],
                       {'user_id': row['user_id'], 'instructor_id': row['instructor_id']})
-            return jsonify({'message': 'Hidden from your view'})
+            return jsonify({'message': 'Statement deleted from receipt views'})
         except Exception as e:
             app.logger.error(f'delete_transaction: {e}')
             try:
@@ -8486,12 +8497,16 @@ def create_app() -> Flask:
             tx = dict(row)
             is_admin = role in ('admin', 'superadmin')
             is_buyer = tx.get('user_id') == uid
-            is_instructor = tx.get('instructor_id') == uid
-            if not (is_admin or is_buyer or is_instructor):
+            is_instructor = False
+            if role == 'instructor' and tx.get('type') in ('purchase', 'quiz_extra_attempt') and tx.get('course_id'):
+                owned = db.execute(
+                    'SELECT 1 FROM courses WHERE id=? AND instructor_id=?',
+                    (tx['course_id'], uid)
+                ).fetchone()
+                is_instructor = bool(owned)
+            if not (is_admin or (role == 'student' and is_buyer) or is_instructor):
                 return jsonify({'error': 'Transaction not found'}), 404
-            # A statement the owner has hidden must not be reachable by direct
-            # URL either. Admins still see it (they need it for support/audit).
-            if not is_admin and int(tx.get('deleted_by_user') or 0):
+            if int(tx.get('deleted_by_user') or 0):
                 return jsonify({'error': 'Transaction not found'}), 404
 
             pd = {}
@@ -9497,7 +9512,7 @@ def create_app() -> Flask:
                  payment_method, json.dumps(payment_details), payout_status,
                  applied_coupon['code'] if applied_coupon else None,
                  discount_applied, original_amount, fee_estimate,
-                 'policy_applied')
+                 'estimated')
             )
 
             # Increment coupon uses if a coupon was applied
@@ -10665,52 +10680,15 @@ def create_app() -> Flask:
 
 
     def _normalize_unpaid_transaction_splits(db, instructor_id=None, course_id=None):
-        """Normalize legacy unpaid shares to the saved post-fee amount."""
-        from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+        """Read-only compatibility shim that ensures fee columns exist.
+
+        Historical transaction shares are immutable during page reads. Any
+        approved repair must be an explicit, previewed and audited operation.
+        """
         ensure_transactions_table(db)
         ensure_column(db, 'transactions', 'paystack_fee_estimate', 'REAL DEFAULT 0')
-        clauses = ["status='success'", "type IN ('purchase','quiz_extra_attempt')"]
-        params = []
-        if instructor_id is not None:
-            clauses.append("instructor_id=?")
-            params.append(instructor_id)
-        if course_id is not None:
-            clauses.append("course_id=?")
-            params.append(course_id)
-        rows = db.execute(
-            "SELECT id, amount, instructor_id, created_at, instructor_share, "
-            "platform_share, payout_status, paystack_fee_estimate FROM transactions WHERE "
-            + " AND ".join(clauses), params
-        ).fetchall()
-        changed = 0
-        for tx in rows:
-            if str(tx['payout_status'] or '').lower() == 'paid':
-                continue
-            try:
-                gross = Decimal(str(tx['amount'] or 0)).quantize(Decimal('0.01'))
-                fee = Decimal(str(_paystack_fee_for_transaction(db, tx) or 0)).quantize(Decimal('0.01'))
-                old_i = Decimal(str(tx['instructor_share'] or 0))
-                old_p = Decimal(str(tx['platform_share'] or 0))
-            except (InvalidOperation, TypeError, ValueError):
-                continue
-            if gross <= 0 or fee < 0 or fee > gross:
-                continue
-            net = (gross - fee).quantize(Decimal('0.01'))
-            old_total = old_i + old_p
-            if old_total <= 0 or abs(old_total - net) <= Decimal('0.01'):
-                continue
-            ratio = max(Decimal('0'), min(Decimal('1'), old_i / old_total))
-            new_i = (net * ratio).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-            new_p = (net - new_i).quantize(Decimal('0.01'))
-            db.execute(
-                "UPDATE transactions SET instructor_share=?, platform_share=?, "
-                "updated_at=CURRENT_TIMESTAMP WHERE id=? AND COALESCE(payout_status,'pending') <> 'paid'",
-                (float(new_i), float(new_p), tx['id'])
-            )
-            changed += 1
-        if changed:
-            db.commit()
-        return changed
+        return 0
+
 
     @app.route('/api/admin/paystack-fee-policy', methods=['GET'])
     @admin_required

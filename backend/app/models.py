@@ -61,7 +61,7 @@ def get_course_sections(db, course_id, use_postgres, user_id=None):
                ' WHERE user_id=' + ph + ' AND course_id=' + ph + ' AND is_completed=1')
         for p in db.execute(sql, (user_id, course_id)).fetchall():
             completed_ids.add(p['lesson_id'])
-            if p.get('quiz_score') is not None:
+            if p['quiz_score'] is not None:
                 quiz_scores[p['lesson_id']] = p['quiz_score']
 
     # Load the curriculum with a fixed number of queries rather than issuing

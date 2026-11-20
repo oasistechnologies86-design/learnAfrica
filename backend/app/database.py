@@ -70,24 +70,16 @@ class _PgCursor:
     def _adapt(self, sql, params=None):
         """Translate SQLite-dialect SQL to Postgres-dialect SQL automatically."""
         adapted = sql.replace('?', '%s')
-        # INSERT OR IGNORE → INSERT ... ON CONFLICT DO NOTHING
-        adapted = re.sub(
-            r'INSERT\s+OR\s+IGNORE\s+INTO',
-            'INSERT INTO',
-            adapted,
-            flags=re.IGNORECASE
-        )
-        if ('INSERT INTO' in adapted.upper()
-                and 'ON CONFLICT' not in adapted.upper()
-                and adapted.rstrip()[-1:] in (')', "'", '"', 's')):
-            adapted = adapted.rstrip() + ' ON CONFLICT DO NOTHING'
-        # INSERT OR REPLACE → upsert
-        adapted = re.sub(
-            r'INSERT\s+OR\s+REPLACE\s+INTO\s+(\w+)',
-            r'INSERT INTO \1',
-            adapted,
-            flags=re.IGNORECASE
-        )
+        # Preserve normal INSERT constraint errors. Only SQLite OR IGNORE
+        # should suppress conflicts; blanket suppression can hide bad writes.
+        is_ignore = bool(re.match(r'\s*INSERT\s+OR\s+IGNORE\s+INTO', adapted, re.IGNORECASE))
+        is_replace = bool(re.match(r'\s*INSERT\s+OR\s+REPLACE\s+INTO', adapted, re.IGNORECASE))
+        if is_replace:
+            raise ValueError('INSERT OR REPLACE is unsupported by the PostgreSQL adapter; use an explicit upsert.')
+        if is_ignore:
+            adapted = re.sub(r'INSERT\s+OR\s+IGNORE\s+INTO', 'INSERT INTO', adapted, count=1, flags=re.IGNORECASE)
+            if 'ON CONFLICT' not in adapted.upper():
+                adapted = adapted.rstrip().rstrip(';') + ' ON CONFLICT DO NOTHING'
         # strftime → EXTRACT
         adapted = re.sub(
             r"strftime\('%m',\s*(\w+)\)",
