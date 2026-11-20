@@ -10462,6 +10462,10 @@ def create_app() -> Flask:
         value.setdefault('instructor_overrides', {})
         value.setdefault('history', [])
         value.setdefault('apply_scope', 'all_instructors')
+        # Upgrade the old uninitialized 0% default, but preserve an explicit
+        # zero-rate choice when it has an audit-history entry.
+        if float(value.get('default_rate_pct') or 0) == 0 and not value.get('history'):
+            value['default_rate_pct'] = 1.95
         return value
 
     def _paystack_fee_policy_write(db, policy):
