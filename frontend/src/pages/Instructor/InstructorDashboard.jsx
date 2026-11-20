@@ -225,12 +225,12 @@ function EarningsCard({ stats, onChanged }) {
             <span className="font-semibold text-foreground">{formatPrice(grossRevenue)}</span>
           </div>
           <div className="flex justify-between text-muted-foreground">
-            <span>Paystack processing fees (actual + estimated)</span>
+            <span>LearnAfrica platform fee</span>
             <span className="font-medium">−{formatPrice(stats?.paystack_fees || 0)}</span>
           </div>
           <p className="text-[11px] text-muted-foreground -mt-1">
-            Actual {formatPrice(stats?.paystack_fees_actual || 0)} · Estimated {formatPrice(stats?.paystack_fees_estimated || 0)}
-            {Number(stats?.paystack_fee_unverified_count || 0) > 0 ? ` · ${stats.paystack_fee_unverified_count} awaiting verification` : ''}
+            Calculated by LearnAfrica using the fee policy saved for each transaction
+            {Number(stats?.paystack_fee_unverified_count || 0) > 0 ? ` · ${stats.paystack_fee_unverified_count} calculated from the saved fee policy` : ''}
           </p>
           {feePolicy && (
             <div className="flex justify-between text-muted-foreground">
@@ -239,7 +239,7 @@ function EarningsCard({ stats, onChanged }) {
             </div>
           )}
           <div className="flex justify-between text-muted-foreground">
-            <span>Revenue after Paystack fees</span>
+            <span>Revenue after LearnAfrica fee</span>
             <span className="font-semibold text-foreground">{formatPrice(stats?.net_after_paystack ?? grossRevenue)}</span>
           </div>
           <div className="flex justify-between">
