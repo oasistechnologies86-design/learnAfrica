@@ -7388,7 +7388,7 @@ def create_app() -> Flask:
             # Use the same successful transaction types as the Earnings tab.
             totals = db.execute(
                 """SELECT amount, instructor_share, platform_share, type, instructor_id,
-                          provider, paystack_fee, paystack_fee_status, paystack_fee_estimate, created_at
+                          payout_status, provider, paystack_fee, paystack_fee_status, paystack_fee_estimate, created_at
                    FROM transactions
                    WHERE status='success'
                      AND type IN ('purchase','quiz_extra_attempt','instructor_registration')
@@ -7453,30 +7453,55 @@ def create_app() -> Flask:
             collected = 0.0
             instructor_earned = 0.0
             platform_earned = 0.0
+            outstanding_amount = 0.0
             for tx in totals:
-                amount = float(tx['amount'] or 0)
+                amount = max(0.0, float(tx['amount'] or 0))
                 collected += amount
                 tx_type = str(tx['type'] or '')
                 if tx_type == 'instructor_registration':
-                    # Registration payments belong entirely to the platform.
+                    # Registration payments belong entirely to the platform and
+                    # are outside the course/extra-attempt fee-sharing policy.
                     platform_earned += amount
                     continue
-                owner = db.execute('SELECT role FROM users WHERE id=?', (tx['instructor_id'],)).fetchone() if tx['instructor_id'] else None
+
+                fee = min(amount, max(0.0, _paystack_fee_for_transaction(db, tx)))
+                distributable = round(amount - fee, 2)
+                owner = db.execute(
+                    'SELECT role FROM users WHERE id=?', (tx['instructor_id'],)
+                ).fetchone() if tx['instructor_id'] else None
                 if owner and str(owner['role'] or '').lower() in ('admin', 'superadmin'):
-                    # Admin-owned courses are platform revenue, not an instructor liability.
-                    platform_fee = _paystack_fee_for_transaction(db, tx)
-                    platform_earned += max(0.0, amount - platform_fee)
+                    # Admin-owned course revenue is platform income after fees.
+                    platform_earned += distributable
+                    continue
+
+                # Older transactions may contain shares calculated from the
+                # gross amount, before a Paystack fee policy was introduced.
+                # Newer rows already contain net shares. In either case retain
+                # the transaction's saved split ratio, then apply it to the
+                # distributable amount. This is read-only and never rewrites
+                # transaction history or completed payouts.
+                stored_instructor = max(0.0, float(tx['instructor_share'] or 0))
+                stored_platform = max(0.0, float(tx['platform_share'] or 0))
+                stored_total = stored_instructor + stored_platform
+                if stored_total > 0:
+                    instructor_ratio = min(1.0, max(0.0, stored_instructor / stored_total))
                 else:
-                    instructor_earned += float(tx['instructor_share'] or 0)
-                    platform_earned += float(tx['platform_share'] or 0)
+                    instructor_ratio = 0.0
+                instructor_net = round(distributable * instructor_ratio, 2)
+                platform_net = round(distributable - instructor_net, 2)
+                instructor_earned += instructor_net
+                platform_earned += platform_net
+                if str(tx['payout_status'] or '').lower() != 'paid':
+                    outstanding_amount += instructor_net
+
             collected = round(collected, 2)
             instructor_earned = round(instructor_earned, 2)
             platform_earned = round(platform_earned, 2)
             paid_amount = float(paid['amount'] or 0)
             other_expenses = float(expense_total['amount'] or 0)
-            # Paystack fees are calculated once from the saved policy snapshots.
-            # Manual Paystack-fee entries are no longer accepted because adding
-            # them to these automatic calculations would count the same fee twice.
+            # Paystack fees are a cash cost deducted once from gross collections.
+            # The allocations above already represent the post-fee split, so do
+            # not subtract the fee from either share a second time.
             paystack_fees_actual = automatic_actual_paystack_fees
             paystack_fees_estimated = automatic_estimated_paystack_fees
             paystack_fees = paystack_fees_actual + paystack_fees_estimated
@@ -7484,10 +7509,7 @@ def create_app() -> Flask:
             withdrawals = float(withdrawal_total['amount'] or 0)
             # This is a ledger estimate, not a bank or Paystack balance.
             remaining = collected - paid_amount - expenses - withdrawals
-            outstanding_amount = float(outstanding['amount'] or 0)
-            # Keep the liability within total instructor earnings and avoid
-            # negative liabilities from inconsistent legacy payout markers.
-            outstanding_amount = min(max(0.0, outstanding_amount), max(0.0, instructor_earned - paid_amount))
+            outstanding_amount = round(max(0.0, outstanding_amount), 2)
             after_obligations = remaining - outstanding_amount
             return jsonify({
                 'currency': 'GHS',
