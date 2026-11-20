@@ -7249,26 +7249,12 @@ def create_app() -> Flask:
             ).fetchone()
             recorded_platform_share = float(platform_row['amount'] or 0) if platform_row else 0.0
             fee_rows = db.execute(
-                "SELECT amount, paystack_fee, paystack_fee_status, created_at FROM transactions"
-                " WHERE instructor_id=? AND provider='paystack' AND status='success'"
+                "SELECT COALESCE(SUM(paystack_fee_estimate), 0) AS fee FROM transactions"
+                " WHERE instructor_id=? AND status='success'"
                 " AND type IN ('purchase','quiz_extra_attempt') AND DATE(created_at) >= ?",
                 (row['id'], reporting_from)
-            ).fetchall() if paystack_fee_ready else []
-            actual_fees = 0.0
-            estimated_fees = 0.0
-            for fee_tx in fee_rows:
-                if str(fee_tx['paystack_fee_status'] or 'unknown').lower() == 'actual':
-                    actual_fees += float(fee_tx['paystack_fee'] or 0)
-                else:
-                    resolved_fee = _effective_paystack_fee_policy(db, row['id'], str(fee_tx['created_at'] or reporting_from)[:10])
-                    estimated_fees += round(float(fee_tx['amount'] or 0) * resolved_fee['rate_pct'] / 100.0, 2)
-            reported_fees = actual_fees + estimated_fees
-            unverified_row = db.execute(
-                "SELECT COUNT(*) AS count FROM transactions WHERE instructor_id=? AND provider='paystack' "
-                "AND status='success' AND type IN ('purchase','quiz_extra_attempt') "
-                "AND COALESCE(paystack_fee_status,'unknown')<>'actual' AND DATE(created_at) >= ?", (row['id'], reporting_from)
-            ).fetchone() if fee_status_ready else {'count': 0}
-            unverified_count = int(unverified_row['count'] or 0) if unverified_row else 0
+            ).fetchone()
+            reported_fees = round(float(fee_rows['fee'] or 0), 2) if fee_rows else 0.0
             if row['role'] in ('admin', 'superadmin'):
                 recorded_platform_share = max(0.0, gross - reported_fees)
             result.append({
@@ -7278,10 +7264,12 @@ def create_app() -> Flask:
                 'role': row['role'],
                 'course_count': row['course_count'],
                 'gross_revenue': round(gross, 2),
-                'paystack_fees': round(reported_fees, 2),
-                'paystack_fees_actual': round(actual_fees, 2),
-                'paystack_fees_estimated': round(estimated_fees, 2),
-                'paystack_fee_unverified_count': unverified_count,
+                'platform_fee': round(reported_fees, 2),
+                'paystack_fees': round(reported_fees, 2),  # legacy response key
+                'paystack_fees_actual': 0.0,
+                'paystack_fees_estimated': round(reported_fees, 2),
+                'paystack_fee_unverified_count': 0,
+                'net_after_platform_fee': round(max(0.0, gross - reported_fees), 2),
                 'net_after_paystack': round(max(0.0, gross - reported_fees), 2),
                 'instructor_earnings': round(instr, 2),
                 'platform_earnings':   round(recorded_platform_share, 2),
