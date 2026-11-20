@@ -1000,6 +1000,9 @@ export default function AdminPage() {
                             <p className="text-[10px] text-muted-foreground mt-1">
                               Actual {formatPrice(financialSummary.paystack_fees_actual || 0)} · Estimated {formatPrice(financialSummary.paystack_fees_estimated || 0)}
                             </p>
+                            <p className="text-[10px] text-muted-foreground">
+                              {Number(financialSummary.paystack_fee_unverified_count || 0)} transactions awaiting fee verification
+                            </p>
                           )}
                         </div>
                       ))}
