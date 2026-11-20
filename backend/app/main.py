@@ -7226,6 +7226,7 @@ def create_app() -> Flask:
         fee_status_ready = ensure_column(db, 'transactions', 'paystack_fee_status', "TEXT DEFAULT 'unknown'")
         if fee_status_ready:
             db.execute("UPDATE transactions SET paystack_fee_status='actual' WHERE COALESCE(paystack_fee,0)>0 AND paystack_fee_status='unknown'")
+        _normalize_unpaid_transaction_splits(db)
         instructors = db.execute('''
             SELECT u.id, u.name, u.email, u.avatar, u.role,
                    (SELECT COUNT(*) FROM courses c WHERE c.instructor_id=u.id) as course_count,
@@ -8746,9 +8747,9 @@ def create_app() -> Flask:
 
     def _manual_payout_for_instructor(db, instructor_id, reference, note, admin_id):
         """Admin pays an instructor from their own account and records it here.
-        _normalize_unpaid_transaction_splits(db, instructor_id=instructor_id)
         No Paystack transfer. Marks the instructor's pending earnings as paid and
         closes any open payout request. Returns (ok, amount, error)."""
+        _normalize_unpaid_transaction_splits(db, instructor_id=instructor_id)
         pending_rows = db.execute(
             """SELECT id, instructor_share FROM transactions
                WHERE instructor_id=? AND type IN ('purchase','quiz_extra_attempt')
