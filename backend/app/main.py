@@ -3946,7 +3946,9 @@ def create_app() -> Flask:
                 'total_courses': 0, 'total_students': 0, 'total_earnings': 0,
                 'average_rating': 0, 'completion_rate': 0,
                 'monthly_enrollments': [], 'course_performance': [], 'recent_students': [],
-                'gross_revenue': 0, 'platform_share': 0, 'paystack_fees': 0, 'net_after_paystack': 0,
+                'gross_revenue': 0, 'platform_share': 0, 'paystack_fees': 0,
+                'paystack_fees_actual': 0, 'paystack_fees_estimated': 0,
+                'paystack_fee_unverified_count': 0, 'net_after_paystack': 0,
                 'instructor_share_pct': _split['instructor_pct'],
                 'platform_share_pct':   _split['admin_pct'],
                 'split_configured':     _split['configured'],
@@ -3960,6 +3962,7 @@ def create_app() -> Flask:
         # Paystack's actual provider fee is captured by the verified webhook.
         # Keep it separate from revenue-split percentages and never estimate it.
         paystack_fee_ready = ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
+        fee_status_ready = ensure_column(db, 'transactions', 'paystack_fee_status', "TEXT DEFAULT 'unknown'")
         earnings_row = db.execute(
             "SELECT COALESCE(SUM(instructor_share), 0) as t FROM transactions"
             " WHERE instructor_id=? AND type IN ('purchase','quiz_extra_attempt') AND status='success'", (uid,)).fetchone()
@@ -4040,13 +4043,25 @@ def create_app() -> Flask:
             "SELECT COALESCE(SUM(platform_share), 0) as t FROM transactions"
             " WHERE instructor_id=? AND type IN ('purchase','quiz_extra_attempt') AND status='success'", (uid,)).fetchone()
         platform_share = round(float(platform_row['t'] or 0), 2) if platform_row else 0.0
-        fee_row = db.execute(
-            "SELECT COALESCE(SUM(paystack_fee), 0) as t FROM transactions"
+        fee_rows = db.execute(
+            "SELECT amount, paystack_fee, paystack_fee_status, created_at FROM transactions"
             " WHERE instructor_id=? AND provider='paystack' AND status='success'"
             " AND type IN ('purchase','quiz_extra_attempt')",
             (uid,)
-        ).fetchone() if paystack_fee_ready else {'t': 0}
-        paystack_fees = round(float(fee_row['t'] or 0), 2) if fee_row else 0.0
+        ).fetchall() if paystack_fee_ready else []
+        paystack_fees_actual = 0.0
+        paystack_fees_estimated = 0.0
+        paystack_fee_unverified_count = 0
+        for fee_tx in fee_rows:
+            if fee_status_ready and str(fee_tx['paystack_fee_status'] or 'unknown').lower() == 'actual':
+                paystack_fees_actual += float(fee_tx['paystack_fee'] or 0)
+            else:
+                paystack_fee_unverified_count += 1
+                resolved_fee = _effective_paystack_fee_policy(db, uid, str(fee_tx['created_at'] or datetime.utcnow().date().isoformat())[:10])
+                paystack_fees_estimated += round(float(fee_tx['amount'] or 0) * resolved_fee['rate_pct'] / 100.0, 2)
+        paystack_fees_actual = round(paystack_fees_actual, 2)
+        paystack_fees_estimated = round(paystack_fees_estimated, 2)
+        paystack_fees = round(paystack_fees_actual + paystack_fees_estimated, 2)
         net_after_paystack = round(max(0.0, gross_revenue - paystack_fees), 2)
         return jsonify({
             'total_courses': len(course_ids), 'total_students': total_students,
@@ -4056,6 +4071,9 @@ def create_app() -> Flask:
             'total_paid': total_paid, 'pending_payout': requested, 'available_to_request': available,
             'gross_revenue': gross_revenue, 'platform_share': platform_share,
             'paystack_fees': paystack_fees,
+            'paystack_fees_actual': paystack_fees_actual,
+            'paystack_fees_estimated': paystack_fees_estimated,
+            'paystack_fee_unverified_count': paystack_fee_unverified_count,
             'net_after_paystack': net_after_paystack,
             'instructor_share_pct': _split['instructor_pct'],
             'platform_share_pct':   _split['admin_pct'],
