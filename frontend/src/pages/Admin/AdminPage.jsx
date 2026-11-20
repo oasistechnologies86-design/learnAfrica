@@ -966,9 +966,9 @@ export default function AdminPage() {
                   <p className="text-sm text-warning">Financial summary is temporarily unavailable. Your existing Earnings information remains available.</p>
                 ) : financialSummary ? (
                   <>
-                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
                       <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
-                        <p className="text-xs text-muted-foreground">Paystack available balance</p>
+                        <p className="text-xs text-muted-foreground">Provider available balance</p>
                         {paystackBalance?.available ? (
                           <>
                             <p className="text-lg font-bold mt-1 tabular-nums">
@@ -999,10 +999,10 @@ export default function AdminPage() {
                           {label === 'LearnAfrica platform fees' && (
                             <>
                               <p className="text-[10px] text-muted-foreground mt-1">
-                                Actual {formatPrice(financialSummary.paystack_fees_actual || 0)} · Estimated {formatPrice(financialSummary.paystack_fees_estimated || 0)}
+                                Calculated from the saved LearnAfrica fee policy
                               </p>
                               <p className="text-[10px] text-muted-foreground">
-                                {Number(financialSummary.paystack_fee_unverified_count || 0)} transactions awaiting fee verification
+                                Saved per transaction when payment is made
                               </p>
                             </>
                           )}
@@ -1020,7 +1020,7 @@ export default function AdminPage() {
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      The Paystack available balance is fetched read-only. Processing fees combine provider-confirmed fees with estimates at the saved rate for transactions that have no verified fee yet. The actual and estimated amounts are shown separately in the Earnings breakdown. Do not also enter the same estimated fee as a manual expense. A transfer to your bank is not an expense.
+                      The Provider available balance is fetched read-only. Processing fees combine provider-confirmed fees with estimates at the saved rate for transactions that have no verified fee yet. The actual and estimated amounts are shown separately in the Earnings breakdown. Do not also enter the same estimated fee as a manual expense. A transfer to your bank is not an expense.
                     </p>
                   </>
                 ) : (
@@ -1195,7 +1195,7 @@ export default function AdminPage() {
                     <p>Gross amount: {formatPrice(feePreview.gross || 0)}</p>
                     <p>Recorded actual LearnAfrica platform fees: {formatPrice(feePreview.actual_paystack_fees || 0)}</p>
                     <p>Estimated fees at the selected policy: {formatPrice(feePreview.estimated_policy_fees || 0)}</p>
-                    <p>Transactions missing a verified fee: {Number(feePreview.transactions_missing_actual_fee || 0).toLocaleString()}</p>
+                    <p>: {Number(feePreview.transactions_missing_actual_fee || 0).toLocaleString()}</p>
                     <p className="text-muted-foreground">{feePreview.note}</p>
                   </div>
                 )}
@@ -1228,36 +1228,36 @@ export default function AdminPage() {
                 <Card className="overflow-hidden">
                   <div className="p-5 border-b border-border bg-muted/20">
                     <h2 className="font-bold text-base">Platform Earnings Overview</h2>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">
-                      <div className="text-center p-3 bg-background rounded-xl border border-border">
-                        <p className="text-2xl font-bold">{formatPrice(earnings.total_gross || 0)}</p>
-                        <p className="text-xs text-muted-foreground mt-1">Course Gross Revenue</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 mt-4">
+                      <div className="text-left p-3 bg-background rounded-xl border border-border">
+                        <p className="text-lg font-bold">{formatPrice(earnings.total_gross || 0)}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Course gross revenue</p>
                       </div>
-                      <div className="text-center p-3 bg-primary/5 rounded-xl border border-primary/20">
-                        <p className="text-2xl font-bold text-primary">{formatPrice(earnings.instructors_total || 0)}</p>
-                        <p className="text-xs text-muted-foreground mt-1">Instructor earnings (actual recorded shares)</p>
+                      <div className="text-left p-3 bg-primary/5 rounded-xl border border-primary/20">
+                        <p className="text-lg font-bold text-primary">{formatPrice(earnings.instructors_total || 0)}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Instructor earnings</p>
                       </div>
-                      <div className="text-center p-3 bg-success/5 rounded-xl border border-success/20">
-                        <p className="text-2xl font-bold text-success">{formatPrice(earnings.platform_total || 0)}</p>
-                        <p className="text-xs text-muted-foreground mt-1">Platform earnings (actual recorded shares)</p>
+                      <div className="text-left p-3 bg-success/5 rounded-xl border border-success/20">
+                        <p className="text-lg font-bold text-success">{formatPrice(earnings.platform_total || 0)}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Platform earnings</p>
                       </div>
-                      <div className="text-center p-3 bg-warning/5 rounded-xl border border-warning/20">
-                        <p className="text-2xl font-bold text-warning">{formatPrice(earnings.registration_fees_total || 0)}</p>
-                        <p className="text-xs text-muted-foreground mt-1">Instructor Registration Fees</p>
+                      <div className="text-left p-3 bg-warning/5 rounded-xl border border-warning/20">
+                        <p className="text-lg font-bold text-warning">{formatPrice(earnings.registration_fees_total || 0)}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Instructor registration fees</p>
                       </div>
-                      <div className="text-center p-3 bg-muted/30 rounded-xl border border-border">
-                        <p className="text-2xl font-bold">{formatPrice(earnings.paystack_fees_total || 0)}</p>
-                        <p className="text-xs text-muted-foreground mt-1">Processing fees · actual + estimated</p>
-                        <p className="text-[10px] text-muted-foreground mt-1">Actual: {formatPrice(earnings.paystack_fees_actual_total || 0)} · Estimated: {formatPrice(earnings.paystack_fees_estimated_total || 0)}</p>
-                        <p className="text-[10px] text-muted-foreground mt-1">Includes {formatPrice(earnings.registration_paystack_fees_total || 0)} from instructor registrations</p>
+                      <div className="text-left p-3 bg-muted/30 rounded-xl border border-border">
+                        <p className="text-lg font-bold">{formatPrice(earnings.paystack_fees_total || 0)}</p>
+                        <p className="text-xs text-muted-foreground mt-1">LearnAfrica platform fee</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">Calculated from the saved fee policy</p>
+                        <p className="text-[10px] text-muted-foreground mt-1"></p>
                       </div>
-                      <div className="text-center p-3 bg-warning/5 rounded-xl border border-warning/20">
-                        <p className="text-2xl font-bold text-warning">{Number(earnings.paystack_fee_unverified_count || 0).toLocaleString()}</p>
-                        <p className="text-xs text-muted-foreground mt-1">Transactions missing a verified fee</p>
+                      <div className="text-left p-3 bg-warning/5 rounded-xl border border-warning/20">
+                        <p className="text-lg font-bold text-warning">{Number(earnings.paystack_fee_unverified_count || 0).toLocaleString()}</p>
+                        <p className="text-xs text-muted-foreground mt-1"></p>
                       </div>
-                      <div className="text-center p-3 bg-success/5 rounded-xl border border-success/20">
-                        <p className="text-2xl font-bold text-success">{formatPrice(earnings.net_after_paystack_total ?? earnings.total_gross ?? 0)}</p>
-                        <p className="text-xs text-muted-foreground mt-1">Course revenue after LearnAfrica platform fees</p>
+                      <div className="text-left p-3 bg-success/5 rounded-xl border border-success/20">
+                        <p className="text-lg font-bold text-success">{formatPrice(earnings.net_after_paystack_total ?? earnings.total_gross ?? 0)}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Course revenue after LearnAfrica platform fee</p>
                       </div>
                     </div>
                   </div>
@@ -1269,12 +1269,12 @@ export default function AdminPage() {
                             <th className="text-left p-3 font-medium text-muted-foreground">Instructor</th>
                             <th className="text-center p-3 font-medium text-muted-foreground">Courses</th>
                             <th className="text-right p-3 font-medium text-muted-foreground">Gross</th>
-                            <th className="text-right p-3 font-medium text-muted-foreground">Paystack Fee</th>
+                            <th className="text-right p-3 font-medium text-muted-foreground">LearnAfrica fee</th>
                             <th className="text-right p-3 font-medium text-muted-foreground">After Fee</th>
                             <th className="text-right p-3 font-medium text-muted-foreground">Their Share</th>
                             <th className="text-right p-3 font-medium text-muted-foreground">Platform Share</th>
                             <th className="text-left p-3 font-medium text-muted-foreground">Future Split Override</th>
-                            <th className="text-left p-3 font-medium text-muted-foreground">Paystack Fee Override</th>
+                            <th className="text-left p-3 font-medium text-muted-foreground">LearnAfrica fee Override</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1711,7 +1711,7 @@ export default function AdminPage() {
             <div className="space-y-4">
               {/* Identity + contact */}
               <div className="flex items-center gap-4">
-                <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-2xl font-bold overflow-hidden shrink-0">
+                <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-lg font-bold overflow-hidden shrink-0">
                   {selectedUser.avatar
                     ? <img src={selectedUser.avatar} alt="" className="h-full w-full object-cover" />
                     : (selectedUser.name || 'U')[0].toUpperCase()}
@@ -1879,7 +1879,7 @@ export default function AdminPage() {
                   </div>
                   <div className="rounded-xl bg-muted/30 p-3 text-center">
                     <p className="text-lg font-bold">{formatPrice(selectedUser.paystack_fees || 0)}</p>
-                    <p className="text-xs text-muted-foreground">LearnAfrica platform fees</p>
+                    <p className="text-xs text-muted-foreground">LearnAfrica platform fee</p>
                   </div>
                   <div className="rounded-xl bg-muted/30 p-3 text-center">
                     <p className="text-lg font-bold">{formatPrice(selectedUser.net_after_paystack || 0)}</p>
@@ -2878,11 +2878,11 @@ function AdminSettingsTab() {
                 <div className="grid grid-cols-2 gap-3 pt-2">
                   <div className="p-3 rounded-lg bg-success/10 border border-success/30 text-center">
                     <p className="text-3xs uppercase font-bold text-muted-foreground">Instructor</p>
-                    <p className="text-2xl font-bold tabular-nums text-success">{instructorPct}%</p>
+                    <p className="text-lg font-bold tabular-nums text-success">{instructorPct}%</p>
                   </div>
                   <div className="p-3 rounded-lg bg-primary/10 border border-primary/30 text-center">
                     <p className="text-3xs uppercase font-bold text-muted-foreground">Platform</p>
-                    <p className="text-2xl font-bold tabular-nums text-primary">{adminPct}%</p>
+                    <p className="text-lg font-bold tabular-nums text-primary">{adminPct}%</p>
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground">
