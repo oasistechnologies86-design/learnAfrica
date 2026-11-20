@@ -8,12 +8,33 @@ import json
 import uuid
 
 from flask import Blueprint, request, jsonify, g
-from .database import get_db, ensure_transactions_table
+from .database import get_db, ensure_transactions_table, ensure_column
 from .security import token_required
 from .payments import initiate_payment, compute_split
 from .crud import resolve_instructor_revenue_split
 
 extra_attempts_bp = Blueprint("extra_attempts", __name__)
+
+
+def _active_paystack_fee_rate(db, instructor_id):
+    """Read the dated platform default or instructor-specific estimate rate."""
+    row = db.execute("SELECT value FROM platform_config WHERE key='paystack_fee_policy'").fetchone()
+    try:
+        policy = json.loads(row['value']) if row and row['value'] else {}
+    except Exception:
+        policy = {}
+    if not isinstance(policy, dict):
+        policy = {}
+    from datetime import date
+    today = date.today().isoformat()
+    default_date = str(policy.get('effective_from') or today)
+    rate = float(policy.get('default_rate_pct', 1.95) or 0) if today >= default_date else 0.0
+    source = 'platform_default' if today >= default_date else 'not_yet_effective'
+    override = (policy.get('instructor_overrides') or {}).get(str(instructor_id))
+    if isinstance(override, dict) and today >= str(override.get('effective_from') or default_date):
+        rate = float(override.get('rate_pct', rate) or 0)
+        source = 'instructor_override'
+    return max(0.0, min(100.0, rate)), source, default_date
 
 
 def ensure_extra_attempts_table(db):
@@ -86,6 +107,8 @@ def purchase_extra_attempt(quiz_id):
         if g.current_user.get("role") != "student":
             return jsonify({"error": "Only students can purchase an extra attempt."}), 403
         ensure_transactions_table(db)
+        ensure_column(db, 'transactions', 'paystack_fee_estimate', 'REAL DEFAULT 0')
+        ensure_column(db, 'transactions', 'paystack_fee_status', "TEXT DEFAULT 'unknown'")
         ensure_extra_attempts_table(db)
         uid = g.current_user["user_id"]
         quiz = db.execute(
@@ -178,19 +201,30 @@ def purchase_extra_attempt(quiz_id):
         )
         if pay.get("error") or (pay.get("provider") == "paystack" and not pay.get("checkout_url")):
             return jsonify({"error": pay.get("error") or "Payment checkout could not be started."}), 502
+
+        fee_estimate = 0.0
+        if pay.get('provider') == 'paystack':
+            fee_rate, _fee_source, _fee_default_date = _active_paystack_fee_rate(db, course['instructor_id'])
+            fee_estimate = min(amount, max(0.0, round(amount * fee_rate / 100.0, 2)))
+            if fee_estimate > 0:
+                provisional_net = round(amount - fee_estimate, 2)
+                split_pct = 100.0 if instructor_is_admin else effective_split['instructor_pct']
+                instructor_share, platform_share = compute_split(provisional_net, split_pct)
         tx_details = dict(details)
         tx_details["purpose"] = "quiz_extra_attempt"
         db.execute(
             """INSERT INTO transactions
                (id,receipt_id,type,user_id,user_name,user_email,course_id,course_title,
                 instructor_id,amount,currency,instructor_share,platform_share,status,
-                provider,provider_ref,payment_method,payment_details,payout_status,notes)
-               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                provider,provider_ref,payment_method,payment_details,payout_status,notes,
+                paystack_fee_estimate,paystack_fee_status)
+               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (pay["id"], pay["receipt_id"], "quiz_extra_attempt", uid, user["name"],
              user["email"], course["id"], "Additional quiz attempt: " + str(quiz["title"]),
              course["instructor_id"], amount, "GHS", instructor_share, platform_share, pay["status"],
              pay["provider"], pay["provider_ref"], method, json.dumps(tx_details),
-             payout_status, "One additional attempt for quiz " + quiz_id)
+             payout_status, "One additional attempt for quiz " + quiz_id,
+             fee_estimate, 'estimated' if pay.get('provider') == 'paystack' else 'not_applicable')
         )
         db.commit()
         if pay["status"] == "success":

@@ -7198,6 +7198,10 @@ def create_app() -> Flask:
         instructor_pct, admin_pct = get_revenue_split(db)
         ensure_transactions_table(db)
         paystack_fee_ready = ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
+        ensure_column(db, 'transactions', 'paystack_fee_estimate', 'REAL DEFAULT 0')
+        fee_status_ready = ensure_column(db, 'transactions', 'paystack_fee_status', "TEXT DEFAULT 'unknown'")
+        if fee_status_ready:
+            db.execute("UPDATE transactions SET paystack_fee_status='actual' WHERE COALESCE(paystack_fee,0)>0 AND paystack_fee_status='unknown'")
         instructors = db.execute('''
             SELECT u.id, u.name, u.email, u.avatar, u.role,
                    (SELECT COUNT(*) FROM courses c WHERE c.instructor_id=u.id) as course_count,
@@ -7233,6 +7237,12 @@ def create_app() -> Flask:
                 (row['id'],)
             ).fetchone() if paystack_fee_ready else {'amount': 0}
             actual_fees = float(fee_row['amount'] or 0) if fee_row else 0.0
+            unverified_row = db.execute(
+                "SELECT COUNT(*) AS count FROM transactions WHERE instructor_id=? AND provider='paystack' "
+                "AND status='success' AND type IN ('purchase','quiz_extra_attempt') "
+                "AND COALESCE(paystack_fee_status,'unknown')<>'actual'", (row['id'],)
+            ).fetchone() if fee_status_ready else {'count': 0}
+            unverified_count = int(unverified_row['count'] or 0) if unverified_row else 0
             if row['role'] in ('admin', 'superadmin'):
                 recorded_platform_share = max(0.0, gross - actual_fees)
             result.append({
@@ -7243,6 +7253,7 @@ def create_app() -> Flask:
                 'course_count': row['course_count'],
                 'gross_revenue': round(gross, 2),
                 'paystack_fees': round(actual_fees, 2),
+                'paystack_fee_unverified_count': unverified_count,
                 'net_after_paystack': round(max(0.0, gross - actual_fees), 2),
                 'instructor_earnings': round(instr, 2),
                 'platform_earnings':   round(recorded_platform_share, 2),
@@ -7254,11 +7265,23 @@ def create_app() -> Flask:
             "SELECT COALESCE(SUM(amount), 0) as t FROM transactions"
             " WHERE type='instructor_registration' AND status='success'"
         ).fetchone()
+        registration_fee_row = db.execute(
+            "SELECT COALESCE(SUM(paystack_fee),0) AS fees, "
+            "COUNT(CASE WHEN COALESCE(paystack_fee_status,'unknown')<>'actual' THEN 1 END) AS unverified "
+            "FROM transactions WHERE provider='paystack' AND type='instructor_registration' AND status='success'"
+        ).fetchone() if fee_status_ready else {'fees': 0, 'unverified': 0}
+        course_fees_total = sum(float(row.get('paystack_fees') or 0) for row in result)
+        registration_fees_actual = float(registration_fee_row['fees'] or 0) if registration_fee_row else 0.0
+        registration_fee_unverified = int(registration_fee_row['unverified'] or 0) if registration_fee_row else 0
         return jsonify({
             'instructors': result,
             'total_gross': round(total_gross, 2),
-            'paystack_fees_total': round(sum(float(row.get('paystack_fees') or 0) for row in result), 2),
-            'net_after_paystack_total': round(max(0.0, total_gross - sum(float(row.get('paystack_fees') or 0) for row in result)), 2),
+            'course_paystack_fees_total': round(course_fees_total, 2),
+            'registration_paystack_fees_total': round(registration_fees_actual, 2),
+            'paystack_fees_total': round(course_fees_total + registration_fees_actual, 2),
+            'paystack_fee_unverified_count': sum(int(row.get('paystack_fee_unverified_count') or 0) for row in result) + registration_fee_unverified,
+            'registration_fee_unverified_count': registration_fee_unverified,
+            'net_after_paystack_total': round(max(0.0, total_gross - course_fees_total), 2),
             'platform_total': round(sum(float(row.get('platform_earnings') or 0) for row in result) + float(reg_row['t'] or 0), 2),
             'instructors_total': round(total_instr, 2),
             # Instructor registration fees are 100% platform income and belong
@@ -9280,6 +9303,8 @@ def create_app() -> Flask:
             instructor_row = db.execute(
                 'SELECT role FROM users WHERE id=?', (course['instructor_id'],)
             ).fetchone()
+            ensure_column(db, 'transactions', 'paystack_fee_estimate', 'REAL DEFAULT 0')
+            ensure_column(db, 'transactions', 'paystack_fee_status', "TEXT DEFAULT 'unknown'")
             instructor_is_admin = bool(instructor_row) and instructor_row['role'] in ('admin', 'superadmin')
 
             if instructor_is_admin:
@@ -9309,14 +9334,27 @@ def create_app() -> Flask:
                     'detail': _err_detail(error_msg),
                 }), 502
 
+            fee_policy_snapshot = {'rate_pct': 0.0, 'source': 'not_paystack', 'effective_from': None}
+            fee_estimate = 0.0
+            if pay.get('provider') == 'paystack':
+                fee_policy_snapshot = _effective_paystack_fee_policy(db, course['instructor_id'])
+                fee_estimate = min(float(amount), max(0.0, round(float(amount) * fee_policy_snapshot['rate_pct'] / 100.0, 2)))
+                # Deduct the policy estimate provisionally, preserving the
+                # configured instructor/platform split ratio. Settlement will
+                # replace it with the exact fee returned by Paystack.
+                if fee_estimate > 0:
+                    provisional_net = round(float(amount) - fee_estimate, 2)
+                    split_pct = 100.0 if instructor_is_admin else effective_split['instructor_pct']
+                    instr_share, plat_share = compute_split(provisional_net, split_pct)
             db.execute(
                 '''INSERT INTO transactions
                    (id, receipt_id, type, user_id, user_name, user_email,
                     course_id, course_title, instructor_id, amount, currency,
                     instructor_share, platform_share, status, provider, provider_ref,
                     payment_method, payment_details, payout_status,
-                    coupon_code, discount_applied, original_amount)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                    coupon_code, discount_applied, original_amount,
+                    paystack_fee_estimate, paystack_fee_status)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
                 (pay['id'], pay['receipt_id'], 'purchase',
                  uid, user_row['name'], user_row['email'],
                  cid, course['title'], course['instructor_id'],
@@ -9324,7 +9362,8 @@ def create_app() -> Flask:
                  pay['status'], pay['provider'], pay['provider_ref'],
                  payment_method, json.dumps(payment_details), payout_status,
                  applied_coupon['code'] if applied_coupon else None,
-                 discount_applied, original_amount)
+                 discount_applied, original_amount, fee_estimate,
+                 'estimated' if pay.get('provider') == 'paystack' else 'not_applicable')
             )
 
             # Increment coupon uses if a coupon was applied
@@ -9454,7 +9493,7 @@ def create_app() -> Flask:
                                 # before replacing it, making duplicate webhooks idempotent.
                                 _apply_verified_paystack_fee_to_unpaid_shares(db, tx['id'], fee_amount)
                                 db.execute(
-                                    "UPDATE transactions SET paystack_fee=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                                    "UPDATE transactions SET paystack_fee=?, paystack_fee_status='actual', updated_at=CURRENT_TIMESTAMP WHERE id=?",
                                     (fee_amount, tx['id'])
                                 )
                                 db.commit()
@@ -9917,9 +9956,11 @@ def create_app() -> Flask:
                     fee_amount = round(float(result.get('fees') or 0), 2)
                     if 0 <= fee_amount <= float(tx['amount'] or 0):
                         ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
+                        ensure_column(db, 'transactions', 'paystack_fee_estimate', 'REAL DEFAULT 0')
+                        ensure_column(db, 'transactions', 'paystack_fee_status', "TEXT DEFAULT 'unknown'")
                         _apply_verified_paystack_fee_to_unpaid_shares(db, tx['id'], fee_amount)
                         db.execute(
-                            "UPDATE transactions SET paystack_fee=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                            "UPDATE transactions SET paystack_fee=?, paystack_fee_status='actual', updated_at=CURRENT_TIMESTAMP WHERE id=?",
                             (fee_amount, tx['id'])
                         )
                 db.execute("UPDATE transactions SET status='success', updated_at=CURRENT_TIMESTAMP WHERE id=?", (tx['id'],))
@@ -10364,8 +10405,13 @@ def create_app() -> Flask:
         approved adjustment rather than a silent rewrite.
         """
         from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+        ensure_column(db, 'transactions', 'paystack_fee_estimate', 'REAL DEFAULT 0')
+        ensure_column(db, 'transactions', 'paystack_fee_status', "TEXT DEFAULT 'unknown'")
+        # Backfill historical rows whose non-zero provider fee was already recorded.
+        db.execute("UPDATE transactions SET paystack_fee_status='actual' WHERE COALESCE(paystack_fee,0)>0 AND paystack_fee_status='unknown'")
         row = db.execute(
-            "SELECT amount, instructor_share, platform_share, payout_status, type, paystack_fee "
+            "SELECT amount, instructor_share, platform_share, payout_status, type, paystack_fee, "
+            "paystack_fee_estimate, paystack_fee_status "
             "FROM transactions WHERE id=?",
             (transaction_id,)
         ).fetchone()
@@ -10385,7 +10431,8 @@ def create_app() -> Flask:
         # Shares already include the previously recorded fee when this is a
         # duplicate webhook. Recover the original split ratio from the prior
         # net amount, otherwise retries would progressively reduce earnings.
-        previous_fee = Decimal(str(row['paystack_fee'] or 0)).quantize(Decimal('0.01'))
+        previous_fee_value = row['paystack_fee'] if str(row['paystack_fee_status'] or '').lower() == 'actual' else row['paystack_fee_estimate']
+        previous_fee = Decimal(str(previous_fee_value or 0)).quantize(Decimal('0.01'))
         previous_net = gross - previous_fee
         if previous_net <= 0:
             return False
@@ -10410,10 +10457,26 @@ def create_app() -> Flask:
             value = {}
         if not isinstance(value, dict):
             value = {}
-        value.setdefault('default_rate_pct', 0)
+        value.setdefault('default_rate_pct', 1.95)
         value.setdefault('effective_from', datetime.utcnow().date().isoformat())
         value.setdefault('instructor_overrides', {})
         value.setdefault('history', [])
+        value.setdefault('apply_scope', 'all_instructors')
+        # Upgrade the old uninitialized 0% default. Preserve zero only when
+        # the audit history shows an intentional change from a positive rate.
+        default_history = [
+            entry for entry in (value.get('history') or [])
+            if isinstance(entry, dict) and entry.get('action') not in ('override', 'reset_to_default')
+        ]
+        explicit_zero_choice = any(
+            isinstance(entry.get('old_rate_pct'), (int, float))
+            and entry.get('old_rate_pct') > 0
+            and isinstance(entry.get('new_rate_pct'), (int, float))
+            and entry.get('new_rate_pct') == 0
+            for entry in default_history
+        )
+        if float(value.get('default_rate_pct') or 0) == 0 and not explicit_zero_choice:
+            value['default_rate_pct'] = 1.95
         return value
 
     def _paystack_fee_policy_write(db, policy):
@@ -10424,6 +10487,30 @@ def create_app() -> Flask:
         else:
             db.execute("INSERT INTO platform_config (key, value) VALUES ('paystack_fee_policy', ?)", (payload,))
         db.commit()
+
+    def _effective_paystack_fee_policy(db, instructor_id, transaction_date=None):
+        """Resolve the active estimate for an instructor on a transaction date.
+
+        The platform default applies to all instructors. A dated instructor
+        override takes precedence from its own effective date. This is only a
+        provisional estimate; verified Paystack fees replace it at settlement.
+        """
+        policy = _paystack_fee_policy_read(db)
+        day = str(transaction_date or datetime.utcnow().date().isoformat())[:10]
+        default_date = str(policy.get('effective_from') or datetime.utcnow().date().isoformat())
+        default_rate = float(policy.get('default_rate_pct', 1.95) or 0)
+        if day < default_date:
+            rate, source, effective = 0.0, 'not_yet_effective', default_date
+        else:
+            rate, source, effective = default_rate, 'platform_default', default_date
+        override = (policy.get('instructor_overrides') or {}).get(str(instructor_id))
+        if isinstance(override, dict):
+            override_date = str(override.get('effective_from') or default_date)
+            if day >= override_date:
+                rate = float(override.get('rate_pct', rate) or 0)
+                source, effective = 'instructor_override', override_date
+        rate = max(0.0, min(100.0, rate))
+        return {'rate_pct': rate, 'source': source, 'effective_from': effective}
 
     @app.route('/api/admin/paystack-fee-policy', methods=['GET'])
     @admin_required
@@ -10448,20 +10535,33 @@ def create_app() -> Flask:
             db = get_db()
             ensure_transactions_table(db)
             ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
-            row = db.execute(
-                """SELECT COUNT(*) AS transaction_count,
-                          COALESCE(SUM(amount),0) AS gross,
-                          COALESCE(SUM(paystack_fee),0) AS actual_paystack_fees
+            ensure_column(db, 'transactions', 'paystack_fee_estimate', 'REAL DEFAULT 0')
+            ensure_column(db, 'transactions', 'paystack_fee_status', "TEXT DEFAULT 'unknown'")
+            db.execute("UPDATE transactions SET paystack_fee_status='actual' WHERE COALESCE(paystack_fee,0)>0 AND paystack_fee_status='unknown'")
+            rows = db.execute(
+                """SELECT instructor_id, amount, paystack_fee, paystack_fee_status,
+                          CAST(created_at AS TEXT) AS created_at
                    FROM transactions
-                   WHERE type IN ('purchase','quiz_extra_attempt') AND status='success'
-                     AND DATE(created_at) >= ?""", (effective_from,)
-            ).fetchone()
+                   WHERE provider='paystack' AND type IN ('purchase','quiz_extra_attempt')
+                     AND status='success' AND DATE(created_at) >= ?""", (effective_from,)
+            ).fetchall()
+            gross = sum(float(r['amount'] or 0) for r in rows)
+            actual_fees = sum(float(r['paystack_fee'] or 0) for r in rows if str(r['paystack_fee_status'] or '').lower() == 'actual')
+            estimated_fees = 0.0
+            missing_actual = 0
+            for tx in rows:
+                resolved = _effective_paystack_fee_policy(db, tx['instructor_id'], str(tx['created_at'] or effective_from)[:10])
+                estimated_fees += float(tx['amount'] or 0) * resolved['rate_pct'] / 100.0
+                if str(tx['paystack_fee_status'] or '').lower() != 'actual':
+                    missing_actual += 1
             return jsonify({
                 'effective_from': effective_from,
-                'transaction_count': int(row['transaction_count'] or 0),
-                'gross': round(float(row['gross'] or 0), 2),
-                'actual_paystack_fees': round(float(row['actual_paystack_fees'] or 0), 2),
-                'note': 'Preview only. Existing transactions and completed payouts are not changed.'
+                'transaction_count': len(rows),
+                'gross': round(gross, 2),
+                'actual_paystack_fees': round(actual_fees, 2),
+                'estimated_policy_fees': round(estimated_fees, 2),
+                'transactions_missing_actual_fee': missing_actual,
+                'note': 'Preview only. Policy figures are estimates, not provider-confirmed fees. Existing transactions and paid payouts are not changed.'
             })
         except Exception as e:
             app.logger.error(f'preview_paystack_fee_policy: {e}')
@@ -10500,6 +10600,7 @@ def create_app() -> Flask:
             }
             policy['default_rate_pct'] = rate
             policy['effective_from'] = effective_from
+            policy['apply_scope'] = 'all_instructors'
             policy['history'] = (policy.get('history') or []) + [entry]
             _paystack_fee_policy_write(db, policy)
             return jsonify({'message': 'Fee policy saved. Actual Paystack fees remain authoritative; existing transactions and paid payouts were not changed.', **policy})
@@ -10559,13 +10660,24 @@ def create_app() -> Flask:
             if g.current_user.get('role') != 'instructor':
                 return jsonify({'error': 'Instructor access required'}), 403
             policy = _paystack_fee_policy_read(db)
+            active = _effective_paystack_fee_policy(db, uid)
             override = (policy.get('instructor_overrides') or {}).get(uid)
+            scheduled_override = override if isinstance(override, dict) and str(override.get('effective_from') or '') > datetime.utcnow().date().isoformat() else None
+            scheduled_default = None
+            if str(policy.get('effective_from') or '') > datetime.utcnow().date().isoformat():
+                scheduled_default = {
+                    'rate_pct': policy.get('default_rate_pct', 1.95),
+                    'effective_from': policy.get('effective_from'),
+                }
             return jsonify({
-                'rate_pct': override.get('rate_pct') if override else policy.get('default_rate_pct', 0),
-                'effective_from': override.get('effective_from') if override else policy.get('effective_from'),
-                'source': 'instructor_override' if override else 'platform_default',
+                'rate_pct': active['rate_pct'],
+                'effective_from': active['effective_from'],
+                'source': active['source'],
+                'scheduled_override': scheduled_override,
+                'scheduled_default': scheduled_default,
                 'editable': False,
                 'actual_paystack_fee_source': 'verified Paystack transaction fee',
+                'policy_rate_is_estimate_only': True,
             })
         except Exception as e:
             app.logger.error(f'instructor_paystack_fee_policy: {e}')
