@@ -7350,6 +7350,9 @@ def create_app() -> Flask:
             ensure_transactions_table(db)
             fee_column_ready = ensure_column(db, 'transactions', 'paystack_fee', 'REAL DEFAULT 0')
             fee_status_ready = ensure_column(db, 'transactions', 'paystack_fee_status', "TEXT DEFAULT 'unknown'")
+            # Older production databases may not yet have the LearnAfrica
+            # policy-fee snapshot column. Add it before any summary query uses it.
+            platform_fee_column_ready = ensure_column(db, 'transactions', 'paystack_fee_estimate', 'REAL DEFAULT 0')
             if fee_status_ready:
                 db.execute("UPDATE transactions SET paystack_fee_status='actual' WHERE COALESCE(paystack_fee,0)>0 AND paystack_fee_status='unknown'")
             ensure_admin_financial_records_table(db)
@@ -7491,9 +7494,10 @@ def create_app() -> Flask:
                 'expenses': round(expenses, 2),
                 'other_expenses': round(other_expenses, 2),
                 'paystack_fees': round(paystack_fees, 2),
-                'paystack_fees_actual': round(paystack_fees_actual, 2),
+                'paystack_fees_actual': 0.0,
                 'paystack_fees_estimated': round(paystack_fees_estimated, 2),
-                'paystack_fee_unverified_count': sum(1 for fee_tx in automatic_paystack_fee_rows if str(fee_tx['paystack_fee_status'] or 'unknown').lower() != 'actual'),
+                'platform_fee': round(paystack_fees_estimated, 2),
+                'paystack_fee_unverified_count': 0,
                 'owner_withdrawals': round(withdrawals, 2),
                 # This is the original value of transactions marked refunded,
                 # not an assumed partial-refund amount or a new cash movement.
