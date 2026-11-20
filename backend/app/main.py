@@ -4008,7 +4008,7 @@ def create_app() -> Flask:
             d_c = int(p['d'] or 0) if p else 0
             course_revenue = db.execute(
                 "SELECT COALESCE(SUM(amount), 0) AS gross, "
-                "COALESCE(SUM(CASE WHEN provider='paystack' THEN COALESCE(paystack_fee, 0) ELSE 0 END), 0) AS fees, "
+                "COALESCE(SUM(COALESCE(paystack_fee_estimate, 0)), 0) AS fees, "
                 "COALESCE(SUM(instructor_share), 0) AS instructor_share, "
                 "COALESCE(SUM(platform_share), 0) AS platform_share "
                 "FROM transactions WHERE course_id=? AND type IN ('purchase','quiz_extra_attempt') AND status='success'",
@@ -4022,7 +4022,9 @@ def create_app() -> Flask:
                 'completion': int((d_c/t_c)*100) if t_c else 0,
                 'rating': float(r['rating'] or 0),
                 'gross_revenue': round(course_gross, 2),
-                'paystack_fees': round(course_fees, 2),
+                'platform_fee': round(course_fees, 2),
+                'paystack_fees': round(course_fees, 2),  # legacy response key
+                'net_after_platform_fee': round(max(0.0, course_gross-course_fees), 2),
                 'net_after_paystack': round(max(0.0, course_gross-course_fees), 2),
                 'instructor_earnings': round(float(course_revenue['instructor_share'] or 0), 2) if course_revenue else 0.0,
                 'platform_earnings': round(float(course_revenue['platform_share'] or 0), 2) if course_revenue else 0.0,
