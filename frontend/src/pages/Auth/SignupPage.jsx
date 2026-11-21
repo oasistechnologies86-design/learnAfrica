@@ -146,9 +146,8 @@ export function SignupPage() {
     if (!formData.name) newErrors.name = 'Name is required'
     if (!formData.email) newErrors.email = 'Email is required'
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Invalid email address'
-    if (formData.phone && !isValidIntlPhone(formData.phone)) {
-      newErrors.phone = 'Enter a valid phone number, e.g. 0244123456'
-    }
+    if (!formData.phone) newErrors.phone = 'Phone number is required'
+    else if (!isValidIntlPhone(formData.phone)) newErrors.phone = 'Enter a valid phone number for the selected country.'
     if (!formData.password) newErrors.password = 'Password is required'
     else if (!isPasswordStrong(formData.password)) {
       newErrors.password = 'Password does not meet all requirements'
@@ -166,8 +165,8 @@ export function SignupPage() {
                  normalizeIdNumber(instructor.country, instructor.id_type, instructor.id_number)) {
         newErrors.id_number = 'The two identification numbers do not match.'
       }
-      if (instructor.country === 'GH' && !isValidGhanaPostGps(instructor.digital_address)) {
-        newErrors.digital_address = 'Enter a valid GhanaPost GPS address (format GA-123-4567)'
+      if (instructor.country === 'GH' && !String(instructor.digital_address || '').trim()) {
+        newErrors.digital_address = 'Digital address is required.'
       }
       if (!acceptVerification) {
         newErrors.verification = 'You must acknowledge the information-verification statement'
@@ -201,7 +200,7 @@ export function SignupPage() {
           state: {
             email:    formData.email,
             name:     formData.name,
-            phone:    instructor.phone || formData.phone,
+            phone:    formData.phone,
             password: formData.password,
             country:  instructor.country,
             id_type:  instructor.id_type,
@@ -367,6 +366,7 @@ export function SignupPage() {
         <Field
           id="name"
           label="Full name"
+          required
           icon={User}
           name="name"
           value={formData.name}
@@ -380,6 +380,7 @@ export function SignupPage() {
         <Field
           id="email"
           label="Email address"
+          required
           icon={Mail}
           name="email"
           type="email"
@@ -394,6 +395,7 @@ export function SignupPage() {
         <Field
           id="password"
           label="Password"
+          required
           icon={Lock}
           name="password"
           type={showPassword ? 'text' : 'password'}
@@ -456,6 +458,7 @@ export function SignupPage() {
         <Field
           id="confirmPassword"
           label="Confirm password"
+          required
           icon={Lock}
           name="confirmPassword"
           type={showConfirmPassword ? 'text' : 'password'}
@@ -480,7 +483,7 @@ export function SignupPage() {
 
         <div className="space-y-1.5">
           <label htmlFor="phone" className="block text-[13px] font-semibold text-foreground">
-            Phone number <span className="font-normal text-muted-foreground">(optional)</span>
+            Phone number <span className="ml-1 text-destructive" aria-hidden="true">*</span>
           </label>
           <PhoneField
             id="phone"
@@ -488,7 +491,7 @@ export function SignupPage() {
             value={formData.phone}
             onChange={handleChange}
             error={errors.phone}
-            helperText="Pick your country, then type your number. You can change or remove it later."
+            helperText="Choose your country code, then enter your phone number."
           />
         </div>
 
