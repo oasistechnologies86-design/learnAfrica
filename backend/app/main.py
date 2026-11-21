@@ -283,6 +283,11 @@ def _validate_instructor_profile(d, require_address=True):
         if perr:
             errors['phone'] = perr
 
+    # Ghana requires a digital address, but applicants may enter their own
+    # address text; GhanaPost GPS-specific formatting is deliberately not used.
+    if country == 'GH' and not clean['digital_address']:
+        errors['digital_address'] = 'A digital address is required.'
+
     if require_address:
         if not clean['city']:
             errors['city'] = 'City or locality is required.'
