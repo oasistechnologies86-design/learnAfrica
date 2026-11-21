@@ -8,7 +8,7 @@ Covers:
     from instructor features on the SERVER, not just the screen.
   * Frozen identity: an instructor cannot change country / id_type / id_number
     via the profile endpoint; an admin can, and the change is audited.
-  * Backward compatibility: legacy Ghanaian instructors (Ghana Card + GPS,
+  * Backward compatibility: legacy Ghanaian instructors (Ghana Card + free-text digital address,
     no country column) are treated as complete and are never locked out.
   * The instructor-registration free/paid switch keeps working alongside all
     of the above.
