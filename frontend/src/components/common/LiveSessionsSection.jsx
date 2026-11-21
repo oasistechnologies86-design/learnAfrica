@@ -58,7 +58,7 @@ export default function LiveSessionsSection({ courseId, mode = 'student', isEnro
     try {
       await authFetch(`/api/live-sessions/${sessionId}/rsvp`, { method: 'DELETE' });
       load();
-    } catch (e) { alert(e.message); }
+    } catch (e) { await alert(e.message); }
   };
 
   const removeSession = async (sessionId) => {
@@ -66,7 +66,7 @@ export default function LiveSessionsSection({ courseId, mode = 'student', isEnro
     try {
       await authFetch(`/api/instructor/live-sessions/${sessionId}`, { method: 'DELETE' });
       setSessions(prev => prev.filter(s => s.id !== sessionId));
-    } catch (e) { alert(e.message); }
+    } catch (e) { await alert(e.message); }
   };
 
   const now = Date.now();
