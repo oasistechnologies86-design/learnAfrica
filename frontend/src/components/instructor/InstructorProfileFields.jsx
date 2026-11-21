@@ -248,7 +248,7 @@ export function InstructorProfileFields({
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input id="digital_address" value={value.digital_address || ''}
-                  onChange={(e) => onChange({ digital_address: e.target.value.toUpperCase() })}
+                  onChange={(e) => onChange({ digital_address: e.target.value })}
                   invalid={!!errors.digital_address}
                   placeholder={digital.placeholder} className="pl-10" />
               </div>
