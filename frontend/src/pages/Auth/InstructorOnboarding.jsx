@@ -3,12 +3,13 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Globe, MapPin, FileText, ArrowLeft, Loader2, Clock, Briefcase, CreditCard } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Input, Label } from '@/components/common/Input';
+import { PhoneField } from '@/components/common/PhoneField';
 import { useAuth } from '@/context/AuthContext';
 import { GoogleAuthButton } from '@/components/common/GoogleAuthButton';
 import { PaymentMethodForm } from '@/components/common/PaymentMethodForm';
 import { AuthCard } from '@/components/auth/AuthCard';
 import { API_BASE } from '@/lib/api';
-import { normalizeGhPhone, validatePayoutDetails } from '@/lib/payoutDetails';
+import { normalizeGhPhone, validatePayoutDetails, isValidIntlPhone } from '@/lib/payoutDetails';
 
 export default function InstructorOnboarding() {
   const locationState = useLocation().state;
@@ -21,6 +22,7 @@ export default function InstructorOnboarding() {
 
   const [formData, setFormData] = useState({
     bio: '', title: '', location: '', website: '',
+    phone: locationState?.phone || user?.phone || '',
   });
   // REQUIRED payment method for instructor onboarding. International applicants
   // provide bank-transfer details for manual payout; Ghana keeps momo/bank.
@@ -52,6 +54,8 @@ export default function InstructorOnboarding() {
       e.title = 'Your field / specialisation is required.';
     if (!formData.location)
       e.location = 'Location is required.';
+    if (!formData.phone) e.phone = 'Phone number is required.'
+    else if (!isValidIntlPhone(formData.phone)) e.phone = 'Enter a valid phone number for the selected country.'
     if (!isPaymentValid())
       e.payment = 'Please complete your payment method — this is required.';
     setErrors(e);
@@ -69,6 +73,8 @@ export default function InstructorOnboarding() {
         await updateUser({
           bio: formData.bio, instructor_title: formData.title,
           location: formData.location, website: formData.website,
+        phone: formData.phone,
+          phone: formData.phone,
         });
         try {
           const token = sessionStorage.getItem('auth_token');
@@ -228,6 +234,13 @@ export default function InstructorOnboarding() {
           </div>
           {errors.location && <p className="text-xs text-destructive font-medium">{errors.location}</p>}
         </div>
+
+        {viaGoogle && (
+          <div className="space-y-2">
+            <Label htmlFor="onboarding-phone" className="text-xs font-bold uppercase tracking-wider">Phone Number <span className="text-destructive">*</span></Label>
+            <PhoneField id="onboarding-phone" value={formData.phone} onChange={e => set('phone', e.target.value)} error={errors.phone} helperText="Choose your country code, then enter your number." required />
+          </div>
+        )}
 
         {/* Portfolio / Website */}
         <div className="space-y-2">
