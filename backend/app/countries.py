@@ -296,7 +296,7 @@ def profile_requirements(country):
         "subdivisions": subdivisions(code),
         "postal_required": uses_postal_code(code),
         "digital_address": digital,
-        "digital_address_required": False,
+        "digital_address_required": code == "GH",
     }
 
 
