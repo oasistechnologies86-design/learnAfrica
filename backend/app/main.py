@@ -104,15 +104,12 @@ def _normalize_ghana_card(value):
 
 
 def _is_valid_ghana_post_gps(value):
-    """Validate a GhanaPost GPS digital address, e.g. GA-123-4567.
+    """Legacy compatibility check accepting any non-empty digital address.
 
-    Format: two-letter region code, a 3-5 digit area, then a 4-5 digit unique
-    code, separated by dashes. Whitespace and case are ignored.
+    Ghanaian applicants may enter their own digital address; GhanaPost GPS
+    formatting is not required.
     """
-    import re
-    raw = re.sub(r'\s+', '', str(value or '')).upper()
-    return bool(re.fullmatch(r'[A-Z]{2}-\d{3,5}-\d{4,5}', raw))
-
+    return bool(str(value or '').strip())
 
 # Accepted instructor identity documents. Ghana Card keeps its strict national
 # format; the rest are free-form identifiers but still length-bounded so an
