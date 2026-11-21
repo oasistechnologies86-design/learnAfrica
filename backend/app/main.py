@@ -164,8 +164,8 @@ def _validate_ghana_card_gps(d):
     """
     id_number, _ = _validate_instructor_identity(d)
     gps_raw = d.get('ghana_post_gps') or d.get('ghana_post_gps_code') or ''
-    gps = str(gps_raw).strip().upper()
-    return id_number, (gps if _is_valid_ghana_post_gps(gps) else None)
+    gps = str(gps_raw).strip()
+    return id_number, (gps if gps else None)
 
 
 def _ghana_card_gps_error(d):
@@ -180,9 +180,9 @@ def _ghana_card_gps_error(d):
         if id_type == 'ghana_card':
             return 'A valid Ghana Card number is required (format GHA-123456789-0).'
         return f'A valid {label} number is required (4-40 characters).'
-    if not _is_valid_ghana_post_gps(gps_raw):
-        return 'A valid GhanaPost GPS digital address is required (format GA-123-4567).'
-    return 'An identity document and GhanaPost GPS are required.'
+    if not gps_raw:
+        return 'A digital address is required.'
+    return 'An identity document and digital address are required.'
 
 
 # ── International instructor profile ─────────────────────────────────────────
@@ -213,7 +213,7 @@ def _normalize_profile_payload(d):
         'city': str(d.get('city') or d.get('town') or '').strip(),
         'street_address': str(d.get('street_address') or d.get('address') or '').strip(),
         'postal_code': str(d.get('postal_code') or d.get('zip') or '').strip().upper(),
-        'digital_address': str(d.get('digital_address') or d.get('ghana_post_gps') or '').strip().upper(),
+        'digital_address': str(d.get('digital_address') or d.get('ghana_post_gps') or '').strip(),
         'phone': str(d.get('phone') or '').strip(),
     }
 
@@ -274,12 +274,11 @@ def _validate_instructor_profile(d, require_address=True):
         if err:
             errors['id_number'] = err
 
-    # Phone (international)
-    if clean['phone']:
-        e164, perr = cm.validate_phone(clean['phone'], country)
-        clean['phone'] = e164
-        if perr:
-            errors['phone'] = perr
+    # Phone is compulsory for every instructor account.
+    e164, perr = cm.validate_phone(clean['phone'], country)
+    clean['phone'] = e164
+    if perr:
+        errors['phone'] = perr
 
     if require_address:
         if not clean['city']:
@@ -288,6 +287,8 @@ def _validate_instructor_profile(d, require_address=True):
             errors['street_address'] = 'Street address is required.'
         if req['postal_required'] and not clean['postal_code']:
             errors['postal_code'] = 'Postal code is required for this country.'
+    if req.get('digital_address_required') and not clean['digital_address']:
+        errors['digital_address'] = 'Digital address is required.'
 
     return clean, errors
 
@@ -309,7 +310,7 @@ def _instructor_profile_complete(db, user_id):
         if not row:
             return False
         r = dict(row)
-        # Legacy Ghanaian applicant: identity + GPS already on file.
+        # Legacy Ghanaian applicant: identity + digital address already on file.
         if (r.get('ghana_card_number') or r.get('ghana_post_gps')) and not r.get('country'):
             return True
         if r.get('profile_completed_at'):
@@ -325,7 +326,9 @@ def _instructor_profile_complete(db, user_id):
         if err:
             return False
         req = cm.profile_requirements(country)
-        if not r.get('city') or not r.get('street_address'):
+        if not r.get('city') or not r.get('street_address') or not r.get('phone'):
+            return False
+        if req.get('digital_address_required') and not r.get('digital_address'):
             return False
         if req['postal_required'] and not r.get('postal_code'):
             return False
@@ -992,8 +995,9 @@ def create_app() -> Flask:
             if len(d['password']) < app.config['PASS_MIN_LENGTH']:
                 return jsonify({'error': f'Password must be at least {app.config["PASS_MIN_LENGTH"]} characters'}), 400
 
-            # Optional contact phone ("call line"). Stored normalised so it can be
-            # used for support/recovery without duplicating formats.
+            # A contact phone is compulsory for every new account.
+            if not str(d.get('phone') or '').strip():
+                return jsonify({'error': 'Phone number is required.'}), 400
             phone, phone_err = _clean_profile_phone(d.get('phone'))
             if phone_err:
                 return jsonify({'error': phone_err}), 400
@@ -1011,10 +1015,9 @@ def create_app() -> Flask:
             # Instructor applicants must supply identity + location details and
             # accept both agreements before an account is created.
             #
-            # Country-aware: when the client sends a `country`, we validate the
-            # full international profile (any country, country-specific ID types
-            # and address rules). With no `country` we keep the original Ghana
-            # Card + GhanaPost GPS requirement so older clients still work.
+            # Country-aware: when the client sends a `country`, validate the
+            # international profile. Legacy requests still require an identity
+            # document and a non-empty free-text digital address.
             _signup_profile = None
             if role == 'instructor':
                 _country_in = str(d.get('country') or '').strip().upper()
@@ -1802,7 +1805,7 @@ def create_app() -> Flask:
             d = request.get_json() or {}
             # ── Identity document + location are required (country-aware) ──
             # International applicants send `country` and the full profile;
-            # otherwise the original Ghana Card + GhanaPost GPS rules apply.
+            # otherwise legacy identity fields are accepted with a free-text digital address.
             _prof = None
             _country_in = str(d.get('country') or '').strip().upper()
             if _country_in:
