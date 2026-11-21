@@ -30,6 +30,7 @@ export function PhoneField({
   placeholder = '244 123 456',
   error,
   helperText,
+  required = false,
 }) {
   const parsed = useMemo(() => parsePhone(value, DEFAULT_COUNTRY), [value])
   const [country, setCountry] = useState(parsed.country)
@@ -58,8 +59,8 @@ export function PhoneField({
   const emit = (nextCountry, nextNational) => {
     const dial = countryByCode(nextCountry).dial
     const digits = String(nextNational || '').replace(/\D/g, '')
-    const e164 = digits ? dial + digits : ''
-    onChange?.({ target: { name, value: e164 } })
+    const parsed = parsePhone(digits, nextCountry)
+    onChange?.({ target: { name, value: parsed.e164 } })
   }
 
   const onNationalChange = (e) => {
@@ -82,6 +83,7 @@ export function PhoneField({
       <div className="flex gap-2">
         <select
           aria-label="Country code"
+          required={required}
           value={country}
           onChange={onCountryChange}
           disabled={disabled}
@@ -101,6 +103,7 @@ export function PhoneField({
             id={id}
             name={name}
             type="tel"
+            required={required}
             inputMode="numeric"
             autoComplete="tel-national"
             value={national}
