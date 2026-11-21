@@ -13,65 +13,16 @@ import { formatPrice } from '@/lib/money';
 import { courseThumbnail } from '@/lib/courseThumbnail';
 import { normalizeGhPhone, isValidIntlPhone } from '@/lib/payoutDetails';
 import { PhoneField } from '@/components/common/PhoneField';
+import { formatPaymentMethod } from '@/lib/paymentMethod';
 
 // ── Provider definitions ────────────────────────────────────────────────────
 // These are a *preference*. Paystack's hosted checkout shows the matching
 // channel(s), and the student can still switch method on that page.
 const PROVIDERS = [
-  {
-    id: 'any',
-    name: 'Card, Mobile Money or Bank',
-    short: 'ANY',
-    tileBg: 'bg-primary',
-    tileText: 'text-primary-foreground',
-    type: 'any',
-    hint: 'Choose on Paystack',
-  },
-  {
-    id: 'card',
-    name: 'Card',
-    short: 'CARD',
-    tileBg: 'bg-slate-800',
-    tileText: 'text-white',
-    type: 'card',
-    hint: 'Visa, Mastercard, Verve',
-  },
-  {
-    id: 'mtn_momo',
-    name: 'MTN Mobile Money',
-    short: 'MTN',
-    tileBg: 'bg-yellow-400',
-    tileText: 'text-yellow-950',
-    type: 'momo',
-    hint: 'Approve on your phone',
-  },
-  {
-    id: 'vodafone_cash',
-    name: 'Vodafone Cash',
-    short: 'Voda',
-    tileBg: 'bg-red-500',
-    tileText: 'text-white',
-    type: 'momo',
-    hint: 'Approve on your phone',
-  },
-  {
-    id: 'airteltigo_money',
-    name: 'AirtelTigo Money',
-    short: 'AT',
-    tileBg: 'bg-blue-600',
-    tileText: 'text-white',
-    type: 'momo',
-    hint: 'Approve on your phone',
-  },
-  {
-    id: 'bank_transfer',
-    name: 'Bank Transfer',
-    short: 'BANK',
-    tileBg: 'bg-emerald-700',
-    tileText: 'text-white',
-    type: 'bank',
-    hint: 'Pay from your bank app',
-  },
+  { id: 'any', name: 'Any', hint: 'Choose card, mobile money or bank transfer on Paystack.' },
+  { id: 'card', name: 'Card', hint: 'Continue to Paystack to pay securely by card.' },
+  { id: 'mobile_money', name: 'Mobile Money', hint: 'Continue to Paystack to complete a mobile money payment.' },
+  { id: 'bank_transfer', name: 'Bank Transfer', hint: 'Continue to Paystack to complete a bank transfer.' },
 ];
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -103,7 +54,7 @@ export default function PaymentPage() {
   // order reference only. The payment method (card / mobile money / bank) and
   // the number are entered once, on Paystack's hosted page — so the student
   // never types the same number twice.
-  const provider = 'any';
+  const [provider, setProvider] = useState('any');
 
   // ── Coupon state ─────────────────────────────────────────────────
   const [showCouponInput, setShowCouponInput] = useState(false);
@@ -322,7 +273,7 @@ export default function PaymentPage() {
           <p className="text-sm text-muted-foreground mt-1.5">You are now enrolled in <strong>{course.title}</strong>.</p>
           <div className="mt-6 p-4 rounded-lg bg-muted/40 text-left text-sm space-y-1.5">
             <div className="flex justify-between"><span className="text-muted-foreground">Amount</span><span className="font-bold">{formatPrice(receipt?.amount)}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Method</span><span>{PROVIDERS.find(p => p.id === receipt?.payment_method)?.name}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Method</span><span>{formatPaymentMethod(receipt?.payment_method)}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Receipt ID</span><span className="font-mono text-xs">{receipt?.receipt_id}</span></div>
           </div>
           <div className="mt-6 flex flex-col sm:flex-row gap-2">
@@ -372,19 +323,42 @@ export default function PaymentPage() {
             </p>
 
             <form onSubmit={handlePay} className="space-y-4 mt-5">
+              {errs.name && (
+                <div role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2.5">
+                  <p className="text-sm font-semibold text-destructive">Almost there!</p>
+                  <p className="text-xs text-destructive mt-0.5">Please complete all required fields to proceed to payment.</p>
+                </div>
+              )}
               {/* ── Personal details ───────────────────────────────── */}
               <div>
-                <label className="text-xs font-bold uppercase text-muted-foreground">Full name</label>
+                <label htmlFor="payment-full-name" className="text-xs font-bold uppercase text-muted-foreground">
+                  Full name <span className="text-destructive" aria-hidden="true">*</span>
+                </label>
                 <input
-                  type="text" placeholder="e.g. Ama Mensah"
+                  id="payment-full-name"
+                  type="text"
+                  placeholder="e.g. Ama Mensah"
                   value={details.name}
-                  onChange={e => setDetails({ ...details, name: e.target.value })}
+                  required
+                  aria-invalid={!!errs.name}
+                  aria-describedby={errs.name ? 'payment-full-name-error' : undefined}
+                  onChange={e => {
+                    const value = e.target.value;
+                    setDetails(prev => ({ ...prev, name: value }));
+                    if (value.trim()) setErrs(prev => {
+                      const next = { ...prev };
+                      delete next.name;
+                      return next;
+                    });
+                  }}
                   className={cn(
                     'w-full mt-1.5 h-11 px-3 rounded-lg border-2 outline-none transition bg-background',
-                    errs.name ? 'border-destructive' : 'border-border focus:border-primary'
+                    errs.name
+                      ? 'border-destructive ring-2 ring-destructive/20 shadow-[0_0_0_3px_rgba(220,38,38,0.12)]'
+                      : 'border-border focus:border-primary'
                   )}
                 />
-                {errs.name && <p className="text-xs text-destructive mt-1">{errs.name}</p>}
+                {errs.name && <p id="payment-full-name-error" className="text-xs text-destructive mt-1">{errs.name}</p>}
               </div>
 
               <div>
@@ -421,13 +395,23 @@ export default function PaymentPage() {
                 <span>Paying as <strong className="text-foreground">{user?.email}</strong></span>
               </div>
 
-              {/* ── Payment method is chosen on Paystack's page ──────── */}
-              <div className="flex items-start gap-2.5 rounded-lg border border-border bg-muted/30 px-3 py-3 text-xs text-muted-foreground">
-                <CreditCard className="h-4 w-4 flex-shrink-0 text-primary mt-0.5" />
-                <span>
-                  On the next page, Paystack lets you pay by <strong className="text-foreground">card, mobile money or bank transfer</strong>.
-                  Pick one there and enter your details once.
-                </span>
+              <div>
+                <label htmlFor="payment-method" className="text-xs font-bold uppercase text-muted-foreground">
+                  Payment method
+                </label>
+                <select
+                  id="payment-method"
+                  value={provider}
+                  onChange={e => setProvider(e.target.value)}
+                  className="w-full mt-1.5 h-11 px-3 rounded-lg border-2 border-border bg-background text-sm outline-none transition focus:border-primary"
+                >
+                  {PROVIDERS.map(method => (
+                    <option key={method.id} value={method.id}>{method.name}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  {PROVIDERS.find(method => method.id === provider)?.hint}
+                </p>
               </div>
 
               {error && (

@@ -162,22 +162,29 @@ def process_payout(instructor, amount, currency='GHS'):
 # used and none of these functions execute. Set PAYSTACK_SECRET_KEY in the
 # environment and Paystack takes over automatically — no code changes needed.
 
-def _paystack_channels_for(payment_method):
-    """Map our payment_method IDs to Paystack channels.
+def normalise_payment_channel(channel):
+    """Map a verified Paystack channel to a LearnAfrica statement method.
 
-    These are a *preference* — we restrict the hosted checkout to the channel
-    the student picked, but they can still switch method on Paystack's page if
-    we pass more than one. Card and bank transfer are available in Ghana;
-    mobile money maps to the single `mobile_money` channel.
+    Unknown channels return None so they cannot overwrite a stored method.
     """
-    if payment_method in ('mtn_momo', 'vodafone_cash', 'airteltigo_money'):
+    value = str(channel or '').strip().lower()
+    return {
+        'card': 'card',
+        'mobile_money': 'mobile_money',
+        'bank_transfer': 'bank_transfer',
+        'bank': 'bank_transfer',
+    }.get(value)
+
+
+def _paystack_channels_for(payment_method):
+    """Map the student's selected method to Paystack checkout channels."""
+    if payment_method in ('mtn_momo', 'vodafone_cash', 'airteltigo_money', 'mobile_money'):
         return ['mobile_money']
     if payment_method == 'card':
         return ['card']
     if payment_method == 'bank_transfer':
         return ['bank_transfer']
-    # 'any' (or unknown): let the student choose card, mobile money or bank on
-    # Paystack's page — they pick and enter their number there, once.
+    # 'any' (or unknown): allow the student to choose a supported method.
     return ['card', 'mobile_money', 'bank_transfer']
 
 

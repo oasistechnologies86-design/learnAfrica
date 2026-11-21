@@ -9289,7 +9289,8 @@ def create_app() -> Flask:
         """Initiate a course purchase.
 
         Body: {
-          payment_method: 'any' | 'mtn_momo' | 'vodafone_cash' | 'airteltigo_money' | 'card' | 'bank_transfer',
+          payment_method: 'any' | 'card' | 'mobile_money' | 'bank_transfer'
+                          (legacy momo provider IDs remain accepted),
           payment_details: {
              name, phone, city   (contact details for the receipt)
           }
@@ -9316,7 +9317,8 @@ def create_app() -> Flask:
 
             # Validate payment_method. `any` lets the student choose the channel
             # on Paystack's hosted page; the named values pre-select one.
-            valid_methods = ('any', 'mtn_momo', 'vodafone_cash', 'airteltigo_money', 'card', 'bank_transfer')
+            valid_methods = ('any', 'card', 'mobile_money', 'bank_transfer',
+                             'mtn_momo', 'vodafone_cash', 'airteltigo_money')
             if payment_method not in valid_methods:
                 return jsonify({'error': f'Invalid payment method. Must be one of: {", ".join(valid_methods)}'}), 400
 
@@ -9623,7 +9625,7 @@ def create_app() -> Flask:
                     # Only a Paystack transaction may be settled by this event.
                     if tx:
                         from decimal import Decimal, InvalidOperation
-                        from .payments import verify_payment
+                        from .payments import verify_payment, normalise_payment_channel
                         if str(tx['provider'] or '').lower() != 'paystack':
                             app.logger.warning('Paystack webhook provider mismatch for transaction %s', tx['id'])
                             return jsonify({'error': 'Payment provider mismatch'}), 400
@@ -9639,6 +9641,13 @@ def create_app() -> Flask:
                                    != str(tx['currency'] or 'GHS').strip().upper()):
                             app.logger.warning('Paystack webhook verification mismatch for transaction %s', tx['id'])
                             return jsonify({'error': 'Payment verification mismatch'}), 400
+                        actual_method = normalise_payment_channel(verified.get('channel'))
+                        if actual_method:
+                            db.execute(
+                                "UPDATE transactions SET payment_method=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                                (actual_method, tx['id'])
+                            )
+                            db.commit()
                     if tx:
                         # Paystack webhook amounts (including fees) are in the
                         # currency's minor unit. Store the verified fee in GHS.
@@ -10042,7 +10051,7 @@ def create_app() -> Flask:
         Verifies the payment status and enrolls the student if successful.
         Safe to call multiple times — idempotent."""
         try:
-            from .payments import verify_payment
+            from .payments import verify_payment, normalise_payment_channel
             db = get_db()
             ensure_transactions_table(db)
             tx = db.execute(
@@ -10051,6 +10060,7 @@ def create_app() -> Flask:
             ).fetchone()
             if not tx:
                 return jsonify({'error': 'Transaction not found'}), 404
+            tx = dict(tx)
             # Only the buyer or an admin can verify
             role = g.current_user['role']
             if tx['user_id'] != g.current_user['user_id'] and role not in ('admin', 'superadmin'):
@@ -10063,6 +10073,7 @@ def create_app() -> Flask:
                     'receipt_id': current_tx['receipt_id'],
                     'amount': float(current_tx['amount'] or 0),
                     'transaction_type': current_tx['type'],
+                    'payment_method': current_tx.get('payment_method') or 'any',
                     'enrolled': not is_extra_attempt,
                 }
                 if is_extra_attempt:
@@ -10107,6 +10118,13 @@ def create_app() -> Flask:
                         or str(result.get('currency') or '').strip().upper()
                            != str(tx['currency'] or 'GHS').strip().upper()):
                     return jsonify({'error': 'Payment verification mismatch'}), 400
+                actual_method = normalise_payment_channel(result.get('channel'))
+                if actual_method:
+                    db.execute(
+                        "UPDATE transactions SET payment_method=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                        (actual_method, tx['id'])
+                    )
+                    tx['payment_method'] = actual_method
 
             if new_status == 'success':
                 if tx['provider'] == 'paystack' and result.get('fees') is not None:
