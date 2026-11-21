@@ -212,7 +212,7 @@ export default function InstructorProfileCompletion() {
 
           <div className="space-y-2">
             <label htmlFor="instructor-profile-phone" className="block text-sm font-medium">Phone number <span className="text-destructive">*</span></label>
-            <PhoneField id="instructor-profile-phone" value={profile.phone || ''} onChange={e => handleChange({ phone: e.target.value })} error={errors.phone} helperText="Choose your country code and enter your number." />
+            <PhoneField id="instructor-profile-phone" value={profile.phone || ''} onChange={e => handleChange({ phone: e.target.value })} error={errors.phone} helperText="Choose your country code and enter your number." required />
           </div>
 
           <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/30 p-3">
