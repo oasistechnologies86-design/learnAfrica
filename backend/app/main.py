@@ -154,14 +154,14 @@ def _validate_instructor_identity(d):
 
 
 def _validate_ghana_card_gps(d):
-    """Return (id_number, gps) normalised, or (None, ...) when invalid.
+    """Return the identity document number and trimmed free-text digital address.
 
     Kept for backwards compatibility; id_number is the document number for
-    whichever id_type the applicant chose.
+    whichever id_type the applicant chose. The address is not format-validated.
     """
     id_number, _ = _validate_instructor_identity(d)
     gps_raw = d.get('ghana_post_gps') or d.get('ghana_post_gps_code') or ''
-    gps = str(gps_raw).strip().upper()
+    gps = str(gps_raw).strip()
     return id_number, (gps if _is_valid_ghana_post_gps(gps) else None)
 
 
@@ -172,7 +172,7 @@ def _ghana_card_gps_error(d):
         id_type = DEFAULT_ID_TYPE
     label = ID_TYPES[id_type]
     id_number, _ = _validate_instructor_identity(d)
-    gps_raw = str(d.get('ghana_post_gps') or d.get('ghana_post_gps_code') or '').strip().upper()
+    gps_raw = str(d.get('ghana_post_gps') or d.get('ghana_post_gps_code') or '').strip()
     if not id_number:
         if id_type == 'ghana_card':
             return 'A valid Ghana Card number is required (format GHA-123456789-0).'
@@ -183,8 +183,9 @@ def _ghana_card_gps_error(d):
 
 
 # ── International instructor profile ─────────────────────────────────────────
-# Country-aware identity + address. Ghana keeps its existing strict rules; every
-# other country uses the maintained datasets in app/countries.py. Completeness is
+# Country-aware identity + address. Ghana Card identity remains strictly
+# validated, while Ghana digital addresses accept free text. Other countries
+# use the maintained datasets in app/countries.py. Completeness is
 # always derived from persisted, validated data — never from a client flag.
 INSTRUCTOR_PROFILE_FIELDS = (
     'country', 'id_type', 'id_number', 'region', 'district', 'city',
@@ -5719,7 +5720,7 @@ def create_app() -> Flask:
             if k in d:
                 fields.append(f'{k}=?'); vals.append(str(d.get(k) or '').strip())
         if country == 'GH' and d.get('digital_address'):
-            fields.append('ghana_post_gps=?'); vals.append(str(d['digital_address']).strip().upper())
+            fields.append('ghana_post_gps=?'); vals.append(str(d['digital_address']).strip())
         try:
             vals.append(uid)
             db.execute(f'UPDATE instructor_applications SET {",".join(fields)} WHERE user_id=?', vals)
@@ -10327,15 +10328,28 @@ def create_app() -> Flask:
         d.pop('verified', None)
 
         existing = db.execute(
-            'SELECT country,id_type,id_number FROM instructor_applications WHERE user_id=?',
+            'SELECT country,id_type,id_number,region,district,city,street_address,'
+            'postal_code,digital_address,phone FROM instructor_applications WHERE user_id=?',
             (uid,)).fetchone()
-        frozen_identity = bool(existing and (existing['country'] or existing['id_number']))
+        existing_data = dict(existing) if existing else {}
+        provided_fields = set(d)
+        frozen_identity = bool(existing_data and (existing_data.get('country') or existing_data.get('id_number')))
+
+        # A profile edit may submit only the fields the user changed. Fill omitted
+        # required values from the stored profile for validation, but only persist
+        # fields that were actually submitted. An explicit blank still validates
+        # as blank and is rejected where the field is required.
+        for field in ('country','id_type','id_number','region','district','city',
+                      'street_address','postal_code','digital_address','phone'):
+            if field not in d and existing_data.get(field) is not None:
+                d[field] = existing_data[field]
+
         if frozen_identity:
             # Frozen: keep the stored identity; re-inject it only so validation
             # runs against the real country, but never write it back.
-            d['country'] = existing['country'] or d.get('country') or ''
-            d['id_type'] = existing['id_type'] or d.get('id_type') or ''
-            d['id_number'] = existing['id_number'] or d.get('id_number') or ''
+            d['country'] = existing_data.get('country') or d.get('country') or ''
+            d['id_type'] = existing_data.get('id_type') or d.get('id_type') or ''
+            d['id_number'] = existing_data.get('id_number') or d.get('id_number') or ''
 
         clean, errors = _validate_instructor_profile(d, require_address=True)
         if errors:
@@ -10346,7 +10360,7 @@ def create_app() -> Flask:
         fields, vals = [], []
         for k in ('region', 'district', 'city', 'street_address',
                   'postal_code', 'digital_address', 'phone'):
-            if k in d:
+            if k in provided_fields:
                 fields.append(f'{k}=?')
                 vals.append(clean[k])
         # Only fill identity when the profile does not already have it (frozen).
@@ -10359,7 +10373,7 @@ def create_app() -> Flask:
                 fields.append('id_number=?'); vals.append(clean['id_number'])
                 if clean['country'] == 'GH' and clean['id_type'] == 'ghana_card':
                     fields.append('ghana_card_number=?'); vals.append(clean['id_number'])
-        if clean.get('digital_address') and clean.get('country') == 'GH':
+        if 'digital_address' in provided_fields and clean.get('digital_address') and clean.get('country') == 'GH':
             fields.append('ghana_post_gps=?'); vals.append(clean['digital_address'])
 
         try:

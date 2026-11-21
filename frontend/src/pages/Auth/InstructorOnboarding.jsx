@@ -191,11 +191,11 @@ export default function InstructorOnboarding() {
         {/* Professional Bio */}
         <div className="space-y-2">
           <Label htmlFor="bio" required className="text-xs font-bold uppercase tracking-wider">
-            Professional Bio <span className="text-destructive">*</span>
+            Professional Bio
           </Label>
           <div className="relative">
             <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <textarea id="bio" value={formData.bio}
+            <textarea id="bio" required minLength={50} value={formData.bio}
               onChange={e => set('bio', e.target.value)}
               placeholder="Tell students about your experience, expertise, and teaching style… (min 50 characters)"
               className="flex min-h-[140px] w-full rounded-md border border-input bg-background pl-10 pr-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 resize-none" />
@@ -206,11 +206,11 @@ export default function InstructorOnboarding() {
         {/* Field / Specialisation — the key field the user asked about */}
         <div className="space-y-2">
           <Label htmlFor="title" required className="text-xs font-bold uppercase tracking-wider">
-            Your Field / Specialisation <span className="text-destructive">*</span>
+            Your Field / Specialisation
           </Label>
           <div className="relative">
             <Briefcase className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input id="title" value={formData.title}
+            <Input id="title" required value={formData.title}
               onChange={e => set('title', e.target.value)}
               placeholder="e.g. Web Developer, Data Scientist, UI/UX Designer, Cybersecurity Expert…"
               className="pl-10" />
@@ -224,11 +224,11 @@ export default function InstructorOnboarding() {
         {/* Location */}
         <div className="space-y-2">
           <Label htmlFor="location" required className="text-xs font-bold uppercase tracking-wider">
-            Your Location <span className="text-destructive">*</span>
+            Your Location
           </Label>
           <div className="relative">
             <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input id="location" value={formData.location}
+            <Input id="location" required value={formData.location}
               onChange={e => set('location', e.target.value)}
               placeholder="e.g. Accra, Ghana" className="pl-10" />
           </div>
@@ -262,7 +262,7 @@ export default function InstructorOnboarding() {
         {/* ── REQUIRED: Payment method for receiving payouts ── */}
         <div className="pt-2 space-y-2">
           <Label required className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
-            <CreditCard className="h-3.5 w-3.5" /> Payout Method <span className="text-destructive normal-case font-bold">*</span>
+            <CreditCard className="h-3.5 w-3.5" /> Payout Method
           </Label>
           <p className="text-xs text-muted-foreground -mt-1">
             Required — this is where your course earnings will be sent. You can update it later from your profile.

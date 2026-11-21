@@ -65,6 +65,12 @@ stu1 = login('stu@example.com')
 stu2 = login('kofi@example.com')
 adm = login('admin@example.com')
 
+# Admin Receipts tab opens a buyer's active statement through this detail route.
+r = c.get('/api/transactions/t2', headers={'Authorization': f'Bearer {adm}'})
+admin_statement = (r.get_json() or {}).get('transaction') or {}
+check('admin can open another user\'s active statement', r.status_code == 200 and admin_statement.get('id') == 't2',
+      r.status_code)
+
 # ── Student receipt access is buyer-only ──────────────────────────────────────
 with app.app_context():
     db = get_db()

@@ -82,6 +82,7 @@ export function InstructorProfileFields({
           <Globe className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <select
             id="country"
+            required
             value={country}
             disabled={lockIdentity}
             onChange={(e) => onChange({ country: e.target.value, id_type: '', id_number: '',
@@ -112,6 +113,7 @@ export function InstructorProfileFields({
               <IdCard className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <select
                 id="id_type"
+                required
                 value={idType}
                 disabled={lockIdentity}
                 onChange={(e) => onChange({ id_type: e.target.value, id_number: '' })}
@@ -134,6 +136,7 @@ export function InstructorProfileFields({
                   <IdCard className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="id_number"
+                    required
                     value={idNumber}
                     disabled={lockIdentity}
                     onChange={(e) => onChange({ id_number: e.target.value })}
@@ -156,6 +159,7 @@ export function InstructorProfileFields({
                     <Check className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="id_confirm"
+                      required
                       value={idConfirm}
                       onChange={(e) => setIdConfirm(e.target.value)}
                       placeholder="Type it again to confirm"
@@ -216,7 +220,7 @@ export function InstructorProfileFields({
               <Label htmlFor="city" required>City / locality</Label>
               <div className="relative">
                 <Building2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input id="city" value={value.city || ''}
+                <Input id="city" required value={value.city || ''}
                   onChange={(e) => onChange({ city: e.target.value })}
                   invalid={!!errors.city}
                   placeholder="Type your city or town" className="pl-10" />
@@ -237,7 +241,7 @@ export function InstructorProfileFields({
 
           <div className="space-y-2">
             <Label htmlFor="street_address" required>Street address</Label>
-            <Input id="street_address" value={value.street_address || ''}
+            <Input id="street_address" required value={value.street_address || ''}
               onChange={(e) => onChange({ street_address: e.target.value })}
               invalid={!!errors.street_address}
               placeholder="House number and street" />
@@ -249,7 +253,7 @@ export function InstructorProfileFields({
               <Label htmlFor="digital_address" required>{digital.label}</Label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input id="digital_address" value={value.digital_address || ''}
+                <Input id="digital_address" required={country === 'GH'} value={value.digital_address || ''}
                   onChange={(e) => onChange({ digital_address: e.target.value })}
                   invalid={!!errors.digital_address}
                   placeholder={digital.placeholder} className="pl-10" />
