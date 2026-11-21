@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 export function Field({
   id,
   label,
+  required = false,
   icon: Icon,
   trailing,
   invalid = false,
@@ -23,7 +24,7 @@ export function Field({
     <div className={cn('space-y-1.5', className)}>
       {label && (
         <label htmlFor={id} className="block text-[13px] font-semibold text-foreground">
-          {label}
+          {label}{required && <span className="ml-1 text-destructive" aria-hidden="true">*</span>}
         </label>
       )}
       <div className="relative">
