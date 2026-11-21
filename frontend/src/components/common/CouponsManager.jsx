@@ -57,11 +57,11 @@ export default function CouponsManager({ role = 'admin', myCourses = [] }) {
   };
 
   const deleteCoupon = async (id) => {
-    if (!confirm('Delete this coupon? Anyone still trying to use it will get an error.')) return;
+    if (!(await window.LearnAfricaDialog.confirm('Delete this coupon? Anyone still trying to use it will get an error.'))) return;
     try {
       await authFetch(`/api/coupons/${id}`, { method: 'DELETE' });
       setCoupons(prev => prev.filter(c => c.id !== id));
-    } catch (e) { alert(e.message); }
+    } catch (e) { window.LearnAfricaDialog.alert(e.message); }
   };
 
   const toggleActive = async (c) => {
@@ -71,7 +71,7 @@ export default function CouponsManager({ role = 'admin', myCourses = [] }) {
         body: JSON.stringify({ active: !c.active }),
       });
       setCoupons(prev => prev.map(x => x.id === c.id ? d.coupon : x));
-    } catch (e) { alert(e.message); }
+    } catch (e) { window.LearnAfricaDialog.alert(e.message); }
   };
 
   const filtered = useMemo(() => {
