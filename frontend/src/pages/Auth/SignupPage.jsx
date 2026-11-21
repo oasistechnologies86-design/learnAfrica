@@ -146,7 +146,8 @@ export function SignupPage() {
     if (!formData.name) newErrors.name = 'Name is required'
     if (!formData.email) newErrors.email = 'Email is required'
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Invalid email address'
-    if (formData.phone && !isValidIntlPhone(formData.phone)) {
+    if (!formData.phone) newErrors.phone = 'Phone number is required'
+    else if (!isValidIntlPhone(formData.phone)) {
       newErrors.phone = 'Enter a valid phone number, e.g. 0244123456'
     }
     if (!formData.password) newErrors.password = 'Password is required'
@@ -165,9 +166,6 @@ export function SignupPage() {
       } else if (normalizeIdNumber(instructor.country, instructor.id_type, idConfirm) !==
                  normalizeIdNumber(instructor.country, instructor.id_type, instructor.id_number)) {
         newErrors.id_number = 'The two identification numbers do not match.'
-      }
-      if (instructor.country === 'GH' && !isValidGhanaPostGps(instructor.digital_address)) {
-        newErrors.digital_address = 'Enter a valid GhanaPost GPS address (format GA-123-4567)'
       }
       if (!acceptVerification) {
         newErrors.verification = 'You must acknowledge the information-verification statement'
@@ -480,7 +478,7 @@ export function SignupPage() {
 
         <div className="space-y-1.5">
           <label htmlFor="phone" className="block text-[13px] font-semibold text-foreground">
-            Phone number <span className="font-normal text-muted-foreground">(optional)</span>
+            Phone number <span className="text-destructive">*</span>
           </label>
           <PhoneField
             id="phone"
@@ -488,7 +486,7 @@ export function SignupPage() {
             value={formData.phone}
             onChange={handleChange}
             error={errors.phone}
-            helperText="Pick your country, then type your number. You can change or remove it later."
+            helperText="Choose your country code and enter your phone number."
           />
         </div>
 
