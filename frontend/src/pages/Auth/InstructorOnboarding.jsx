@@ -23,7 +23,7 @@ export default function InstructorOnboarding() {
   const [formData, setFormData] = useState({
     bio: '', title: '', location: '', website: '',
     // Phone ("call line") is collected on the signup step; editable here too.
-    phone: locationState?.phone || '',
+    phone: locationState?.phone || user?.phone || '',
   });
   // REQUIRED payment method for instructor onboarding. International applicants
   // provide bank-transfer details for manual payout; Ghana keeps momo/bank.
@@ -53,6 +53,8 @@ export default function InstructorOnboarding() {
       e.bio = 'Please provide a bio of at least 50 characters.';
     if (!formData.title)
       e.title = 'Your field / specialisation is required.';
+    if (!formData.phone && !locationState?.phone && !user?.phone)
+      e.phone = 'Phone number is required.';
     if (!formData.location)
       e.location = 'Location is required.';
     if (!isPaymentValid())
@@ -233,19 +235,20 @@ export default function InstructorOnboarding() {
           {errors.location && <p className="text-xs text-destructive font-medium">{errors.location}</p>}
         </div>
 
-        {/* Phone (call line) — prefilled from signup, editable here */}
-        <div className="space-y-2">
-          <Label htmlFor="phone" className="text-xs font-bold uppercase tracking-wider">
-            Phone Number <span className="text-muted-foreground font-normal normal-case">(optional)</span>
-          </Label>
-          <PhoneField
-            id="phone"
-            name="phone"
-            value={formData.phone}
-            onChange={e => set('phone', e.target.value)}
-            helperText="Pick your country, then type your number. You can change this later from your profile."
-          />
-        </div>
+        {/* Google signups may not have passed through the account-details form. */}
+        {!locationState?.phone && !user?.phone && (
+          <div className="space-y-2">
+            <Label htmlFor="phone" required>Phone Number</Label>
+            <PhoneField
+              id="phone"
+              name="phone"
+              value={formData.phone}
+              onChange={e => set('phone', e.target.value)}
+              error={errors.phone}
+              helperText="Choose your country code and enter your phone number."
+            />
+          </div>
+        )}
 
         {/* Portfolio / Website */}
         <div className="space-y-2">
