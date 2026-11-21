@@ -264,7 +264,10 @@ function AppRoutes() {
 
 export default function App() {
   useEffect(() => {
-    try { sessionStorage.removeItem('learnAfrica:chunk-reload-once') } catch { /* storage may be disabled */ }
+    const timer = window.setTimeout(() => {
+      try { sessionStorage.removeItem('learnAfrica:chunk-reload-once') } catch { /* storage may be disabled */ }
+    }, 15000)
+    return () => window.clearTimeout(timer)
   }, [])
 
   return (
