@@ -57,13 +57,16 @@ export function PhoneField({
 
   const emit = (nextCountry, nextNational) => {
     const dial = countryByCode(nextCountry).dial
-    const digits = String(nextNational || '').replace(/\D/g, '')
+    let digits = String(nextNational || '').replace(/\D/g, '')
+    // Ghana's leading trunk zero is not part of the international number.
+    if (nextCountry === 'GH') digits = digits.replace(/^0+/, '')
     const e164 = digits ? dial + digits : ''
     onChange?.({ target: { name, value: e164 } })
   }
 
   const onNationalChange = (e) => {
-    const digits = sanitizePhoneInput(e.target.value).replace(/^\+/, '').replace(/\D/g, '').slice(0, 15)
+    let digits = sanitizePhoneInput(e.target.value).replace(/^\+/, '').replace(/\D/g, '').slice(0, 15)
+    if (country === 'GH') digits = digits.replace(/^0+/, '')
     setNational(digits)
     emit(country, digits)
   }
