@@ -209,6 +209,11 @@ export default function InstructorProfileCompletion() {
             onIdConfirmChange={setIdConfirm}
           />
 
+          <div className="space-y-2">
+            <label htmlFor="instructor-profile-phone" className="block text-sm font-medium">Phone number <span className="text-destructive">*</span></label>
+            <PhoneField id="instructor-profile-phone" value={profile.phone || ''} onChange={e => handleChange({ phone: e.target.value })} error={errors.phone} helperText="Choose your country code and enter your number." />
+          </div>
+
           <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/30 p-3">
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <p className="text-2xs text-muted-foreground">
