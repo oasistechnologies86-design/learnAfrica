@@ -14,9 +14,6 @@ import {
 } from '@/lib/countries'
 
 // ── Instructor-specific validators (mirror the backend) ─────────────────────
-const isValidGhanaPostGps = (v) =>
-  /^[A-Z]{2}-\d{3,5}-\d{4,5}$/.test(String(v || '').replace(/\s+/g, '').toUpperCase())
-
 // Identity documents are country-aware (see lib/countries); Ghana Card is the
 // only one with a strict national format. Kept here only as a fallback label.
 const ID_TYPE_LABELS = {
