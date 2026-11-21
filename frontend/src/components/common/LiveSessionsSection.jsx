@@ -49,22 +49,22 @@ export default function LiveSessionsSection({ courseId, mode = 'student', isEnro
     try {
       await authFetch(`/api/live-sessions/${sessionId}/rsvp`, { method: 'POST' });
       load();
-    } catch (e) { alert(e.message); }
+    } catch (e) { window.LearnAfricaDialog.alert(e.message); }
   };
 
   const unrsvp = async (sessionId) => {
     try {
       await authFetch(`/api/live-sessions/${sessionId}/rsvp`, { method: 'DELETE' });
       load();
-    } catch (e) { alert(e.message); }
+    } catch (e) { window.LearnAfricaDialog.alert(e.message); }
   };
 
   const removeSession = async (sessionId) => {
-    if (!confirm('Delete this live session? All RSVPs will be cleared.')) return;
+    if (!(await window.LearnAfricaDialog.confirm('Delete this live session? All RSVPs will be cleared.'))) return;
     try {
       await authFetch(`/api/instructor/live-sessions/${sessionId}`, { method: 'DELETE' });
       setSessions(prev => prev.filter(s => s.id !== sessionId));
-    } catch (e) { alert(e.message); }
+    } catch (e) { window.LearnAfricaDialog.alert(e.message); }
   };
 
   const now = Date.now();
