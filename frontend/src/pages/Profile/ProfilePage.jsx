@@ -10,6 +10,7 @@ import { Input } from '../../components/common/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/common/Card';
 import { PaymentMethodForm } from '@/components/common/PaymentMethodForm';
 import { PhoneField } from '@/components/common/PhoneField';
+import { useAppDialog } from '@/components/common/AppDialog';
 import { fetchCountryConfig, idTypesFor, countryName } from '@/lib/countries';
 import { cn } from '@/lib/utils';
 import { API_BASE } from '@/lib/api';
@@ -152,6 +153,7 @@ function SuperAdminStats({ stats }) {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function ProfilePage() {
+  const { alert } = useAppDialog();
   const { user, updateUser, refreshProfile } = useAuth();
   const fileInputRef = useRef(null);
   const role = user?.role || 'student';
@@ -275,11 +277,11 @@ export default function ProfilePage() {
   }, [user]);
 
   const handleChange   = useCallback(e => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value })), []);
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
-      alert('Image too large (max 5MB)');
+      await alert('Image too large (max 5MB)');
       return;
     }
     const reader = new FileReader();
