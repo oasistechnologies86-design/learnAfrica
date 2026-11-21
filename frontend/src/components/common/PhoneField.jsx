@@ -87,7 +87,6 @@ export function PhoneField({
     }
   }, [value, countryOptions])
 
-  const selected = countryOptions.find(option => option.code === country) || countryByCode(country)
   const emit = (nextCountry, nextNational) => {
     const option = countryOptions.find(item => item.code === nextCountry) || countryByCode(nextCountry)
     let digits = String(nextNational || '').replace(/\D/g, '')
