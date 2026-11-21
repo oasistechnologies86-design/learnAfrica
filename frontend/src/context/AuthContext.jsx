@@ -41,7 +41,11 @@ async function api(endpoint, options = {}, attempt = 0) {
     }
     throw new Error('Invalid response from server');
   }
-  if (!res.ok) throw new Error(data.error || data.detail || `HTTP ${res.status}`);
+  if (!res.ok) {
+    const error = new Error(data.error || data.detail || `HTTP ${res.status}`);
+    error.status = res.status;
+    throw error;
+  }
   return data;
 }
 
@@ -179,20 +183,35 @@ export function AuthProvider({ children }) {
       setIsLoading(true);
       const token = sessionStorage.getItem('auth_token');
       if (token) {
+        let verified = null;
         try {
-          const verified = await api('/api/auth/verify');
+          verified = await api('/api/auth/verify');
           setRegistrationPaymentDue(!!verified?.requires_registration_payment);
           setProfileComplete(verified?.profile_complete !== false);
-          await loadProfile();
         } catch (e) {
           const msg = String(e?.message || '');
-          // A suspension is a known account state, not an expired session.
-          // Surface it so the login screen can explain what happened instead
-          // of silently dropping the user back with a generic error.
-          if (/suspended/i.test(msg)) setSessionError(msg);
-          else console.warn('Session invalid:', msg);
-          sessionStorage.removeItem('auth_token');
-          disconnectSocket();
+          if (/suspended/i.test(msg)) {
+            setSessionError(msg);
+          } else if (e?.status === 401) {
+            // Only a server-confirmed unauthorized response invalidates the
+            // stored session. Network/5xx failures must not erase a valid token.
+            console.warn('Session expired or invalid:', msg);
+            sessionStorage.removeItem('auth_token');
+            disconnectSocket();
+          } else {
+            console.warn('Session verification temporarily unavailable:', msg);
+            setSessionError('We could not verify your session. Please try again.');
+          }
+        }
+        if (verified && sessionStorage.getItem('auth_token')) {
+          try {
+            await loadProfile();
+          } catch (e) {
+            // A profile endpoint failure is not proof that the JWT is invalid.
+            // Keep the token so a temporary API issue does not sign the user out.
+            console.error('Profile could not be loaded:', e?.message || e);
+            setSessionError('Your session is active, but your profile could not be loaded. Please try again.');
+          }
         }
       }
       setIsLoading(false);
