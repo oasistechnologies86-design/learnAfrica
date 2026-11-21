@@ -113,14 +113,14 @@ export function PhoneField({
 
   return (
     <div className={cn('space-y-2', className)}>
-      <div className="flex gap-2">
+      <div className="flex w-full min-w-0 gap-2">
         <select
           aria-label="Country code"
           value={country}
           onChange={onCountryChange}
           disabled={disabled}
           className={cn(
-            'h-10 shrink-0 rounded-lg border border-input bg-background px-2 text-sm outline-none',
+            'h-10 w-[42%] min-w-[7.25rem] max-w-44 flex-none rounded-lg border border-input bg-background px-2 text-sm outline-none',
             'focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
             selectClassName
           )}
@@ -129,7 +129,7 @@ export function PhoneField({
             <option key={option.code} value={option.code}>{option.flag || countryFlag(option.code)} {option.dial} · {option.name}</option>
           ))}
         </select>
-        <div className="relative flex-1">
+        <div className="relative min-w-0 flex-1">
           <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             id={id}
@@ -142,7 +142,7 @@ export function PhoneField({
             disabled={disabled}
             required={required}
             placeholder={placeholder}
-            className={cn('pl-10', inputError, inputClassName)}
+            className={cn('w-full min-w-0 pl-10', inputError, inputClassName)}
           />
         </div>
       </div>
