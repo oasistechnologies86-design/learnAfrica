@@ -254,7 +254,7 @@ export function InstructorProfileFields({
                   invalid={!!errors.digital_address}
                   placeholder={digital.placeholder} className="pl-10" />
               </div>
-              <Hint>Enter the digital address used for your location. It does not have to follow a GhanaPost GPS format.</Hint>
+              <Hint>Enter your own digital address for this location.</Hint>
             </div>
           )}
 
