@@ -24,6 +24,7 @@ export function PhoneField({
   value = '',
   onChange,
   disabled = false,
+  required = false,
   className,
   selectClassName,
   inputClassName,
@@ -103,6 +104,7 @@ export function PhoneField({
           <Input
             id={id}
             name={name}
+            required={required}
             type="tel"
             inputMode="numeric"
             autoComplete="tel-national"
