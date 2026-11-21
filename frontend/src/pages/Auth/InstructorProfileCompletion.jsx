@@ -15,6 +15,7 @@ import { useAuth } from '@/context/AuthContext'
 import { API_BASE } from '@/lib/api'
 import { fetchCountryConfig, fetchRequirements, isValidIdNumber, normalizeIdNumber } from '@/lib/countries'
 import { InstructorProfileFields } from '@/components/instructor/InstructorProfileFields'
+import { isValidIntlPhone } from '@/lib/payoutDetails'
 
 function Card({ children, className = '' }) {
   return <div className={`rounded-2xl border border-border bg-card p-6 sm:p-7 ${className}`}>{children}</div>
