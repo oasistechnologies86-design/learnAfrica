@@ -192,7 +192,7 @@ export function AuthProvider({ children }) {
           const msg = String(e?.message || '');
           if (/suspended/i.test(msg)) {
             setSessionError(msg);
-          } else if (e?.status === 401) {
+          } else if (e?.status === 401 || e?.status === 404) {
             // Only a server-confirmed unauthorized response invalidates the
             // stored session. Network/5xx failures must not erase a valid token.
             console.warn('Session expired or invalid:', msg);
@@ -207,10 +207,15 @@ export function AuthProvider({ children }) {
           try {
             await loadProfile();
           } catch (e) {
-            // A profile endpoint failure is not proof that the JWT is invalid.
-            // Keep the token so a temporary API issue does not sign the user out.
-            console.error('Profile could not be loaded:', e?.message || e);
-            setSessionError('Your session is active, but your profile could not be loaded. Please try again.');
+            if (e?.status === 401) {
+              sessionStorage.removeItem('auth_token');
+              disconnectSocket();
+              setSessionError('Your session has expired. Please sign in again.');
+            } else {
+              // A transient profile/API failure is not proof that the JWT is invalid.
+              console.error('Profile could not be loaded:', e?.message || e);
+              setSessionError('Your session is active, but your profile could not be loaded. Please try again.');
+            }
           }
         }
       }
