@@ -30,6 +30,11 @@ export function DialogProvider({ children }) {
   const prompt = useCallback((message, defaultValue = '', options = {}) =>
     enqueue('prompt', message, { ...options, defaultValue }), [enqueue]);
 
+  useEffect(() => {
+    window.LearnAfricaDialog = { alert: showAlert, confirm, prompt };
+    return () => { delete window.LearnAfricaDialog; };
+  }, [showAlert, confirm, prompt]);
+
   const finish = (value) => {
     if (!active) return;
     active.resolve(value);
