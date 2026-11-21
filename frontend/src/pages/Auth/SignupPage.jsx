@@ -490,6 +490,7 @@ export function SignupPage() {
           <PhoneField
             id="phone"
             name="phone"
+            required
             value={formData.phone}
             onChange={handleChange}
             error={errors.phone}
