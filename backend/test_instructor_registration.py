@@ -62,7 +62,7 @@ AH = {'Authorization': f'Bearer {adm_tok}'}
 
 def signup_instructor(email, extra=None):
     body = {'name': 'Applicant', 'email': email, 'password': 'Pass12345!',
-            'role': 'instructor',
+            'role': 'instructor', 'phone': '+233244123456',
             'ghana_card_number': 'GHA-123456789-0',
             'ghana_post_gps': 'GA-123-4567',
             'accept_terms': True, 'accept_verification': True}
@@ -81,15 +81,18 @@ r = signup_instructor('nocard@example.com', {'ghana_card_number': '', 'ghana_pos
 check('instructor signup rejected without Ghana Card', r.status_code == 400, r.status_code)
 r = signup_instructor('badcard@example.com', {'ghana_card_number': '1234'})
 check('instructor signup rejected with malformed Ghana Card', r.status_code == 400, r.status_code)
-r = signup_instructor('nogps@example.com', {'ghana_post_gps': 'nonsense'})
-check('instructor signup rejected with malformed GPS', r.status_code == 400, r.status_code)
+r = signup_instructor('freeaddress@example.com', {'ghana_post_gps': 'House 12, Market Road, near the community clinic'})
+check('instructor signup accepts a free-text digital address', r.status_code in (200, 201), r.get_json())
+
+r = c.post('/api/auth/signup', json={'name': 'No Phone', 'email': 'no_phone@example.com', 'password': 'Pass12345!', 'role': 'student'})
+check('signup rejects a missing contact phone', r.status_code == 400 and 'phone' in (r.get_json() or {}).get('error', '').lower(), r.get_json())
 
 # ── One email identity is shared across student and instructor roles ────────
 r = signup_instructor('shared.role@example.com')
 check('first instructor registration with an unused email succeeds', r.status_code in (200, 201), r.status_code)
 r = c.post('/api/auth/signup', json={
     'name': 'Student Attempt', 'email': 'SHARED.ROLE@EXAMPLE.COM',
-    'password': 'Pass12345!', 'role': 'student',
+    'password': 'Pass12345!', 'role': 'student', 'phone': '+233244123456',
 })
 check('same email cannot be registered again as a student with different casing',
       r.status_code == 409, r.status_code)
@@ -235,7 +238,7 @@ check('instructor detail view exposes the application record',
 
 # ── Student registration is always free (unaffected by paid instructor mode) ─
 r = c.post('/api/auth/signup', json={'name': 'Student', 'email': 'stu_free@example.com',
-                                     'password': 'Pass12345!', 'role': 'student'})
+                                     'password': 'Pass12345!', 'role': 'student', 'phone': '+233244123456'})
 check('student signup unaffected by paid instructor registration', r.status_code in (200, 201), r.status_code)
 r = c.post('/api/auth/signup', json={'name': 'S2', 'email': 'stu_free2@example.com',
                                      'password': 'Pass12345!', 'role': 'student'})
