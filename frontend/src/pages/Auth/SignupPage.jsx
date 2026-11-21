@@ -368,6 +368,7 @@ export function SignupPage() {
         <Field
           id="name"
           label="Full name"
+          required
           icon={User}
           name="name"
           value={formData.name}
@@ -381,6 +382,7 @@ export function SignupPage() {
         <Field
           id="email"
           label="Email address"
+          required
           icon={Mail}
           name="email"
           type="email"
@@ -395,6 +397,7 @@ export function SignupPage() {
         <Field
           id="password"
           label="Password"
+          required
           icon={Lock}
           name="password"
           type={showPassword ? 'text' : 'password'}
@@ -457,6 +460,7 @@ export function SignupPage() {
         <Field
           id="confirmPassword"
           label="Confirm password"
+          required
           icon={Lock}
           name="confirmPassword"
           type={showConfirmPassword ? 'text' : 'password'}
