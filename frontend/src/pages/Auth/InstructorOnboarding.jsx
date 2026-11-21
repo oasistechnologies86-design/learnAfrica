@@ -239,10 +239,9 @@ export default function InstructorOnboarding() {
         {viaGoogle && (
           <div className="space-y-2">
             <Label htmlFor="phone" required className="text-xs font-bold uppercase tracking-wider">Phone Number</Label>
-            <Input id="phone" type="tel" value={formData.phone}
+            <PhoneField id="phone" value={formData.phone}
               onChange={e => set('phone', e.target.value)}
-              aria-invalid={!!errors.phone}
-              placeholder="Include your country code, e.g. +233…" />
+              error={errors.phone} placeholder="Enter your phone number" />
             {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
           </div>
         )}
