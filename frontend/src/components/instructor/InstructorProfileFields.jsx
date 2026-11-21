@@ -261,7 +261,7 @@ export function InstructorProfileFields({
           {showPhone && (
             <div className="space-y-2">
               <Label htmlFor="phone" required>Phone number</Label>
-              <PhoneField id="phone" value={value.phone || ''}
+              <PhoneField id="phone" required value={value.phone || ''}
                 onChange={(e) => onChange({ phone: e.target.value })}
                 error={errors.phone}
                 placeholder="Enter your phone number" />
