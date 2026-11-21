@@ -5,7 +5,7 @@ Covers task items 3, 4 and 5:
   3. Admin can switch instructor registration free <-> paid with a GHS fee;
      the fee is server-enforced and never taken from the client; approval is
      blocked until the fee is paid; student registration stays free.
-  4. Ghana Card + GhanaPost GPS are required and validated on the backend.
+  4. Ghana identity details and a free-text digital address are required.
   5. Both agreement checkboxes are required; version + timestamp are recorded.
 
     python backend/test_instructor_registration.py
@@ -64,7 +64,7 @@ def signup_instructor(email, extra=None):
     body = {'name': 'Applicant', 'email': email, 'password': 'Pass12345!',
             'role': 'instructor',
             'ghana_card_number': 'GHA-123456789-0',
-            'ghana_post_gps': 'GA-123-4567',
+            'ghana_post_gps': 'GA-123-4567', 'phone': '+233244123456',
             'accept_terms': True, 'accept_verification': True}
     if extra:
         body.update(extra)
@@ -81,15 +81,18 @@ r = signup_instructor('nocard@example.com', {'ghana_card_number': '', 'ghana_pos
 check('instructor signup rejected without Ghana Card', r.status_code == 400, r.status_code)
 r = signup_instructor('badcard@example.com', {'ghana_card_number': '1234'})
 check('instructor signup rejected with malformed Ghana Card', r.status_code == 400, r.status_code)
-r = signup_instructor('nogps@example.com', {'ghana_post_gps': 'nonsense'})
-check('instructor signup rejected with malformed GPS', r.status_code == 400, r.status_code)
+r = signup_instructor('nogps@example.com', {'ghana_post_gps': ''})
+check('instructor signup rejected without a digital address', r.status_code == 400, r.status_code)
+r = signup_instructor('freetext-address@example.com', {'ghana_post_gps': 'Near the community library, Adenta'})
+check('instructor signup accepts a free-text Ghana digital address',
+      r.status_code in (200, 201), (r.get_json() or {}).get('error', r.status_code))
 
 # ── One email identity is shared across student and instructor roles ────────
 r = signup_instructor('shared.role@example.com')
 check('first instructor registration with an unused email succeeds', r.status_code in (200, 201), r.status_code)
 r = c.post('/api/auth/signup', json={
     'name': 'Student Attempt', 'email': 'SHARED.ROLE@EXAMPLE.COM',
-    'password': 'Pass12345!', 'role': 'student',
+    'password': 'Pass12345!', 'role': 'student', 'phone': '+233244123456',
 })
 check('same email cannot be registered again as a student with different casing',
       r.status_code == 409, r.status_code)
@@ -235,10 +238,10 @@ check('instructor detail view exposes the application record',
 
 # ── Student registration is always free (unaffected by paid instructor mode) ─
 r = c.post('/api/auth/signup', json={'name': 'Student', 'email': 'stu_free@example.com',
-                                     'password': 'Pass12345!', 'role': 'student'})
+                                     'password': 'Pass12345!', 'role': 'student', 'phone': '+233244123456'})
 check('student signup unaffected by paid instructor registration', r.status_code in (200, 201), r.status_code)
 r = c.post('/api/auth/signup', json={'name': 'S2', 'email': 'stu_free2@example.com',
-                                     'password': 'Pass12345!', 'role': 'student'})
+                                     'password': 'Pass12345!', 'role': 'student', 'phone': '+233244123456'})
 check('instructor signup needs no Ghana details or payment', r.status_code in (200, 201), r.status_code)
 
 # ── The fee cannot be overridden by the client ───────────────────────────────
