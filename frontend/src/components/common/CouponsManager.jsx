@@ -73,7 +73,7 @@ export default function CouponsManager({ role = 'admin', myCourses = [] }) {
         body: JSON.stringify({ active: !c.active }),
       });
       setCoupons(prev => prev.map(x => x.id === c.id ? d.coupon : x));
-    } catch (e) { alert(e.message); }
+    } catch (e) { await alert(e.message); }
   };
 
   const filtered = useMemo(() => {
