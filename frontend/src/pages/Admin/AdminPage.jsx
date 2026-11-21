@@ -2071,7 +2071,7 @@ function AdminReceiptsTab() {
   }, []);
 
   const verify = async (markStatus = null) => {
-    if (!lookup.trim())) return;
+    if (!lookup.trim()) return;
     setBusy(true); setMsg(null);
     try {
       const r = await API('/api/admin/transactions/verify', {
