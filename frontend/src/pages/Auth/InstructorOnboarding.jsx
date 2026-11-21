@@ -73,7 +73,6 @@ export default function InstructorOnboarding() {
         await updateUser({
           bio: formData.bio, instructor_title: formData.title,
           location: formData.location, website: formData.website,
-        phone: formData.phone,
           phone: formData.phone,
         });
         try {
