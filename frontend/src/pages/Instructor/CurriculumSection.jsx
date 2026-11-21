@@ -284,7 +284,7 @@ function CourseResourcesManager({ resources = [], onChange }) {
   const addFile = async (file) => {
     if (!file) return;
     if (file.size > 50 * 1024 * 1024) {
-      alert('File too large — max 50MB per resource');
+      window.LearnAfricaDialog.alert('File too large — max 50MB per resource');
       return;
     }
     const tmpId = `tmp_${Date.now()}_${Math.random().toString(36).slice(2)}`;
@@ -317,13 +317,13 @@ function CourseResourcesManager({ resources = [], onChange }) {
       URL.revokeObjectURL(localBlob);
     } catch (err) {
       console.error('Resource upload failed:', err);
-      alert('Upload failed: ' + (err.message || 'try again'));
+      window.LearnAfricaDialog.alert('Upload failed: ' + (err.message || 'try again'));
       onChange(withPending.filter(r => r.id !== tmpId));
     }
   };
 
   const addLink = () => {
-    if (!titleInput.trim() || !urlInput.trim()) return;
+    if (!titleInput.trim() || !urlInput.trim())) return;
     onChange([...resources, {
       id:        `tmp_${Date.now()}`,
       title:     titleInput.trim(),
@@ -623,7 +623,7 @@ function LessonResourcesEditor({ resources = [], onChange }) {
   };
 
   const addLink = () => {
-    if (!titleInput.trim() || !urlInput.trim()) return;
+    if (!titleInput.trim() || !urlInput.trim())) return;
     onChange([...resources, {
       id: `tmp_${Date.now()}`, title: titleInput.trim(),
       url: urlInput.trim(), file_type: 'link',
@@ -633,7 +633,7 @@ function LessonResourcesEditor({ resources = [], onChange }) {
 
   const handleFile = async (file) => {
     if (!file) return;
-    if (file.size > 50*1024*1024) { alert('Max 50MB'); return; }
+    if (file.size > 50*1024*1024) { window.LearnAfricaDialog.alert('Max 50MB'); return; }
     const tmpId = `tmp_${Date.now()}`;
     const localBlob = URL.createObjectURL(file);
     const ext = file.name.split('.').pop().toLowerCase();
@@ -662,7 +662,7 @@ function LessonResourcesEditor({ resources = [], onChange }) {
       URL.revokeObjectURL(localBlob);
     } catch (err) {
       console.error('Resource upload failed:', err);
-      alert('Upload failed: ' + (err.message || 'try again'));
+      window.LearnAfricaDialog.alert('Upload failed: ' + (err.message || 'try again'));
       onChange(withPending.filter(r => r.id !== tmpId));
     }
   };
