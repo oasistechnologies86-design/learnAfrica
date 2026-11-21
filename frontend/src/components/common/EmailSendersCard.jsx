@@ -8,6 +8,7 @@
  * sender address.
  */
 import { useEffect, useState } from 'react';
+import { useAppDialog } from '@/components/common/AppDialog';
 import { Mail, CheckCircle2, AlertTriangle, Loader2, Plug, Unplug, Send, ExternalLink, ShieldCheck, KeyRound } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
