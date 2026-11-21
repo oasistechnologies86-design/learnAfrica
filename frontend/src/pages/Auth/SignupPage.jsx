@@ -566,7 +566,7 @@ export function SignupPage() {
                 className="mt-1 h-4 w-4 rounded border-border accent-primary"
               />
               <label htmlFor="verification" className="cursor-pointer text-sm text-muted-foreground">
-                I confirm that the information I have provided is accurate and truthful. I understand that
+                <span className="mr-1 text-destructive">*</span>I confirm that the information I have provided is accurate and truthful. I understand that
                 LearnAfrica may verify this information and that providing false or misleading information may
                 result in rejection, suspension, account termination, or referral to the appropriate authorities
                 for possible legal action where applicable.
@@ -587,7 +587,7 @@ export function SignupPage() {
             className="mt-1 h-4 w-4 rounded border-border accent-primary"
           />
           <label htmlFor="terms" className="cursor-pointer text-sm text-muted-foreground">
-            I agree to the{' '}
+            <span className="mr-1 text-destructive">*</span>I agree to the{' '}
             <button type="button" onClick={() => setModal('terms')} className="font-medium text-primary hover:underline">Terms</button>
             {' '}and{' '}
             <button type="button" onClick={() => setModal('privacy')} className="font-medium text-primary hover:underline">Privacy Policy</button>
