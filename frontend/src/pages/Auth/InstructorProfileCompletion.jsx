@@ -104,7 +104,7 @@ export default function InstructorProfileCompletion() {
       errs.postal_code = 'Postal code is required for this country.'
     }
     if (!profile.phone) errs.phone = 'Phone number is required.'
-    else if (!/^\\+\\d{7,15}$/.test(String(profile.phone).replace(/[\\s()-]/g, ''))) errs.phone = 'Enter a valid international phone number.'
+    else if (!String(profile.phone).trim().startsWith('+') || String(profile.phone).split('').filter(ch => ch >= '0' && ch <= '9').length < 7 || String(profile.phone).split('').filter(ch => ch >= '0' && ch <= '9').length > 15) errs.phone = 'Enter a valid international phone number.'
     setErrors(errs)
     return Object.keys(errs).length === 0
   }, [profile, idConfirm, identityFrozen, requirements])
