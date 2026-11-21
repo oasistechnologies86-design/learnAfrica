@@ -594,7 +594,7 @@ export default function StudentDashboard() {
             onClick={() => setQuickAccessOpen(true)}
             aria-haspopup="dialog"
             aria-expanded={quickAccessOpen}
-            className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-md px-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:basis-full md:justify-start"
+            className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-md px-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:justify-start"
           >
             View More <ArrowRight className="h-3.5 w-3.5" />
           </button>
