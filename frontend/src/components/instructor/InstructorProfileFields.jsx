@@ -9,7 +9,7 @@
  * invented list.
  */
 import { useEffect, useMemo, useState } from 'react'
-import { IdCard, MapPin, Phone, Globe, Building2, AlertTriangle, Check } from 'lucide-react'
+import { IdCard, MapPin, Globe, Building2, AlertTriangle, Check } from 'lucide-react'
 import { Input, Label } from '@/components/common/Input'
 import { PhoneField } from '@/components/common/PhoneField'
 import { cn } from '@/lib/utils'
