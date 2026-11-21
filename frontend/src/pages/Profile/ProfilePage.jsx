@@ -178,7 +178,7 @@ export default function ProfilePage() {
   });
 
   const loadIdentity = useCallback(async () => {
-    if (!(role === 'instructor' || role === 'admin' || role === 'superadmin')) return;
+    if (!(role === 'instructor' || role === 'admin' || role === 'superadmin'))) return;
     setIdentityLoading(true);
     try {
       const res = await authedFetch('/api/instructor/profile');
@@ -279,7 +279,7 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
-      alert('Image too large (max 5MB)');
+      window.LearnAfricaDialog.alert('Image too large (max 5MB)');
       return;
     }
     const reader = new FileReader();
