@@ -22,8 +22,8 @@ export default function InstructorOnboarding() {
 
   const [formData, setFormData] = useState({
     bio: '', title: '', location: '', website: '',
-    // Phone ("call line") is collected on the signup step; editable here too.
-    phone: locationState?.phone || '',
+    // Signup collects the contact number once. Google applicants add it here.
+    phone: locationState?.phone || user?.phone || '',
   });
   // REQUIRED payment method for instructor onboarding. International applicants
   // provide bank-transfer details for manual payout; Ghana keeps momo/bank.
@@ -55,6 +55,8 @@ export default function InstructorOnboarding() {
       e.title = 'Your field / specialisation is required.';
     if (!formData.location)
       e.location = 'Location is required.';
+    if (viaGoogle && !String(formData.phone || '').trim())
+      e.phone = 'Phone number is required.';
     if (!isPaymentValid())
       e.payment = 'Please complete your payment method — this is required.';
     setErrors(e);
@@ -188,7 +190,7 @@ export default function InstructorOnboarding() {
 
         {/* Professional Bio */}
         <div className="space-y-2">
-          <Label htmlFor="bio" className="text-xs font-bold uppercase tracking-wider">
+          <Label htmlFor="bio" required className="text-xs font-bold uppercase tracking-wider">
             Professional Bio <span className="text-destructive">*</span>
           </Label>
           <div className="relative">
@@ -203,7 +205,7 @@ export default function InstructorOnboarding() {
 
         {/* Field / Specialisation — the key field the user asked about */}
         <div className="space-y-2">
-          <Label htmlFor="title" className="text-xs font-bold uppercase tracking-wider">
+          <Label htmlFor="title" required className="text-xs font-bold uppercase tracking-wider">
             Your Field / Specialisation <span className="text-destructive">*</span>
           </Label>
           <div className="relative">
@@ -221,7 +223,7 @@ export default function InstructorOnboarding() {
 
         {/* Location */}
         <div className="space-y-2">
-          <Label htmlFor="location" className="text-xs font-bold uppercase tracking-wider">
+          <Label htmlFor="location" required className="text-xs font-bold uppercase tracking-wider">
             Your Location <span className="text-destructive">*</span>
           </Label>
           <div className="relative">
@@ -233,19 +235,16 @@ export default function InstructorOnboarding() {
           {errors.location && <p className="text-xs text-destructive font-medium">{errors.location}</p>}
         </div>
 
-        {/* Phone (call line) — prefilled from signup, editable here */}
-        <div className="space-y-2">
-          <Label htmlFor="phone" className="text-xs font-bold uppercase tracking-wider">
-            Phone Number <span className="text-muted-foreground font-normal normal-case">(optional)</span>
-          </Label>
-          <PhoneField
-            id="phone"
-            name="phone"
-            value={formData.phone}
-            onChange={e => set('phone', e.target.value)}
-            helperText="Pick your country, then type your number. You can change this later from your profile."
-          />
-        </div>
+        {/* Google-created accounts have not passed through the signup phone field. */}
+        {viaGoogle && (
+          <div className="space-y-2">
+            <Label htmlFor="phone" required className="text-xs font-bold uppercase tracking-wider">Phone Number</Label>
+            <PhoneField id="phone" required value={formData.phone}
+              onChange={e => set('phone', e.target.value)}
+              error={errors.phone} placeholder="Enter your phone number" />
+            {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
+          </div>
+        )}
 
         {/* Portfolio / Website */}
         <div className="space-y-2">
@@ -262,7 +261,7 @@ export default function InstructorOnboarding() {
 
         {/* ── REQUIRED: Payment method for receiving payouts ── */}
         <div className="pt-2 space-y-2">
-          <Label className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+          <Label required className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
             <CreditCard className="h-3.5 w-3.5" /> Payout Method <span className="text-destructive normal-case font-bold">*</span>
           </Label>
           <p className="text-xs text-muted-foreground -mt-1">

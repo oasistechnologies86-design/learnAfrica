@@ -85,7 +85,7 @@ function CommentCard({ comment, user, isAuthenticated, onDelete, onEdit, onLike,
     if(!editText.trim()) return;
     setSaving(true);
     try { await onEdit(comment.id, editText.trim()); setEditing(false); }
-    catch(e) { alert(e.message); }
+    catch(e) { window.LearnAfricaDialog.alert(e.message); }
     setSaving(false);
   };
 
@@ -95,7 +95,7 @@ function CommentCard({ comment, user, isAuthenticated, onDelete, onEdit, onLike,
     try {
       await onReply(comment.id, replyText.trim());
       setReplyText(''); setReplying(false); setShowReplies(true);
-    } catch(e) { alert(e.message); }
+    } catch(e) { window.LearnAfricaDialog.alert(e.message); }
     setPostingReply(false);
   };
 

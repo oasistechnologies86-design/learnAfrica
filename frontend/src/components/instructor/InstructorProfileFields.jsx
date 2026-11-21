@@ -9,8 +9,9 @@
  * invented list.
  */
 import { useEffect, useMemo, useState } from 'react'
-import { IdCard, MapPin, Phone, Globe, Building2, AlertTriangle, Check } from 'lucide-react'
+import { IdCard, MapPin, Globe, Building2, AlertTriangle, Check } from 'lucide-react'
 import { Input, Label } from '@/components/common/Input'
+import { PhoneField } from '@/components/common/PhoneField'
 import { cn } from '@/lib/utils'
 import {
   idTypesFor, usesPostalCode, digitalAddressField, normalizeIdNumber,
@@ -41,6 +42,7 @@ export function InstructorProfileFields({
   lockIdentity = false,
   /** Show the address block (signup collects it on the completion page). */
   showAddress = true,
+  showPhone = true,
   /** Optional controlled "re-enter ID" value so the parent can validate on submit. */
   idConfirm: idConfirmProp,
   onIdConfirmChange,
@@ -248,25 +250,23 @@ export function InstructorProfileFields({
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input id="digital_address" value={value.digital_address || ''}
-                  onChange={(e) => onChange({ digital_address: e.target.value.toUpperCase() })}
+                  onChange={(e) => onChange({ digital_address: e.target.value })}
                   invalid={!!errors.digital_address}
                   placeholder={digital.placeholder} className="pl-10" />
               </div>
-              <Hint>Find yours in the GhanaPost GPS app.</Hint>
+              <Hint>Enter your own digital address for this location.</Hint>
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="phone">Phone number</Label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input id="phone" value={value.phone || ''}
+          {showPhone && (
+            <div className="space-y-2">
+              <Label htmlFor="phone" required>Phone number</Label>
+              <PhoneField id="phone" required value={value.phone || ''}
                 onChange={(e) => onChange({ phone: e.target.value })}
-                invalid={!!errors.phone}
-                placeholder="Include your country code, e.g. +233… or +1…" className="pl-10" />
+                error={errors.phone}
+                placeholder="Enter your phone number" />
             </div>
-            <FieldError>{errors.phone}</FieldError>
-          </div>
+          )}
         </>
       )}
     </div>

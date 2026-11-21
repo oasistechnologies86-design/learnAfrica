@@ -104,15 +104,12 @@ def _normalize_ghana_card(value):
 
 
 def _is_valid_ghana_post_gps(value):
-    """Validate a GhanaPost GPS digital address, e.g. GA-123-4567.
+    """Legacy compatibility check accepting any non-empty digital address.
 
-    Format: two-letter region code, a 3-5 digit area, then a 4-5 digit unique
-    code, separated by dashes. Whitespace and case are ignored.
+    Ghanaian applicants may enter their own digital address; GhanaPost GPS
+    formatting is not required.
     """
-    import re
-    raw = re.sub(r'\s+', '', str(value or '')).upper()
-    return bool(re.fullmatch(r'[A-Z]{2}-\d{3,5}-\d{4,5}', raw))
-
+    return bool(str(value or '').strip())
 
 # Accepted instructor identity documents. Ghana Card keeps its strict national
 # format; the rest are free-form identifiers but still length-bounded so an
@@ -181,8 +178,8 @@ def _ghana_card_gps_error(d):
             return 'A valid Ghana Card number is required (format GHA-123456789-0).'
         return f'A valid {label} number is required (4-40 characters).'
     if not _is_valid_ghana_post_gps(gps_raw):
-        return 'A valid GhanaPost GPS digital address is required (format GA-123-4567).'
-    return 'An identity document and GhanaPost GPS are required.'
+        return 'A digital address is required.'
+    return 'An identity document and digital address are required.'
 
 
 # ── International instructor profile ─────────────────────────────────────────
@@ -213,7 +210,7 @@ def _normalize_profile_payload(d):
         'city': str(d.get('city') or d.get('town') or '').strip(),
         'street_address': str(d.get('street_address') or d.get('address') or '').strip(),
         'postal_code': str(d.get('postal_code') or d.get('zip') or '').strip().upper(),
-        'digital_address': str(d.get('digital_address') or d.get('ghana_post_gps') or '').strip().upper(),
+        'digital_address': str(d.get('digital_address') or d.get('ghana_post_gps') or '').strip(),
         'phone': str(d.get('phone') or '').strip(),
     }
 
@@ -274,12 +271,19 @@ def _validate_instructor_profile(d, require_address=True):
         if err:
             errors['id_number'] = err
 
-    # Phone (international)
-    if clean['phone']:
+    # Phone (international) is required for every instructor profile.
+    if not clean['phone']:
+        errors['phone'] = 'Phone number is required.'
+    else:
         e164, perr = cm.validate_phone(clean['phone'], country)
         clean['phone'] = e164
         if perr:
             errors['phone'] = perr
+
+    # Ghana requires a digital address, but applicants may enter their own
+    # address text; GhanaPost GPS-specific formatting is deliberately not used.
+    if country == 'GH' and not clean['digital_address']:
+        errors['digital_address'] = 'A digital address is required.'
 
     if require_address:
         if not clean['city']:
@@ -992,8 +996,9 @@ def create_app() -> Flask:
             if len(d['password']) < app.config['PASS_MIN_LENGTH']:
                 return jsonify({'error': f'Password must be at least {app.config["PASS_MIN_LENGTH"]} characters'}), 400
 
-            # Optional contact phone ("call line"). Stored normalised so it can be
-            # used for support/recovery without duplicating formats.
+            # Required contact phone. Store it in one normalized international format.
+            if not str(d.get('phone') or '').strip():
+                return jsonify({'error': 'Phone number is required'}), 400
             phone, phone_err = _clean_profile_phone(d.get('phone'))
             if phone_err:
                 return jsonify({'error': phone_err}), 400
@@ -1696,8 +1701,10 @@ def create_app() -> Flask:
             for f in ('name','avatar','bio','location','website','instructor_title','instructor_field'):
                 if f in d:
                     fields.append(f'{f}=?'); vals.append(d[f])
-            # Contact phone ("call line") — optional, validated when provided.
+            # Contact phone is required whenever the profile submits it; it cannot be cleared.
             if 'phone' in d:
+                if not str(d.get('phone') or '').strip():
+                    return jsonify({'error': 'Phone number is required'}), 400
                 phone, phone_err = _clean_profile_phone(d.get('phone'))
                 if phone_err:
                     return jsonify({'error': phone_err}), 400

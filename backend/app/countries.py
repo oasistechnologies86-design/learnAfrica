@@ -125,7 +125,7 @@ POSTAL_CODE_COUNTRIES = {
 # Countries that expose a recognised national digital-address system we can
 # collect as free text (we do not claim to validate it).
 DIGITAL_ADDRESS_COUNTRIES = {
-    "GH": {"label": "GhanaPost GPS digital address", "placeholder": "GA-123-4567"},
+    "GH": {"label": "Digital address", "placeholder": "Enter your digital address"},
 }
 
 
@@ -296,7 +296,7 @@ def profile_requirements(country):
         "subdivisions": subdivisions(code),
         "postal_required": uses_postal_code(code),
         "digital_address": digital,
-        "digital_address_required": False,
+        "digital_address_required": code == "GH",
     }
 
 

@@ -47,8 +47,8 @@ export function RichTextEditor({ value = '', onChange, placeholder = 'Start writ
     document.execCommand('insertText', false, text)
   }
 
-  const promptLink = () => {
-    const url = window.prompt('Enter URL (https://...)', 'https://')
+  const promptLink = async () => {
+    const url = await window.LearnAfricaDialog.prompt('Enter URL (https://...)', 'https://')
     if (url && /^https?:\/\//i.test(url)) exec('createLink', url)
   }
 

@@ -284,7 +284,7 @@ function CourseResourcesManager({ resources = [], onChange }) {
   const addFile = async (file) => {
     if (!file) return;
     if (file.size > 50 * 1024 * 1024) {
-      alert('File too large — max 50MB per resource');
+      window.LearnAfricaDialog.alert('File too large — max 50MB per resource');
       return;
     }
     const tmpId = `tmp_${Date.now()}_${Math.random().toString(36).slice(2)}`;
@@ -317,7 +317,7 @@ function CourseResourcesManager({ resources = [], onChange }) {
       URL.revokeObjectURL(localBlob);
     } catch (err) {
       console.error('Resource upload failed:', err);
-      alert('Upload failed: ' + (err.message || 'try again'));
+      window.LearnAfricaDialog.alert('Upload failed: ' + (err.message || 'try again'));
       onChange(withPending.filter(r => r.id !== tmpId));
     }
   };
@@ -633,7 +633,7 @@ function LessonResourcesEditor({ resources = [], onChange }) {
 
   const handleFile = async (file) => {
     if (!file) return;
-    if (file.size > 50*1024*1024) { alert('Max 50MB'); return; }
+    if (file.size > 50*1024*1024) { window.LearnAfricaDialog.alert('Max 50MB'); return; }
     const tmpId = `tmp_${Date.now()}`;
     const localBlob = URL.createObjectURL(file);
     const ext = file.name.split('.').pop().toLowerCase();
@@ -662,7 +662,7 @@ function LessonResourcesEditor({ resources = [], onChange }) {
       URL.revokeObjectURL(localBlob);
     } catch (err) {
       console.error('Resource upload failed:', err);
-      alert('Upload failed: ' + (err.message || 'try again'));
+      window.LearnAfricaDialog.alert('Upload failed: ' + (err.message || 'try again'));
       onChange(withPending.filter(r => r.id !== tmpId));
     }
   };
@@ -765,7 +765,7 @@ function CurriculumItemEditor({ item, index, onUpdate, onRemove, onMoveUp, onMov
         <button
           onClick={(e) => {
             e.stopPropagation();
-            if (window.confirm('Delete this lesson?')) onRemove();
+            window.LearnAfricaDialog.confirm('Delete this lesson?').then(confirmed => { if (confirmed) onRemove(); });
           }}
           className="p-2 rounded-lg bg-destructive/5 hover:bg-destructive/15 text-destructive/80 hover:text-destructive transition-colors shrink-0 border border-destructive/20"
           title="Delete this lesson"

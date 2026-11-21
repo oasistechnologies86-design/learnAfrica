@@ -15,6 +15,7 @@ import { useAuth } from '@/context/AuthContext'
 import { API_BASE } from '@/lib/api'
 import { fetchCountryConfig, fetchRequirements, isValidIdNumber, normalizeIdNumber } from '@/lib/countries'
 import { InstructorProfileFields } from '@/components/instructor/InstructorProfileFields'
+import { isValidIntlPhone } from '@/lib/payoutDetails'
 
 function Card({ children, className = '' }) {
   return <div className={`rounded-2xl border border-border bg-card p-6 sm:p-7 ${className}`}>{children}</div>
@@ -102,9 +103,10 @@ export default function InstructorProfileCompletion() {
     if (requirements?.postal_required && !profile.postal_code) {
       errs.postal_code = 'Postal code is required for this country.'
     }
-    if (profile.phone) {
-      const p = String(profile.phone).trim()
-      if (!/^\+?\d[\d\s-]{6,}$/.test(p)) errs.phone = 'Enter a valid phone number including country code.'
+    if (!String(profile.phone || '').trim()) errs.phone = 'Phone number is required.'
+    else if (!isValidIntlPhone(profile.phone)) errs.phone = 'Enter a valid phone number including country code.'
+    if (profile.country === 'GH' && !String(profile.digital_address || '').trim()) {
+      errs.digital_address = 'A digital address is required.'
     }
     setErrors(errs)
     return Object.keys(errs).length === 0

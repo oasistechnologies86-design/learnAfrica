@@ -14,6 +14,7 @@ import { fetchCountryConfig, idTypesFor, countryName } from '@/lib/countries';
 import { cn } from '@/lib/utils';
 import { API_BASE } from '@/lib/api';
 import { formatPrice } from '@/lib/money';
+import { isValidIntlPhone } from '@/lib/payoutDetails';
 
 // ── fetch helper ──────────────────────────────────────────────────────────────
 const authedFetch = (url) => {
@@ -220,6 +221,10 @@ export default function ProfilePage() {
 
   const saveIdentity = useCallback(async () => {
     setIdentityError('');
+    if (!String(identityForm.phone || '').trim() || !isValidIntlPhone(identityForm.phone)) {
+      setIdentityError('A valid phone number is required.');
+      return;
+    }
     setIdentitySaving(true);
     try {
       const res = await fetch(`${API_BASE}/api/instructor/profile`, {
@@ -279,7 +284,7 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
-      alert('Image too large (max 5MB)');
+      window.LearnAfricaDialog.alert('Image too large (max 5MB)');
       return;
     }
     const reader = new FileReader();
@@ -290,6 +295,10 @@ export default function ProfilePage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSaving) return;
+    if (!String(formData.phone || '').trim() || !isValidIntlPhone(formData.phone)) {
+      await window.LearnAfricaDialog.alert('A valid phone number is required.');
+      return;
+    }
     setIsSaving(true);
     try {
       // Specialisation goes to both legacy and primary column for backward compat
@@ -437,18 +446,19 @@ export default function ProfilePage() {
 
                 <div className="grid md:grid-cols-2 gap-5 md:gap-6">
                   <div className="space-y-2">
-                    <label className="text-3xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Phone Number</label>
+                    <label className="text-3xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Phone Number <span className="text-destructive">*</span></label>
                     <PhoneField
                       id="profile-phone"
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
+                      required
                       disabled={!isEditing}
                       placeholder="244 123 456"
                       inputClassName={cn('h-11 rounded-xl',
                         isEditing ? 'bg-background border-primary/40 focus:ring-2 focus:ring-primary/20' : 'bg-muted/40 border-transparent text-muted-foreground')}
                     />
-                    <p className="text-2xs text-muted-foreground/70 ml-1">Your call line. Optional, and only visible to you.</p>
+                    <p className="text-2xs text-muted-foreground/70 ml-1">Your required contact number. Only visible to you.</p>
                   </div>
                   <div className="space-y-2">
                     <label className="text-3xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Location</label>
@@ -514,7 +524,7 @@ export default function ProfilePage() {
                         <div key={f.key} className="space-y-1">
                           <label htmlFor={`identity-${f.key}`}
                             className="text-3xs font-bold text-muted-foreground uppercase tracking-widest ml-1">
-                            {f.label}
+                            {f.label}{f.key === 'phone' && <span className="ml-1 text-destructive">*</span>}
                           </label>
                           {f.key === 'phone' ? (
                             <PhoneField
@@ -522,6 +532,7 @@ export default function ProfilePage() {
                               name={f.key}
                               value={identityForm[f.key]}
                               onChange={(e) => setIdentityForm((p) => ({ ...p, [f.key]: e.target.value }))}
+                              required
                               placeholder="244 123 456"
                             />
                           ) : (
