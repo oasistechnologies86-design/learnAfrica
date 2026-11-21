@@ -491,6 +491,7 @@ export function SignupPage() {
             value={formData.phone}
             onChange={handleChange}
             error={errors.phone}
+            required
             helperText="Choose your country code, then enter your phone number."
           />
         </div>
@@ -631,7 +632,7 @@ export function SignupPage() {
                 </>
               ) : (
                 <>
-                  <p>We collect the minimum information needed to operate the platform: your name, email, profile details you choose to share (such as an optional phone number), and course progress. We never sell your data to third parties.</p>
+                  <p>We collect the minimum information needed to operate the platform: your name, email, profile details you choose to share (including your required phone number), and course progress. We never sell your data to third parties.</p>
                   <p>Payment information is processed by our payment provider — we do not store full card numbers on our servers. Your password is hashed and cannot be recovered, only reset.</p>
                   <p>You can request export or deletion of your data at any time by contacting support. Cookies are used solely for authentication and remembering UI preferences.</p>
                 </>
