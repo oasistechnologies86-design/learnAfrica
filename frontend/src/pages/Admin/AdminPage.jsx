@@ -13,6 +13,7 @@ import PasswordResetRequestsCard from '@/components/common/PasswordResetRequests
 import EmailSendersCard from '@/components/common/EmailSendersCard';
 import EmailUsageCard from '@/components/common/EmailUsageCard';
 import { ScaleToFit } from '@/components/common/ScaleToFit';
+import { useAppDialog } from '@/components/common/AppDialog';
 import { CertificateDocument, CERT_DESIGN_WIDTH, CERT_DESIGN_HEIGHT } from '@/pages/Certificate/CertificatePage';
 import { mergeFooterConfig, SOCIAL_NAMES, AUDIENCES } from '@/lib/footerConfig';
 import StudentsListModal from '@/components/admin/StudentsListModal';
@@ -106,6 +107,7 @@ const TABS = ['Overview', 'Students', 'Leaderboard', 'Instructors', 'Courses', '
 export default function AdminPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { alert, confirm } = useAppDialog();
   // Honour ?tab=Settings (used by the Gmail "Return to Email Senders" button),
   // so an external link can land on the right tab instead of the Overview.
   const [tab, setTab] = useState(() => {
@@ -248,7 +250,7 @@ export default function AdminPage() {
 
   const deleteUser = async (uid, role) => {
     if (role === 'superadmin') { showStatus('error', 'Cannot delete the super admin account.'); return; }
-    if (!window.confirm('Permanently delete this user? This cannot be undone.')) return;
+    if (!await confirm('Permanently delete this user? This cannot be undone.')) return;
     setActionLoading(uid + 'delete');
     try {
       await API(`/api/admin/users/${uid}`, { method: 'DELETE' });
@@ -2041,6 +2043,7 @@ export default function AdminPage() {
 // ─────────────────────────────────────────────────────────────────────────
 function AdminReceiptsTab() {
   const navigate = useNavigate();
+  const { confirm } = useAppDialog();
   const [lookup, setLookup]   = useState('');
   const [found,  setFound]    = useState(null);
   const [busy,   setBusy]     = useState(false);
@@ -3154,6 +3157,7 @@ function StudentTutorialSettingsCard() {
 
 // ─── Database backup / restore ────────────────────────────────────────────
 function DatabaseBackupCard() {
+  const { alert } = useAppDialog();
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importFile, setImportFile] = useState(null);
@@ -3193,14 +3197,14 @@ function DatabaseBackupCard() {
       // Keep the object URL alive long enough for the browser to begin saving it.
       window.setTimeout(() => URL.revokeObjectURL(url), 1500);
     } catch (e) {
-      alert('Backup download failed: ' + e.message);
+      await alert('Backup download failed: ' + e.message);
     } finally { setExporting(false); }
   };
 
   const runImport = async () => {
-    if (!importFile) { alert('Choose a backup file first.'); return; }
-    if (confirmText !== 'CONFIRM') { alert('Type CONFIRM to proceed.'); return; }
-    if (!password) { alert('Enter your admin password.'); return; }
+    if (!importFile) { await alert('Choose a backup file first.'); return; }
+    if (confirmText !== 'CONFIRM') { await alert('Type CONFIRM to proceed.'); return; }
+    if (!password) { await alert('Enter your admin password.'); return; }
     setImporting(true); setImportResult(null);
     try {
       const text = await importFile.text();
@@ -3333,6 +3337,7 @@ function DatabaseBackupCard() {
 // ── Admin: Payouts tab — see pending balances + pay instructors
 // ─────────────────────────────────────────────────────────────────────────
 function AdminPayoutsTab() {
+  const { alert, confirm, prompt } = useAppDialog();
   const [data,    setData]    = useState({ instructors: [], total_pending: 0, currency: 'GHS' });
   const [requests, setRequests] = useState({ requests: [], total_requested: 0 });
   const [history, setHistory] = useState(null);
@@ -3374,7 +3379,7 @@ function AdminPayoutsTab() {
   };
 
   const markSent = async (req) => {
-    const ref = window.prompt(
+    const ref = await prompt(
       `Mark ${req.instructor_name || 'instructor'}'s request of GH₵ ${Number(req.amount).toFixed(2)} as sent?\n\n` +
       `Only do this AFTER you have paid them from your own account.\n\n` +
       `Optional: enter a payment reference (e.g. MoMo transaction ID):`,
@@ -3743,6 +3748,7 @@ function AdminPayoutsTab() {
 
 // ── Admin: Blog ───────────────────────────────────────────────────────────────
 function AdminBlogTab() {
+  const { confirm } = useAppDialog();
   const empty = { title: '', slug: '', excerpt: '', cover: '', body: '', is_published: true };
   const [posts, setPosts]       = useState([]);
   const [loading, setLoading]   = useState(true);
