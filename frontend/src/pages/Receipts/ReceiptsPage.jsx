@@ -78,20 +78,23 @@ export default function ReceiptsPage() {
     date_from: '', date_to: '', status: '', type: '', search: '',
   });
 
-  const loadRows = () => {
+  const loadRows = async () => {
     setLoading(true); setError('');
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([k, v]) => {
       if (v && k !== 'search') params.set(k, v);
     });
-    authedFetch(`/api/transactions?${params.toString()}`)
-      .then(r => r.json())
-      .then(d => {
-        setRows(d.transactions || []);
-        if (d.error) setError(d.error);
-      })
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false));
+    try {
+      const response = await authedFetch(`/api/transactions?${params.toString()}`);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Could not load receipts.');
+      setRows(data.transactions || []);
+      if (data.error) setError(data.error);
+    } catch (e) {
+      setError(e.message || 'Could not load receipts.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { loadRows(); /* eslint-disable-next-line */ }, [filters.date_from, filters.date_to, filters.status, filters.type]);
@@ -108,9 +111,10 @@ export default function ReceiptsPage() {
         const d = await res.json().catch(() => ({}));
         throw new Error(d.error || 'Could not delete this statement.');
       }
+      setRows(current => current.filter(row => String(row.id) !== String(id)));
       showToast({ type: 'success', message: 'Statement deleted.' });
       setConfirmDelete(null);
-      loadRows();
+      await loadRows();
     } catch (e) {
       showToast({ type: 'error', message: e.message || 'Could not delete this statement.' });
       setConfirmDelete(null);
