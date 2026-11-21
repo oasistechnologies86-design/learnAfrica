@@ -4,7 +4,7 @@ import { Input } from '@/components/common/Input'
 import { cn } from '@/lib/utils'
 import {
   COUNTRIES, DEFAULT_COUNTRY,
-  parsePhone, sanitizePhoneInput,
+  sanitizePhoneInput,
 } from '@/lib/payoutDetails'
 
 /**
@@ -32,50 +32,91 @@ export function PhoneField({
   helperText,
   required = false,
 }) {
-  const parsed = useMemo(() => parsePhone(value, DEFAULT_COUNTRY), [value])
-  const [country, setCountry] = useState(parsed.country)
-  const [national, setNational] = useState(parsed.national)
-  // The country the user last picked themselves. While it is set, typing does
-  // not re-derive the country from the value (that would fight the selection
-  // for shared dial codes such as +1). It is cleared once the field empties.
-  const userCountry = useRef(null)
-
-  // Re-seed from the value only when it changes from the outside (e.g. the
-  // profile loads), not on every keystroke — otherwise the caret jumps.
-  useEffect(() => {
-    const p = parsePhone(value, DEFAULT_COUNTRY)
-    setNational(p.national)
-    if (!p.national) {
-      userCountry.current = null
-      setCountry(p.country)
-    } else if (userCountry.current) {
-      setCountry(userCountry.current)
-    } else {
-      setCountry(p.country)
+  const flagFor = (code) => String(code || '').toUpperCase().replace(/[A-Z]/g, ch =>
+    String.fromCodePoint(127397 + ch.charCodeAt(0))
+  );
+  const parseValue = (raw, options, preferred = DEFAULT_COUNTRY) => {
+    const source = String(raw || '').trim();
+    const digits = source.replace(/\\D/g, '');
+    if (!digits) return { country: preferred, national: '' };
+    if (source.startsWith('+')) {
+      const matches = options
+        .filter(item => item.dial && digits.startsWith(String(item.dial).replace(/\\D/g, '')))
+        .sort((a, b) => String(b.dial).length - String(a.dial).length);
+      if (matches.length) {
+        const dialDigits = String(matches[0].dial).replace(/\\D/g, '');
+        const selected = matches.find(item => item.code === preferred) || matches[0];
+        return { country: selected.code, national: digits.slice(dialDigits.length) };
+      }
     }
+    return { country: preferred, national: digits.replace(/^0+/, '') };
+  };
+
+  const [countryOptions, setCountryOptions] = useState(COUNTRIES.map(item => ({
+    ...item, name: item.name || item.code, flag: item.flag || flagFor(item.code),
+  })));
+  const parsed = parseValue(value, countryOptions);
+  const [country, setCountry] = useState(parsed.country);
+  const [national, setNational] = useState(parsed.national);
+  const userCountry = useRef(null);
+
+  useEffect(() => {
+    let active = true;
+    fetch(`${API_BASE}/api/config/countries`)
+      .then(response => response.ok ? response.json() : Promise.reject(new Error('Country list unavailable')))
+      .then(data => {
+        if (!active || !Array.isArray(data?.countries)) return;
+        const options = data.countries
+          .filter(item => item.dial)
+          .map(item => ({ ...item, flag: flagFor(item.code) }));
+        if (!options.length) return;
+        setCountryOptions(options);
+      })
+      .catch(() => {
+        // Keep the bundled country choices available if the public config is
+        // temporarily offline.
+      });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    const p = parseValue(value, countryOptions, country);
+    setNational(p.national);
+    if (!p.national) {
+      userCountry.current = null;
+      setCountry(p.country);
+    } else if (userCountry.current) {
+      setCountry(userCountry.current);
+    } else {
+      setCountry(p.country);
+    }
+    // External value changes (profile load) and the country list are the only
+    // reasons to re-seed the visible national number.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value])
+  }, [value, countryOptions]);
 
   const emit = (nextCountry, nextNational) => {
-    const digits = String(nextNational || '').replace(/\D/g, '')
-    const parsed = parsePhone(digits, nextCountry)
-    onChange?.({ target: { name, value: parsed.e164 } })
-  }
+    const digits = String(nextNational || '').replace(/\\D/g, '').replace(/^0+/, '');
+    const selected = countryOptions.find(item => item.code === nextCountry)
+      || COUNTRIES.find(item => item.code === nextCountry);
+    const dial = selected?.dial || '+233';
+    onChange?.({ target: { name, value: digits ? `${dial}${digits}` : '' } });
+  };
 
   const onNationalChange = (e) => {
-    const digits = sanitizePhoneInput(e.target.value).replace(/^\+/, '').replace(/\D/g, '').slice(0, 15)
-    setNational(digits)
-    emit(country, digits)
-  }
+    const digits = sanitizePhoneInput(e.target.value).replace(/^\\+/, '').replace(/\\D/g, '').slice(0, 15);
+    setNational(digits);
+    emit(country, digits);
+  };
 
   const onCountryChange = (e) => {
-    const next = e.target.value
-    userCountry.current = next
-    setCountry(next)
-    emit(next, national)
-  }
+    const next = e.target.value;
+    userCountry.current = next;
+    setCountry(next);
+    emit(next, national);
+  };
 
-  const inputError = error && 'border-destructive focus:ring-destructive'
+  const inputError = error && 'border-destructive focus:ring-destructive';
 
   return (
     <div className={cn('space-y-2', className)}>
@@ -92,8 +133,8 @@ export function PhoneField({
             selectClassName
           )}
         >
-          {COUNTRIES.map(c => (
-            <option key={c.code} value={c.code}>{c.flag} {c.dial}</option>
+          {countryOptions.map(c => (
+            <option key={c.code} value={c.code}>{c.flag} {c.dial} · {c.name}</option>
           ))}
         </select>
         <div className="relative flex-1">
