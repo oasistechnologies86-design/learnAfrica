@@ -125,7 +125,7 @@ POSTAL_CODE_COUNTRIES = {
 # Countries that expose a recognised national digital-address system we can
 # collect as free text (we do not claim to validate it).
 DIGITAL_ADDRESS_COUNTRIES = {
-    "GH": {"label": "GhanaPost GPS digital address", "placeholder": "GA-123-4567"},
+    "GH": {"label": "Digital address", "placeholder": "Enter your digital address"},
 }
 
 
