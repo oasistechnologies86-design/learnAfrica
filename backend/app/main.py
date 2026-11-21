@@ -1701,8 +1701,10 @@ def create_app() -> Flask:
             for f in ('name','avatar','bio','location','website','instructor_title','instructor_field'):
                 if f in d:
                     fields.append(f'{f}=?'); vals.append(d[f])
-            # Contact phone ("call line") — optional, validated when provided.
+            # Contact phone is required whenever the profile submits it; it cannot be cleared.
             if 'phone' in d:
+                if not str(d.get('phone') or '').strip():
+                    return jsonify({'error': 'Phone number is required'}), 400
                 phone, phone_err = _clean_profile_phone(d.get('phone'))
                 if phone_err:
                     return jsonify({'error': phone_err}), 400
