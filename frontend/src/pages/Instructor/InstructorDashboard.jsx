@@ -1,3 +1,4 @@
+import { useAppDialog } from '@/components/common/AppDialog';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/common/Card';
@@ -43,6 +44,7 @@ export function payoutDestinationLabel(method, details) {
 }
 
 function EarningsCard({ stats, onChanged }) {
+  const { confirm } = useAppDialog();
   const [showBreakdown, setShowBreakdown] = useState(false);
   const [summary, setSummary]   = useState(null);
   const [busy,    setBusy]      = useState(false);
@@ -90,7 +92,7 @@ function EarningsCard({ stats, onChanged }) {
       dest ? `\nWe will send it to: ${dest}` : '',
       '\nMoney will arrive within 24 hours.',
     ].filter(Boolean).join('\n');
-    if (!window.confirm(lines)) return;
+    if (!(await confirm(lines, { title: 'Confirm payout request', confirmLabel: 'Request payout' }))) return;
     setBusy(true); setMsg(null);
     try {
       const r = await api('/api/instructor/payouts/request', { method: 'POST' });
