@@ -42,6 +42,7 @@ export function InstructorProfileFields({
   lockIdentity = false,
   /** Show the address block (signup collects it on the completion page). */
   showAddress = true,
+  showPhone = true,
   /** Optional controlled "re-enter ID" value so the parent can validate on submit. */
   idConfirm: idConfirmProp,
   onIdConfirmChange,
