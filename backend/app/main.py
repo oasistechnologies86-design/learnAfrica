@@ -9289,7 +9289,8 @@ def create_app() -> Flask:
         """Initiate a course purchase.
 
         Body: {
-          payment_method: 'any' | 'mtn_momo' | 'vodafone_cash' | 'airteltigo_money' | 'card' | 'bank_transfer',
+          payment_method: 'any' | 'card' | 'mobile_money' | 'bank_transfer'
+                          (legacy momo provider IDs remain accepted),
           payment_details: {
              name, phone, city   (contact details for the receipt)
           }

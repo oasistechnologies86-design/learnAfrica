@@ -4,6 +4,7 @@ const PAYMENT_METHOD_LABELS = {
   mobile_money: 'Mobile Money',
   bank_transfer: 'Bank Transfer',
   mtn_momo: 'Mobile Money',
+  mtn_mobile_money: 'Mobile Money',
   vodafone_cash: 'Mobile Money',
   airteltigo_money: 'Mobile Money',
   coupon: 'Coupon',
