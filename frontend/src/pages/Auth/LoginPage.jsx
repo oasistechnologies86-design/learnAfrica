@@ -139,6 +139,7 @@ export function LoginPage() {
         <Field
           id="email"
           label="Email address"
+          required
           icon={Mail}
           type="email"
           value={email}
@@ -150,6 +151,7 @@ export function LoginPage() {
         <Field
           id="password"
           label="Password"
+          required
           icon={Lock}
           type={showPassword ? 'text' : 'password'}
           value={password}
