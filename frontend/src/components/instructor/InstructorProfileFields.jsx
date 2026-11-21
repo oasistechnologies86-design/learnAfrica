@@ -256,7 +256,6 @@ export function InstructorProfileFields({
             </div>
           )}
 
-          </div>
         </>
       )}
     </div>
