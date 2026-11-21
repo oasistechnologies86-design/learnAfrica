@@ -80,7 +80,7 @@ function SenderRow({ slot, cfg, active, refresh, masterOn }) {
   };
 
   const disconnect = async () => {
-    if (!window.confirm('Disconnect this sender? Any emails will use the selected sender instead.')) return;
+    if (!(await window.LearnAfricaDialog.confirm('Disconnect this sender? Any emails will use the selected sender instead.'))) return;
     setBusy('disconnect'); setMsg(null);
     try {
       await API('/api/admin/email/disconnect', { method: 'POST', body: JSON.stringify({ slot: slot.id }) });
