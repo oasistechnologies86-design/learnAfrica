@@ -8098,9 +8098,9 @@ def create_app() -> Flask:
         return bool(re.fullmatch(r'0\d{9}', _normalize_gh_phone(raw)))
 
     def _clean_profile_phone(raw):
-        """Validate/normalise an optional profile 'call line'. Returns
-        (normalised_or_None, error_or_None). Blank input is allowed and stored
-        as None, so the field stays optional at signup and on the profile.
+        """Validate/normalise a profile contact number. Returns
+        (normalised_or_None, error_or_None). Blank input remains compatible
+        with legacy records; signup and instructor validation enforce presence.
 
         The UI sends an international value such as '+233244123456'; a local
         number such as '0244123456' is accepted too for backward compatibility.
@@ -10325,7 +10325,7 @@ def create_app() -> Flask:
         d.pop('verified', None)
 
         existing = db.execute(
-            'SELECT country,id_type,id_number FROM instructor_applications WHERE user_id=?',
+            'SELECT country,id_type,id_number,phone,digital_address,region,district,city,street_address,postal_code FROM instructor_applications WHERE user_id=?',
             (uid,)).fetchone()
         frozen_identity = bool(existing and (existing['country'] or existing['id_number']))
         if frozen_identity:
@@ -10334,6 +10334,13 @@ def create_app() -> Flask:
             d['country'] = existing['country'] or d.get('country') or ''
             d['id_type'] = existing['id_type'] or d.get('id_type') or ''
             d['id_number'] = existing['id_number'] or d.get('id_number') or ''
+        if existing:
+            # Partial profile updates retain previously validated contact and
+            # address values when the request only changes another field.
+            for key in ('phone', 'digital_address', 'region', 'district', 'city',
+                        'street_address', 'postal_code'):
+                if not str(d.get(key) or '').strip() and existing[key]:
+                    d[key] = existing[key]
 
         clean, errors = _validate_instructor_profile(d, require_address=True)
         if errors:
