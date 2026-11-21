@@ -263,6 +263,10 @@ function AppRoutes() {
 }
 
 export default function App() {
+  useEffect(() => {
+    try { sessionStorage.removeItem('learnAfrica:chunk-reload-once') } catch { /* storage may be disabled */ }
+  }, [])
+
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ScrollToTop />
