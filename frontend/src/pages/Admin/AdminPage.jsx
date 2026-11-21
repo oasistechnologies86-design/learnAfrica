@@ -13,6 +13,7 @@ import PasswordResetRequestsCard from '@/components/common/PasswordResetRequests
 import EmailSendersCard from '@/components/common/EmailSendersCard';
 import EmailUsageCard from '@/components/common/EmailUsageCard';
 import { ScaleToFit } from '@/components/common/ScaleToFit';
+import { useAppDialog } from '@/components/common/AppDialog';
 import { CertificateDocument, CERT_DESIGN_WIDTH, CERT_DESIGN_HEIGHT } from '@/pages/Certificate/CertificatePage';
 import { mergeFooterConfig, SOCIAL_NAMES, AUDIENCES } from '@/lib/footerConfig';
 import StudentsListModal from '@/components/admin/StudentsListModal';
@@ -106,6 +107,7 @@ const TABS = ['Overview', 'Students', 'Leaderboard', 'Instructors', 'Courses', '
 export default function AdminPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { confirm } = useAppDialog();
   // Honour ?tab=Settings (used by the Gmail "Return to Email Senders" button),
   // so an external link can land on the right tab instead of the Overview.
   const [tab, setTab] = useState(() => {
@@ -248,7 +250,7 @@ export default function AdminPage() {
 
   const deleteUser = async (uid, role) => {
     if (role === 'superadmin') { showStatus('error', 'Cannot delete the super admin account.'); return; }
-    if (!window.confirm('Permanently delete this user? This cannot be undone.')) return;
+    if (!await confirm('Permanently delete this user? This cannot be undone.')) return;
     setActionLoading(uid + 'delete');
     try {
       await API(`/api/admin/users/${uid}`, { method: 'DELETE' });
@@ -269,7 +271,7 @@ export default function AdminPage() {
   };
 
   const deleteCourse = async (cid) => {
-    if (!window.confirm('Delete this course permanently? All enrollments and progress will be lost.')) return;
+    if (!await confirm('Delete this course permanently? All enrollments and progress will be lost.')) return;
     setActionLoading(cid + 'delete');
     try {
       await API(`/api/instructor/courses/${cid}`, { method: 'DELETE' });
@@ -1405,7 +1407,7 @@ export default function AdminPage() {
                   ) : (
                     <button
                       onClick={async () => {
-                        if (!window.confirm(`This will DELETE all ${guideSteps.length} existing steps and replace them with the default 10-step guide. Continue?`)) return;
+                        if (!await confirm(`This will DELETE all ${guideSteps.length} existing steps and replace them with the default 10-step guide. Continue?`)) return;
                         try {
                           setActionLoading('reseed');
                           const r = await API('/api/admin/instructor-guide/reseed', { method: 'POST', body: JSON.stringify({force: true}) });
@@ -1517,7 +1519,7 @@ export default function AdminPage() {
                                   title="Remove video"
                                   onClick={async (e) => {
                                     e.stopPropagation();
-                                    if (!window.confirm('Remove the video from this step?')) return;
+                                    if (!await confirm('Remove the video from this step?')) return;
                                     try {
                                       await API(`/api/admin/instructor-guide/${step.id}`, {
                                         method: 'PUT',
@@ -1540,7 +1542,7 @@ export default function AdminPage() {
                               <Edit2 className="h-4 w-4" />
                             </button>
                             <button onClick={async () => {
-                              if (!window.confirm('Delete this guide step?')) return;
+                              if (!await confirm('Delete this guide step?')) return;
                               try {
                                 await API(`/api/admin/instructor-guide/${step.id}`, { method: 'DELETE' });
                                 setGuideSteps(prev => prev.filter(s => s.id !== step.id));
@@ -2041,6 +2043,7 @@ export default function AdminPage() {
 // ─────────────────────────────────────────────────────────────────────────
 function AdminReceiptsTab() {
   const navigate = useNavigate();
+  const { confirm } = useAppDialog();
   const [lookup, setLookup]   = useState('');
   const [found,  setFound]    = useState(null);
   const [busy,   setBusy]     = useState(false);
@@ -2053,7 +2056,7 @@ function AdminReceiptsTab() {
   const deleteStatement = async (transaction) => {
     if (!transaction?.id || deletingId) return;
     const label = transaction.receipt_id || transaction.id;
-    if (!window.confirm(`Delete statement ${label} from receipt views? The financial audit record will be retained.`)) return;
+    if (!await confirm(`Delete statement ${label} from receipt views? The financial audit record will be retained.`)) return;
     setDeletingId(transaction.id);
     try {
       await API(`/api/transactions/${encodeURIComponent(transaction.id)}`, { method: 'DELETE' });
@@ -3154,6 +3157,7 @@ function StudentTutorialSettingsCard() {
 
 // ─── Database backup / restore ────────────────────────────────────────────
 function DatabaseBackupCard() {
+  const { alert } = useAppDialog();
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importFile, setImportFile] = useState(null);
@@ -3193,14 +3197,14 @@ function DatabaseBackupCard() {
       // Keep the object URL alive long enough for the browser to begin saving it.
       window.setTimeout(() => URL.revokeObjectURL(url), 1500);
     } catch (e) {
-      alert('Backup download failed: ' + e.message);
+      await alert('Backup download failed: ' + e.message);
     } finally { setExporting(false); }
   };
 
   const runImport = async () => {
-    if (!importFile) { alert('Choose a backup file first.'); return; }
-    if (confirmText !== 'CONFIRM') { alert('Type CONFIRM to proceed.'); return; }
-    if (!password) { alert('Enter your admin password.'); return; }
+    if (!importFile) { await alert('Choose a backup file first.'); return; }
+    if (confirmText !== 'CONFIRM') { await alert('Type CONFIRM to proceed.'); return; }
+    if (!password) { await alert('Enter your admin password.'); return; }
     setImporting(true); setImportResult(null);
     try {
       const text = await importFile.text();
@@ -3333,6 +3337,7 @@ function DatabaseBackupCard() {
 // ── Admin: Payouts tab — see pending balances + pay instructors
 // ─────────────────────────────────────────────────────────────────────────
 function AdminPayoutsTab() {
+  const { confirm, prompt } = useAppDialog();
   const [data,    setData]    = useState({ instructors: [], total_pending: 0, currency: 'GHS' });
   const [requests, setRequests] = useState({ requests: [], total_requested: 0 });
   const [history, setHistory] = useState(null);
@@ -3374,7 +3379,7 @@ function AdminPayoutsTab() {
   };
 
   const markSent = async (req) => {
-    const ref = window.prompt(
+    const ref = await prompt(
       `Mark ${req.instructor_name || 'instructor'}'s request of GH₵ ${Number(req.amount).toFixed(2)} as sent?\n\n` +
       `Only do this AFTER you have paid them from your own account.\n\n` +
       `Optional: enter a payment reference (e.g. MoMo transaction ID):`,
@@ -3394,7 +3399,7 @@ function AdminPayoutsTab() {
   };
 
   const rejectReq = async (req) => {
-    const note = window.prompt(`Reject ${req.instructor_name || 'instructor'}'s payout request? Optional reason:`, '');
+    const note = await prompt(`Reject ${req.instructor_name || 'instructor'}'s payout request? Optional reason:`, '');
     if (note === null) return;
     setReqBusy(req.id); setMsg(null);
     try {
@@ -3409,7 +3414,7 @@ function AdminPayoutsTab() {
   };
 
   const payOne = async (inst) => {
-    if (!window.confirm(`Pay ${inst.name} GH₵ ${Number(inst.pending).toFixed(2)} to ${inst.method_label}?`)) return;
+    if (!await confirm(`Pay ${inst.name} GH₵ ${Number(inst.pending).toFixed(2)} to ${inst.method_label}?`)) return;
     setBusyId(inst.instructor_id); setMsg(null);
     try {
       const r = await API(`/api/admin/payouts/pay/${inst.instructor_id}`, { method: 'POST' });
@@ -3422,7 +3427,7 @@ function AdminPayoutsTab() {
 
   // Admin pays the instructor from their own account — no request needed.
   const payManualOne = async (inst) => {
-    const ref = window.prompt(
+    const ref = await prompt(
       `Mark ${inst.name}'s GH₵ ${Number(inst.pending).toFixed(2)} as paid manually?\n\n` +
       `Only do this AFTER you have paid them from your own account.\n\n` +
       `Optional: enter a payment reference (e.g. MoMo transaction ID):`,
@@ -3447,7 +3452,7 @@ function AdminPayoutsTab() {
       return;
     }
     const total = data.instructors.reduce((s, i) => s + Number(i.pending || 0), 0);
-    const ref = window.prompt(
+    const ref = await prompt(
       `Mark all ${data.instructors.length} instructor(s) paid, total GH₵ ${total.toFixed(2)}?\n\n` +
       `Only do this AFTER you have paid them from your own account.\n\n` +
       `Optional: enter a payment reference to attach to all:`,
@@ -3473,7 +3478,7 @@ function AdminPayoutsTab() {
       return;
     }
     const total = eligible.reduce((s, i) => s + Number(i.pending || 0), 0);
-    if (!window.confirm(`Pay all ${eligible.length} instructor(s) a total of GH₵ ${total.toFixed(2)}?`)) return;
+    if (!await confirm(`Pay all ${eligible.length} instructor(s) a total of GH₵ ${total.toFixed(2)}?`)) return;
     setBusy(true); setMsg(null);
     try {
       const r = await API('/api/admin/payouts/pay-all', { method: 'POST' });
@@ -3743,6 +3748,7 @@ function AdminPayoutsTab() {
 
 // ── Admin: Blog ───────────────────────────────────────────────────────────────
 function AdminBlogTab() {
+  const { confirm } = useAppDialog();
   const empty = { title: '', slug: '', excerpt: '', cover: '', body: '', is_published: true };
   const [posts, setPosts]       = useState([]);
   const [loading, setLoading]   = useState(true);
@@ -3794,7 +3800,7 @@ function AdminBlogTab() {
   };
 
   const remove = async (id) => {
-    if (!window.confirm('Delete this post? This cannot be undone.')) return;
+    if (!await confirm('Delete this post? This cannot be undone.')) return;
     try {
       await API(`/api/admin/blog/${id}`, { method: 'DELETE' });
       load();

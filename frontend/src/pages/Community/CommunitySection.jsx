@@ -1,3 +1,4 @@
+import { useAppDialog } from '@/components/common/AppDialog';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -45,6 +46,7 @@ function normaliseComment(value, depth = 0) {
 
 // Single comment card (recursive for replies)
 function CommentCard({ comment, user, isAuthenticated, onDelete, onEdit, onLike, onReply, depth=0 }) {
+  const { alert } = useAppDialog();
   const [showReplies,  setShowReplies]  = useState(depth===0 && (comment.reply_count||0)>0);
   const [replying,     setReplying]     = useState(false);
   const [replyText,    setReplyText]    = useState('');
@@ -85,7 +87,7 @@ function CommentCard({ comment, user, isAuthenticated, onDelete, onEdit, onLike,
     if(!editText.trim()) return;
     setSaving(true);
     try { await onEdit(comment.id, editText.trim()); setEditing(false); }
-    catch(e) { alert(e.message); }
+    catch(e) { await alert(e.message); }
     setSaving(false);
   };
 
@@ -95,7 +97,7 @@ function CommentCard({ comment, user, isAuthenticated, onDelete, onEdit, onLike,
     try {
       await onReply(comment.id, replyText.trim());
       setReplyText(''); setReplying(false); setShowReplies(true);
-    } catch(e) { alert(e.message); }
+    } catch(e) { await alert(e.message); }
     setPostingReply(false);
   };
 

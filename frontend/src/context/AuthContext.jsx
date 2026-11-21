@@ -41,7 +41,11 @@ async function api(endpoint, options = {}, attempt = 0) {
     }
     throw new Error('Invalid response from server');
   }
-  if (!res.ok) throw new Error(data.error || data.detail || `HTTP ${res.status}`);
+  if (!res.ok) {
+    const error = new Error(data.error || data.detail || `HTTP ${res.status}`);
+    error.status = res.status;
+    throw error;
+  }
   return data;
 }
 
@@ -178,26 +182,41 @@ export function AuthProvider({ children }) {
     const init = async () => {
       setIsLoading(true);
       const token = sessionStorage.getItem('auth_token');
+      let sessionVerified = false;
       if (token) {
         try {
           const verified = await api('/api/auth/verify');
+          sessionVerified = true;
           setRegistrationPaymentDue(!!verified?.requires_registration_payment);
           setProfileComplete(verified?.profile_complete !== false);
-          await loadProfile();
         } catch (e) {
           const msg = String(e?.message || '');
-          // A suspension is a known account state, not an expired session.
-          // Surface it so the login screen can explain what happened instead
-          // of silently dropping the user back with a generic error.
-          if (/suspended/i.test(msg)) setSessionError(msg);
-          else console.warn('Session invalid:', msg);
-          sessionStorage.removeItem('auth_token');
-          disconnectSocket();
+          if (e?.status === 401) {
+            // Only a confirmed unauthorized response invalidates the stored token.
+            sessionStorage.removeItem('auth_token');
+            disconnectSocket();
+            console.warn('Session expired or invalid:', msg);
+          } else {
+            // A temporary backend/network failure must not destroy a potentially
+            // valid session. The next bootstrap can retry verification.
+            setSessionError(/suspended/i.test(msg) ? msg : 'We could not verify your session. Please try again.');
+            console.warn('Session verification unavailable:', msg);
+          }
+        }
+        if (sessionVerified) {
+          try {
+            await loadProfile();
+          } catch (e) {
+            // Keep the verified token. Profile loading can fail independently
+            // during a backend restart or temporary network interruption.
+            setSessionError('Your session is valid, but your profile could not be loaded. Please refresh and try again.');
+            console.error('Profile load failed after session verification:', e.message);
+          }
         }
       }
       setIsLoading(false);
       const liveToken = sessionStorage.getItem('auth_token');
-      if (liveToken) {
+      if (liveToken && sessionVerified) {
         initSocket(liveToken);
         loadNotifications();
       }

@@ -4,6 +4,7 @@ import {
   AlignCenter, AlignRight, AlignJustify, Heading1, Heading2, Link as LinkIcon, X
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useAppDialog } from '@/components/common/AppDialog'
 import { sanitizeHtml } from '@/lib/sanitizeHtml'
 
 /**
@@ -15,6 +16,7 @@ import { sanitizeHtml } from '@/lib/sanitizeHtml'
  * Toolbar: bold, italic, underline, H1, H2, lists, alignment, link.
  */
 export function RichTextEditor({ value = '', onChange, placeholder = 'Start writing…', className }) {
+  const { prompt, alert } = useAppDialog();
   const editorRef = useRef(null)
   const [hasFocus, setHasFocus] = useState(false)
 
@@ -47,9 +49,14 @@ export function RichTextEditor({ value = '', onChange, placeholder = 'Start writ
     document.execCommand('insertText', false, text)
   }
 
-  const promptLink = () => {
-    const url = window.prompt('Enter URL (https://...)', 'https://')
+  const promptLink = async () => {
+    const url = await prompt('Enter the link URL (https://...)', 'https://', {
+      title: 'Insert link',
+      placeholder: 'https://example.com',
+    })
+    if (url === null) return
     if (url && /^https?:\/\//i.test(url)) exec('createLink', url)
+    else if (url) await alert('Please enter a valid URL beginning with https:// or http://.')
   }
 
   const Btn = ({ onClick, title, children, active = false }) => (

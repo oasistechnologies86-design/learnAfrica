@@ -15,6 +15,7 @@ export function Field({
   invalid = false,
   error,
   hint,
+  required = false,
   className,
   inputClassName,
   ...props
@@ -23,7 +24,7 @@ export function Field({
     <div className={cn('space-y-1.5', className)}>
       {label && (
         <label htmlFor={id} className="block text-[13px] font-semibold text-foreground">
-          {label}
+          {label}{required && <span className="ml-1 text-destructive" aria-hidden="true">*</span>}
         </label>
       )}
       <div className="relative">
@@ -36,6 +37,8 @@ export function Field({
         <input
           id={id}
           aria-invalid={invalid || undefined}
+          aria-required={required || undefined}
+          required={required}
           className={cn(
             'flex h-12 w-full rounded-[10px] border border-input bg-muted/40 px-3 text-[16px] text-foreground transition-colors lg:h-11 lg:text-[13px]',
             'placeholder:text-muted-foreground',

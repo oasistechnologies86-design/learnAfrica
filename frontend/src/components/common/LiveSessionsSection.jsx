@@ -1,3 +1,4 @@
+import { useAppDialog } from '@/components/common/AppDialog';
 import { useState, useEffect } from 'react';
 import { Video, Calendar, Clock, Users, Plus, Trash2, ExternalLink, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/common/Button';
@@ -14,6 +15,7 @@ import { API_BASE } from '@/lib/api';
  *   isEnrolled: for students — whether they can RSVP
  */
 export default function LiveSessionsSection({ courseId, mode = 'student', isEnrolled = false }) {
+  const { alert, confirm } = useAppDialog();
   const [sessions, setSessions] = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState('');
@@ -49,22 +51,22 @@ export default function LiveSessionsSection({ courseId, mode = 'student', isEnro
     try {
       await authFetch(`/api/live-sessions/${sessionId}/rsvp`, { method: 'POST' });
       load();
-    } catch (e) { alert(e.message); }
+    } catch (e) { await alert(e.message); }
   };
 
   const unrsvp = async (sessionId) => {
     try {
       await authFetch(`/api/live-sessions/${sessionId}/rsvp`, { method: 'DELETE' });
       load();
-    } catch (e) { alert(e.message); }
+    } catch (e) { await alert(e.message); }
   };
 
   const removeSession = async (sessionId) => {
-    if (!confirm('Delete this live session? All RSVPs will be cleared.')) return;
+    if (!(await confirm('Delete this live session? All RSVPs will be cleared.'))) return;
     try {
       await authFetch(`/api/instructor/live-sessions/${sessionId}`, { method: 'DELETE' });
       setSessions(prev => prev.filter(s => s.id !== sessionId));
-    } catch (e) { alert(e.message); }
+    } catch (e) { await alert(e.message); }
   };
 
   const now = Date.now();

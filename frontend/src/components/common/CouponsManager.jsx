@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useAppDialog } from '@/components/common/AppDialog';
 import { Loader2, Plus, Copy, Check, Trash2, Ticket, AlertCircle, Calendar, Users, Percent, DollarSign, ToggleLeft, ToggleRight, Search } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
@@ -17,6 +18,7 @@ import { formatPrice } from '@/lib/money';
  *              a course when creating course-specific coupons
  */
 export default function CouponsManager({ role = 'admin', myCourses = [] }) {
+  const { alert, confirm } = useAppDialog();
   const [coupons,  setCoupons]  = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState('');
@@ -57,11 +59,11 @@ export default function CouponsManager({ role = 'admin', myCourses = [] }) {
   };
 
   const deleteCoupon = async (id) => {
-    if (!confirm('Delete this coupon? Anyone still trying to use it will get an error.')) return;
+    if (!(await confirm('Delete this coupon? Anyone still trying to use it will get an error.'))) return;
     try {
       await authFetch(`/api/coupons/${id}`, { method: 'DELETE' });
       setCoupons(prev => prev.filter(c => c.id !== id));
-    } catch (e) { alert(e.message); }
+    } catch (e) { await alert(e.message); }
   };
 
   const toggleActive = async (c) => {
@@ -71,7 +73,7 @@ export default function CouponsManager({ role = 'admin', myCourses = [] }) {
         body: JSON.stringify({ active: !c.active }),
       });
       setCoupons(prev => prev.map(x => x.id === c.id ? d.coupon : x));
-    } catch (e) { alert(e.message); }
+    } catch (e) { await alert(e.message); }
   };
 
   const filtered = useMemo(() => {

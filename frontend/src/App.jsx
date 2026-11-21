@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './components/common/Toast';
+import { AppDialogProvider } from './components/common/AppDialog';
 import AfricaMapLoader from './components/common/AfricaMapLoader';
 import ErrorBoundary from './components/common/ErrorBoundary';
 
@@ -262,11 +263,19 @@ function AppRoutes() {
 }
 
 export default function App() {
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      try { sessionStorage.removeItem('learnAfrica:chunk-reload-once') } catch { /* storage may be disabled */ }
+    }, 15000)
+    return () => window.clearTimeout(timer)
+  }, [])
+
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ScrollToTop />
       <ThemeProvider>
         <ToastProvider>
+          <AppDialogProvider>
           <AuthProvider>
             <AppGate>
               <ErrorBoundary>
@@ -274,6 +283,7 @@ export default function App() {
               </ErrorBoundary>
             </AppGate>
           </AuthProvider>
+          </AppDialogProvider>
         </ToastProvider>
       </ThemeProvider>
     </BrowserRouter>

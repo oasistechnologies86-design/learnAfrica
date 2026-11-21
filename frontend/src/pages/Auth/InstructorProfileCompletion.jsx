@@ -15,6 +15,7 @@ import { useAuth } from '@/context/AuthContext'
 import { API_BASE } from '@/lib/api'
 import { fetchCountryConfig, fetchRequirements, isValidIdNumber, normalizeIdNumber } from '@/lib/countries'
 import { InstructorProfileFields } from '@/components/instructor/InstructorProfileFields'
+import { PhoneField } from '@/components/common/PhoneField'
 
 function Card({ children, className = '' }) {
   return <div className={`rounded-2xl border border-border bg-card p-6 sm:p-7 ${className}`}>{children}</div>
@@ -102,10 +103,8 @@ export default function InstructorProfileCompletion() {
     if (requirements?.postal_required && !profile.postal_code) {
       errs.postal_code = 'Postal code is required for this country.'
     }
-    if (profile.phone) {
-      const p = String(profile.phone).trim()
-      if (!/^\+?\d[\d\s-]{6,}$/.test(p)) errs.phone = 'Enter a valid phone number including country code.'
-    }
+    if (!profile.phone) errs.phone = 'Phone number is required.'
+    else if (!String(profile.phone).trim().startsWith('+') || String(profile.phone).split('').filter(ch => ch >= '0' && ch <= '9').length < 7 || String(profile.phone).split('').filter(ch => ch >= '0' && ch <= '9').length > 15) errs.phone = 'Enter a valid international phone number.'
     setErrors(errs)
     return Object.keys(errs).length === 0
   }, [profile, idConfirm, identityFrozen, requirements])
@@ -208,6 +207,11 @@ export default function InstructorProfileCompletion() {
             idConfirm={idConfirm}
             onIdConfirmChange={setIdConfirm}
           />
+
+          <div className="space-y-2">
+            <label htmlFor="instructor-profile-phone" className="block text-sm font-medium">Phone number <span className="text-destructive">*</span></label>
+            <PhoneField id="instructor-profile-phone" value={profile.phone || ''} onChange={e => handleChange({ phone: e.target.value })} error={errors.phone} helperText="Choose your country code and enter your number." required />
+          </div>
 
           <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/30 p-3">
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />

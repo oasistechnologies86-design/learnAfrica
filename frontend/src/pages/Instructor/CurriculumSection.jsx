@@ -1,3 +1,4 @@
+import { useAppDialog } from '@/components/common/AppDialog';
 import { useState, useRef, useEffect } from 'react';
 import {
   BookOpen, Layout, X, ChevronRight, Plus, GripVertical, Video,
@@ -247,6 +248,7 @@ function VideoUrlInput({ item, onChanged }) {
 
 // ── Course Resources Manager ────────────────────────────────────────────────
 function CourseResourcesManager({ resources = [], onChange }) {
+  const { alert } = useAppDialog();
   const [urlInput,   setUrlInput]   = useState('');
   const [titleInput, setTitleInput] = useState('');
   const [dragOver,   setDragOver]   = useState(false);
@@ -284,7 +286,7 @@ function CourseResourcesManager({ resources = [], onChange }) {
   const addFile = async (file) => {
     if (!file) return;
     if (file.size > 50 * 1024 * 1024) {
-      alert('File too large — max 50MB per resource');
+      await alert('File too large — max 50MB per resource');
       return;
     }
     const tmpId = `tmp_${Date.now()}_${Math.random().toString(36).slice(2)}`;
@@ -317,7 +319,7 @@ function CourseResourcesManager({ resources = [], onChange }) {
       URL.revokeObjectURL(localBlob);
     } catch (err) {
       console.error('Resource upload failed:', err);
-      alert('Upload failed: ' + (err.message || 'try again'));
+      await alert('Upload failed: ' + (err.message || 'try again'));
       onChange(withPending.filter(r => r.id !== tmpId));
     }
   };
@@ -611,6 +613,7 @@ function QuizEditor({ item, onUpdate }) {
 
 // ── Per-Lesson Resources Editor ───────────────────────────────────────────
 function LessonResourcesEditor({ resources = [], onChange }) {
+  const { alert } = useAppDialog();
   const [titleInput, setTitleInput] = useState('');
   const [urlInput,   setUrlInput]   = useState('');
   const inputRef = useRef(null);
@@ -633,7 +636,7 @@ function LessonResourcesEditor({ resources = [], onChange }) {
 
   const handleFile = async (file) => {
     if (!file) return;
-    if (file.size > 50*1024*1024) { alert('Max 50MB'); return; }
+    if (file.size > 50*1024*1024) { await alert('Max 50MB'); return; }
     const tmpId = `tmp_${Date.now()}`;
     const localBlob = URL.createObjectURL(file);
     const ext = file.name.split('.').pop().toLowerCase();
@@ -662,7 +665,7 @@ function LessonResourcesEditor({ resources = [], onChange }) {
       URL.revokeObjectURL(localBlob);
     } catch (err) {
       console.error('Resource upload failed:', err);
-      alert('Upload failed: ' + (err.message || 'try again'));
+      await alert('Upload failed: ' + (err.message || 'try again'));
       onChange(withPending.filter(r => r.id !== tmpId));
     }
   };
@@ -711,6 +714,7 @@ function LessonResourcesEditor({ resources = [], onChange }) {
 
 // ── Lesson Item Editor ──────────────────────────────────────────────────────
 function CurriculumItemEditor({ item, index, onUpdate, onRemove, onMoveUp, onMoveDown, isFirst, isLast, hasResources = false }) {
+  const { confirm } = useAppDialog();
   const [isOpen, setIsOpen] = useState(false);
   const [showCustomPreview, setShowCustomPreview] = useState(false);
   const selectedCustomEntry = getCustomLesson(item.component_key || item.componentKey);
@@ -763,9 +767,9 @@ function CurriculumItemEditor({ item, index, onUpdate, onRemove, onMoveUp, onMov
             className="rounded-md p-1.5 text-muted-foreground hover:bg-muted disabled:opacity-25 disabled:cursor-not-allowed"><ChevronDown className="h-4 w-4" /></button>
         </div>
         <button
-          onClick={(e) => {
+          onClick={async (e) => {
             e.stopPropagation();
-            if (window.confirm('Delete this lesson?')) onRemove();
+            if (await confirm('Delete this lesson?', { title: 'Delete lesson' })) onRemove();
           }}
           className="p-2 rounded-lg bg-destructive/5 hover:bg-destructive/15 text-destructive/80 hover:text-destructive transition-colors shrink-0 border border-destructive/20"
           title="Delete this lesson"

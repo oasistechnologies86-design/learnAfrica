@@ -1,22 +1,38 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Phone } from 'lucide-react'
 import { Input } from '@/components/common/Input'
 import { cn } from '@/lib/utils'
-import {
-  COUNTRIES, DEFAULT_COUNTRY,
-  countryByCode, parsePhone, sanitizePhoneInput,
-} from '@/lib/payoutDetails'
+import { API_BASE } from '@/lib/api'
+import { COUNTRIES, DEFAULT_COUNTRY, sanitizePhoneInput } from '@/lib/payoutDetails'
+
+const flagForCountry = (code) => String(code || '').toUpperCase().replace(/[A-Z]/g, ch =>
+  String.fromCodePoint(127397 + ch.charCodeAt(0))
+)
+
+function parsePhoneValue(raw, options, preferred = DEFAULT_COUNTRY) {
+  const source = String(raw || '').trim()
+  const digits = source.replace(/\D/g, '')
+  if (!digits) return { country: preferred, national: '' }
+
+  if (source.startsWith('+')) {
+    const matches = options
+      .filter(item => item.dial && digits.startsWith(String(item.dial).replace(/\D/g, '')))
+      .sort((a, b) => String(b.dial).length - String(a.dial).length)
+    if (matches.length) {
+      const dialDigits = String(matches[0].dial).replace(/\D/g, '')
+      const selected = matches.find(item => item.code === preferred) || matches[0]
+      return { country: selected.code, national: digits.slice(dialDigits.length) }
+    }
+  }
+
+  return { country: preferred, national: digits.replace(/^0+/, '') }
+}
 
 /**
- * Country-code phone input.
- *
- * The user picks their country (which fixes the dial code) then types the rest.
- * Non-digit characters are stripped automatically as they type, so a stray
- * letter, space, bracket or dash can never end up saved. The component always
- * emits an international value, e.g. "+233244123456".
- *
- * `onChange` is called with a normal input-like event ({ target: { name, value } })
- * so it drops straight into the existing `handleChange` handlers.
+ * Country-code phone input backed by the platform's full ISO country list.
+ * The public config supplies calling codes for all supported countries; the
+ * bundled list remains as a fallback if the API is temporarily unavailable.
+ * The component always emits an international value such as +233244123456.
  */
 export function PhoneField({
   id,
@@ -30,46 +46,68 @@ export function PhoneField({
   placeholder = '244 123 456',
   error,
   helperText,
+  required = false,
 }) {
-  const parsed = useMemo(() => parsePhone(value, DEFAULT_COUNTRY), [value])
-  const [country, setCountry] = useState(parsed.country)
-  const [national, setNational] = useState(parsed.national)
-  // The country the user last picked themselves. While it is set, typing does
-  // not re-derive the country from the value (that would fight the selection
-  // for shared dial codes such as +1). It is cleared once the field empties.
+  const [countryOptions, setCountryOptions] = useState(() => COUNTRIES.map(item => ({
+    ...item,
+    name: item.name || item.code,
+    flag: item.flag || flagForCountry(item.code),
+  })))
+  const initial = parsePhoneValue(value, countryOptions)
+  const [country, setCountry] = useState(initial.country)
+  const [national, setNational] = useState(initial.national)
   const userCountry = useRef(null)
 
-  // Re-seed from the value only when it changes from the outside (e.g. the
-  // profile loads), not on every keystroke — otherwise the caret jumps.
   useEffect(() => {
-    const p = parsePhone(value, DEFAULT_COUNTRY)
-    setNational(p.national)
-    if (!p.national) {
+    let active = true
+    fetch(`${API_BASE}/api/config/countries`)
+      .then(response => response.ok ? response.json() : Promise.reject(new Error('Country list unavailable')))
+      .then(data => {
+        if (!active || !Array.isArray(data?.countries)) return
+        const options = data.countries
+          .filter(item => item.dial)
+          .map(item => ({ ...item, flag: flagForCountry(item.code) }))
+        if (options.length) setCountryOptions(options)
+      })
+      .catch(() => {
+        // Keep the bundled country choices available if public config is offline.
+      })
+    return () => { active = false }
+  }, [])
+
+  useEffect(() => {
+    const parsed = parsePhoneValue(value, countryOptions, country)
+    setNational(parsed.national)
+    if (!parsed.national) {
       userCountry.current = null
-      setCountry(p.country)
+      setCountry(parsed.country)
     } else if (userCountry.current) {
       setCountry(userCountry.current)
     } else {
-      setCountry(p.country)
+      setCountry(parsed.country)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value])
+  }, [value, countryOptions])
 
   const emit = (nextCountry, nextNational) => {
-    const dial = countryByCode(nextCountry).dial
-    const digits = String(nextNational || '').replace(/\D/g, '')
-    const e164 = digits ? dial + digits : ''
-    onChange?.({ target: { name, value: e164 } })
+    const digits = String(nextNational || '').replace(/\D/g, '').replace(/^0+/, '')
+    const selected = countryOptions.find(item => item.code === nextCountry)
+      || COUNTRIES.find(item => item.code === nextCountry)
+    const dial = selected?.dial || '+233'
+    onChange?.({ target: { name, value: digits ? `${dial}${digits}` : '' } })
   }
 
-  const onNationalChange = (e) => {
-    const digits = sanitizePhoneInput(e.target.value).replace(/^\+/, '').replace(/\D/g, '').slice(0, 15)
+  const onNationalChange = (event) => {
+    const digits = sanitizePhoneInput(event.target.value)
+      .replace(/^\+/, '')
+      .replace(/\D/g, '')
+      .slice(0, 15)
     setNational(digits)
     emit(country, digits)
   }
 
-  const onCountryChange = (e) => {
-    const next = e.target.value
+  const onCountryChange = (event) => {
+    const next = event.target.value
     userCountry.current = next
     setCountry(next)
     emit(next, national)
@@ -82,6 +120,7 @@ export function PhoneField({
       <div className="flex gap-2">
         <select
           aria-label="Country code"
+          required={required}
           value={country}
           onChange={onCountryChange}
           disabled={disabled}
@@ -91,8 +130,10 @@ export function PhoneField({
             selectClassName
           )}
         >
-          {COUNTRIES.map(c => (
-            <option key={c.code} value={c.code}>{c.flag} {c.dial}</option>
+          {countryOptions.map(item => (
+            <option key={item.code} value={item.code}>
+              {item.flag} {item.dial} · {item.name}
+            </option>
           ))}
         </select>
         <div className="relative flex-1">
@@ -101,21 +142,26 @@ export function PhoneField({
             id={id}
             name={name}
             type="tel"
+            required={required}
             inputMode="numeric"
             autoComplete="tel-national"
             value={national}
             onChange={onNationalChange}
             disabled={disabled}
             placeholder={placeholder}
-            className={cn('pl-10', inputError, inputClassName)}
+            aria-invalid={!!error || undefined}
+            className={cn(
+              'h-10 w-full rounded-lg pl-10 pr-3 text-sm',
+              inputError,
+              inputClassName
+            )}
           />
         </div>
       </div>
-      {error
-        ? <p className="text-sm text-destructive">{error}</p>
-        : helperText
-          ? <p className="text-xs text-muted-foreground">{helperText}</p>
-          : null}
+      {error && <p className="text-xs font-medium text-destructive">{error}</p>}
+      {helperText && <p className="text-xs text-muted-foreground">{helperText}</p>}
     </div>
   )
 }
+
+export default PhoneField
