@@ -4,7 +4,7 @@
  * Shared by instructor signup and the "Complete Your Instructor Profile" page
  * so both collect exactly the same fields and enforce the same rules. Field
  * visibility follows the selected country (e.g. postal code only where it is
- * used, GhanaPost GPS only for Ghana). Where we have reliable subdivision data
+ * used, digital-address collection only where supported). Where we have reliable subdivision data
  * we show a dropdown; otherwise a clearly-labelled free-text box — never an
  * invented list.
  */
