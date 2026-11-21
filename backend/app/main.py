@@ -179,7 +179,7 @@ def _ghana_card_gps_error(d):
         return f'A valid {label} number is required (4-40 characters).'
     if not _is_valid_ghana_post_gps(gps_raw):
         return 'A digital address is required.'
-    return 'An identity document and GhanaPost GPS are required.'
+    return 'An identity document and digital address are required.'
 
 
 # ── International instructor profile ─────────────────────────────────────────
