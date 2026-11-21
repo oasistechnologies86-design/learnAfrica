@@ -11,7 +11,7 @@ export function DialogProvider({ children }) {
 
   useEffect(() => {
     setInputValue(active?.defaultValue || '');
-  }, [active?.id]);
+  }, [active?.id, active?.defaultValue]);
 
   const enqueue = useCallback((type, message, options = {}) => new Promise(resolve => {
     setQueue(current => [...current, {
