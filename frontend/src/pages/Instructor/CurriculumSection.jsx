@@ -319,7 +319,7 @@ function CourseResourcesManager({ resources = [], onChange }) {
       URL.revokeObjectURL(localBlob);
     } catch (err) {
       console.error('Resource upload failed:', err);
-      await await alert('Upload failed: ' + (err.message || 'try again'));
+      await alert('Upload failed: ' + (err.message || 'try again'));
       onChange(withPending.filter(r => r.id !== tmpId));
     }
   };
