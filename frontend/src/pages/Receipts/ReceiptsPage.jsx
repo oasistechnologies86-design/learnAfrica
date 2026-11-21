@@ -109,6 +109,9 @@ export default function ReceiptsPage() {
         throw new Error(d.error || 'Could not delete this statement.');
       }
       showToast({ type: 'success', message: 'Statement deleted.' });
+      // Remove the deleted item immediately; a failed refresh must not leave
+      // the stale row visible until the next full page reload.
+      setRows(prev => prev.filter(row => String(row.id) !== String(id)));
       setConfirmDelete(null);
       loadRows();
     } catch (e) {
