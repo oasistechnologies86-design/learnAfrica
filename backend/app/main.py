@@ -213,7 +213,7 @@ def _normalize_profile_payload(d):
         'city': str(d.get('city') or d.get('town') or '').strip(),
         'street_address': str(d.get('street_address') or d.get('address') or '').strip(),
         'postal_code': str(d.get('postal_code') or d.get('zip') or '').strip().upper(),
-        'digital_address': str(d.get('digital_address') or d.get('ghana_post_gps') or '').strip().upper(),
+        'digital_address': str(d.get('digital_address') or d.get('ghana_post_gps') or '').strip(),
         'phone': str(d.get('phone') or '').strip(),
     }
 
