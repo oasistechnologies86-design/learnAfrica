@@ -23,12 +23,12 @@ p{margin:0;color:var(--muted);line-height:1.5}
   var CFG=window.LA_CONFIG||{};
 
   var css=
-    '#la-loader{--la-bg:transparent;position:fixed;top:0;right:0;bottom:0;left:0;z-index:2147483000;display:grid;place-items:center;'+
+    '#la-loader{--la-bg:transparent;position:fixed;top:0;right:0;bottom:0;left:0;z-index:2147483000;display:grid;place-items:center;align-content:center;gap:14px;'+
     'background:var(--la-bg);transition:opacity .7s ease,visibility .7s}'+
     '@media (prefers-color-scheme: dark){#la-loader{--la-bg:rgba(10,17,13,.55)}}'+
     '#la-loader.done{opacity:0;visibility:hidden;pointer-events:none}'+
     '#la-canvas{width:min(170px,max(120px,28vmin));aspect-ratio:1/1;display:block}'+
-    '#la-status{margin-top:14px;color:var(--muted);font-size:13px;font-weight:500;letter-spacing:.02em;text-align:center}'+
+    '#la-status{margin-top:0;color:var(--muted);font-size:13px;font-weight:500;letter-spacing:.02em;text-align:center}'+
     'html.la-lock,html.la-lock body{overflow:hidden}';
   var st=document.createElement('style'); st.id='la-loader-style'; st.textContent=css;
   (document.head||document.documentElement).appendChild(st);
