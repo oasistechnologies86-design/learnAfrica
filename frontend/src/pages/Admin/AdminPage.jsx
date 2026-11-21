@@ -107,7 +107,7 @@ const TABS = ['Overview', 'Students', 'Leaderboard', 'Instructors', 'Courses', '
 export default function AdminPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { alert, confirm } = useAppDialog();
+  const { confirm } = useAppDialog();
   // Honour ?tab=Settings (used by the Gmail "Return to Email Senders" button),
   // so an external link can land on the right tab instead of the Overview.
   const [tab, setTab] = useState(() => {
@@ -3337,7 +3337,7 @@ function DatabaseBackupCard() {
 // ── Admin: Payouts tab — see pending balances + pay instructors
 // ─────────────────────────────────────────────────────────────────────────
 function AdminPayoutsTab() {
-  const { alert, confirm, prompt } = useAppDialog();
+  const { confirm, prompt } = useAppDialog();
   const [data,    setData]    = useState({ instructors: [], total_pending: 0, currency: 'GHS' });
   const [requests, setRequests] = useState({ requests: [], total_requested: 0 });
   const [history, setHistory] = useState(null);
