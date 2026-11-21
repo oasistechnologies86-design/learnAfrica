@@ -190,7 +190,7 @@ export default function InstructorOnboarding() {
 
         {/* Professional Bio */}
         <div className="space-y-2">
-          <Label htmlFor="bio" className="text-xs font-bold uppercase tracking-wider">
+          <Label htmlFor="bio" required className="text-xs font-bold uppercase tracking-wider">
             Professional Bio <span className="text-destructive">*</span>
           </Label>
           <div className="relative">
@@ -205,7 +205,7 @@ export default function InstructorOnboarding() {
 
         {/* Field / Specialisation — the key field the user asked about */}
         <div className="space-y-2">
-          <Label htmlFor="title" className="text-xs font-bold uppercase tracking-wider">
+          <Label htmlFor="title" required className="text-xs font-bold uppercase tracking-wider">
             Your Field / Specialisation <span className="text-destructive">*</span>
           </Label>
           <div className="relative">
@@ -223,7 +223,7 @@ export default function InstructorOnboarding() {
 
         {/* Location */}
         <div className="space-y-2">
-          <Label htmlFor="location" className="text-xs font-bold uppercase tracking-wider">
+          <Label htmlFor="location" required className="text-xs font-bold uppercase tracking-wider">
             Your Location <span className="text-destructive">*</span>
           </Label>
           <div className="relative">
@@ -261,7 +261,7 @@ export default function InstructorOnboarding() {
 
         {/* ── REQUIRED: Payment method for receiving payouts ── */}
         <div className="pt-2 space-y-2">
-          <Label className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+          <Label required className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
             <CreditCard className="h-3.5 w-3.5" /> Payout Method <span className="text-destructive normal-case font-bold">*</span>
           </Label>
           <p className="text-xs text-muted-foreground -mt-1">
