@@ -154,10 +154,10 @@ def _validate_instructor_identity(d):
 
 
 def _validate_ghana_card_gps(d):
-    """Return (id_number, gps) normalised, or (None, ...) when invalid.
+    """Return the identity document number and trimmed free-text digital address.
 
     Kept for backwards compatibility; id_number is the document number for
-    whichever id_type the applicant chose.
+    whichever id_type the applicant chose. The address is not format-validated.
     """
     id_number, _ = _validate_instructor_identity(d)
     gps_raw = d.get('ghana_post_gps') or d.get('ghana_post_gps_code') or ''
@@ -183,8 +183,9 @@ def _ghana_card_gps_error(d):
 
 
 # ── International instructor profile ─────────────────────────────────────────
-# Country-aware identity + address. Ghana keeps its existing strict rules; every
-# other country uses the maintained datasets in app/countries.py. Completeness is
+# Country-aware identity + address. Ghana Card identity remains strictly
+# validated, while Ghana digital addresses accept free text. Other countries
+# use the maintained datasets in app/countries.py. Completeness is
 # always derived from persisted, validated data — never from a client flag.
 INSTRUCTOR_PROFILE_FIELDS = (
     'country', 'id_type', 'id_number', 'region', 'district', 'city',
