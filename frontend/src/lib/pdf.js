@@ -22,6 +22,7 @@
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas-pro';
 import { formatMoney } from './money.js';
+import { formatPaymentMethod } from './paymentMethod.js';
 
 // ── Page geometry (mm) ───────────────────────────────────────────────────────
 export const A4_LANDSCAPE = { w: 297, h: 210 };
@@ -259,7 +260,7 @@ export async function drawStatementPdf(tx) {
   doc.setFontSize(8);
   doc.text(statusTxt, RIGHT_X - sw + 4, y + 20.8);
   labelValue(doc, 'Reference', tx?.reference || '—', RIGHT_X, y + 28, { valueStyle: 'normal', valueSize: 8.5, align: 'right', maxWidth: COL_W });
-  labelValue(doc, 'Payment Method', tx?.payment_method || '—', RIGHT_X, y + 42, { valueStyle: 'normal', valueSize: 9, align: 'right', maxWidth: COL_W });
+  labelValue(doc, 'Payment Method', formatPaymentMethod(tx?.payment_method), RIGHT_X, y + 42, { valueStyle: 'normal', valueSize: 9, align: 'right', maxWidth: COL_W });
 
   y += 74;
   doc.setDrawColor(...BRAND.line);

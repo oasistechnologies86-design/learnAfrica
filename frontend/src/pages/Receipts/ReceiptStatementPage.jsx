@@ -12,6 +12,7 @@ import { API_BASE } from '@/lib/api';
 import { formatMoney } from '@/lib/money';
 import { drawStatementPdf, downloadPdf, printPdf } from '@/lib/pdf';
 import { cn } from '@/lib/utils';
+import { formatPaymentMethod } from '@/lib/paymentMethod';
 
 const STATUS_STYLE = {
   success:  { icon: CheckCircle2, cls: 'bg-success/10 text-success border-success/30', label: 'Paid' },
@@ -204,7 +205,7 @@ export default function ReceiptStatementPage() {
             <Meta label="Receipt No" value={tx.receipt_id} mono />
             <Meta label="Reference" value={tx.reference} mono />
             <Meta label="Student" value={tx.buyer?.name} />
-            <Meta label="Payment Method" value={tx.payment_method} />
+            <Meta label="Payment Method" value={formatPaymentMethod(tx.payment_method)} />
             <Meta label="Account" value={tx.buyer?.email} />
             <Meta label="Contact Number" value={tx.buyer?.phone || tx.buyer?.contact?.phone || tx.buyer?.contact?.phone_number || 'Contact number not provided'} />
             <Meta label="Provider" value={tx.provider} />
