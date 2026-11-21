@@ -177,9 +177,9 @@ export default function PaymentPage() {
   const validate = () => {
     const e = {};
     if (!details.name.trim()) e.name = 'Please enter your full name';
-    // Phone is optional here: it is only used on the receipt. The number that
-    // actually pays (mobile money) is entered once on Paystack's page.
-    if (details.phone.trim() && !isValidIntlPhone(details.phone)) {
+    if (!details.phone.trim()) {
+      e.phone = 'Please enter your phone number';
+    } else if (!isValidIntlPhone(details.phone)) {
       e.phone = 'Enter a valid phone number, e.g. 0244123456';
     }
     setErrs(e);
@@ -318,12 +318,11 @@ export default function PaymentPage() {
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
               Tell us who you are for your receipt, then pay securely on Paystack.
-              You choose your method — card, mobile money or bank — and enter your
-              number there, just once.
+              Choose card, mobile money or bank transfer, then enter your payment details securely on Paystack.
             </p>
 
             <form onSubmit={handlePay} className="space-y-4 mt-5">
-              {errs.name && (
+              {(errs.name || errs.phone) && (
                 <div role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2.5">
                   <p className="text-sm font-semibold text-destructive">Almost there!</p>
                   <p className="text-xs text-destructive mt-0.5">Please complete all required fields to proceed to payment.</p>
@@ -364,13 +363,22 @@ export default function PaymentPage() {
               <div>
                 <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1.5">
                   <Smartphone className="h-3.5 w-3.5" /> Phone number
-                  <span className="font-normal normal-case opacity-60">(optional, for your receipt)</span>
+                  <span className="text-destructive" aria-hidden="true">*</span>
                 </label>
                 <PhoneField
                   id="pay-phone"
                   name="phone"
                   value={details.phone}
-                  onChange={v => setDetails({ ...details, phone: v.target.value })}
+                  required
+                  onChange={v => {
+                    const value = v.target.value;
+                    setDetails(prev => ({ ...prev, phone: value }));
+                    if (value.trim() && isValidIntlPhone(value)) setErrs(prev => {
+                      const next = { ...prev };
+                      delete next.phone;
+                      return next;
+                    });
+                  }}
                   error={errs.phone}
                   className="mt-1.5"
                   inputClassName="h-11 rounded-lg border-2"
