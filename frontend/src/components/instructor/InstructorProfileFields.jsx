@@ -12,7 +12,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { IdCard, MapPin, Globe, Building2, AlertTriangle, Check } from 'lucide-react'
 import { Input, Label } from '@/components/common/Input'
 import { cn } from '@/lib/utils'
-import { PhoneField } from '@/components/common/PhoneField'
 import {
   idTypesFor, usesPostalCode, digitalAddressField, normalizeIdNumber,
 } from '@/lib/countries'
@@ -257,7 +256,7 @@ export function InstructorProfileFields({
             </div>
           )}
 
-/div>
+          </div>
         </>
       )}
     </div>
