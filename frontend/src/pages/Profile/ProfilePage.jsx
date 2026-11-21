@@ -178,7 +178,7 @@ export default function ProfilePage() {
   });
 
   const loadIdentity = useCallback(async () => {
-    if (!(role === 'instructor' || role === 'admin' || role === 'superadmin'))) return;
+    if (!(role === 'instructor' || role === 'admin' || role === 'superadmin')) return;
     setIdentityLoading(true);
     try {
       const res = await authedFetch('/api/instructor/profile');
