@@ -181,7 +181,7 @@ def _ghana_card_gps_error(d):
             return 'A valid Ghana Card number is required (format GHA-123456789-0).'
         return f'A valid {label} number is required (4-40 characters).'
     if not _is_valid_ghana_post_gps(gps_raw):
-        return 'A valid GhanaPost GPS digital address is required (format GA-123-4567).'
+        return 'A digital address is required.'
     return 'An identity document and GhanaPost GPS are required.'
 
 
@@ -274,8 +274,10 @@ def _validate_instructor_profile(d, require_address=True):
         if err:
             errors['id_number'] = err
 
-    # Phone (international)
-    if clean['phone']:
+    # Phone (international) is required for every instructor profile.
+    if not clean['phone']:
+        errors['phone'] = 'Phone number is required.'
+    else:
         e164, perr = cm.validate_phone(clean['phone'], country)
         clean['phone'] = e164
         if perr:
@@ -992,8 +994,9 @@ def create_app() -> Flask:
             if len(d['password']) < app.config['PASS_MIN_LENGTH']:
                 return jsonify({'error': f'Password must be at least {app.config["PASS_MIN_LENGTH"]} characters'}), 400
 
-            # Optional contact phone ("call line"). Stored normalised so it can be
-            # used for support/recovery without duplicating formats.
+            # Required contact phone. Store it in one normalized international format.
+            if not str(d.get('phone') or '').strip():
+                return jsonify({'error': 'Phone number is required'}), 400
             phone, phone_err = _clean_profile_phone(d.get('phone'))
             if phone_err:
                 return jsonify({'error': phone_err}), 400
