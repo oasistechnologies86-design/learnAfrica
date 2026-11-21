@@ -2207,7 +2207,19 @@ function AdminReceiptsTab() {
                 ) : rows.length === 0 ? (
                   <tr><td colSpan={8} className="text-center py-6 text-muted-foreground">No transactions yet.</td></tr>
                 ) : rows.slice(0, 50).map(t => (
-                  <tr key={t.id} className="border-b border-border/50 hover:bg-muted/20">
+                  <tr
+                    key={t.id}
+                    tabIndex={0}
+                    aria-label={`Open statement for ${t.receipt_id || t.id}`}
+                    onClick={() => navigate(`/receipts/${encodeURIComponent(t.id)}`)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        navigate(`/receipts/${encodeURIComponent(t.id)}`);
+                      }
+                    }}
+                    className="border-b border-border/50 hover:bg-muted/20 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+                  >
                     <td className="px-2 py-2 font-mono text-2xs">{t.receipt_id}</td>
                     <td className="px-2 py-2 text-xs text-muted-foreground whitespace-nowrap">
                       {new Date(t.created_at).toLocaleDateString()}
@@ -2226,13 +2238,19 @@ function AdminReceiptsTab() {
                     </td>
                     <td className="px-2 py-2 text-right whitespace-nowrap">
                       <Button type="button" size="sm" variant="ghost"
-                        onClick={() => navigate(`/receipts/${encodeURIComponent(t.id)}`)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          navigate(`/receipts/${encodeURIComponent(t.id)}`);
+                        }}
                         aria-label={`View statement ${t.receipt_id || t.id}`}>
                         <Eye className="h-4 w-4" />
                       </Button>
                       <Button type="button" size="sm" variant="ghost"
                         disabled={deletingId === t.id}
-                        onClick={() => deleteStatement(t)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          deleteStatement(t);
+                        }}
                         aria-label={`Delete statement ${t.receipt_id || t.id}`}>
                         {deletingId === t.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                       </Button>
