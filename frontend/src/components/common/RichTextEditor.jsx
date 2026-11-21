@@ -4,6 +4,7 @@ import {
   AlignCenter, AlignRight, AlignJustify, Heading1, Heading2, Link as LinkIcon, X
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useAppDialog } from '@/components/common/AppDialog'
 import { sanitizeHtml } from '@/lib/sanitizeHtml'
 
 /**
@@ -15,6 +16,7 @@ import { sanitizeHtml } from '@/lib/sanitizeHtml'
  * Toolbar: bold, italic, underline, H1, H2, lists, alignment, link.
  */
 export function RichTextEditor({ value = '', onChange, placeholder = 'Start writing…', className }) {
+  const { prompt, alert } = useAppDialog();
   const editorRef = useRef(null)
   const [hasFocus, setHasFocus] = useState(false)
 
