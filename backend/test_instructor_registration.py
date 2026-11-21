@@ -84,7 +84,7 @@ check('instructor signup rejected with malformed Ghana Card', r.status_code == 4
 r = signup_instructor('freeaddress@example.com', {'ghana_post_gps': 'House 12, Market Road, near the community clinic'})
 check('instructor signup accepts a free-text digital address', r.status_code in (200, 201), r.get_json())
 
-r = c.post('/api/auth/signup', json={'name': 'No Phone', 'email': 'no_phone@example.com', 'password': 'Pass12345!', 'role': 'student'})
+r = c.post('/api/auth/signup', json={'name': 'No Phone', 'email': 'no_phone@example.com', 'password': 'Pass12345!', 'role': 'student', 'phone': '+233244123456'})
 check('signup rejects a missing contact phone', r.status_code == 400 and 'phone' in (r.get_json() or {}).get('error', '').lower(), r.get_json())
 
 # ── One email identity is shared across student and instructor roles ────────
@@ -99,7 +99,7 @@ check('same email cannot be registered again as a student with different casing'
 
 r = c.post('/api/auth/signup', json={
     'name': 'Student First', 'email': 'student.first@example.com',
-    'password': 'Pass12345!', 'role': 'student',
+    'password': 'Pass12345!', 'role': 'student', 'phone': '+233244123456',
 })
 check('student registration with an unused email succeeds', r.status_code in (200, 201), r.status_code)
 r = signup_instructor('STUDENT.FIRST@EXAMPLE.COM')
