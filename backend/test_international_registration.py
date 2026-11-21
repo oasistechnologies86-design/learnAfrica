@@ -68,7 +68,7 @@ AH = {'Authorization': f'Bearer {adm_tok}'}
 
 def signup_instructor(email, extra=None):
     body = {'name': 'Applicant', 'email': email, 'password': 'Pass12345!',
-            'role': 'instructor', 'accept_terms': True, 'accept_verification': True}
+            'role': 'instructor', 'phone': '+233244123456', 'accept_terms': True, 'accept_verification': True}
     if extra:
         body.update(extra)
     return c.post('/api/auth/signup', json=body)
