@@ -65,6 +65,32 @@ function RouteLoadingScreen() {
   return <AfricaMapLoader />;
 }
 
+// A deployment can replace hashed chunks while another tab still holds older
+// HTML. Retry one failed Vite lazy import once per minute, then leave the
+// ErrorBoundary in control instead of creating an endless reload loop.
+function ChunkLoadRecovery() {
+  useEffect(() => {
+    const key = 'learnafrica_chunk_reload_at';
+    const clearTimer = window.setTimeout(() => sessionStorage.removeItem(key), 60000);
+    const handlePreloadError = (event) => {
+      event.preventDefault();
+      const previous = Number(sessionStorage.getItem(key) || 0);
+      if (!previous || Date.now() - previous > 60000) {
+        sessionStorage.setItem(key, String(Date.now()));
+        window.location.reload();
+      } else {
+        console.error('A page module could not be loaded after the recovery reload.', event.payload);
+      }
+    };
+    window.addEventListener('vite:preloadError', handlePreloadError);
+    return () => {
+      window.clearTimeout(clearTimer);
+      window.removeEventListener('vite:preloadError', handlePreloadError);
+    };
+  }, []);
+  return null;
+}
+
 // ── Route Guards ──────────────────────────────────────────────────────────────
 function ProtectedRoute({ children, allowedRoles, returnUrl }) {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -266,6 +292,7 @@ export default function App() {
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ScrollToTop />
+      <ChunkLoadRecovery />
       <ThemeProvider>
         <ToastProvider>
           <DialogProvider>
