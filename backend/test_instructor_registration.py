@@ -86,6 +86,13 @@ check('instructor signup rejected without a digital address', r.status_code == 4
 r = signup_instructor('freetext-address@example.com', {'ghana_post_gps': 'Near the community library, Adenta'})
 check('instructor signup accepts a free-text Ghana digital address',
       r.status_code in (200, 201), (r.get_json() or {}).get('error', r.status_code))
+with app.app_context():
+    free_text_row = get_db().execute(
+        "SELECT ghana_post_gps FROM instructor_applications ia JOIN users u "
+        "ON u.id=ia.user_id WHERE u.email='freetext-address@example.com'").fetchone()
+check('free-text Ghana digital address is stored unchanged',
+      free_text_row and free_text_row['ghana_post_gps'] == 'Near the community library, Adenta',
+      free_text_row['ghana_post_gps'] if free_text_row else None)
 
 # ── One email identity is shared across student and instructor roles ────────
 r = signup_instructor('shared.role@example.com')
@@ -99,7 +106,7 @@ check('same email cannot be registered again as a student with different casing'
 
 r = c.post('/api/auth/signup', json={
     'name': 'Student First', 'email': 'student.first@example.com',
-    'password': 'Pass12345!', 'role': 'student',
+    'password': 'Pass12345!', 'role': 'student', 'phone': '+233244123456',
 })
 check('student registration with an unused email succeeds', r.status_code in (200, 201), r.status_code)
 r = signup_instructor('STUDENT.FIRST@EXAMPLE.COM')
@@ -121,7 +128,7 @@ with app.app_context():
                            " ON u.id=ia.user_id WHERE u.email='ins_ok@example.com'").fetchone()
 check('Ghana Card stored normalised', row and row['ghana_card_number'] == 'GHA-123456789-0',
       row['ghana_card_number'] if row else None)
-check('GhanaPost GPS stored', row and row['ghana_post_gps'] == 'GA-123-4567')
+check('Ghana digital address stored', row and row['ghana_post_gps'] == 'GA-123-4567')
 check('agreement version recorded', row and row['agreement_version'] == INSTRUCTOR_AGREEMENT_VERSION,
       row['agreement_version'] if row else None)
 check('agreement acceptance timestamp recorded', row and row['agreement_accepted_at'])
@@ -222,7 +229,7 @@ match = next((a for a in apps if a.get('email') == 'ins_paid@example.com'), None
 check('applications list carries Ghana Card for admin',
       match and match.get('ghana_card_number') == 'GHA-123456789-0',
       match.get('ghana_card_number') if match else None)
-check('applications list carries GhanaPost GPS for admin',
+check('applications list carries Ghana digital address for admin',
       match and match.get('ghana_post_gps') == 'GA-123-4567',
       match.get('ghana_post_gps') if match else None)
 
@@ -230,7 +237,7 @@ r = c.get(f'/api/admin/users/{uid}', headers=AH)
 detail = (r.get_json() or {}).get('user') or {}
 check('instructor detail view carries Ghana Card for admin',
       detail.get('ghana_card_number') == 'GHA-123456789-0', detail.get('ghana_card_number'))
-check('instructor detail view carries GhanaPost GPS for admin',
+check('instructor detail view carries Ghana digital address for admin',
       detail.get('ghana_post_gps') == 'GA-123-4567', detail.get('ghana_post_gps'))
 check('instructor detail view exposes the application record',
       (detail.get('instructor_application') or {}).get('registration_paid_at') is not None,
@@ -256,7 +263,7 @@ r = c.get('/api/instructor-registration')
 check('public endpoint reports free again', (r.get_json() or {}).get('is_free') is True, r.get_json())
 
 # ── Alternative identity documents (id_type dropdown) ────────────────────────
-# A non-Ghana-Card ID with a valid GPS address must be accepted and stored.
+# A non-Ghana-Card ID with a free-text digital address must be accepted and stored.
 r = signup_instructor('voter@example.com', {
     'id_type': 'voter_id', 'id_number': '0123456789',
     'ghana_card_number': '0123456789',
