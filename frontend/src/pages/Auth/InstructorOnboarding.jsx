@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Globe, MapPin, FileText, ArrowLeft, Loader2, Clock, Briefcase, CreditCard } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Input, Label } from '@/components/common/Input';
-import { PhoneField } from '@/components/common/PhoneField';
 import { useAuth } from '@/context/AuthContext';
 import { GoogleAuthButton } from '@/components/common/GoogleAuthButton';
 import { PaymentMethodForm } from '@/components/common/PaymentMethodForm';
@@ -22,8 +21,6 @@ export default function InstructorOnboarding() {
 
   const [formData, setFormData] = useState({
     bio: '', title: '', location: '', website: '',
-    // Phone ("call line") is collected on the signup step; editable here too.
-    phone: locationState?.phone || '',
   });
   // REQUIRED payment method for instructor onboarding. International applicants
   // provide bank-transfer details for manual payout; Ghana keeps momo/bank.
@@ -72,7 +69,6 @@ export default function InstructorOnboarding() {
         await updateUser({
           bio: formData.bio, instructor_title: formData.title,
           location: formData.location, website: formData.website,
-          phone: formData.phone,
         });
         try {
           const token = sessionStorage.getItem('auth_token');
@@ -231,20 +227,6 @@ export default function InstructorOnboarding() {
               placeholder="e.g. Accra, Ghana" className="pl-10" />
           </div>
           {errors.location && <p className="text-xs text-destructive font-medium">{errors.location}</p>}
-        </div>
-
-        {/* Phone (call line) — prefilled from signup, editable here */}
-        <div className="space-y-2">
-          <Label htmlFor="phone" className="text-xs font-bold uppercase tracking-wider">
-            Phone Number <span className="text-muted-foreground font-normal normal-case">(optional)</span>
-          </Label>
-          <PhoneField
-            id="phone"
-            name="phone"
-            value={formData.phone}
-            onChange={e => set('phone', e.target.value)}
-            helperText="Pick your country, then type your number. You can change this later from your profile."
-          />
         </div>
 
         {/* Portfolio / Website */}
