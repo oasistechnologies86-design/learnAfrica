@@ -82,7 +82,7 @@ function CommentCard({ comment, user, isAuthenticated, onDelete, onEdit, onLike,
   };
 
   const handleEdit = async () => {
-    if(!editText.trim())) return;
+    if(!editText.trim()) return;
     setSaving(true);
     try { await onEdit(comment.id, editText.trim()); setEditing(false); }
     catch(e) { window.LearnAfricaDialog.alert(e.message); }
@@ -90,7 +90,7 @@ function CommentCard({ comment, user, isAuthenticated, onDelete, onEdit, onLike,
   };
 
   const handleReply = async () => {
-    if(!replyText.trim())) return;
+    if(!replyText.trim()) return;
     setPostingReply(true);
     try {
       await onReply(comment.id, replyText.trim());
@@ -299,7 +299,7 @@ export function CommentsSection({ user, isAuthenticated }) {
       setComments(prev => prev.filter(c=>c.id!==payload.id).map(c=>({...c, replies:(Array.isArray(c.replies)?c.replies:[]).filter(r=>r.id!==payload.id)})));
     };
     const onLike = (payload) => {
-      if (!payload || typeof payload.id !== 'string' || !Number.isFinite(Number(payload.likes_count)))) return;
+      if (!payload || typeof payload.id !== 'string' || !Number.isFinite(Number(payload.likes_count))) return;
       const likes_count = Math.max(0, Number(payload.likes_count));
       setComments(prev => prev.map(c => {
         if(c.id===payload.id) return {...c, likes_count};
@@ -320,7 +320,7 @@ export function CommentsSection({ user, isAuthenticated }) {
 
   const post = async (e) => {
     e.preventDefault();
-    if(!text.trim())) return;
+    if(!text.trim()) return;
     setPosting(true); setError('');
     try {
       const r = await fetch(`${API_BASE}/api/homepage/comments`,  {
