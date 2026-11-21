@@ -49,10 +49,7 @@ export function RichTextEditor({ value = '', onChange, placeholder = 'Start writ
     document.execCommand('insertText', false, text)
   }
 
-  const promptLink = () => {
-    const url = window.prompt('Enter URL (https://...)', 'https://')
-    if (url && /^https?:\/\//i.test(url)) exec('createLink', url)
-  }
+  const promptLink = async () => {\n    const url = await prompt('Enter the link URL (https://...)', 'https://', { title: 'Insert link', placeholder: 'https://example.com' })\n    if (url === null) return\n    if (url && /^https?:\\/\\//i.test(url)) exec('createLink', url)\n    else if (url) await alert('Please enter a valid URL beginning with https:// or http://.')\n  }
 
   const Btn = ({ onClick, title, children, active = false }) => (
     <button
