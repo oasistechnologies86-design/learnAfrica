@@ -36,6 +36,7 @@ export function Field({
         )}
         <input
           id={id}
+          required={required}
           aria-invalid={invalid || undefined}
           className={cn(
             'flex h-12 w-full rounded-[10px] border border-input bg-muted/40 px-3 text-[16px] text-foreground transition-colors lg:h-11 lg:text-[13px]',
