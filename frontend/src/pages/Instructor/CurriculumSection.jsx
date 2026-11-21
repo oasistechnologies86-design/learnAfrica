@@ -323,7 +323,7 @@ function CourseResourcesManager({ resources = [], onChange }) {
   };
 
   const addLink = () => {
-    if (!titleInput.trim() || !urlInput.trim())) return;
+    if (!titleInput.trim() || !urlInput.trim()) return;
     onChange([...resources, {
       id:        `tmp_${Date.now()}`,
       title:     titleInput.trim(),
@@ -623,7 +623,7 @@ function LessonResourcesEditor({ resources = [], onChange }) {
   };
 
   const addLink = () => {
-    if (!titleInput.trim() || !urlInput.trim())) return;
+    if (!titleInput.trim() || !urlInput.trim()) return;
     onChange([...resources, {
       id: `tmp_${Date.now()}`, title: titleInput.trim(),
       url: urlInput.trim(), file_type: 'link',
@@ -765,7 +765,7 @@ function CurriculumItemEditor({ item, index, onUpdate, onRemove, onMoveUp, onMov
         <button
           onClick={(e) => {
             e.stopPropagation();
-            if (window.confirm('Delete this lesson?')) onRemove();
+            window.LearnAfricaDialog.confirm('Delete this lesson?').then(confirmed => { if (confirmed) onRemove(); });
           }}
           className="p-2 rounded-lg bg-destructive/5 hover:bg-destructive/15 text-destructive/80 hover:text-destructive transition-colors shrink-0 border border-destructive/20"
           title="Delete this lesson"
