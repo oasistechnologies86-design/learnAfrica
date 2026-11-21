@@ -998,7 +998,9 @@ def create_app() -> Flask:
             # A contact phone is compulsory for every new account.
             if not str(d.get('phone') or '').strip():
                 return jsonify({'error': 'Phone number is required.'}), 400
-            phone, phone_err = _clean_profile_phone(d.get('phone'))
+            # The phone widget submits E.164; validate it against the global
+            # numbering plan rather than accepting arbitrary digit strings.
+            phone, phone_err = _country_module().validate_phone(d.get('phone'))
             if phone_err:
                 return jsonify({'error': phone_err}), 400
 
