@@ -4,7 +4,7 @@ import { Input } from '@/components/common/Input'
 import { cn } from '@/lib/utils'
 import {
   COUNTRIES, DEFAULT_COUNTRY,
-  countryByCode, parsePhone, sanitizePhoneInput,
+  parsePhone, sanitizePhoneInput,
 } from '@/lib/payoutDetails'
 
 /**
@@ -57,7 +57,6 @@ export function PhoneField({
   }, [value])
 
   const emit = (nextCountry, nextNational) => {
-    const dial = countryByCode(nextCountry).dial
     const digits = String(nextNational || '').replace(/\D/g, '')
     const parsed = parsePhone(digits, nextCountry)
     onChange?.({ target: { name, value: parsed.e164 } })
