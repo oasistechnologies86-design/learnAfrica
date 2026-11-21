@@ -122,6 +122,7 @@ export function PhoneField({
           className={cn(
             'h-10 w-[42%] min-w-[7.25rem] max-w-44 flex-none rounded-lg border border-input bg-background px-2 text-sm outline-none',
             'focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
+            error && 'border-destructive focus-visible:ring-destructive',
             selectClassName
           )}
         >
