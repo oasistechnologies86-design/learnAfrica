@@ -90,7 +90,7 @@ function EarningsCard({ stats, onChanged }) {
       dest ? `\nWe will send it to: ${dest}` : '',
       '\nMoney will arrive within 24 hours.',
     ].filter(Boolean).join('\n');
-    if (!window.confirm(lines)) return;
+    if (!(await window.LearnAfricaDialog.confirm(lines))) return;
     setBusy(true); setMsg(null);
     try {
       const r = await api('/api/instructor/payouts/request', { method: 'POST' });
