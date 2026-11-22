@@ -19,7 +19,7 @@ const CSS = `
    underneath while softly diffusing it. The admin preview remains untouched. */
 .la-root:not(.la-preview){
   /* Keep the surrounding page fully visible: blur it without adding a dark tint. */
-  background:transparent;
+  background:transparent!important;
   -webkit-backdrop-filter:blur(8px) saturate(115%);
   backdrop-filter:blur(8px) saturate(115%);
 }
@@ -193,7 +193,6 @@ function hasUnsavedChanges() {
 
 export default function AppUpdateNotice() {
   const [available, setAvailable] = useState(false);
-  const [remoteNotice, setRemoteNotice] = useState('');
   const buttonRef = useRef(null);
 
   const revealWhenSafe = useCallback(() => {
@@ -208,18 +207,8 @@ export default function AppUpdateNotice() {
       if (!response.ok) return;
       const latest = await response.json();
       if (latest?.version && latest.version !== BUILD_ID) {
-        // The notice itself is fetched from the latest deployment, not rendered
-        // from this older tab's bundled React component.
-        const noticeResponse = await fetch('/update-notice.html?check=' + encodeURIComponent(latest.version) + '-' + Date.now(), {
-          cache: 'no-store',
-          headers: { Accept: 'text/html' },
-        });
-        if (noticeResponse.ok) {
-          const markup = await noticeResponse.text();
-          if (markup.includes('LEARNAFRICA_UPDATE_REFRESH') && markup.includes('la-card')) {
-            setRemoteNotice(markup);
-          }
-        }
+        // Render the notice in this document, not inside an iframe. This lets
+        // backdrop-filter see the real LearnAfrica page behind the transparent veil.
         revealWhenSafe();
       }
     } catch {
@@ -255,32 +244,14 @@ export default function AppUpdateNotice() {
         buttonRef.current?.focus();
       }
     };
-    const handleRemoteRefresh = event => {
-      if (event.source !== document.getElementById('la-remote-update-notice')?.contentWindow) return;
-      if (event.data?.type === 'LEARNAFRICA_UPDATE_REFRESH') window.location.reload();
-    };
     window.addEventListener('keydown', blockEscape, true);
-    window.addEventListener('message', handleRemoteRefresh);
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener('keydown', blockEscape, true);
-      window.removeEventListener('message', handleRemoteRefresh);
     };
-  }, [available, remoteNotice]);
+  }, [available]);
 
   if (!available) return null;
-  if (remoteNotice) {
-    return (
-      <iframe
-        id="la-remote-update-notice"
-        title="LearnAfrica update required"
-        srcDoc={remoteNotice}
-        sandbox="allow-scripts"
-        referrerPolicy="no-referrer"
-        style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', border: 0, zIndex: 9999, background: 'transparent', backdropFilter: 'blur(8px) saturate(115%)', WebkitBackdropFilter: 'blur(8px) saturate(115%)' }}
-      />
-    );
-  }
   return <LearnAfricaUpdate onUpdate={() => window.location.reload()} buttonRef={buttonRef} />;
 }
 
