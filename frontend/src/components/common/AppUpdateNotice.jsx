@@ -8,7 +8,7 @@ const CSS = `
   --a:#ffb627; --b:#2fe02f; --btntext:#04101c;
   color-scheme:dark;
   position:fixed; inset:0; z-index:9999; overflow-x:hidden; overflow-y:auto;
-  background:var(--bg); color:var(--text);
+  background:transparent; color:var(--text);
   font-family:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
   display:grid; place-items:center;
   padding:20px;
