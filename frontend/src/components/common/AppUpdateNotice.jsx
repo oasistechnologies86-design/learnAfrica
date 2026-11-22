@@ -1,52 +1,63 @@
 /* global __LEARN_AFRICA_BUILD_ID__ */
-import { useCallback, useEffect, useState } from 'react';
-import { RefreshCw, ShieldCheck } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Rocket, RefreshCw, ShieldCheck, GraduationCap, Sparkles } from 'lucide-react';
 
-const BUILD_ID = typeof __LEARN_AFRICA_BUILD_ID__ !== 'undefined'
-  ? __LEARN_AFRICA_BUILD_ID__
-  : 'development';
+const BUILD_ID = typeof __LEARN_AFRICA_BUILD_ID__ !== 'undefined' ? __LEARN_AFRICA_BUILD_ID__ : 'development';
 
-function BrandMark() {
+function UpdateArtwork({ compact = false }) {
   return (
-    <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-cyan-300/20 bg-gradient-to-br from-slate-900 via-indigo-950 to-teal-900 shadow-[0_10px_35px_rgba(13,148,136,.24)]">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_20%,rgba(94,234,212,.32),transparent_48%)]" />
-      <svg viewBox="0 0 48 48" className="relative h-9 w-9" role="img" aria-label="LearnAfrica">
-        <defs>
-          <linearGradient id="la-update-mark" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#99F6E4" />
-            <stop offset="100%" stopColor="#60A5FA" />
-          </linearGradient>
-        </defs>
-        <path d="M7 12.5c6.5-2.1 12.2-.9 17 3.2v22c-4.8-4.1-10.5-5.3-17-3.2z" fill="none" stroke="url(#la-update-mark)" strokeWidth="2.7" strokeLinejoin="round" />
-        <path d="M41 12.5c-6.5-2.1-12.2-.9-17 3.2v22c4.8-4.1 10.5-5.3 17-3.2z" fill="none" stroke="url(#la-update-mark)" strokeWidth="2.7" strokeLinejoin="round" />
-        <path d="M13 19h5M13 24h5M30 19h5M30 24h5" stroke="#CCFBF1" strokeWidth="1.8" strokeLinecap="round" />
-        <path d="m24 5 1.5 3.5L29 10l-3.5 1.5L24 15l-1.5-3.5L19 10l3.5-1.5z" fill="#A7F3D0" />
-      </svg>
-      <span className="absolute -right-1 -top-1 h-4 w-4 rounded-full border-2 border-slate-900 bg-teal-300 shadow-[0_0_14px_rgba(94,234,212,.8)]" />
+    <div className={'relative flex items-center justify-center overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-green-100 ' + (compact ? 'min-h-[190px] rounded-2xl' : 'min-h-[230px] sm:min-h-[330px] sm:rounded-l-[2rem]')}>
+      <div className="absolute -left-12 -top-16 h-52 w-52 rounded-full bg-emerald-300/30 blur-3xl" />
+      <div className="absolute -bottom-20 right-0 h-56 w-56 rounded-full bg-lime-300/30 blur-3xl" />
+      <div className="absolute h-40 w-40 rounded-full border border-emerald-300/50 sm:h-56 sm:w-56" />
+      <div className="absolute h-32 w-32 rounded-full border border-dashed border-emerald-400/60 sm:h-44 sm:w-44" />
+      <div className="absolute right-[17%] top-[18%] text-emerald-400"><Sparkles className="h-5 w-5" /></div>
+      <div className="absolute bottom-[20%] left-[17%] text-lime-500"><Sparkles className="h-4 w-4" /></div>
+      <div className="relative z-10 flex flex-col items-center">
+        <div className="relative flex h-24 w-24 items-center justify-center rounded-[2rem] border border-white/80 bg-gradient-to-br from-emerald-500 via-green-600 to-emerald-800 text-white shadow-[0_18px_50px_rgba(5,150,105,.35)] sm:h-32 sm:w-32 sm:rounded-[2.5rem]">
+          <GraduationCap className="h-12 w-12 sm:h-16 sm:w-16" strokeWidth={1.6} />
+          <span className="absolute -right-3 -top-3 flex h-11 w-11 items-center justify-center rounded-2xl border-4 border-white bg-lime-300 text-emerald-900 shadow-lg sm:h-14 sm:w-14">
+            <RefreshCw className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.5} />
+          </span>
+        </div>
+        <div className="mt-5 rounded-full border border-emerald-200/80 bg-white/80 px-4 py-1.5 text-[10px] font-extrabold tracking-[.24em] text-emerald-800 shadow-sm">LEARNAFRICA</div>
+      </div>
+    </div>
+  );
+}
+
+function UpdatePanel({ onRefresh, protectionMessage, preview = false }) {
+  return (
+    <div className="relative grid w-full overflow-hidden rounded-[1.75rem] border border-white/80 bg-white shadow-[0_28px_90px_rgba(6,78,59,.22)] ring-1 ring-emerald-900/5 sm:grid-cols-[.82fr_1.18fr] sm:rounded-[2rem]">
+      <UpdateArtwork />
+      <div className="flex flex-col justify-center p-5 sm:p-8 lg:p-10">
+        <div className="mb-4 inline-flex w-fit items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] font-bold text-emerald-800">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100"><Rocket className="h-3.5 w-3.5" /></span>
+          NEW VERSION AVAILABLE
+        </div>
+        <h2 className="max-w-xl text-2xl font-extrabold leading-tight tracking-tight text-emerald-950 sm:text-3xl lg:text-[2.55rem]">A new LearnAfrica version is ready!</h2>
+        <p className="mt-3 max-w-lg text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">We’ve made improvements to give you a better and smoother learning experience.</p>
+        <div className="mt-5 flex items-center gap-3 rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50 to-green-50 px-4 py-3.5">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-700 text-white shadow-md shadow-emerald-900/15"><ShieldCheck className="h-5 w-5" /></span>
+          <p className="text-xs font-semibold leading-5 text-emerald-900 sm:text-sm">Your account and saved course progress remain safe.</p>
+        </div>
+        {protectionMessage && <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">{protectionMessage}</p>}
+        <button type="button" onClick={onRefresh} disabled={preview} className="mt-6 flex min-h-14 w-full items-center justify-center gap-3 rounded-full border border-emerald-300/50 bg-gradient-to-r from-emerald-500 via-green-600 to-emerald-800 px-5 py-3 text-sm font-extrabold text-white shadow-[0_12px_28px_rgba(5,150,105,.28)] transition hover:-translate-y-0.5 hover:brightness-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300/70 disabled:cursor-default sm:text-base">
+          <RefreshCw className="h-5 w-5" /> Refresh to Update <span aria-hidden="true" className="text-xl leading-none">›</span>
+        </button>
+      </div>
     </div>
   );
 }
 
 export function UpdateNoticePreview() {
   return (
-    <div className="mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 p-4 text-white shadow-2xl sm:p-5">
-      <div className="flex items-start gap-3">
-        <BrandMark />
-        <div className="min-w-0 flex-1 pt-0.5">
-          <p className="text-base font-bold tracking-tight">New version available</p>
-          <p className="mt-1 text-sm text-slate-300">A new LearnAfrica version is ready.</p>
-        </div>
-        <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-teal-300 shadow-[0_0_12px_rgba(94,234,212,.8)]" />
+    <div className="mx-auto w-full max-w-4xl overflow-hidden rounded-[2rem] bg-slate-200 p-3 sm:p-6">
+      <div className="mb-3 flex items-center gap-2 px-2 text-[10px] font-semibold uppercase tracking-[.18em] text-slate-500">
+        <span className="h-2 w-2 rounded-full bg-emerald-500" /> Student experience preview
       </div>
-      <div className="mt-4 flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2.5">
-        <ShieldCheck className="h-4 w-4 shrink-0 text-teal-300" />
-        <p className="text-xs text-slate-300">Your account and saved course progress remain safe.</p>
-      </div>
-      <button type="button" disabled className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-500 px-4 py-2.5 text-sm font-bold text-slate-950 shadow-lg shadow-teal-950/30">
-        <RefreshCw className="h-4 w-4" />
-        Refresh to update
-      </button>
-      <p className="mt-3 text-center text-[10px] font-semibold tracking-[.18em] text-slate-500">LEARNAFRICA</p>
+      <UpdatePanel preview onRefresh={() => {}} />
+      <p className="mt-3 text-center text-[10px] text-slate-500">Illustrative preview of the mandatory update screen.</p>
     </div>
   );
 }
@@ -60,9 +71,7 @@ function hasUnsavedChanges() {
         if (field.checked !== field.defaultChecked) return true;
       } else if (field.tagName === 'SELECT') {
         if ([...field.options].some(option => option.selected !== option.defaultSelected)) return true;
-      } else if (field.value !== field.defaultValue) {
-        return true;
-      }
+      } else if (field.value !== field.defaultValue) return true;
     }
   }
   return [...document.querySelectorAll('form [contenteditable="true"], [data-update-protected] [contenteditable="true"]')].some(node =>
@@ -72,32 +81,31 @@ function hasUnsavedChanges() {
 
 export default function AppUpdateNotice() {
   const [available, setAvailable] = useState(false);
-  const [checking, setChecking] = useState(false);
-  const [protectionMessage, setProtectionMessage] = useState('');
+  const buttonRef = useRef(null);
+
+  const revealWhenSafe = useCallback(() => {
+    // Never cover an unsaved form/editor. The next scheduled version check
+    // will display the mandatory screen once the current work is saved.
+    if (!hasUnsavedChanges()) setAvailable(true);
+  }, []);
 
   const checkVersion = useCallback(async () => {
     if (import.meta.env.DEV || document.visibilityState === 'hidden' || !navigator.onLine) return;
-    setChecking(true);
     try {
-      const response = await fetch('/version.json?check=' + Date.now(), {
-        cache: 'no-store',
-        headers: { Accept: 'application/json' },
-      });
+      const response = await fetch('/version.json?check=' + Date.now(), { cache: 'no-store', headers: { Accept: 'application/json' } });
       if (!response.ok) return;
       const latest = await response.json();
-      if (latest?.version && latest.version !== BUILD_ID) setAvailable(true);
+      if (latest?.version && latest.version !== BUILD_ID) revealWhenSafe();
     } catch {
-      // A version check is optional; network failures must never block the app.
-    } finally {
-      setChecking(false);
+      // Version checks are optional and must never interrupt the app.
     }
-  }, []);
+  }, [revealWhenSafe]);
 
   useEffect(() => {
     checkVersion();
     const interval = window.setInterval(checkVersion, 60000);
     const onVisible = () => { if (document.visibilityState === 'visible') checkVersion(); };
-    const onChunkLoadFailure = () => setAvailable(true);
+    const onChunkLoadFailure = () => revealWhenSafe();
     window.addEventListener('online', checkVersion);
     window.addEventListener('learnafrica:update-available', onChunkLoadFailure);
     document.addEventListener('visibilitychange', onVisible);
@@ -107,45 +115,29 @@ export default function AppUpdateNotice() {
       window.removeEventListener('learnafrica:update-available', onChunkLoadFailure);
       document.removeEventListener('visibilitychange', onVisible);
     };
-  }, [checkVersion]);
+  }, [checkVersion, revealWhenSafe]);
 
-  const refresh = () => {
-    if (hasUnsavedChanges()) {
-      setProtectionMessage('Please save your current changes before updating.');
-      return;
-    }
-    setProtectionMessage('');
-    window.location.reload();
-  };
+  useEffect(() => {
+    if (!available) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    buttonRef.current?.focus();
+    const blockEscape = event => { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); } };
+    window.addEventListener('keydown', blockEscape, true);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', blockEscape, true);
+    };
+  }, [available]);
 
+  const refresh = () => window.location.reload();
   if (!available) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-[120] w-[calc(100vw-2rem)] max-w-sm animate-in slide-in-from-bottom-3 fade-in duration-300 sm:bottom-6 sm:right-6" role="status" aria-live="polite">
-      <div className="overflow-hidden rounded-2xl border border-slate-700/80 bg-slate-950 p-4 text-white shadow-[0_18px_70px_rgba(2,6,23,.42)] ring-1 ring-white/10">
-        <div className="flex items-start gap-3">
-          <BrandMark />
-          <div className="min-w-0 flex-1 pt-0.5">
-            <p className="text-base font-bold tracking-tight">New version available</p>
-            <p className="mt-1 text-sm text-slate-300">A new LearnAfrica version is ready.</p>
-          </div>
-          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-teal-300 shadow-[0_0_12px_rgba(94,234,212,.8)]" />
-        </div>
-        <div className="mt-4 flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2.5">
-          <ShieldCheck className="h-4 w-4 shrink-0 text-teal-300" />
-          <p className="text-xs text-slate-300">Your account and saved course progress remain safe.</p>
-        </div>
-        {protectionMessage && (
-          <p className="mt-3 rounded-lg border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
-            {protectionMessage}
-          </p>
-        )}
-        <button type="button" onClick={refresh} disabled={checking}
-          className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-400 to-cyan-400 px-4 py-2.5 text-sm font-bold text-slate-950 shadow-lg shadow-teal-950/30 transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-200 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 disabled:opacity-70">
-          <RefreshCw className="h-4 w-4" />
-          Refresh to update
-        </button>
-        <p className="mt-3 text-center text-[10px] font-semibold tracking-[.18em] text-slate-500">LEARNAFRICA</p>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-emerald-950/55 px-3 py-5 backdrop-blur-md sm:px-6 sm:py-8" role="presentation">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_15%_15%,rgba(52,211,153,.24),transparent_42%),radial-gradient(ellipse_at_85%_85%,rgba(163,230,53,.18),transparent_40%)]" />
+      <div className="relative z-10 my-auto w-full max-w-5xl animate-in fade-in zoom-in-95 duration-300" role="dialog" aria-modal="true" aria-labelledby="learnAfrica-update-title" aria-describedby="learnAfrica-update-description">
+        <UpdatePanel onRefresh={refresh} protectionMessage="" />
       </div>
     </div>
   );
