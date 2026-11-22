@@ -1,4 +1,5 @@
 // src/pages/Courses/CoursesPage.jsx
+import { BrandedSelect } from '@/components/common/BrandedSelect';
 import { useState, useMemo, useEffect, Suspense, lazy } from 'react';
 import { Grid3X3, List, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
 import CourseCard from '@/components/course/CourseCard';
@@ -167,14 +168,14 @@ export function CoursesPage() {
           <SearchBar value={searchQuery} onChange={setSearchQuery} suggestions={searchSuggestions} placeholder="Search course name, code (e.g. ACC 101), topics or instructor…" />
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          <select value={sortBy} onChange={e => setSortBy(e.target.value)}
+          <BrandedSelect value={sortBy} onChange={e => setSortBy(e.target.value)}
             className="h-10 rounded-lg border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
             <option value="popular">Most Popular</option>
             <option value="newest">Newest</option>
             <option value="rating">Highest Rated</option>
             <option value="price-low">Price: Low to High</option>
             <option value="price-high">Price: High to Low</option>
-          </select>
+          </BrandedSelect>
           <div className="hidden sm:flex items-center rounded-lg border border-input p-1">
             <button onClick={() => setViewMode('grid')}
               className={cn('flex h-8 w-8 items-center justify-center rounded-md transition-colors',
