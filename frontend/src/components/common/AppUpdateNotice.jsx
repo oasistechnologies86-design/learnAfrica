@@ -17,6 +17,15 @@ const CSS = `
 }
 .la-root, .la-root *{box-sizing:border-box}
 
+/* In-admin demonstration: keep the same card design, but render it inside
+   the preview panel instead of covering the entire admin page. */
+.la-root.la-preview{
+  position:relative; inset:auto; z-index:auto;
+  min-height:0; overflow:visible; padding:0;
+  display:flex; align-items:center; justify-content:center;
+  background:transparent;
+}
+
 .la-card{position:relative;width:min(440px,100%);background:var(--card);border-radius:28px;padding:clamp(24px,5vw,36px);text-align:center;isolation:isolate}
 /* animated neon border */
 .la-card::before{content:"";position:absolute;inset:-2px;border-radius:34px;z-index:-1;
@@ -63,14 +72,15 @@ const CSS = `
 @media (prefers-reduced-motion: reduce){.la-root *,.la-root *::before,.la-root *::after{animation:none!important;transition:none!important}}
 `;
 
-function LearnAfricaUpdate({ onUpdate, buttonRef }) {
+function LearnAfricaUpdate({ onUpdate, buttonRef, preview = false }) {
   const [updating, setUpdating] = useState(false);
   const timer = useRef(null);
 
   useEffect(() => () => clearTimeout(timer.current), []);
 
   const handleClick = () => {
-    if (updating) return;
+    // The admin preview is a visual demonstration, never an update action.
+    if (preview || updating) return;
     setUpdating(true);
     timer.current = window.setTimeout(() => {
       try {
@@ -83,7 +93,7 @@ function LearnAfricaUpdate({ onUpdate, buttonRef }) {
   };
 
   return (
-    <div className="la-root">
+    <div className={"la-root" + (preview ? " la-preview" : "")}>
       <style>{CSS}</style>
       <main
         className="la-card"
@@ -152,7 +162,7 @@ function LearnAfricaUpdate({ onUpdate, buttonRef }) {
 }
 
 export function UpdateNoticePreview() {
-  return <LearnAfricaUpdate onUpdate={() => {}} />;
+  return <LearnAfricaUpdate preview onUpdate={() => {}} />;
 }
 
 function hasUnsavedChanges() {
