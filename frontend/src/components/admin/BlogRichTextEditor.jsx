@@ -94,22 +94,20 @@ export default function BlogRichTextEditor({ value = '', onChange }) {
     const plain = clipboard?.getData('text/plain') || '';
     let html = rawHtml || plain.split(/\r?\n/).map(line => '<p>' + line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p>').join('');
     html = sanitizeHtml(html);
-    const template = document.createElement('template'); template.innerHTML = html;
-    template.content.querySelectorAll('*').forEach(node => { node.removeAttribute('class'); node.removeAttribute('id'); node.removeAttribute('contenteditable'); });
     const s = window.getSelection();
     if (!s?.rangeCount || !editor.current?.contains(s.anchorNode)) {
       editor.current?.focus(); const r = document.createRange(); r.selectNodeContents(editor.current); r.collapse(false); s?.removeAllRanges(); s?.addRange(r);
     }
     if (!s?.rangeCount) return;
-    const r = s.getRangeAt(0); r.deleteContents(); r.insertNode(template.content);
-    // A fresh plain paragraph is the explicit formatting boundary after paste.
-    const clean = document.createElement('p'); clean.append(document.createElement('br'));
-    let anchor = r.startContainer;
-    if (anchor.nodeType === Node.TEXT_NODE) anchor = anchor.parentElement;
-    const pastedBlock = anchor?.closest?.('p,div,li,h1,h2,h3,h4,h5,h6,blockquote');
-    if (pastedBlock && editor.current.contains(pastedBlock)) pastedBlock.after(clean); else editor.current.append(clean);
-    const caret = document.createRange(); caret.setStart(clean, 0); caret.collapse(true);
-    s.removeAllRanges(); s.addRange(caret); savedRange.current = caret.cloneRange();
+    // Let the browser editing engine split paragraphs correctly when a
+    // Word document's block content is pasted into the middle of a paragraph.
+    document.execCommand('insertHTML', false, html + '<p data-learnAfrica-paste-end="true"><br></p>');
+    const clean = editor.current.querySelector('[data-learnAfrica-paste-end]');
+    if (clean) {
+      clean.removeAttribute('data-learnAfrica-paste-end');
+      const caret = document.createRange(); caret.setStart(clean, 0); caret.collapse(true);
+      s.removeAllRanges(); s.addRange(caret); savedRange.current = caret.cloneRange();
+    }
     publish(); syncFormats();
   };
   const changeSpacing = size => {
