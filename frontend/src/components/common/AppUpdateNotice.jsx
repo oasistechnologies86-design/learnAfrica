@@ -26,7 +26,7 @@ function UpdateArtwork({ compact = false }) {
   );
 }
 
-function UpdatePanel({ onRefresh, protectionMessage, preview = false }) {
+function UpdatePanel({ onRefresh, protectionMessage, preview = false, buttonRef }) {
   return (
     <div className="relative grid w-full overflow-hidden rounded-[1.75rem] border border-white/80 bg-white shadow-[0_28px_90px_rgba(6,78,59,.22)] ring-1 ring-emerald-900/5 sm:grid-cols-[.82fr_1.18fr] sm:rounded-[2rem]">
       <UpdateArtwork />
@@ -36,13 +36,13 @@ function UpdatePanel({ onRefresh, protectionMessage, preview = false }) {
           NEW VERSION AVAILABLE
         </div>
         <h2 id="learnAfrica-update-title" className="max-w-xl text-2xl font-extrabold leading-tight tracking-tight text-emerald-950 sm:text-3xl lg:text-[2.55rem]">A new LearnAfrica version is ready!</h2>
-        <p className="mt-3 max-w-lg text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">We’ve made improvements to give you a better and smoother learning experience.</p>
+        <p id="learnAfrica-update-description" className="mt-3 max-w-lg text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">We’ve made improvements to give you a better and smoother learning experience.</p>
         <div className="mt-5 flex items-center gap-3 rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50 to-green-50 px-4 py-3.5">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-700 text-white shadow-md shadow-emerald-900/15"><ShieldCheck className="h-5 w-5" /></span>
           <p className="text-xs font-semibold leading-5 text-emerald-900 sm:text-sm">Your account and saved course progress remain safe.</p>
         </div>
         {protectionMessage && <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">{protectionMessage}</p>}
-        <button type="button" onClick={onRefresh} disabled={preview} className="mt-6 flex min-h-14 w-full items-center justify-center gap-3 rounded-full border border-emerald-300/50 bg-gradient-to-r from-emerald-500 via-green-600 to-emerald-800 px-5 py-3 text-sm font-extrabold text-white shadow-[0_12px_28px_rgba(5,150,105,.28)] transition hover:-translate-y-0.5 hover:brightness-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300/70 disabled:cursor-default sm:text-base">
+        <button ref={buttonRef} type="button" onClick={onRefresh} disabled={preview} className="mt-6 flex min-h-14 w-full items-center justify-center gap-3 rounded-full border border-emerald-300/50 bg-gradient-to-r from-emerald-500 via-green-600 to-emerald-800 px-5 py-3 text-sm font-extrabold text-white shadow-[0_12px_28px_rgba(5,150,105,.28)] transition hover:-translate-y-0.5 hover:brightness-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300/70 disabled:cursor-default sm:text-base">
           <RefreshCw className="h-5 w-5" /> Refresh to Update <span aria-hidden="true" className="text-xl leading-none">›</span>
         </button>
       </div>
@@ -122,7 +122,7 @@ export default function AppUpdateNotice() {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     buttonRef.current?.focus();
-    const blockEscape = event => { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); } };
+    const blockEscape = event => { if (event.key === 'Escape' || event.key === 'Tab') { event.preventDefault(); event.stopPropagation(); buttonRef.current?.focus(); } };
     window.addEventListener('keydown', blockEscape, true);
     return () => {
       document.body.style.overflow = previousOverflow;
@@ -137,7 +137,7 @@ export default function AppUpdateNotice() {
     <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-emerald-950/55 px-3 py-5 backdrop-blur-md sm:px-6 sm:py-8" role="presentation">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_15%_15%,rgba(52,211,153,.24),transparent_42%),radial-gradient(ellipse_at_85%_85%,rgba(163,230,53,.18),transparent_40%)]" />
       <div className="relative z-10 my-auto w-full max-w-5xl animate-in fade-in zoom-in-95 duration-300" role="dialog" aria-modal="true" aria-labelledby="learnAfrica-update-title" aria-describedby="learnAfrica-update-description">
-        <UpdatePanel onRefresh={refresh} protectionMessage="" />
+        <UpdatePanel onRefresh={refresh} protectionMessage="" buttonRef={buttonRef} />
       </div>
     </div>
   );
