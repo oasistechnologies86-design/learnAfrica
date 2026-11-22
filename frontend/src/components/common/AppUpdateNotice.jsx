@@ -18,8 +18,10 @@ const CSS = `
 /* Frosted-glass veil for the live update notice: keep the page visible
    underneath while softly diffusing it. The admin preview remains untouched. */
 .la-root:not(.la-preview){
-  /* Keep the surrounding page fully visible: blur it without adding a dark tint. */
-  background:transparent!important;
+  /* A nearly-clear paint layer gives Chromium a stable backdrop to composite.
+     Fully transparent backgrounds can produce a black backdrop in some
+     compositing paths; this 1.5% neutral veil stays visually transparent. */
+  background:rgba(255,255,255,.015)!important;
   -webkit-backdrop-filter:blur(8px) saturate(115%);
   backdrop-filter:blur(8px) saturate(115%);
 }
