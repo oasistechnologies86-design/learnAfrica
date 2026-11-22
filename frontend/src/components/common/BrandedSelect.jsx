@@ -40,8 +40,9 @@ export function BrandedSelect({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
+  const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue ?? '');
   const options = useMemo(() => flattenOptions(children), [children]);
-  const current = value === undefined ? defaultValue : value;
+  const current = value === undefined ? uncontrolledValue : value;
   const selected = options.find(option => option.value === String(current ?? ''));
   const searchable = options.length > 8;
   const filtered = useMemo(() => {
@@ -71,6 +72,7 @@ export function BrandedSelect({
 
   const choose = option => {
     if (!option || option.disabled) return;
+    if (value === undefined) setUncontrolledValue(option.value);
     onChange?.({ target: { value: option.value } });
     setOpen(false);
     setQuery('');
