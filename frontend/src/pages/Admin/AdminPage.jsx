@@ -3809,10 +3809,10 @@ function AdminBlogTab() {
   const [status, setStatus] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [coverCandidateIndex, setCoverCandidateIndex] = useState(0);
+  const [coverCandidateState, setCoverCandidateState] = useState({ source: '', index: 0 });
+  const coverCandidateIndex = coverCandidateState.source === form.cover ? coverCandidateState.index : 0;
   const field = (key, value) => setForm(current => ({ ...current, [key]: value }));
   const coverCandidates = getBlogImageCandidates(form.cover);
-  useEffect(() => { setCoverCandidateIndex(0); }, [form.cover]);
   const load = useCallback(async () => {
     setLoading(true);
     try { const data = await API('/api/admin/blog'); setPosts(data.posts || []); }
@@ -3881,7 +3881,7 @@ function AdminBlogTab() {
           <label className="block space-y-1 text-sm font-medium">Or paste image URL<Input value={form.cover} onChange={e => field('cover', e.target.value)} placeholder="https://…" /></label>
           <label className="block space-y-1 text-sm font-medium">Image alt text<Input value={form.cover_alt} onChange={e => field('cover_alt', e.target.value)} placeholder="Describe what the image shows" /></label>
           {form.cover && <div className="rounded-lg border border-border p-2"><img src={coverCandidates[coverCandidateIndex] || form.cover} alt={form.cover_alt || 'Cover preview'} className="max-h-64 w-full rounded bg-muted object-contain"
-              onError={() => coverCandidateIndex < coverCandidates.length - 1 ? setCoverCandidateIndex(index => index + 1) : setStatus({ type: 'error', msg: 'This image could not be loaded. Check its sharing permissions or try another URL.' })} /><p className="mt-2 break-all text-xs text-muted-foreground">{form.cover}</p></div>}
+              onError={() => coverCandidateIndex < coverCandidates.length - 1 ? setCoverCandidateState({ source: form.cover, index: coverCandidateIndex + 1 }) : setStatus({ type: 'error', msg: 'This image could not be loaded. Check its sharing permissions or try another URL.' })} /><p className="mt-2 break-all text-xs text-muted-foreground">{form.cover}</p></div>}
         </section>
         <section className="space-y-2"><h3 className="text-sm font-semibold">Article body</h3><BlogRichTextEditor value={form.body} onChange={value => field('body', value)} /></section>
         <section className="space-y-3 rounded-xl border border-border p-3"><h3 className="text-sm font-semibold">Search and social preview</h3>
