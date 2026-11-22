@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { BrandedSelect } from '@/components/common/BrandedSelect';
+import BlogRichTextEditor from '@/components/admin/BlogRichTextEditor';
+import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import { BrandedDatePicker } from '@/components/common/BrandedDatePicker';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -3763,149 +3765,112 @@ function AdminPayoutsTab() {
 
 // ── Admin: Blog ───────────────────────────────────────────────────────────────
 function AdminBlogTab() {
-  const empty = { title: '', slug: '', excerpt: '', cover: '', body: '', is_published: true };
-  const [posts, setPosts]       = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [form, setForm]         = useState(empty);
+  const empty = { title: '', slug: '', excerpt: '', cover: '', cover_alt: '', body: '', category: '', tags: '', author_name: '', seo_title: '', seo_description: '', og_image: '', is_published: true };
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [form, setForm] = useState(empty);
   const [editingId, setEditingId] = useState(null);
-  const [busy, setBusy]         = useState(false);
-  const [status, setStatus]     = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [status, setStatus] = useState(null);
   const [showForm, setShowForm] = useState(false);
-
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const field = (key, value) => setForm(current => ({ ...current, [key]: value }));
   const load = useCallback(async () => {
     setLoading(true);
-    try {
-      const data = await API('/api/admin/blog');
-      setPosts(data.posts || []);
-    } finally {
-      setLoading(false);
-    }
+    try { const data = await API('/api/admin/blog'); setPosts(data.posts || []); }
+    catch (error) { setStatus({ type: 'error', msg: error.message || 'Could not load posts.' }); }
+    finally { setLoading(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
-
-  const startCreate = () => { setEditingId(null); setForm(empty); setShowForm(true); setStatus(null); };
-  const startEdit   = (p) => {
-    setEditingId(p.id);
-    setForm({
-      title: p.title || '', slug: p.slug || '', excerpt: p.excerpt || '',
-      cover: p.cover || '', body: p.body || '', is_published: !!p.is_published,
-    });
-    setShowForm(true); setStatus(null);
+  const startCreate = () => { setEditingId(null); setForm(empty); setShowForm(true); setPreviewOpen(false); setStatus(null); };
+  const startEdit = post => {
+    let tags = post.tags || [];
+    if (typeof tags === 'string') { try { const parsed = JSON.parse(tags); tags = Array.isArray(parsed) ? parsed : tags.split(','); } catch { tags = tags.split(','); } }
+    setEditingId(post.id);
+    setForm({ ...empty, ...post, tags: Array.isArray(tags) ? tags.join(', ') : String(tags || ''), is_published: !!post.is_published });
+    setShowForm(true); setPreviewOpen(false); setStatus(null);
   };
-
+  const uploadCover = async event => {
+    const file = event.target.files && event.target.files[0]; event.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { setStatus({ type: 'error', msg: 'Choose a valid image file.' }); return; }
+    if (file.size > 5 * 1024 * 1024) { setStatus({ type: 'error', msg: 'Image is too large. Maximum size is 5 MB.' }); return; }
+    setUploading(true); setStatus(null);
+    try {
+      const body = new FormData(); body.append('file', file);
+      const token = sessionStorage.getItem('auth_token');
+      const response = await fetch(API_BASE + '/api/admin/blog/upload-image', { method: 'POST', headers: token ? { Authorization: 'Bearer ' + token } : {}, body });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || result.detail || 'Image upload failed.');
+      field('cover', result.url); setStatus({ type: 'success', msg: 'Image uploaded. Add descriptive alt text before publishing.' });
+    } catch (error) { setStatus({ type: 'error', msg: error.message }); }
+    finally { setUploading(false); }
+  };
   const save = async () => {
     if (!form.title.trim()) { setStatus({ type: 'error', msg: 'Title is required.' }); return; }
+    if (form.cover && !/^https?:\/\//i.test(form.cover) && !form.cover.startsWith('/')) { setStatus({ type: 'error', msg: 'Use a valid image URL.' }); return; }
+    if (form.cover && !form.cover_alt.trim()) { setStatus({ type: 'error', msg: 'Add alt text describing the cover image.' }); return; }
     setBusy(true); setStatus(null);
     try {
-      await API(editingId
-        ? `/api/admin/blog/${editingId}`
-        : '/api/admin/blog', {
-        method: editingId ? 'PUT' : 'POST',
-        body: JSON.stringify(form),
-      });
-      setStatus({ type: 'success', msg: editingId ? 'Post updated.' : 'Post created.' });
-      setShowForm(false); setForm(empty); setEditingId(null);
-      load();
-    } catch (e) {
-      setStatus({ type: 'error', msg: e.message });
-    } finally {
-      setBusy(false);
-    }
+      const payload = { ...form, tags: form.tags.split(',').map(tag => tag.trim()).filter(Boolean) };
+      const result = await API(editingId ? '/api/admin/blog/' + editingId : '/api/admin/blog', { method: editingId ? 'PUT' : 'POST', body: JSON.stringify(payload) });
+      setStatus({ type: 'success', msg: editingId ? 'Post updated.' : 'Post created' + (result.slug ? ' at /blog/' + result.slug : '') + '.' });
+      setShowForm(false); setForm(empty); setEditingId(null); await load();
+    } catch (error) { setStatus({ type: 'error', msg: error.message }); }
+    finally { setBusy(false); }
   };
-
-  const remove = async (id) => {
+  const remove = async id => {
     if (!(await window.LearnAfricaDialog.confirm('Delete this post? This cannot be undone.'))) return;
-    try {
-      await API(`/api/admin/blog/${id}`, { method: 'DELETE' });
-      load();
-    } catch (e) {
-      setStatus({ type: 'error', msg: e.message });
-    }
+    try { await API('/api/admin/blog/' + id, { method: 'DELETE' }); setStatus({ type: 'success', msg: 'Post deleted.' }); await load(); }
+    catch (error) { setStatus({ type: 'error', msg: error.message }); }
   };
-
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-bold flex items-center gap-2"><FileText className="h-5 w-5" /> Blog</h2>
-          <p className="text-sm text-muted-foreground">
-            Publish articles with Markdown. They appear at <code>/blog</code> for SEO.
-          </p>
+      <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-lg font-bold flex items-center gap-2"><FileText className="h-5 w-5" /> Blog</h2><p className="text-sm text-muted-foreground">Create articles with formatting, images, categories, tags and SEO details.</p></div><Button onClick={startCreate} className="gap-2"><Plus className="h-4 w-4" /> New post</Button></div>
+      {status && <div role="status" className={cn('rounded-lg px-3 py-2 text-sm', status.type === 'error' ? 'bg-destructive/10 text-destructive' : 'bg-success/10 text-success')}>{status.msg}</div>}
+      {showForm && <Card><CardHeader><CardTitle>{editingId ? 'Edit article' : 'Create article'}</CardTitle></CardHeader><CardContent className="space-y-4 p-4 pt-0">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <label className="space-y-1 text-sm font-medium">Article title<Input value={form.title} onChange={e => field('title', e.target.value)} placeholder="Article title" /></label>
+          <label className="space-y-1 text-sm font-medium">URL slug<Input value={form.slug} onChange={e => field('slug', e.target.value)} placeholder="article-url-slug" /></label>
+          <label className="space-y-1 text-sm font-medium md:col-span-2">Short summary<textarea value={form.excerpt} onChange={e => field('excerpt', e.target.value)} rows={2} maxLength={320} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" placeholder="Short summary for the listing and search results." /></label>
+          <label className="space-y-1 text-sm font-medium">Category<Input value={form.category} onChange={e => field('category', e.target.value)} placeholder="Technology, Study Tips…" /></label>
+          <label className="space-y-1 text-sm font-medium">Tags<Input value={form.tags} onChange={e => field('tags', e.target.value)} placeholder="technology, learning, careers" /><span className="text-xs text-muted-foreground">Separate tags with commas.</span></label>
+          <label className="space-y-1 text-sm font-medium">Author name<Input value={form.author_name} onChange={e => field('author_name', e.target.value)} placeholder="Author display name" /></label>
         </div>
-        <Button onClick={startCreate} className="gap-2"><Plus className="h-4 w-4" /> New post</Button>
-      </div>
-
-      {status && (
-        <div className={cn('text-sm rounded-lg px-3 py-2',
-          status.type === 'error' ? 'bg-destructive/10 text-destructive' : 'bg-success/10 text-success')}>
-          {status.msg}
+        <section className="space-y-2 rounded-xl border border-border p-3"><h3 className="text-sm font-semibold">Cover image</h3>
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted">{uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}{uploading ? 'Uploading…' : 'Upload image'}<input type="file" accept="image/png,image/jpeg,image/gif,image/webp" className="sr-only" disabled={uploading} onChange={uploadCover} /></label>
+          <span className="ml-2 text-xs text-muted-foreground">PNG, JPG, GIF or WebP, up to 5 MB.</span>
+          <label className="block space-y-1 text-sm font-medium">Or paste image URL<Input value={form.cover} onChange={e => field('cover', e.target.value)} placeholder="https://…" /></label>
+          <label className="block space-y-1 text-sm font-medium">Image alt text<Input value={form.cover_alt} onChange={e => field('cover_alt', e.target.value)} placeholder="Describe what the image shows" /></label>
+          {form.cover && <div className="rounded-lg border border-border p-2"><img src={form.cover} alt={form.cover_alt || 'Cover preview'} className="max-h-64 w-full rounded bg-muted object-contain" /><p className="mt-2 break-all text-xs text-muted-foreground">{form.cover}</p></div>}
+        </section>
+        <section className="space-y-2"><h3 className="text-sm font-semibold">Article body</h3><BlogRichTextEditor value={form.body} onChange={value => field('body', value)} /></section>
+        <section className="space-y-3 rounded-xl border border-border p-3"><h3 className="text-sm font-semibold">Search and social preview</h3>
+          <label className="block space-y-1 text-sm font-medium">SEO title<Input value={form.seo_title} onChange={e => field('seo_title', e.target.value)} maxLength={70} placeholder="Leave blank to use article title" /></label>
+          <label className="block space-y-1 text-sm font-medium">SEO description<textarea value={form.seo_description} onChange={e => field('seo_description', e.target.value)} rows={2} maxLength={180} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" placeholder="Search result description." /></label>
+          <label className="block space-y-1 text-sm font-medium">Social sharing image URL<Input value={form.og_image} onChange={e => field('og_image', e.target.value)} placeholder="Leave blank to use cover image" /></label>
+        </section>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button type="button" variant="outline" onClick={() => setPreviewOpen(open => !open)}>{previewOpen ? 'Hide preview' : 'Preview article'}</Button>
         </div>
-      )}
-
-      {showForm && (
-        <Card>
-          <CardContent className="p-4 space-y-3">
-            <Input placeholder="Title" value={form.title}
-              onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
-            <Input placeholder="Slug (optional — generated from the title)" value={form.slug}
-              onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} />
-            <Input placeholder="Excerpt / summary" value={form.excerpt}
-              onChange={e => setForm(f => ({ ...f, excerpt: e.target.value }))} />
-            <Input placeholder="Cover image URL" value={form.cover}
-              onChange={e => setForm(f => ({ ...f, cover: e.target.value }))} />
-            <textarea
-              placeholder="Body (Markdown or plain text)"
-              value={form.body}
-              onChange={e => setForm(f => ({ ...f, body: e.target.value }))}
-              rows={10}
-              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={form.is_published}
-                onChange={e => setForm(f => ({ ...f, is_published: e.target.checked }))} />
-              Published (visible publicly)
-            </label>
-            <div className="flex gap-2">
-              <Button onClick={save} disabled={busy} className="gap-2">
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                {editingId ? 'Save changes' : 'Create post'}
-              </Button>
-              <Button variant="outline" onClick={() => { setShowForm(false); setEditingId(null); }}>Cancel</Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {loading ? (
-        <div className="py-10 text-center text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin inline mr-2" /> Loading…</div>
-      ) : posts.length === 0 ? (
-        <p className="text-sm text-muted-foreground py-6">No posts yet.</p>
-      ) : (
-        <Card>
-          <CardContent className="p-0 divide-y divide-border">
-            {posts.map(p => (
-              <div key={p.id} className="flex items-center justify-between gap-3 p-4">
-                <div className="min-w-0">
-                  <p className="font-medium truncate">{p.title}</p>
-                  <p className="text-xs text-muted-foreground">
-                    /blog/{p.slug} · {p.is_published ? 'Published' : 'Draft'}
-                  </p>
-                </div>
-                <div className="flex gap-1 shrink-0">
-                  <button onClick={() => startEdit(p)}
-                    className="p-2 rounded hover:bg-muted text-muted-foreground hover:text-primary transition-colors">
-                    <Edit2 className="h-4 w-4" />
-                  </button>
-                  <button onClick={() => remove(p.id)}
-                    className="p-2 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+        {previewOpen && <section aria-label="Article preview" className="rounded-xl border border-border bg-background p-4 sm:p-6">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-primary">Preview · Not published yet</p>
+          <article className="mx-auto max-w-3xl">
+            {form.category && <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-primary">{form.category}</p>}
+            <h1 className="text-2xl font-bold leading-tight sm:text-3xl">{form.title || 'Untitled article'}</h1>
+            {form.excerpt && <p className="mt-3 text-base leading-7 text-muted-foreground">{form.excerpt}</p>}
+            {form.author_name && <p className="mt-3 text-xs text-muted-foreground">{form.author_name}</p>}
+            {form.cover && <img src={form.cover} alt={form.cover_alt || ''} className="my-6 max-h-80 w-full rounded-xl bg-muted object-contain" />}
+            {form.body && /<[a-z][\s\S]*>/i.test(form.body)
+              ? <div className="blog-article-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(form.body) }} />
+              : <div className="blog-article-content whitespace-pre-wrap">{form.body || 'Your article content will appear here.'}</div>}
+          </article>
+        </section>}
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.is_published} onChange={e => field('is_published', e.target.checked)} /> Published (visible publicly)</label>
+        <div className="flex flex-wrap gap-2"><Button onClick={save} disabled={busy || uploading}>{busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}{editingId ? 'Save changes' : 'Create post'}</Button><Button variant="outline" onClick={() => { setShowForm(false); setEditingId(null); }}>Cancel</Button></div>
+      </CardContent></Card>}
+      {loading ? <div className="py-10 text-center text-muted-foreground"><Loader2 className="mr-2 inline h-5 w-5 animate-spin" /> Loading…</div> : posts.length === 0 ? <p className="py-6 text-sm text-muted-foreground">No posts yet.</p> : <Card><CardContent className="divide-y divide-border p-0">{posts.map(post => <div key={post.id} className="flex items-center justify-between gap-3 p-4"><div className="min-w-0"><p className="truncate font-medium">{post.title}</p><p className="break-all text-xs text-muted-foreground">/blog/{post.slug} · {post.category || 'Uncategorised'} · {post.is_published ? 'Published' : 'Draft'}</p></div><div className="flex shrink-0 gap-1"><button type="button" aria-label={'Edit ' + post.title} onClick={() => startEdit(post)} className="rounded p-2 text-muted-foreground hover:bg-muted hover:text-primary"><Edit2 className="h-4 w-4" /></button><button type="button" aria-label={'Delete ' + post.title} onClick={() => remove(post.id)} className="rounded p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"><Trash2 className="h-4 w-4" /></button></div></div>)}</CardContent></Card>}
     </div>
   );
 }
