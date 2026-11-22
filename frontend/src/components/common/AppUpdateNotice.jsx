@@ -18,7 +18,8 @@ const CSS = `
 /* Frosted-glass veil for the live update notice: keep the page visible
    underneath while softly diffusing it. The admin preview remains untouched. */
 .la-root:not(.la-preview){
-  background:rgba(3,5,12,.14);
+  /* Keep the surrounding page fully visible: blur it without adding a dark tint. */
+  background:transparent;
   -webkit-backdrop-filter:blur(8px) saturate(115%);
   backdrop-filter:blur(8px) saturate(115%);
 }
@@ -232,12 +233,12 @@ export default function AppUpdateNotice() {
     const onVisible = () => { if (document.visibilityState === 'visible') checkVersion(); };
     const onChunkLoadFailure = () => revealWhenSafe();
     window.addEventListener('online', checkVersion);
-    window.addEventListener('learnafrica:update-available', onChunkLoadFailure);
+    window.addEventListener('learnafrica:chunk-load-failed', onChunkLoadFailure);
     document.addEventListener('visibilitychange', onVisible);
     return () => {
       window.clearInterval(interval);
       window.removeEventListener('online', checkVersion);
-      window.removeEventListener('learnafrica:update-available', onChunkLoadFailure);
+      window.removeEventListener('learnafrica:chunk-load-failed', onChunkLoadFailure);
       document.removeEventListener('visibilitychange', onVisible);
     };
   }, [checkVersion, revealWhenSafe]);
@@ -276,7 +277,7 @@ export default function AppUpdateNotice() {
         srcDoc={remoteNotice}
         sandbox="allow-scripts"
         referrerPolicy="no-referrer"
-        style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', border: 0, zIndex: 9999, background: 'transparent' }}
+        style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', border: 0, zIndex: 9999, background: 'transparent', backdropFilter: 'blur(8px) saturate(115%)', WebkitBackdropFilter: 'blur(8px) saturate(115%)' }}
       />
     );
   }
