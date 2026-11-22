@@ -96,11 +96,14 @@ export default function AppUpdateNotice() {
     checkVersion();
     const interval = window.setInterval(checkVersion, 60000);
     const onVisible = () => { if (document.visibilityState === 'visible') checkVersion(); };
+    const onChunkLoadFailure = () => setAvailable(true);
     window.addEventListener('online', checkVersion);
+    window.addEventListener('learnafrica:update-available', onChunkLoadFailure);
     document.addEventListener('visibilitychange', onVisible);
     return () => {
       window.clearInterval(interval);
       window.removeEventListener('online', checkVersion);
+      window.removeEventListener('learnafrica:update-available', onChunkLoadFailure);
       document.removeEventListener('visibilitychange', onVisible);
     };
   }, [checkVersion]);
