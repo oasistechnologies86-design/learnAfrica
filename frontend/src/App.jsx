@@ -6,6 +6,7 @@ import { ToastProvider } from './components/common/Toast';
 import { DialogProvider } from './components/common/DialogProvider';
 import AfricaMapLoader from './components/common/AfricaMapLoader';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import AppUpdateNotice from './components/common/AppUpdateNotice';
 
 import MainLayout    from './layouts/MainLayout';
 import DashboardLayout  from './layouts/DashboardLayout';
@@ -293,6 +294,7 @@ export default function App() {
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ScrollToTop />
       <ChunkLoadRecovery />
+      <AppUpdateNotice />
       <ThemeProvider>
         <ToastProvider>
           <DialogProvider>
