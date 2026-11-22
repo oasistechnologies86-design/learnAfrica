@@ -56,6 +56,35 @@ function isSafeUrl(value) {
   return !BAD_SCHEME.test(decoded);
 }
 
+function sanitizeInlineStyle(value) {
+  const allowedFonts = new Set(['Arial', 'Georgia', 'Times New Roman', 'Verdana', 'Tahoma', 'Trebuchet MS']);
+  const safe = [];
+  for (const declaration of String(value || '').split(';')) {
+    const separator = declaration.indexOf(':');
+    if (separator < 0) continue;
+    const property = declaration.slice(0, separator).trim().toLowerCase();
+    const raw = declaration.slice(separator + 1).trim();
+    let normalized = '';
+    if (property === 'text-align' && /^(left|right|center|justify)$/i.test(raw)) normalized = raw.toLowerCase();
+    else if (property === 'font-family') {
+      const family = raw.replace(/^['"]|['"]$/g, '');
+      if (allowedFonts.has(family)) normalized = "'" + family + "'";
+    } else if (property === 'font-size') {
+      const match = raw.match(/^(\d{1,2})(px|pt)$/i);
+      if (match && Number(match[1]) >= 10 && Number(match[1]) <= 48) normalized = match[1] + match[2].toLowerCase();
+    } else if ((property === 'color' || property === 'background-color') && /^#[0-9a-f]{3}(?:[0-9a-f]{3})?$/i.test(raw)) normalized = raw.toLowerCase();
+    else if (property === 'line-height') {
+      const number = Number(raw);
+      if (Number.isFinite(number) && number >= 1.2 && number <= 2.5) normalized = String(number);
+    } else if (property === 'margin-left' || property === 'text-indent') {
+      const match = raw.match(/^(\d{1,3})(px|em|rem)$/i);
+      if (match && Number(match[1]) <= 160) normalized = match[1] + match[2].toLowerCase();
+    }
+    if (normalized) safe.push(property + ': ' + normalized);
+  }
+  return safe.join('; ');
+}
+
 export function sanitizeHtml(html) {
   if (!html || typeof html !== 'string') return '';
   if (html.length > MAX_HTML_LEN) html = html.slice(0, MAX_HTML_LEN);
@@ -87,8 +116,8 @@ export function sanitizeHtml(html) {
         continue;
       }
       if (name === 'style') {
-        const alignment = String(attr.value || '').match(/^\s*text-align\s*:\s*(left|right|center|justify)\s*;?\s*$/i);
-        if (alignment) el.setAttribute('style', 'text-align: ' + alignment[1].toLowerCase());
+        const safeStyle = sanitizeInlineStyle(attr.value);
+        if (safeStyle) el.setAttribute('style', safeStyle);
         else el.removeAttribute('style');
         continue;
       }
