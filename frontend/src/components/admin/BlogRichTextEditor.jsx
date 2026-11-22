@@ -1,228 +1,150 @@
 import { useEffect, useRef, useState } from 'react';
+import { AlignCenter, AlignLeft, AlignRight, AlignJustify, Bold, Italic, Underline, Strikethrough, List, ListOrdered, Undo2, Redo2, Link2, ImagePlus, Eraser, ClipboardPaste, FileText, Plus, Minus } from 'lucide-react';
+import { sanitizeHtml } from '@/lib/sanitizeHtml';
 
-const buttonClass = 'inline-flex h-9 min-w-9 items-center justify-center rounded-lg border border-border bg-background px-2 text-xs font-medium transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary';
-const selectClass = 'h-9 rounded-lg border border-border bg-background px-2 text-xs';
+const buttonClass = 'inline-flex h-9 min-w-9 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 text-xs font-medium text-slate-700 transition hover:border-slate-200 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500';
+const selectClass = 'h-9 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-700 focus:border-emerald-500 focus:outline-none';
+const FONT_SIZES = ['10pt','11pt','12pt','14pt','16pt','18pt','20pt','24pt','28pt','36pt'];
 
-const tools = [
-  { label: 'Bold', command: 'bold', text: 'B', className: 'font-bold' },
-  { label: 'Italic', command: 'italic', text: 'I', className: 'italic' },
-  { label: 'Underline', command: 'underline', text: 'U', className: 'underline' },
-  { label: 'Strikethrough', command: 'strikeThrough', text: 'S', className: 'line-through' },
-  { label: 'Align left', command: 'justifyLeft', text: 'Left' },
-  { label: 'Align centre', command: 'justifyCenter', text: 'Centre' },
-  { label: 'Align right', command: 'justifyRight', text: 'Right' },
-  { label: 'Justify text', command: 'justifyFull', text: 'Justify' },
-  { label: 'Increase indent', command: 'indent', text: 'Indent' },
-  { label: 'Decrease indent', command: 'outdent', text: 'Outdent' },
-  { label: 'Bulleted list', command: 'insertUnorderedList', text: '• List' },
-  { label: 'Numbered list', command: 'insertOrderedList', text: '1. List' },
-  { label: 'Quote', command: 'formatBlock', value: 'BLOCKQUOTE', text: 'Quote' },
-  { label: 'Undo', command: 'undo', text: '↶' },
-  { label: 'Redo', command: 'redo', text: '↷' },
-];
-
-const FONT_SIZES = [
-  ['Small', '2', '13px'],
-  ['Normal', '3', '16px'],
-  ['Large', '4', '19px'],
-  ['Larger', '5', '24px'],
-  ['Heading', '6', '30px'],
-  ['Display', '7', '36px'],
-];
+function ToolButton({ label, children, onClick, active = false }) {
+  return <button type="button" title={label} aria-label={label} aria-pressed={active} onMouseDown={e => e.preventDefault()} onClick={onClick} className={buttonClass + (active ? ' border-emerald-200 bg-emerald-50 text-emerald-800' : '')}>{children}</button>;
+}
+function Group({ title, children }) {
+  return <div className="flex min-w-fit flex-col items-center gap-1 px-2 py-1"><div className="flex min-h-9 flex-wrap items-center justify-center gap-0.5">{children}</div><span className="text-[10px] font-medium tracking-wide text-slate-400">{title}</span></div>;
+}
 
 export default function BlogRichTextEditor({ value = '', onChange }) {
-  const editor = useRef(null);
-  const range = useRef(null);
-  const [panel, setPanel] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
-  const [imageAlt, setImageAlt] = useState('');
-  const [linkUrl, setLinkUrl] = useState('');
-  const [fontSize, setFontSize] = useState('3');
-  const [fontFamily, setFontFamily] = useState('Arial');
-  const [lineSpacing, setLineSpacing] = useState('1.75');
+  const editor = useRef(null), savedRange = useRef(null);
+  const [tab, setTab] = useState('Home'), [panel, setPanel] = useState('');
+  const [imageUrl, setImageUrl] = useState(''), [imageAlt, setImageAlt] = useState(''), [linkUrl, setLinkUrl] = useState('');
+  const [fontSize, setFontSize] = useState('16pt'), [fontFamily, setFontFamily] = useState('Arial'), [lineSpacing, setLineSpacing] = useState('1.6');
+  const [formats, setFormats] = useState({});
 
   useEffect(() => {
     if (!editor.current || document.activeElement === editor.current) return;
     if (editor.current.innerHTML !== value) editor.current.innerHTML = value || '';
-    // Keep the saved baseline unchanged while the user is actively typing.
     editor.current.dataset.initialHtml = value || '';
   }, [value]);
 
   const remember = () => {
-    const selection = window.getSelection();
-    if (selection && selection.rangeCount && editor.current?.contains(selection.anchorNode)) {
-      range.current = selection.getRangeAt(0).cloneRange();
-    }
+    const s = window.getSelection();
+    if (s?.rangeCount && editor.current?.contains(s.anchorNode)) savedRange.current = s.getRangeAt(0).cloneRange();
   };
-
   const restore = () => {
-    const selection = window.getSelection();
-    if (selection && range.current) {
-      editor.current?.focus();
-      selection.removeAllRanges();
-      selection.addRange(range.current);
+    const s = window.getSelection();
+    if (s && savedRange.current && editor.current) {
+      editor.current.focus();
+      try { s.removeAllRanges(); s.addRange(savedRange.current); } catch { savedRange.current = null; }
     }
   };
-
-  const publishChange = () => {
-    if (editor.current) onChange?.(editor.current.innerHTML || '');
-  };
-
-  const command = (name, arg) => {
-    editor.current?.focus();
-    document.execCommand('styleWithCSS', false, true);
-    document.execCommand(name, false, arg ?? null);
-    publishChange();
-  };
-
-  const applyFontSize = value => {
-    restore();
-    document.execCommand('styleWithCSS', false, false);
-    document.execCommand('fontSize', false, value);
-    const px = FONT_SIZES.find(item => item[1] === value)?.[2] || '16px';
-    editor.current?.querySelectorAll('font[size="' + value + '"]').forEach(node => {
-      const span = document.createElement('span');
-      span.style.fontSize = px;
-      span.innerHTML = node.innerHTML;
-      node.replaceWith(span);
+  const publish = () => { if (editor.current) onChange?.(editor.current.innerHTML || ''); };
+  const syncFormats = () => {
+    const s = window.getSelection();
+    if (!s?.anchorNode || !editor.current?.contains(s.anchorNode)) return;
+    const next = {};
+    ['bold','italic','underline','strikeThrough','insertUnorderedList','insertOrderedList'].forEach(k => {
+      try { next[k] = document.queryCommandState(k); } catch { next[k] = false; }
     });
-    setFontSize(value);
-    publishChange();
+    setFormats(next); remember();
   };
-
-  const applyColour = (commandName, colour) => {
+  const command = (name, arg) => {
     restore();
-    command(commandName, colour);
+    try { document.execCommand('styleWithCSS', false, true); document.execCommand(name, false, arg ?? null); } catch {}
+    publish(); syncFormats();
   };
-
-  const insertImage = event => {
-    event.preventDefault();
-    const url = imageUrl.trim();
+  const applyFontSize = size => {
+    restore();
+    const s = window.getSelection();
+    if (!s?.rangeCount || s.isCollapsed) return;
+    const span = document.createElement('span'); span.style.fontSize = size;
+    try {
+      span.append(s.getRangeAt(0).extractContents());
+      s.getRangeAt(0).insertNode(span);
+      const r = document.createRange(); r.selectNodeContents(span); s.removeAllRanges(); s.addRange(r); savedRange.current = r.cloneRange();
+    } catch { document.execCommand('fontSize', false, '4'); }
+    setFontSize(size); publish();
+  };
+  const insertImage = e => {
+    e.preventDefault(); const url = imageUrl.trim();
     if (!/^https?:\/\//i.test(url) && !url.startsWith('/')) return;
     restore();
-    const safeUrl = url.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-    const safeAlt = imageAlt.trim().replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-    document.execCommand('insertHTML', false, '<p><img src="' + safeUrl + '" alt="' + safeAlt + '"></p><p><br></p>');
-    publishChange();
-    setImageUrl('');
-    setImageAlt('');
-    setPanel('');
+    const img = '<img src="' + url.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;') + '" alt="' + imageAlt.trim().replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;') + '" style="max-width:100%;height:auto">';
+    document.execCommand('insertHTML', false, '<p>' + img + '</p><p><br></p>');
+    publish(); setImageUrl(''); setImageAlt(''); setPanel('');
   };
-
-  const insertLink = event => {
-    event.preventDefault();
-    const url = linkUrl.trim();
+  const insertLink = e => {
+    e.preventDefault(); const url = linkUrl.trim();
     if (!/^https?:\/\//i.test(url) && !url.startsWith('/')) return;
-    restore();
-    document.execCommand('createLink', false, url);
-    publishChange();
-    setLinkUrl('');
-    setPanel('');
+    command('createLink', url); setLinkUrl(''); setPanel('');
   };
-
-  const changeLineSpacing = value => {
-    restore();
-    const selection = window.getSelection();
-    let node = selection?.anchorNode;
+  const pastePlainText = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      editor.current?.focus();
+      document.execCommand('insertText', false, text);
+      publish();
+    } catch {
+      window.alert('Use Ctrl+V (or Cmd+V) inside the article page to paste from your clipboard.');
+    }
+  };
+  const handlePaste = e => {
+    e.preventDefault();
+    const clipboard = e.clipboardData;
+    const rawHtml = clipboard?.getData('text/html');
+    const plain = clipboard?.getData('text/plain') || '';
+    let html = rawHtml || plain.split(/\r?\n/).map(line => '<p>' + line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p>').join('');
+    html = sanitizeHtml(html);
+    const s = window.getSelection();
+    if (!s?.rangeCount || !editor.current?.contains(s.anchorNode)) {
+      editor.current?.focus(); const r = document.createRange(); r.selectNodeContents(editor.current); r.collapse(false); s?.removeAllRanges(); s?.addRange(r);
+    }
+    if (!s?.rangeCount) return;
+    // Let the browser editing engine split paragraphs correctly when a
+    // Word document's block content is pasted into the middle of a paragraph.
+    document.execCommand('insertHTML', false, html + '<p data-learnAfrica-paste-end="true"><br></p>');
+    const clean = editor.current.querySelector('[data-learnAfrica-paste-end]');
+    if (clean) {
+      clean.removeAttribute('data-learnAfrica-paste-end');
+      const caret = document.createRange(); caret.setStart(clean, 0); caret.collapse(true);
+      s.removeAllRanges(); s.addRange(caret); savedRange.current = caret.cloneRange();
+    }
+    publish(); syncFormats();
+  };
+  const changeSpacing = size => {
+    restore(); let node = window.getSelection()?.anchorNode;
     if (node?.nodeType === Node.TEXT_NODE) node = node.parentElement;
     const block = node?.closest?.('p,h1,h2,h3,h4,li,blockquote');
-    if (block && editor.current?.contains(block)) block.style.lineHeight = value;
-    setLineSpacing(value);
-    publishChange();
+    if (block && editor.current?.contains(block)) block.style.lineHeight = size;
+    setLineSpacing(size); publish();
   };
-
+  const tabs = ['Home','Insert','Layout','Review'];
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-background">
-      <div className="space-y-2 border-b border-border bg-muted/30 p-2.5">
-        <div className="flex flex-wrap items-center gap-1.5">
-          {tools.map(tool => (
-            <button key={tool.label} type="button" title={tool.label} aria-label={tool.label}
-              onMouseDown={event => event.preventDefault()}
-              onClick={() => command(tool.command, tool.value)}
-              className={buttonClass + (tool.className ? ' ' + tool.className : '')}>
-              {tool.text}
-            </button>
-          ))}
-          <select aria-label="Paragraph style" defaultValue="P" onMouseDown={remember}
-            onChange={event => command('formatBlock', event.target.value)} className={selectClass}>
-            <option value="P">Paragraph</option>
-            <option value="H1">Heading 1</option>
-            <option value="H2">Heading 2</option>
-            <option value="H3">Heading 3</option>
-            <option value="H4">Heading 4</option>
-          </select>
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="border-b border-slate-200 bg-[#f4f7f5]">
+        <div className="flex items-center gap-1 border-b border-slate-200 px-3 pt-2">
+          <div className="mr-3 flex items-center gap-2 pb-2 text-sm font-bold text-emerald-800"><FileText className="h-4 w-4" /> Article editor</div>
+          {tabs.map(item => <button key={item} type="button" onClick={() => { remember(); setTab(item); setPanel(''); }} className={'rounded-t-md px-4 py-2 text-xs font-semibold transition ' + (tab === item ? 'border border-b-white border-slate-200 bg-white text-emerald-800' : 'text-slate-500 hover:bg-white/70 hover:text-slate-800')}>{item}</button>)}
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            Font
-            <select aria-label="Font family" value={fontFamily} onMouseDown={remember}
-              onChange={event => { setFontFamily(event.target.value); restore(); command('fontName', event.target.value); }}
-              className={selectClass}>
-              <option value="Arial">Arial</option>
-              <option value="Georgia">Georgia</option>
-              <option value="Times New Roman">Times New Roman</option>
-              <option value="Verdana">Verdana</option>
-              <option value="Tahoma">Tahoma</option>
-              <option value="Trebuchet MS">Trebuchet</option>
-            </select>
-          </label>
-          <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            Size
-            <select aria-label="Font size" value={fontSize} onMouseDown={remember}
-              onChange={event => applyFontSize(event.target.value)} className={selectClass}>
-              {FONT_SIZES.map(([label, value]) => <option key={value} value={value}>{label}</option>)}
-            </select>
-          </label>
-          <label className="flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-2 text-xs text-muted-foreground">
-            Text
-            <input aria-label="Text colour" type="color" defaultValue="#202938" onMouseDown={remember}
-              onChange={event => applyColour('foreColor', event.target.value)} className="h-5 w-6 cursor-pointer border-0 bg-transparent p-0" />
-          </label>
-          <label className="flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-2 text-xs text-muted-foreground">
-            Highlight
-            <input aria-label="Highlight colour" type="color" defaultValue="#fff1a8" onMouseDown={remember}
-              onChange={event => applyColour('hiliteColor', event.target.value)} className="h-5 w-6 cursor-pointer border-0 bg-transparent p-0" />
-          </label>
-          <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            Line spacing
-            <select aria-label="Line spacing" value={lineSpacing} onMouseDown={remember}
-              onChange={event => changeLineSpacing(event.target.value)} className={selectClass}>
-              <option value="1.4">Compact</option>
-              <option value="1.6">Comfortable</option>
-              <option value="1.75">Relaxed</option>
-              <option value="2">Wide</option>
-            </select>
-          </label>
-          <button type="button" onMouseDown={event => { event.preventDefault(); remember(); }}
-            onClick={() => setPanel(panel === 'link' ? '' : 'link')} className={buttonClass}>Add link</button>
-          <button type="button" onMouseDown={event => { event.preventDefault(); remember(); }}
-            onClick={() => setPanel(panel === 'image' ? '' : 'image')} className={buttonClass}>Insert image</button>
-          <button type="button" onMouseDown={event => event.preventDefault()}
-            onClick={() => command('removeFormat')} className={buttonClass}>Clear formatting</button>
-        </div>
+        {tab === 'Home' && <div className="flex flex-wrap items-stretch divide-x divide-slate-200 px-2 py-1">
+          <Group title="Clipboard"><ToolButton label="Paste from clipboard" onClick={pastePlainText}><ClipboardPaste className="h-4 w-4" /></ToolButton><ToolButton label="Clear formatting" onClick={() => command('removeFormat')}><Eraser className="h-4 w-4" /></ToolButton></Group>
+          <Group title="Font">
+            <select aria-label="Font family" value={fontFamily} onMouseDown={remember} onChange={e => { setFontFamily(e.target.value); command('fontName',e.target.value); }} className={selectClass}>{['Arial','Georgia','Times New Roman','Verdana','Tahoma','Trebuchet MS'].map(f => <option key={f}>{f}</option>)}</select>
+            <select aria-label="Font size" value={fontSize} onMouseDown={remember} onChange={e => applyFontSize(e.target.value)} className={selectClass}>{FONT_SIZES.map(s => <option key={s}>{s}</option>)}</select>
+            <ToolButton label="Bold" active={formats.bold} onClick={() => command('bold')}><Bold className="h-4 w-4" /></ToolButton><ToolButton label="Italic" active={formats.italic} onClick={() => command('italic')}><Italic className="h-4 w-4" /></ToolButton><ToolButton label="Underline" active={formats.underline} onClick={() => command('underline')}><Underline className="h-4 w-4" /></ToolButton><ToolButton label="Strikethrough" active={formats.strikeThrough} onClick={() => command('strikeThrough')}><Strikethrough className="h-4 w-4" /></ToolButton>
+            <label className="flex h-9 items-center gap-1 px-2 text-[10px] text-slate-500">A<input aria-label="Text colour" type="color" defaultValue="#202938" onMouseDown={remember} onChange={e => command('foreColor',e.target.value)} className="h-5 w-5 cursor-pointer border-0 bg-transparent p-0" /></label><label className="flex h-9 items-center gap-1 px-2 text-[10px] text-slate-500">▰<input aria-label="Highlight colour" type="color" defaultValue="#fff1a8" onMouseDown={remember} onChange={e => command('hiliteColor',e.target.value)} className="h-5 w-5 cursor-pointer border-0 bg-transparent p-0" /></label>
+          </Group>
+          <Group title="Paragraph"><ToolButton label="Align left" onClick={() => command('justifyLeft')}><AlignLeft className="h-4 w-4" /></ToolButton><ToolButton label="Centre" onClick={() => command('justifyCenter')}><AlignCenter className="h-4 w-4" /></ToolButton><ToolButton label="Align right" onClick={() => command('justifyRight')}><AlignRight className="h-4 w-4" /></ToolButton><ToolButton label="Justify" onClick={() => command('justifyFull')}><AlignJustify className="h-4 w-4" /></ToolButton><ToolButton label="Bulleted list" active={formats.insertUnorderedList} onClick={() => command('insertUnorderedList')}><List className="h-4 w-4" /></ToolButton><ToolButton label="Numbered list" active={formats.insertOrderedList} onClick={() => command('insertOrderedList')}><ListOrdered className="h-4 w-4" /></ToolButton><select aria-label="Paragraph style" defaultValue="P" onMouseDown={remember} onChange={e => command('formatBlock',e.target.value)} className={selectClass}><option value="P">Normal</option><option value="H1">Heading 1</option><option value="H2">Heading 2</option><option value="H3">Heading 3</option><option value="BLOCKQUOTE">Quote</option></select></Group>
+          <Group title="Editing"><ToolButton label="Undo" onClick={() => command('undo')}><Undo2 className="h-4 w-4" /></ToolButton><ToolButton label="Redo" onClick={() => command('redo')}><Redo2 className="h-4 w-4" /></ToolButton></Group>
+        </div>}
+        {tab === 'Insert' && <div className="flex flex-wrap items-stretch divide-x divide-slate-200 px-2 py-1"><Group title="Links and media"><ToolButton label="Insert link" onClick={() => setPanel(panel === 'link' ? '' : 'link')}><Link2 className="h-4 w-4" /> Link</ToolButton><ToolButton label="Insert image" onClick={() => setPanel(panel === 'image' ? '' : 'image')}><ImagePlus className="h-4 w-4" /> Image</ToolButton></Group></div>}
+        {tab === 'Layout' && <div className="flex flex-wrap items-stretch divide-x divide-slate-200 px-2 py-1"><Group title="Paragraph spacing"><label className="flex items-center gap-2 px-2 text-xs text-slate-600">Line spacing<select aria-label="Line spacing" value={lineSpacing} onMouseDown={remember} onChange={e => changeSpacing(e.target.value)} className={selectClass}><option value="1.4">Compact</option><option value="1.6">Comfortable</option><option value="1.75">Relaxed</option><option value="2">Wide</option></select></label><ToolButton label="Increase indent" onClick={() => command('indent')}><Plus className="h-4 w-4" /> Indent</ToolButton><ToolButton label="Decrease indent" onClick={() => command('outdent')}><Minus className="h-4 w-4" /> Outdent</ToolButton></Group></div>}
+        {tab === 'Review' && <div className="flex flex-wrap items-center px-3 py-3 text-xs text-slate-500">Review your formatting, then use Preview article to check the finished page before publishing.</div>}
       </div>
-      {panel === 'image' && (
-        <form onSubmit={insertImage} className="grid grid-cols-1 gap-2 border-b border-border p-3 sm:grid-cols-[1fr_1fr_auto]">
-          <input required aria-label="Image URL" value={imageUrl} onChange={event => setImageUrl(event.target.value)}
-            placeholder="Image URL (https://…)" className="h-9 min-w-0 rounded-md border border-input bg-background px-3 text-sm" />
-          <input required aria-label="Image alt text" value={imageAlt} onChange={event => setImageAlt(event.target.value)}
-            placeholder="Descriptive alt text" className="h-9 min-w-0 rounded-md border border-input bg-background px-3 text-sm" />
-          <button className="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground">Insert image</button>
-        </form>
-      )}
-      {panel === 'link' && (
-        <form onSubmit={insertLink} className="flex flex-wrap gap-2 border-b border-border p-3">
-          <input required aria-label="Link URL" value={linkUrl} onChange={event => setLinkUrl(event.target.value)}
-            placeholder="https://…" className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm" />
-          <button className="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground">Apply to selected text</button>
-        </form>
-      )}
-      <div ref={editor} contentEditable suppressContentEditableWarning role="textbox" aria-label="Article body editor"
-        aria-multiline="true" onInput={publishChange} onBlur={publishChange}
-        className="min-h-[420px] max-h-[820px] overflow-y-auto bg-background px-5 py-5 text-base leading-7 outline-none sm:px-7 sm:py-7 [&_h1]:my-5 [&_h1]:text-3xl [&_h1]:font-bold [&_h2]:my-4 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:my-3 [&_h3]:text-xl [&_h3]:font-semibold [&_p]:my-3 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_blockquote]:my-4 [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:pl-4 [&_blockquote]:italic [&_img]:my-4 [&_img]:max-h-[480px] [&_img]:rounded-lg [&_img]:object-contain" />
-      <p className="border-t border-border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-        Select text before applying formatting or adding a link. Add descriptive alt text to images. Formatting is saved with the article.
-      </p>
+      {panel === 'image' && <form onSubmit={insertImage} className="grid grid-cols-1 gap-2 border-b border-slate-200 bg-white p-3 sm:grid-cols-[1fr_1fr_auto]"><input required aria-label="Image URL" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="Image URL (https://…)" className="h-9 min-w-0 rounded-md border border-slate-200 px-3 text-sm" /><input required aria-label="Image alt text" value={imageAlt} onChange={e => setImageAlt(e.target.value)} placeholder="Descriptive alt text" className="h-9 min-w-0 rounded-md border border-slate-200 px-3 text-sm" /><button className="rounded-md bg-emerald-700 px-3 py-2 text-sm font-semibold text-white">Insert image</button></form>}
+      {panel === 'link' && <form onSubmit={insertLink} className="flex flex-wrap gap-2 border-b border-slate-200 bg-white p-3"><input required aria-label="Link URL" value={linkUrl} onChange={e => setLinkUrl(e.target.value)} placeholder="https://…" className="h-9 min-w-0 flex-1 rounded-md border border-slate-200 px-3 text-sm" /><button className="rounded-md bg-emerald-700 px-3 py-2 text-sm font-semibold text-white">Apply to selected text</button></form>}
+      <div className="bg-[#eef2ef] p-3 sm:p-5"><div className="mx-auto max-w-[900px] overflow-hidden rounded-sm border border-slate-200 bg-white shadow-[0_2px_12px_rgba(15,23,42,.08)]">
+        <div ref={editor} contentEditable suppressContentEditableWarning role="textbox" aria-label="Article body editor" aria-multiline="true" onInput={() => { publish(); syncFormats(); }} onKeyUp={syncFormats} onMouseUp={syncFormats} onPaste={handlePaste} onBlur={publish} className="min-h-[480px] max-h-[900px] overflow-y-auto bg-white px-6 py-8 text-base leading-7 text-slate-800 outline-none sm:px-12 sm:py-12 [&_h1]:my-5 [&_h1]:text-3xl [&_h1]:font-bold [&_h2]:my-4 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:my-3 [&_h3]:text-xl [&_h3]:font-semibold [&_p]:my-3 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_blockquote]:my-4 [&_blockquote]:border-l-4 [&_blockquote]:border-emerald-600 [&_blockquote]:pl-4 [&_blockquote]:italic [&_img]:my-4 [&_img]:max-h-[480px] [&_img]:rounded-lg [&_img]:object-contain" />
+      </div><p className="mx-auto mt-2 max-w-[900px] text-[11px] text-slate-500">Word-style editing ribbon. Paste keeps supported formatting and places your next typing in a fresh normal paragraph.</p></div>
     </div>
   );
 }
