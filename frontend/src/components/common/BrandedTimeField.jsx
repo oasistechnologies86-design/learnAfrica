@@ -3,8 +3,8 @@ import { Clock } from 'lucide-react';
 /** Branded text-based time entry that avoids the browser's native time popup. */
 export function BrandedTimeField({ value = '', onChange, className = '', required = false, disabled = false, id, name, 'aria-label': ariaLabel }) {
   const handleChange = event => {
-    let next = event.target.value.replace(/[^0-9:]/g, '').slice(0, 5);
-    if (next.length === 2 && !next.includes(':') && value?.length < 2) next += ':';
+    const digits = event.target.value.replace(/\D/g, '').slice(0, 4);
+    const next = digits.length > 2 ? `${digits.slice(0, 2)}:${digits.slice(2)}` : digits;
     onChange?.({ target: { value: next } });
   };
   return (
@@ -20,7 +20,7 @@ export function BrandedTimeField({ value = '', onChange, className = '', require
           }
         }}
         placeholder="HH:MM" maxLength={5}
-        className={`w-full pl-9 ${className}`} />
+        className={`w-full ${className} pl-9`} />
     </div>
   );
 }
