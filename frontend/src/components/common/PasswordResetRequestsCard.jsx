@@ -1,4 +1,5 @@
 /**
+import { BrandedSelect } from '@/components/common/BrandedSelect';
  * PasswordResetRequestsCard — admin review of forgot-password requests.
  *
  * Lists every request (email, reason, date/time, status) and, per request, lets
@@ -138,14 +139,14 @@ export default function PasswordResetRequestsCard({ onChanged }) {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <select value={filter} onChange={e => setFilter(e.target.value)}
+            <BrandedSelect value={filter} onChange={e => setFilter(e.target.value)}
               className="h-9 rounded-lg border border-border bg-background px-2 text-xs">
               <option value="all">All</option>
               <option value="pending">Pending</option>
               <option value="link_sent">Link sent</option>
               <option value="completed">Completed</option>
               <option value="dismissed">Dismissed</option>
-            </select>
+            </BrandedSelect>
             <Button size="sm" variant="outline" onClick={load} className="gap-2">
               <RefreshCw className="h-3.5 w-3.5" /> Refresh
             </Button>
