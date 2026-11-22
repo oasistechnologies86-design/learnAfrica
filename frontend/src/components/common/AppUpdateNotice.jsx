@@ -252,35 +252,71 @@ export default function AppUpdateNotice() {
       if (event.key === 'Escape' || event.key === 'Tab') {
         event.preventDefault();
         event.stopPropagation();
+        document.getElementById('la-remote-update-button')?.focus();
         buttonRef.current?.focus();
       }
     };
-    const handleRemoteRefresh = event => {
-      if (event.source !== document.getElementById('la-remote-update-notice')?.contentWindow) return;
-      if (event.data?.type === 'LEARNAFRICA_UPDATE_REFRESH') window.location.reload();
-    };
     window.addEventListener('keydown', blockEscape, true);
-    window.addEventListener('message', handleRemoteRefresh);
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener('keydown', blockEscape, true);
-      window.removeEventListener('message', handleRemoteRefresh);
+    };
+  }, [available]);
+
+  // Mount the latest notice directly in the app document. An iframe creates a
+  // separate browsing surface, so its backdrop cannot reliably blur the page
+  // behind it. A parent-document overlay lets backdrop-filter see the actual
+  // LearnAfrica page while keeping the remotely fetched card markup current.
+  useEffect(() => {
+    if (!available || !remoteNotice) return undefined;
+    let host;
+    let style;
+    try {
+      const parsed = new DOMParser().parseFromString(remoteNotice, 'text/html');
+      const sourceStyle = parsed.querySelector('style');
+      const sourceRoot = parsed.querySelector('.la-root');
+      if (!sourceStyle || !sourceRoot) return undefined;
+
+      style = document.createElement('style');
+      style.setAttribute('data-la-remote-notice', 'styles');
+      style.textContent = sourceStyle.textContent
+        .replace(/html,body\\s*\\{[^}]*\\}/gi, '')
+        .replace(/\\*\\s*\\{[^}]*\\}/g, '')
+        + '\\n.la-root:not(.la-preview){background:transparent!important;-webkit-backdrop-filter:blur(8px) saturate(115%);backdrop-filter:blur(8px) saturate(115%)}';
+      document.head.appendChild(style);
+
+      host = document.createElement('div');
+      host.className = 'la-root la-remote-root';
+      host.id = 'la-remote-update-host';
+      for (const child of [...sourceRoot.childNodes]) {
+        if (child.nodeName !== 'SCRIPT') host.appendChild(document.importNode(child, true));
+      }
+      document.body.appendChild(host);
+
+      const button = host.querySelector('#update');
+      if (button) {
+        button.id = 'la-remote-update-button';
+        button.addEventListener('click', () => {
+          if (button.disabled) return;
+          button.disabled = true;
+          button.classList.add('go');
+          const label = button.querySelector('b');
+          if (label) label.textContent = 'Updating…';
+          window.setTimeout(() => window.location.reload(), 2100);
+        });
+        button.focus();
+      }
+    } catch {
+      // If remote markup cannot be mounted, the bundled notice remains available.
+    }
+    return () => {
+      host?.remove();
+      style?.remove();
     };
   }, [available, remoteNotice]);
 
   if (!available) return null;
-  if (remoteNotice) {
-    return (
-      <iframe
-        id="la-remote-update-notice"
-        title="LearnAfrica update required"
-        srcDoc={remoteNotice}
-        sandbox="allow-scripts"
-        referrerPolicy="no-referrer"
-        style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', border: 0, zIndex: 9999, background: 'transparent', backdropFilter: 'blur(8px) saturate(115%)', WebkitBackdropFilter: 'blur(8px) saturate(115%)' }}
-      />
-    );
-  }
+  if (remoteNotice) return null;
   return <LearnAfricaUpdate onUpdate={() => window.location.reload()} buttonRef={buttonRef} />;
 }
 
