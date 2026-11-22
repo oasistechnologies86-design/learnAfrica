@@ -77,6 +77,16 @@ export default function BlogRichTextEditor({ value = '', onChange }) {
     if (!/^https?:\/\//i.test(url) && !url.startsWith('/')) return;
     command('createLink', url); setLinkUrl(''); setPanel('');
   };
+  const pastePlainText = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      editor.current?.focus();
+      document.execCommand('insertText', false, text);
+      publish();
+    } catch {
+      window.alert('Use Ctrl+V (or Cmd+V) inside the article page to paste from your clipboard.');
+    }
+  };
   const handlePaste = e => {
     e.preventDefault();
     const clipboard = e.clipboardData;
@@ -118,7 +128,7 @@ export default function BlogRichTextEditor({ value = '', onChange }) {
           {tabs.map(item => <button key={item} type="button" onClick={() => { remember(); setTab(item); setPanel(''); }} className={'rounded-t-md px-4 py-2 text-xs font-semibold transition ' + (tab === item ? 'border border-b-white border-slate-200 bg-white text-emerald-800' : 'text-slate-500 hover:bg-white/70 hover:text-slate-800')}>{item}</button>)}
         </div>
         {tab === 'Home' && <div className="flex flex-wrap items-stretch divide-x divide-slate-200 px-2 py-1">
-          <Group title="Clipboard"><ToolButton label="Paste from clipboard" onClick={() => editor.current?.focus()}><ClipboardPaste className="h-4 w-4" /></ToolButton><ToolButton label="Clear formatting" onClick={() => command('removeFormat')}><Eraser className="h-4 w-4" /></ToolButton></Group>
+          <Group title="Clipboard"><ToolButton label="Paste from clipboard" onClick={pastePlainText}><ClipboardPaste className="h-4 w-4" /></ToolButton><ToolButton label="Clear formatting" onClick={() => command('removeFormat')}><Eraser className="h-4 w-4" /></ToolButton></Group>
           <Group title="Font">
             <select aria-label="Font family" value={fontFamily} onMouseDown={remember} onChange={e => { setFontFamily(e.target.value); command('fontName',e.target.value); }} className={selectClass}>{['Arial','Georgia','Times New Roman','Verdana','Tahoma','Trebuchet MS'].map(f => <option key={f}>{f}</option>)}</select>
             <select aria-label="Font size" value={fontSize} onMouseDown={remember} onChange={e => applyFontSize(e.target.value)} className={selectClass}>{FONT_SIZES.map(s => <option key={s}>{s}</option>)}</select>
