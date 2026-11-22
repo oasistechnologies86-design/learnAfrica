@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { BrandedSelect } from '@/components/common/BrandedSelect';
 import { Phone } from 'lucide-react'
 import { Input } from '@/components/common/Input'
 import { cn } from '@/lib/utils'
@@ -114,7 +115,7 @@ export function PhoneField({
   return (
     <div className={cn('space-y-2', className)}>
       <div className="flex w-full min-w-0 gap-2">
-        <select
+        <BrandedSelect
           aria-label="Country code"
           value={country}
           onChange={onCountryChange}
@@ -129,7 +130,7 @@ export function PhoneField({
           {countryOptions.map(option => (
             <option key={option.code} value={option.code}>{option.flag || countryFlag(option.code)} {option.dial} · {option.name}</option>
           ))}
-        </select>
+        </BrandedSelect>
         <div className="relative min-w-0 flex-1">
           <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
