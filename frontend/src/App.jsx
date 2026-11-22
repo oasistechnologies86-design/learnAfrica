@@ -12,51 +12,66 @@ import MainLayout    from './layouts/MainLayout';
 import DashboardLayout  from './layouts/DashboardLayout';
 import InstructorLayout from './layouts/InstructorLayout';
 
+// Retry one transient lazy-chunk failure before letting it reach the route
+// ErrorBoundary. This helps with short network interruptions without forcing
+// a full page reload that could discard active work.
+const lazyWithRetry = importer => lazy(() => importer().catch(async firstError => {
+  await new Promise(resolve => window.setTimeout(resolve, 300));
+  try {
+    return await importer();
+  } catch (retryError) {
+    window.dispatchEvent(new CustomEvent('learnafrica:update-available', {
+      detail: { message: String(retryError?.message || firstError?.message || 'Page update required') },
+    }));
+    throw retryError;
+  }
+}));
+
 // Every page is loaded on demand. The landing page and layouts ship in the
 // initial bundle; everything else is fetched when its route is opened, so a
 // first-time visitor no longer downloads the admin panel, the course editor
 // and the certificate renderer before seeing the homepage.
-const LandingPage              = lazy(() => import('./pages/Landing/LandingPage').then(m => ({ default: m.LandingPage })));
-const AboutPage                 = lazy(() => import('./pages/About/AboutPage'));
-const LoginPage                = lazy(() => import('./pages/Auth/LoginPage').then(m => ({ default: m.LoginPage })));
-const SignupPage               = lazy(() => import('./pages/Auth/SignupPage').then(m => ({ default: m.SignupPage })));
-const ForgotPasswordPage       = lazy(() => import('./pages/Auth/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
-const ResetPasswordPage        = lazy(() => import('./pages/Auth/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
-const EmailVerificationPage    = lazy(() => import('./pages/Auth/EmailVerificationPage'));
-const InstructorOnboarding     = lazy(() => import('./pages/Auth/InstructorOnboarding'));
-const InstructorInfoPage       = lazy(() => import('./pages/Auth/InstructorInfoPage'));
-const InstructorProfileCompletion = lazy(() => import('./pages/Auth/InstructorProfileCompletion'));
-const CoursesPage              = lazy(() => import('./pages/Courses/CoursesPage').then(m => ({ default: m.CoursesPage })));
-const CourseDetailPage         = lazy(() => import('./pages/Courses/CourseDetailPage').then(m => ({ default: m.CourseDetailPage })));
-const PaymentPage              = lazy(() => import('./pages/Payment/PaymentPage'));
-const PaymentReturnPage        = lazy(() => import('./pages/Payment/PaymentReturnPage'));
-const LessonPage               = lazy(() => import('./pages/Lessons/LessonPage').then(m => ({ default: m.LessonPage })));
-const PreviewCoursePage        = lazy(() => import('./pages/Instructor/PreviewCoursePage').then(m => ({ default: m.PreviewCoursePage })));
-const QuizPage                 = lazy(() => import('./pages/Quiz/QuizPage').then(m => ({ default: m.QuizPage })));
-const QuizResultsPage          = lazy(() => import('./pages/Quiz/QuizResultsPage').then(m => ({ default: m.QuizResultsPage })));
-const StudentDashboard         = lazy(() => import('./pages/Dashboard/StudentDashboard'));
-const InstructorDashboard      = lazy(() => import('./pages/Instructor/InstructorDashboard').then(m => ({ default: m.InstructorDashboard })));
-const CreateCoursePage         = lazy(() => import('./pages/Instructor/CreateCoursePage').then(m => ({ default: m.CreateCoursePage })));
-const AnalyticsPage            = lazy(() => import('./pages/Instructor/AnalyticsPage').then(m => ({ default: m.AnalyticsPage })));
-const ManageCoursesPage        = lazy(() => import('./pages/Instructor/ManageCoursesPage'));
-const RegistrationPaymentPage  = lazy(() => import('./pages/Instructor/RegistrationPaymentPage'));
-const EditCoursePage           = lazy(() => import('./pages/Instructor/EditCoursePage').then(m => ({ default: m.EditCoursePage })));
-const InstructorCouponsPage    = lazy(() => import('./pages/Instructor/InstructorCouponsPage'));
-const ProfilePage              = lazy(() => import('./pages/Profile/ProfilePage'));
-const SettingsPage             = lazy(() => import('./pages/Settings/SettingsPage'));
-const CertificatePage          = lazy(() => import('./pages/Certificate/CertificatePage'));
-const MyCertificatesPage       = lazy(() => import('./pages/Certificate/MyCertificatesPage'));
-const LeaderboardPage          = lazy(() => import('./pages/Leaderboard/LeaderboardPage'));
-const NotFoundPage             = lazy(() => import('./pages/NotFound/NotFoundPage'));
-const AdminPage                = lazy(() => import('./pages/Admin/AdminPage'));
-const ReceiptsPage             = lazy(() => import('./pages/Receipts/ReceiptsPage'));
-const ReceiptStatementPage     = lazy(() => import('./pages/Receipts/ReceiptStatementPage'));
-const InstructorsPage          = lazy(() => import('./pages/Directory/InstructorsPage'));
-const InstructorProfilePage    = lazy(() => import('./pages/Directory/InstructorProfilePage'));
-const BlogPage                 = lazy(() => import('./pages/Blog/BlogPage'));
-const BlogPostPage             = lazy(() => import('./pages/Blog/BlogPostPage'));
-const VerifyCredentialPage     = lazy(() => import('./pages/VerifyCredential/VerifyCredentialPage'));
-const CommunityPage            = lazy(() => import('./pages/Community/CommunityPage'));
+const LandingPage              = lazyWithRetry(() => import('./pages/Landing/LandingPage').then(m => ({ default: m.LandingPage })));
+const AboutPage                 = lazyWithRetry(() => import('./pages/About/AboutPage'));
+const LoginPage                = lazyWithRetry(() => import('./pages/Auth/LoginPage').then(m => ({ default: m.LoginPage })));
+const SignupPage               = lazyWithRetry(() => import('./pages/Auth/SignupPage').then(m => ({ default: m.SignupPage })));
+const ForgotPasswordPage       = lazyWithRetry(() => import('./pages/Auth/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
+const ResetPasswordPage        = lazyWithRetry(() => import('./pages/Auth/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
+const EmailVerificationPage    = lazyWithRetry(() => import('./pages/Auth/EmailVerificationPage'));
+const InstructorOnboarding     = lazyWithRetry(() => import('./pages/Auth/InstructorOnboarding'));
+const InstructorInfoPage       = lazyWithRetry(() => import('./pages/Auth/InstructorInfoPage'));
+const InstructorProfileCompletion = lazyWithRetry(() => import('./pages/Auth/InstructorProfileCompletion'));
+const CoursesPage              = lazyWithRetry(() => import('./pages/Courses/CoursesPage').then(m => ({ default: m.CoursesPage })));
+const CourseDetailPage         = lazyWithRetry(() => import('./pages/Courses/CourseDetailPage').then(m => ({ default: m.CourseDetailPage })));
+const PaymentPage              = lazyWithRetry(() => import('./pages/Payment/PaymentPage'));
+const PaymentReturnPage        = lazyWithRetry(() => import('./pages/Payment/PaymentReturnPage'));
+const LessonPage               = lazyWithRetry(() => import('./pages/Lessons/LessonPage').then(m => ({ default: m.LessonPage })));
+const PreviewCoursePage        = lazyWithRetry(() => import('./pages/Instructor/PreviewCoursePage').then(m => ({ default: m.PreviewCoursePage })));
+const QuizPage                 = lazyWithRetry(() => import('./pages/Quiz/QuizPage').then(m => ({ default: m.QuizPage })));
+const QuizResultsPage          = lazyWithRetry(() => import('./pages/Quiz/QuizResultsPage').then(m => ({ default: m.QuizResultsPage })));
+const StudentDashboard         = lazyWithRetry(() => import('./pages/Dashboard/StudentDashboard'));
+const InstructorDashboard      = lazyWithRetry(() => import('./pages/Instructor/InstructorDashboard').then(m => ({ default: m.InstructorDashboard })));
+const CreateCoursePage         = lazyWithRetry(() => import('./pages/Instructor/CreateCoursePage').then(m => ({ default: m.CreateCoursePage })));
+const AnalyticsPage            = lazyWithRetry(() => import('./pages/Instructor/AnalyticsPage').then(m => ({ default: m.AnalyticsPage })));
+const ManageCoursesPage        = lazyWithRetry(() => import('./pages/Instructor/ManageCoursesPage'));
+const RegistrationPaymentPage  = lazyWithRetry(() => import('./pages/Instructor/RegistrationPaymentPage'));
+const EditCoursePage           = lazyWithRetry(() => import('./pages/Instructor/EditCoursePage').then(m => ({ default: m.EditCoursePage })));
+const InstructorCouponsPage    = lazyWithRetry(() => import('./pages/Instructor/InstructorCouponsPage'));
+const ProfilePage              = lazyWithRetry(() => import('./pages/Profile/ProfilePage'));
+const SettingsPage             = lazyWithRetry(() => import('./pages/Settings/SettingsPage'));
+const CertificatePage          = lazyWithRetry(() => import('./pages/Certificate/CertificatePage'));
+const MyCertificatesPage       = lazyWithRetry(() => import('./pages/Certificate/MyCertificatesPage'));
+const LeaderboardPage          = lazyWithRetry(() => import('./pages/Leaderboard/LeaderboardPage'));
+const NotFoundPage             = lazyWithRetry(() => import('./pages/NotFound/NotFoundPage'));
+const AdminPage                = lazyWithRetry(() => import('./pages/Admin/AdminPage'));
+const ReceiptsPage             = lazyWithRetry(() => import('./pages/Receipts/ReceiptsPage'));
+const ReceiptStatementPage     = lazyWithRetry(() => import('./pages/Receipts/ReceiptStatementPage'));
+const InstructorsPage          = lazyWithRetry(() => import('./pages/Directory/InstructorsPage'));
+const InstructorProfilePage    = lazyWithRetry(() => import('./pages/Directory/InstructorProfilePage'));
+const BlogPage                 = lazyWithRetry(() => import('./pages/Blog/BlogPage'));
+const BlogPostPage             = lazyWithRetry(() => import('./pages/Blog/BlogPostPage'));
+const VerifyCredentialPage     = lazyWithRetry(() => import('./pages/VerifyCredential/VerifyCredentialPage'));
+const CommunityPage            = lazyWithRetry(() => import('./pages/Community/CommunityPage'));
 
 // Shared full-screen loading state, used consistently by every route guard
 // below instead of each one inventing its own behavior (previously
@@ -66,14 +81,14 @@ function RouteLoadingScreen() {
   return <AfricaMapLoader />;
 }
 
-// A stale tab can request a hashed chunk that a newer deployment no longer has.
-// Do not cancel Vite's native preload-error recovery: cancelling it leaves the
-// lazy route rejected and strands the user on the Error Boundary. Vite can now
-// perform its one recovery reload; normal version checks show the branded
-// update screen before this in the usual case.
+// Vite's default preload-error action is an immediate full-page reload. Stop
+// that action so active work is not discarded; lazyWithRetry performs one
+// bounded retry and the existing full-screen update notice remains the only
+// refresh path when a new build is required.
 function ChunkLoadRecovery() {
   useEffect(() => {
-    const handlePreloadError = () => {
+    const handlePreloadError = event => {
+      event.preventDefault();
       window.dispatchEvent(new CustomEvent('learnafrica:chunk-load-failed', {
         detail: { path: window.location.pathname, at: Date.now() },
       }));
