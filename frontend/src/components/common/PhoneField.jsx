@@ -117,11 +117,12 @@ export function PhoneField({
       <div className="flex w-full min-w-0 gap-2">
         <BrandedSelect
           aria-label="Country code"
+          containerClassName="w-[42%] min-w-[7.25rem] max-w-44 flex-none"
           value={country}
           onChange={onCountryChange}
           disabled={disabled}
           className={cn(
-            'h-10 w-[42%] min-w-[7.25rem] max-w-44 flex-none rounded-lg border border-input bg-background px-2 text-sm outline-none',
+            'h-10 w-full rounded-lg border border-input bg-background px-2 text-sm outline-none',
             'focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
             error && 'border-destructive focus-visible:ring-destructive',
             selectClassName
