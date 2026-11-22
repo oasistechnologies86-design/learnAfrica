@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { BrandedSelect } from '@/components/common/BrandedSelect';
 import { useNavigate, Link } from 'react-router-dom';
 import { BookOpen, Layout, ChevronRight, Loader2, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/common/Button';
@@ -293,7 +294,7 @@ export function CreateCoursePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Category *" error={fieldErrors.category}>
-              <select className={inputCls}
+              <BrandedSelect className={inputCls}
                 value={PRESET_CATEGORIES.includes(form.category) ? form.category : (form.category ? '__custom' : '')}
                 onChange={e => {
                   setFieldErrors(p => ({...p, category: ''}));
@@ -303,7 +304,7 @@ export function CreateCoursePage() {
                 <option value="">Select category…</option>
                 {PRESET_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                 <option value="__custom">+ Custom category…</option>
-              </select>
+              </BrandedSelect>
               {!PRESET_CATEGORIES.includes(form.category) && (
                 <input className={cn(inputCls, 'mt-2')}
                   value={form.category}
@@ -312,11 +313,11 @@ export function CreateCoursePage() {
               )}
             </Field>
             <Field label="Difficulty *" error={fieldErrors.difficulty}>
-              <select className={inputCls} value={form.difficulty}
+              <BrandedSelect className={inputCls} value={form.difficulty}
                 onChange={e => { set('difficulty', e.target.value); setFieldErrors(p => ({...p, difficulty: ''})); }}>
                 <option value="">Select level…</option>
                 {DIFFICULTIES.map(d => <option key={d} value={d}>{d}</option>)}
-              </select>
+              </BrandedSelect>
             </Field>
           </div>
 
