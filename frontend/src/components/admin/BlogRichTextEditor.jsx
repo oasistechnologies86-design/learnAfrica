@@ -40,10 +40,10 @@ export default function BlogRichTextEditor({ value = '', onChange }) {
   const [lineSpacing, setLineSpacing] = useState('1.75');
 
   useEffect(() => {
-    if (editor.current && document.activeElement !== editor.current && editor.current.innerHTML !== value) {
-      editor.current.innerHTML = value || '';
-    }
-    if (editor.current) editor.current.dataset.initialHtml = value || '';
+    if (!editor.current || document.activeElement === editor.current) return;
+    if (editor.current.innerHTML !== value) editor.current.innerHTML = value || '';
+    // Keep the saved baseline unchanged while the user is actively typing.
+    editor.current.dataset.initialHtml = value || '';
   }, [value]);
 
   const remember = () => {
