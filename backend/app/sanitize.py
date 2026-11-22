@@ -85,6 +85,12 @@ def _sanitize_inline_style(value):
             family = raw.strip("\\'\"")
             if family in allowed_fonts:
                 normalized = "'" + family + "'"
+        elif prop == 'font-weight' and re.fullmatch(r'(bold|[6-9]00)', raw, re.IGNORECASE):
+            normalized = 'bold'
+        elif prop == 'font-style' and re.fullmatch(r'(italic|oblique)', raw, re.IGNORECASE):
+            normalized = 'italic'
+        elif prop == 'text-decoration' and re.fullmatch(r'(underline|line-through|none)', raw, re.IGNORECASE):
+            normalized = raw.lower()
         elif prop == 'font-size':
             match = re.fullmatch(r'(\d{1,2})(px|pt)', raw, re.IGNORECASE)
             if match and 10 <= int(match.group(1)) <= 48:
