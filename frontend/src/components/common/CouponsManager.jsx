@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
+import { BrandedSelect } from '@/components/common/BrandedSelect';
+import { BrandedDatePicker } from '@/components/common/BrandedDatePicker';
 import { Loader2, Plus, Copy, Check, Trash2, Ticket, AlertCircle, Calendar, Users, Percent, DollarSign, ToggleLeft, ToggleRight, Search } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
@@ -352,7 +354,7 @@ function CreateCouponModal({ role, myCourses, onClose, onCreated }) {
           {/* Applies to */}
           <div>
             <label className="block text-xs font-bold text-muted-foreground mb-1 uppercase tracking-wider">Applies to</label>
-            <select
+            <BrandedSelect
               value={appliesTo}
               onChange={e => setAppliesTo(e.target.value)}
               className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
@@ -360,14 +362,14 @@ function CreateCouponModal({ role, myCourses, onClose, onCreated }) {
               {role === 'admin' && <option value="all">All courses (platform-wide)</option>}
               <option value="instructor">{role === 'admin' ? 'All my courses' : 'All my courses'}</option>
               <option value="course">One specific course</option>
-            </select>
+            </BrandedSelect>
           </div>
 
           {/* Course picker (only when applies_to === 'course') */}
           {appliesTo === 'course' && (
             <div>
               <label className="block text-xs font-bold text-muted-foreground mb-1 uppercase tracking-wider">Course</label>
-              <select
+              <BrandedSelect
                 value={courseId}
                 onChange={e => setCourseId(e.target.value)}
                 required
@@ -377,7 +379,7 @@ function CreateCouponModal({ role, myCourses, onClose, onCreated }) {
                 {myCourses.map(c => (
                   <option key={c.id} value={c.id}>{c.title}</option>
                 ))}
-              </select>
+              </BrandedSelect>
             </div>
           )}
 
@@ -400,8 +402,7 @@ function CreateCouponModal({ role, myCourses, onClose, onCreated }) {
           {/* Expires at */}
           <div>
             <label className="block text-xs font-bold text-muted-foreground mb-1 uppercase tracking-wider">Expires on (optional)</label>
-            <input
-              type="date"
+            <BrandedDatePicker
               value={expiresAt}
               onChange={e => setExpiresAt(e.target.value)}
               className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
