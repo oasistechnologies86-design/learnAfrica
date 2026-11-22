@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { BrandedSelect } from '@/components/common/BrandedSelect';
 import BlogRichTextEditor from '@/components/admin/BlogRichTextEditor';
+import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import { BrandedDatePicker } from '@/components/common/BrandedDatePicker';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -3773,6 +3774,7 @@ function AdminBlogTab() {
   const [uploading, setUploading] = useState(false);
   const [status, setStatus] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const field = (key, value) => setForm(current => ({ ...current, [key]: value }));
   const load = useCallback(async () => {
     setLoading(true);
@@ -3781,13 +3783,13 @@ function AdminBlogTab() {
     finally { setLoading(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
-  const startCreate = () => { setEditingId(null); setForm(empty); setShowForm(true); setStatus(null); };
+  const startCreate = () => { setEditingId(null); setForm(empty); setShowForm(true); setPreviewOpen(false); setStatus(null); };
   const startEdit = post => {
     let tags = post.tags || [];
     if (typeof tags === 'string') { try { const parsed = JSON.parse(tags); tags = Array.isArray(parsed) ? parsed : tags.split(','); } catch { tags = tags.split(','); } }
     setEditingId(post.id);
     setForm({ ...empty, ...post, tags: Array.isArray(tags) ? tags.join(', ') : String(tags || ''), is_published: !!post.is_published });
-    setShowForm(true); setStatus(null);
+    setShowForm(true); setPreviewOpen(false); setStatus(null);
   };
   const uploadCover = async event => {
     const file = event.target.files && event.target.files[0]; event.target.value = '';
@@ -3849,6 +3851,22 @@ function AdminBlogTab() {
           <label className="block space-y-1 text-sm font-medium">SEO description<textarea value={form.seo_description} onChange={e => field('seo_description', e.target.value)} rows={2} maxLength={180} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" placeholder="Search result description." /></label>
           <label className="block space-y-1 text-sm font-medium">Social sharing image URL<Input value={form.og_image} onChange={e => field('og_image', e.target.value)} placeholder="Leave blank to use cover image" /></label>
         </section>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button type="button" variant="outline" onClick={() => setPreviewOpen(open => !open)}>{previewOpen ? 'Hide preview' : 'Preview article'}</Button>
+        </div>
+        {previewOpen && <section aria-label="Article preview" className="rounded-xl border border-border bg-background p-4 sm:p-6">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-primary">Preview · Not published yet</p>
+          <article className="mx-auto max-w-3xl">
+            {form.category && <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-primary">{form.category}</p>}
+            <h1 className="text-2xl font-bold leading-tight sm:text-3xl">{form.title || 'Untitled article'}</h1>
+            {form.excerpt && <p className="mt-3 text-base leading-7 text-muted-foreground">{form.excerpt}</p>}
+            {form.author_name && <p className="mt-3 text-xs text-muted-foreground">{form.author_name}</p>}
+            {form.cover && <img src={form.cover} alt={form.cover_alt || ''} className="my-6 max-h-80 w-full rounded-xl bg-muted object-contain" />}
+            {form.body && /<[a-z][\s\S]*>/i.test(form.body)
+              ? <div className="blog-article-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(form.body) }} />
+              : <div className="blog-article-content whitespace-pre-wrap">{form.body || 'Your article content will appear here.'}</div>}
+          </article>
+        </section>}
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.is_published} onChange={e => field('is_published', e.target.checked)} /> Published (visible publicly)</label>
         <div className="flex flex-wrap gap-2"><Button onClick={save} disabled={busy || uploading}>{busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}{editingId ? 'Save changes' : 'Create post'}</Button><Button variant="outline" onClick={() => { setShowForm(false); setEditingId(null); }}>Cancel</Button></div>
       </CardContent></Card>}
