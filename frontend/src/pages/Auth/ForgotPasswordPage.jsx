@@ -1,4 +1,5 @@
 /**
+import { BrandedSelect } from '@/components/common/BrandedSelect';
  * ForgotPasswordPage — password recovery.
  *
  * Two modes, chosen by the admin's Password reset setting:
@@ -295,10 +296,10 @@ export function ForgotPasswordPage() {
             <div className="space-y-2">
               <Label htmlFor="reason">What do you need?</Label>
               <div className="relative">
-                <select id="reason" value={reason} onChange={e => setReason(e.target.value)}
+                <BrandedSelect id="reason" value={reason} onChange={e => setReason(e.target.value)}
                   className="w-full appearance-none rounded-md border border-input bg-background px-3 py-2 pr-9 text-sm outline-none focus:ring-2 focus:ring-primary/20">
                   {REASONS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-                </select>
+                </BrandedSelect>
                 <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               </div>
             </div>
