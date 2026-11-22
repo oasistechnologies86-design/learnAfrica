@@ -69,7 +69,10 @@ function sanitizeInlineStyle(value) {
     else if (property === 'font-family') {
       const family = raw.replace(/^['"]|['"]$/g, '');
       if (allowedFonts.has(family)) normalized = "'" + family + "'";
-    } else if (property === 'font-size') {
+    } else if (property === 'font-weight' && /^(bold|[6-9]00)$/i.test(raw)) normalized = 'bold';
+    else if (property === 'font-style' && /^(italic|oblique)$/i.test(raw)) normalized = 'italic';
+    else if (property === 'text-decoration' && /^(underline|line-through|none)$/i.test(raw)) normalized = raw.toLowerCase();
+    else if (property === 'font-size') {
       const match = raw.match(/^(\d{1,2})(px|pt)$/i);
       if (match && Number(match[1]) >= 10 && Number(match[1]) <= 48) normalized = match[1] + match[2].toLowerCase();
     } else if ((property === 'color' || property === 'background-color') && /^#[0-9a-f]{3}(?:[0-9a-f]{3})?$/i.test(raw)) normalized = raw.toLowerCase();
