@@ -35,11 +35,11 @@ export function DialogProvider({ children }) {
     return () => { delete window.LearnAfricaDialog; };
   }, [showAlert, confirm, prompt]);
 
-  const finish = (value) => {
+  const finish = useCallback((value) => {
     if (!active) return;
     active.resolve(value);
     setQueue(current => current.slice(1));
-  };
+  }, [active]);
 
   useEffect(() => {
     if (!active) return undefined;
@@ -50,7 +50,7 @@ export function DialogProvider({ children }) {
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [active]);
+  }, [active, finish]);
 
   return (
     <DialogContext.Provider value={{ showAlert, confirm, prompt }}>
