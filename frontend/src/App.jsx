@@ -66,16 +66,17 @@ function RouteLoadingScreen() {
   return <AfricaMapLoader />;
 }
 
-// A deployment can replace hashed chunks while another tab still holds older
-// HTML. Retry one failed Vite lazy import once per minute, then leave the
-// ErrorBoundary in control instead of creating an endless reload loop.
+// A stale tab can request a hashed chunk that a newer deployment no longer has.
+// Do not cancel Vite's native preload-error recovery: cancelling it leaves the
+// lazy route rejected and strands the user on the Error Boundary. Vite can now
+// perform its one recovery reload; normal version checks show the branded
+// update screen before this in the usual case.
 function ChunkLoadRecovery() {
   useEffect(() => {
-    const handlePreloadError = (event) => {
-      event.preventDefault();
-      // Keep recovery under the user's control: surface the branded update notice
-      // instead of silently reloading while a course or form may be in progress.
-      window.dispatchEvent(new Event('learnafrica:update-available'));
+    const handlePreloadError = () => {
+      window.dispatchEvent(new CustomEvent('learnafrica:chunk-load-failed', {
+        detail: { path: window.location.pathname, at: Date.now() },
+      }));
     };
     window.addEventListener('vite:preloadError', handlePreloadError);
     return () => window.removeEventListener('vite:preloadError', handlePreloadError);
