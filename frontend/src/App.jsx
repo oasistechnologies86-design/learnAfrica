@@ -71,23 +71,14 @@ function RouteLoadingScreen() {
 // ErrorBoundary in control instead of creating an endless reload loop.
 function ChunkLoadRecovery() {
   useEffect(() => {
-    const key = 'learnafrica_chunk_reload_at';
-    const clearTimer = window.setTimeout(() => sessionStorage.removeItem(key), 60000);
     const handlePreloadError = (event) => {
       event.preventDefault();
-      const previous = Number(sessionStorage.getItem(key) || 0);
-      if (!previous || Date.now() - previous > 60000) {
-        sessionStorage.setItem(key, String(Date.now()));
-        window.location.reload();
-      } else {
-        console.error('A page module could not be loaded after the recovery reload.', event.payload);
-      }
+      // Keep recovery under the user's control: surface the branded update notice
+      // instead of silently reloading while a course or form may be in progress.
+      window.dispatchEvent(new Event('learnafrica:update-available'));
     };
     window.addEventListener('vite:preloadError', handlePreloadError);
-    return () => {
-      window.clearTimeout(clearTimer);
-      window.removeEventListener('vite:preloadError', handlePreloadError);
-    };
+    return () => window.removeEventListener('vite:preloadError', handlePreloadError);
   }, []);
   return null;
 }
