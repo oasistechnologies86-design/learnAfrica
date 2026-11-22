@@ -4,11 +4,18 @@ import { Loader2, Newspaper, Search, ArrowRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/common/Card';
 import { API_BASE } from '@/lib/api';
 import { setSeo } from '@/lib/seo';
+import { getBlogImageCandidates } from '@/lib/blogImageUrl';
 
 function BlogImage({ src, alt, className, loading = 'lazy' }) {
-  const [failed, setFailed] = useState(false);
+  const [fallbackState, setFallbackState] = useState({ src: '', index: 0, failed: false });
+  const candidates = getBlogImageCandidates(src);
+  const candidateIndex = fallbackState.src === src ? fallbackState.index : 0;
+  const failed = fallbackState.src === src && fallbackState.failed;
   if (!src || failed) return <div className={className + ' flex items-center justify-center bg-muted'}><Newspaper className="h-10 w-10 text-muted-foreground/50" /></div>;
-  return <img src={src} alt={alt || ''} className={className} loading={loading} onError={() => setFailed(true)} />;
+  return <img src={candidates[candidateIndex] || src} alt={alt || ''} className={className} loading={loading}
+    onError={() => setFallbackState(candidateIndex < candidates.length - 1
+      ? { src, index: candidateIndex + 1, failed: false }
+      : { src, index: candidateIndex, failed: true })} />;
 }
 
 function tagsOf(value) {

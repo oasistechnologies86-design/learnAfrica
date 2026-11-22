@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { BrandedSelect } from '@/components/common/BrandedSelect';
 import BlogRichTextEditor from '@/components/admin/BlogRichTextEditor';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
+import { getBlogImageCandidates, normalizeBlogImageUrl } from '@/lib/blogImageUrl';
+import { UpdateNoticePreview } from '@/components/common/AppUpdateNotice';
 import { BrandedDatePicker } from '@/components/common/BrandedDatePicker';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -2690,6 +2692,36 @@ function AdminCertificateSignatureTab() {
   );
 }
 
+function AdminUpdateNoticePreviewCard() {
+  const [showPreview, setShowPreview] = useState(false);
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-sm flex items-center gap-2">
+          <RefreshCw className="h-4 w-4 text-primary" /> App update notification
+        </CardTitle>
+        <p className="text-xs text-muted-foreground">
+          Preview the notification existing users see when a newer LearnAfrica version is deployed.
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground">The notification is detected automatically. There is no manual publishing switch.</p>
+          <Button type="button" variant="outline" onClick={() => setShowPreview(value => !value)} className="gap-2">
+            <Eye className="h-4 w-4" /> {showPreview ? 'Hide preview' : 'Preview notification'}
+          </Button>
+        </div>
+        {showPreview && (
+          <div className="rounded-xl border border-border bg-muted/30 p-3 sm:p-5">
+            <p className="mb-3 text-center text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Student-facing preview</p>
+            <UpdateNoticePreview />
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // ── Admin: Settings tab — revenue split between instructor and platform
 // ─────────────────────────────────────────────────────────────────────────
@@ -2807,6 +2839,8 @@ function AdminSettingsTab() {
           Set the default split for instructors without an individual override. Individual instructor settings take priority for their future course and paid quiz-attempt transactions.
         </p>
       </div>
+
+      <AdminUpdateNoticePreviewCard />
 
       {/* Payment Provider status card */}
       {providerStatus && (
@@ -3775,7 +3809,10 @@ function AdminBlogTab() {
   const [status, setStatus] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [coverCandidateState, setCoverCandidateState] = useState({ source: '', index: 0 });
+  const coverCandidateIndex = coverCandidateState.source === form.cover ? coverCandidateState.index : 0;
   const field = (key, value) => setForm(current => ({ ...current, [key]: value }));
+  const coverCandidates = getBlogImageCandidates(form.cover);
   const load = useCallback(async () => {
     setLoading(true);
     try { const data = await API('/api/admin/blog'); setPosts(data.posts || []); }
@@ -3809,11 +3846,11 @@ function AdminBlogTab() {
   };
   const save = async () => {
     if (!form.title.trim()) { setStatus({ type: 'error', msg: 'Title is required.' }); return; }
-    if (form.cover && !/^https?:\/\//i.test(form.cover) && !form.cover.startsWith('/')) { setStatus({ type: 'error', msg: 'Use a valid image URL.' }); return; }
+    if (form.cover && !/^https?:\/\//i.test(normalizeBlogImageUrl(form.cover)) && !form.cover.startsWith('/')) { setStatus({ type: 'error', msg: 'Use a valid image URL.' }); return; }
     if (form.cover && !form.cover_alt.trim()) { setStatus({ type: 'error', msg: 'Add alt text describing the cover image.' }); return; }
     setBusy(true); setStatus(null);
     try {
-      const payload = { ...form, tags: form.tags.split(',').map(tag => tag.trim()).filter(Boolean) };
+      const payload = { ...form, cover: normalizeBlogImageUrl(form.cover), og_image: normalizeBlogImageUrl(form.og_image), tags: form.tags.split(',').map(tag => tag.trim()).filter(Boolean) };
       const result = await API(editingId ? '/api/admin/blog/' + editingId : '/api/admin/blog', { method: editingId ? 'PUT' : 'POST', body: JSON.stringify(payload) });
       setStatus({ type: 'success', msg: editingId ? 'Post updated.' : 'Post created' + (result.slug ? ' at /blog/' + result.slug : '') + '.' });
       setShowForm(false); setForm(empty); setEditingId(null); await load();
@@ -3829,7 +3866,7 @@ function AdminBlogTab() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-lg font-bold flex items-center gap-2"><FileText className="h-5 w-5" /> Blog</h2><p className="text-sm text-muted-foreground">Create articles with formatting, images, categories, tags and SEO details.</p></div><Button onClick={startCreate} className="gap-2"><Plus className="h-4 w-4" /> New post</Button></div>
       {status && <div role="status" className={cn('rounded-lg px-3 py-2 text-sm', status.type === 'error' ? 'bg-destructive/10 text-destructive' : 'bg-success/10 text-success')}>{status.msg}</div>}
-      {showForm && <Card><CardHeader><CardTitle>{editingId ? 'Edit article' : 'Create article'}</CardTitle></CardHeader><CardContent className="space-y-4 p-4 pt-0">
+      {showForm && <Card data-update-protected><CardHeader><CardTitle>{editingId ? 'Edit article' : 'Create article'}</CardTitle></CardHeader><CardContent className="space-y-4 p-4 pt-0">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <label className="space-y-1 text-sm font-medium">Article title<Input value={form.title} onChange={e => field('title', e.target.value)} placeholder="Article title" /></label>
           <label className="space-y-1 text-sm font-medium">URL slug<Input value={form.slug} onChange={e => field('slug', e.target.value)} placeholder="article-url-slug" /></label>
@@ -3843,7 +3880,8 @@ function AdminBlogTab() {
           <span className="ml-2 text-xs text-muted-foreground">PNG, JPG, GIF or WebP, up to 5 MB.</span>
           <label className="block space-y-1 text-sm font-medium">Or paste image URL<Input value={form.cover} onChange={e => field('cover', e.target.value)} placeholder="https://…" /></label>
           <label className="block space-y-1 text-sm font-medium">Image alt text<Input value={form.cover_alt} onChange={e => field('cover_alt', e.target.value)} placeholder="Describe what the image shows" /></label>
-          {form.cover && <div className="rounded-lg border border-border p-2"><img src={form.cover} alt={form.cover_alt || 'Cover preview'} className="max-h-64 w-full rounded bg-muted object-contain" /><p className="mt-2 break-all text-xs text-muted-foreground">{form.cover}</p></div>}
+          {form.cover && <div className="rounded-lg border border-border p-2"><img src={coverCandidates[coverCandidateIndex] || form.cover} alt={form.cover_alt || 'Cover preview'} className="max-h-64 w-full rounded bg-muted object-contain"
+              onError={() => coverCandidateIndex < coverCandidates.length - 1 ? setCoverCandidateState({ source: form.cover, index: coverCandidateIndex + 1 }) : setStatus({ type: 'error', msg: 'This image could not be loaded. Check its sharing permissions or try another URL.' })} /><p className="mt-2 break-all text-xs text-muted-foreground">{form.cover}</p></div>}
         </section>
         <section className="space-y-2"><h3 className="text-sm font-semibold">Article body</h3><BlogRichTextEditor value={form.body} onChange={value => field('body', value)} /></section>
         <section className="space-y-3 rounded-xl border border-border p-3"><h3 className="text-sm font-semibold">Search and social preview</h3>
@@ -3861,7 +3899,8 @@ function AdminBlogTab() {
             <h1 className="text-2xl font-bold leading-tight sm:text-3xl">{form.title || 'Untitled article'}</h1>
             {form.excerpt && <p className="mt-3 text-base leading-7 text-muted-foreground">{form.excerpt}</p>}
             {form.author_name && <p className="mt-3 text-xs text-muted-foreground">{form.author_name}</p>}
-            {form.cover && <img src={form.cover} alt={form.cover_alt || ''} className="my-6 max-h-80 w-full rounded-xl bg-muted object-contain" />}
+            {form.cover && <img src={coverCandidates[coverCandidateIndex] || form.cover} alt={form.cover_alt || ''} className="my-6 max-h-80 w-full rounded-xl bg-muted object-contain"
+              onError={() => coverCandidateIndex < coverCandidates.length - 1 ? setCoverCandidateState({ source: form.cover, index: coverCandidateIndex + 1 }) : setStatus({ type: 'error', msg: 'This image could not be loaded. Check its sharing permissions or try another URL.' })} />}
             {form.body && /<[a-z][\s\S]*>/i.test(form.body)
               ? <div className="blog-article-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(form.body) }} />
               : <div className="blog-article-content whitespace-pre-wrap">{form.body || 'Your article content will appear here.'}</div>}

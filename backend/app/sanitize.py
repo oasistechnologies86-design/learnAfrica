@@ -69,6 +69,44 @@ def _safe_url(value):
     return not _BAD_SCHEME_RE.match(v)
 
 
+def _sanitize_inline_style(value):
+    """Keep only simple, bounded formatting styles emitted by the blog editor."""
+    allowed_fonts = {'Arial', 'Georgia', 'Times New Roman', 'Verdana', 'Tahoma', 'Trebuchet MS'}
+    safe = []
+    for declaration in str(value or '').split(';'):
+        if ':' not in declaration:
+            continue
+        prop, raw = declaration.split(':', 1)
+        prop, raw = prop.strip().lower(), raw.strip()
+        normalized = ''
+        if prop == 'text-align' and re.fullmatch(r'(left|right|center|justify)', raw, re.IGNORECASE):
+            normalized = raw.lower()
+        elif prop == 'font-family':
+            family = raw.strip("\\'\"")
+            if family in allowed_fonts:
+                normalized = "'" + family + "'"
+        elif prop == 'font-size':
+            match = re.fullmatch(r'(\d{1,2})(px|pt)', raw, re.IGNORECASE)
+            if match and 10 <= int(match.group(1)) <= 48:
+                normalized = match.group(1) + match.group(2).lower()
+        elif prop in ('color', 'background-color') and re.fullmatch(r'#[0-9a-f]{3}(?:[0-9a-f]{3})?', raw, re.IGNORECASE):
+            normalized = raw.lower()
+        elif prop == 'line-height':
+            try:
+                number = float(raw)
+                if 1.2 <= number <= 2.5:
+                    normalized = str(number)
+            except ValueError:
+                pass
+        elif prop in ('margin-left', 'text-indent'):
+            match = re.fullmatch(r'(\d{1,3})(px|em|rem)', raw, re.IGNORECASE)
+            if match and int(match.group(1)) <= 160:
+                normalized = match.group(1) + match.group(2).lower()
+        if normalized:
+            safe.append(prop + ': ' + normalized)
+    return '; '.join(safe)
+
+
 class _Sanitizer(HTMLParser):
     """Allowlist HTML sanitiser built on the stdlib parser.
 
@@ -92,9 +130,9 @@ class _Sanitizer(HTMLParser):
             if lname.startswith('on') or lname not in allowed:
                 continue
             if lname == 'style':
-                match = re.fullmatch(r'\s*text-align\s*:\s*(left|right|center|justify)\s*;?\s*', str(value or ''), re.IGNORECASE)
-                if match:
-                    parts.append('style="text-align: ' + match.group(1).lower() + '"')
+                safe_style = _sanitize_inline_style(value)
+                if safe_style:
+                    parts.append('style="' + _html.escape(safe_style, quote=True) + '"')
                 continue
             if lname in ('href', 'src'):
                 if not _safe_url(value):
