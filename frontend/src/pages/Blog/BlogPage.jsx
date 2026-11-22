@@ -4,11 +4,16 @@ import { Loader2, Newspaper, Search, ArrowRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/common/Card';
 import { API_BASE } from '@/lib/api';
 import { setSeo } from '@/lib/seo';
+import { getBlogImageCandidates } from '@/lib/blogImageUrl';
 
 function BlogImage({ src, alt, className, loading = 'lazy' }) {
   const [failed, setFailed] = useState(false);
+  const [candidateIndex, setCandidateIndex] = useState(0);
+  const candidates = getBlogImageCandidates(src);
+  useEffect(() => { setFailed(false); setCandidateIndex(0); }, [src]);
   if (!src || failed) return <div className={className + ' flex items-center justify-center bg-muted'}><Newspaper className="h-10 w-10 text-muted-foreground/50" /></div>;
-  return <img src={src} alt={alt || ''} className={className} loading={loading} onError={() => setFailed(true)} />;
+  return <img src={candidates[candidateIndex] || src} alt={alt || ''} className={className} loading={loading}
+    onError={() => candidateIndex < candidates.length - 1 ? setCandidateIndex(index => index + 1) : setFailed(true)} />;
 }
 
 function tagsOf(value) {
