@@ -904,12 +904,6 @@ TABLES = [
 
 # Column migrations for existing databases
 MIGRATIONS = [
-    # Additive blog metadata migrations; existing articles are preserved.
-    "ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS cover_alt TEXT",
-    "ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS category TEXT",
-    "ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS seo_title TEXT",
-    "ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS seo_description TEXT",
-    "ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS og_image TEXT",
     # ── NEW (Phase: payments + time + text lessons) ───────────────────────
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS payment_method TEXT",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS payment_details TEXT",

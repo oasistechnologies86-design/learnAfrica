@@ -2954,7 +2954,7 @@ def create_app() -> Flask:
         try:
             db = get_db()
             rows = db.execute(
-                "SELECT id, slug, title, excerpt, cover, cover_alt, category, author_name, tags,"
+                "SELECT id, slug, title, excerpt, cover, author_name, tags,"
                 " CAST(created_at AS TEXT) AS created_at FROM blog_posts"
                 " WHERE is_published=1 ORDER BY created_at DESC LIMIT 100"
             ).fetchall()
@@ -2968,8 +2968,8 @@ def create_app() -> Flask:
         try:
             db = get_db()
             r = db.execute(
-                "SELECT id, slug, title, excerpt, cover, cover_alt, category, body, author_name, tags,"
-                " seo_title, seo_description, og_image, CAST(created_at AS TEXT) AS created_at FROM blog_posts"
+                "SELECT id, slug, title, excerpt, cover, body, author_name, tags,"
+                " CAST(created_at AS TEXT) AS created_at FROM blog_posts"
                 " WHERE slug=? AND is_published=1", (slug,)).fetchone()
             if not r:
                 return jsonify({'error': 'Post not found'}), 404
@@ -2983,60 +2983,41 @@ def create_app() -> Flask:
         """Machine-readable sitemap of public pages for search engines."""
         try:
             db = get_db()
-            base = (request.args.get('base') or public_site_url() or request.host_url).rstrip('/')
-            urls = [base + '/', base + '/courses', base + '/instructors', base + '/blog']
+            base = (request.args.get('base') or public_site_url()
+                    or request.host_url).rstrip('/')
+            urls = [f'{base}/', f'{base}/courses', f'{base}/instructors', f'{base}/blog']
             for r in db.execute("SELECT id FROM courses WHERE is_published=1").fetchall():
-                urls.append(base + '/courses/' + r['id'])
-            for r in db.execute("SELECT id FROM users WHERE instructor_status='approved' AND role IN ('instructor','admin','superadmin')").fetchall():
-                urls.append(base + '/instructors/' + r['id'])
+                urls.append(f'{base}/courses/{r["id"]}')
+            for r in db.execute(
+                    "SELECT id FROM users WHERE instructor_status='approved'"
+                    " AND role IN ('instructor','admin','superadmin')").fetchall():
+                urls.append(f'{base}/instructors/{r["id"]}')
             for r in db.execute("SELECT slug FROM blog_posts WHERE is_published=1").fetchall():
-                urls.append(base + '/blog/' + r['slug'])
+                urls.append(f'{base}/blog/{r["slug"]}')
             body = ('<?xml version="1.0" encoding="UTF-8"?>\n'
                     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-                    + ''.join('  <url><loc>' + u + '</loc></url>\n' for u in urls)
+                    + ''.join(f'  <url><loc>{u}</loc></url>\n' for u in urls)
                     + '</urlset>')
-            return app.response_class(body, mimetype='application/xml')
+            resp = app.response_class(body, mimetype='application/xml')
+            return resp
         except Exception as e:
             app.logger.error(f'sitemap_xml: {e}')
-            return app.response_class('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>', mimetype='application/xml')
+            return app.response_class(
+                '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>',
+                mimetype='application/xml')
 
     # ── ADMIN BLOG CRUD ───────────────────────────────────────────────────────────
     def _blog_slug(title):
-        value = re.sub(r'[^a-z0-9]+', '-', (title or '').strip().lower()).strip('-')
-        return value or 'post'
+        s = re.sub(r'[^a-z0-9]+', '-', (title or '').strip().lower()).strip('-')
+        return s or 'post'
 
     @app.route('/api/admin/blog', methods=['GET'])
     @admin_required
     def admin_list_blog():
         db = get_db()
-        rows = db.execute("SELECT * FROM blog_posts ORDER BY created_at DESC LIMIT 200").fetchall()
+        rows = db.execute(
+            "SELECT * FROM blog_posts ORDER BY created_at DESC LIMIT 200").fetchall()
         return jsonify({'posts': safe_list(rows)})
-
-    @app.route('/api/admin/blog/upload-image', methods=['POST'])
-    @admin_required
-    def admin_upload_blog_image():
-        uploaded = request.files.get('file')
-        if not uploaded or not uploaded.filename:
-            return jsonify({'error': 'Choose an image to upload.'}), 400
-        if request.content_length and request.content_length > 6 * 1024 * 1024:
-            return jsonify({'error': 'Image is too large. Maximum size is 5 MB.'}), 413
-        original = secure_filename(uploaded.filename)
-        ext = original.rsplit('.', 1)[-1].lower() if '.' in original else ''
-        if ext not in {'png', 'jpg', 'jpeg', 'gif', 'webp'} or not allowed_image(original):
-            return jsonify({'error': 'Supported image formats are PNG, JPG, GIF and WebP.'}), 400
-        content = uploaded.read(5 * 1024 * 1024 + 1)
-        if not content:
-            return jsonify({'error': 'The selected image is empty.'}), 400
-        if len(content) > 5 * 1024 * 1024:
-            return jsonify({'error': 'Image is too large. Maximum size is 5 MB.'}), 413
-        if not matches_extension(content, ext) or contains_html_or_script(content):
-            return jsonify({'error': 'The file contents are not a valid image.'}), 400
-        mime = 'image/jpeg' if ext in ('jpg', 'jpeg') else 'image/' + ext
-        public_url, upload_error = _upload_to_supabase(content, 'blog/' + uuid.uuid4().hex + '.' + ext, mime)
-        if not public_url:
-            app.logger.error('admin_upload_blog_image: ' + str(upload_error))
-            return jsonify({'error': 'Image storage is unavailable. The image was not saved.', 'detail': upload_error}), 502
-        return jsonify({'url': public_url, 'filename': original}), 201
 
     @app.route('/api/admin/blog', methods=['POST'])
     @admin_required
@@ -3047,27 +3028,24 @@ def create_app() -> Flask:
             if not title:
                 return jsonify({'error': 'title is required'}), 400
             db = get_db()
-            slug = re.sub(r'[^a-z0-9]+', '-', (d.get('slug') or '').strip().lower()).strip('-') or _blog_slug(title)
-            if db.execute('SELECT 1 FROM blog_posts WHERE slug=?', (slug,)).fetchone():
-                return jsonify({'error': 'That URL slug is already in use. Choose another one.'}), 409
+            slug = (d.get('slug') or '').strip() or _blog_slug(title)
+            # Ensure the slug is unique.
+            exists = db.execute('SELECT 1 FROM blog_posts WHERE slug=?', (slug,)).fetchone()
+            if exists:
+                slug = f'{slug}-{str(uuid.uuid4())[:6]}'
             pid = str(uuid.uuid4())
-            tags = d.get('tags', [])
-            tags_value = json.dumps(tags) if isinstance(tags, (list, dict)) else (tags or '')
             db.execute(
-                '''INSERT INTO blog_posts
-                   (id,slug,title,excerpt,cover,body,author_id,author_name,tags,is_published,cover_alt,category,seo_title,seo_description,og_image)
-                   VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
-                (pid, slug, title, d.get('excerpt', ''), d.get('cover', ''),
-                 sanitize_html(d.get('body', '')), g.current_user['user_id'],
-                 d.get('author_name') or g.current_user.get('name') or 'LearnAfrica',
-                 tags_value, 1 if d.get('is_published', True) else 0,
-                 d.get('cover_alt', ''), d.get('category', ''), d.get('seo_title', ''),
-                 d.get('seo_description', ''), d.get('og_image', '')))
+                '''INSERT INTO blog_posts (id,slug,title,excerpt,cover,body,author_id,author_name,tags,is_published)
+                   VALUES(?,?,?,?,?,?,?,?,?,?)''',
+                (pid, slug, title, d.get('excerpt', ''), d.get('cover', ''), d.get('body', ''),
+                 g.current_user['user_id'], d.get('author_name') or g.current_user.get('name') or 'LearnAfrica',
+                 json.dumps(d.get('tags', [])) if isinstance(d.get('tags'), (list, dict)) else (d.get('tags') or ''),
+                 1 if d.get('is_published', True) else 0))
             db.commit()
             audit('blog_create', 'blog', pid, title, {'slug': slug})
             return jsonify({'message': 'Post created', 'id': pid, 'slug': slug}), 201
         except Exception as e:
-            app.logger.error('admin_create_blog: ' + str(e))
+            app.logger.error(f'admin_create_blog: {e}')
             return jsonify({'error': 'Could not create post', 'detail': _err_detail(e)}), 500
 
     @app.route('/api/admin/blog/<pid>', methods=['PUT'])
@@ -3080,32 +3058,24 @@ def create_app() -> Flask:
             if not row:
                 return jsonify({'error': 'Post not found'}), 404
             fields, params = [], []
-            if 'title' in d:
-                title = (d.get('title') or '').strip()
-                if not title:
-                    return jsonify({'error': 'title is required'}), 400
-                fields.append('title=?'); params.append(title)
-            if 'slug' in d:
-                slug = re.sub(r'[^a-z0-9]+', '-', (d.get('slug') or '').strip().lower()).strip('-') or _blog_slug(d.get('title') or row['title'])
-                if db.execute('SELECT 1 FROM blog_posts WHERE slug=? AND id<>?', (slug, pid)).fetchone():
-                    return jsonify({'error': 'That URL slug is already in use. Choose another one.'}), 409
-                fields.append('slug=?'); params.append(slug)
-            for col in ('excerpt', 'cover', 'cover_alt', 'body', 'author_name', 'category', 'seo_title', 'seo_description', 'og_image'):
+            for col in ('title', 'excerpt', 'cover', 'body'):
                 if col in d:
-                    fields.append(col + '=?'); params.append(sanitize_html(d[col]) if col == 'body' else d[col])
+                    fields.append(f'{col}=?'); params.append(d[col])
             if 'tags' in d:
-                fields.append('tags=?'); params.append(json.dumps(d['tags']) if isinstance(d['tags'], (list, dict)) else (d['tags'] or ''))
+                fields.append('tags=?')
+                params.append(json.dumps(d['tags']) if isinstance(d['tags'], (list, dict)) else (d['tags'] or ''))
             if 'is_published' in d:
                 fields.append('is_published=?'); params.append(1 if d['is_published'] else 0)
             if not fields:
                 return jsonify({'message': 'Nothing to update'})
-            fields.append('updated_at=CURRENT_TIMESTAMP'); params.append(pid)
-            db.execute('UPDATE blog_posts SET ' + ', '.join(fields) + ' WHERE id=?', params)
+            fields.append('updated_at=CURRENT_TIMESTAMP')
+            params.append(pid)
+            db.execute(f'UPDATE blog_posts SET {", ".join(fields)} WHERE id=?', params)
             db.commit()
             audit('blog_update', 'blog', pid, row['title'], {'fields': list(d.keys())})
             return jsonify({'message': 'Post updated'})
         except Exception as e:
-            app.logger.error('admin_update_blog: ' + str(e))
+            app.logger.error(f'admin_update_blog: {e}')
             return jsonify({'error': 'Could not update post', 'detail': _err_detail(e)}), 500
 
     @app.route('/api/admin/blog/<pid>', methods=['DELETE'])
@@ -3121,7 +3091,7 @@ def create_app() -> Flask:
             audit('blog_delete', 'blog', pid, row['title'], {})
             return jsonify({'message': 'Post deleted'})
         except Exception as e:
-            app.logger.error('admin_delete_blog: ' + str(e))
+            app.logger.error(f'admin_delete_blog: {e}')
             return jsonify({'error': 'Could not delete post', 'detail': _err_detail(e)}), 500
 
     # ── REVIEWS ───────────────────────────────────────────────────────────────────

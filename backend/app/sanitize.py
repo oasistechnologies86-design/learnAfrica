@@ -42,7 +42,7 @@ _ALLOWED_ATTRS = {
     'td':  {'colspan', 'rowspan'},
     'th':  {'colspan', 'rowspan'},
 }
-_GLOBAL_ATTRS = {'class', 'style'}
+_GLOBAL_ATTRS = {'class'}
 
 # Schemes that must never appear in an href/src. `data:` is rejected wholesale
 # (it can carry an HTML/SVG document that runs script when navigated to).
@@ -90,11 +90,6 @@ class _Sanitizer(HTMLParser):
         for name, value in attrs:
             lname = (name or '').lower()
             if lname.startswith('on') or lname not in allowed:
-                continue
-            if lname == 'style':
-                match = re.fullmatch(r'\s*text-align\s*:\s*(left|right|center|justify)\s*;?\s*', str(value or ''), re.IGNORECASE)
-                if match:
-                    parts.append('style="text-align: ' + match.group(1).lower() + '"')
                 continue
             if lname in ('href', 'src'):
                 if not _safe_url(value):
