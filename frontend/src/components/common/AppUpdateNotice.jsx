@@ -64,8 +64,8 @@ function hasUnsavedChanges() {
       }
     }
   }
-  return [...document.querySelectorAll('[contenteditable="true"]')].some(node =>
-    node.innerHTML !== (node.dataset.initialHtml || '')
+  return [...document.querySelectorAll('form [contenteditable="true"], [data-update-protected] [contenteditable="true"]')].some(node =>
+    node.dataset.initialHtml !== undefined && node.innerHTML !== node.dataset.initialHtml
   );
 }
 
