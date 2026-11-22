@@ -1,4 +1,5 @@
 import React from 'react';
+import { BrandedSelect } from '@/components/common/BrandedSelect';
 import { Play, Pause, Square, RotateCcw, Volume2 } from 'lucide-react';
 
 const EXCLUDED_READING_NODES = 'button, script, style, textarea, input, select, option, svg, pre, code, [aria-hidden="true"], .custom-lesson-reader-controls, .custom-lesson-completion, .custom-lesson-content-end';
@@ -461,11 +462,11 @@ export default function CustomLessonFrame({
               </button>
               <label className="custom-lesson-reader-speed">
                 <span>Speed</span>
-                <select value={rate} onChange={handleRateChange} aria-label="Reading speed">
+                <BrandedSelect value={rate} onChange={handleRateChange} aria-label="Reading speed">
                   <option value="0.8">Slow</option>
                   <option value="1">Normal</option>
                   <option value="1.2">Fast</option>
-                </select>
+                </BrandedSelect>
               </label>
             </div>
             <div className="custom-lesson-reader-timeline">

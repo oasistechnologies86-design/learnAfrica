@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { BrandedSelect } from '@/components/common/BrandedSelect';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Loader2, CheckCircle2, AlertCircle, Save } from 'lucide-react';
 import { Button } from '@/components/common/Button';
@@ -345,7 +346,7 @@ export function EditCoursePage() {
             {/* Category with custom-category support */}
             <div className="space-y-1.5">
               <label className="text-sm font-semibold">Category</label>
-              <select className={inputCls}
+              <BrandedSelect className={inputCls}
                 value={PRESET_CATEGORIES.includes(form.category) ? form.category : (form.category ? '__custom' : '')}
                 onChange={e => {
                   if (e.target.value === '__custom') setField('category', '');
@@ -354,7 +355,7 @@ export function EditCoursePage() {
                 <option value="">Select…</option>
                 {PRESET_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                 <option value="__custom">+ Custom category…</option>
-              </select>
+              </BrandedSelect>
               {form.category && !PRESET_CATEGORIES.includes(form.category) && (
                 <input className={inputCls + ' mt-2'}
                   value={form.category}
@@ -365,11 +366,11 @@ export function EditCoursePage() {
 
             <div className="space-y-1.5">
               <label className="text-sm font-semibold">Difficulty</label>
-              <select className={inputCls} value={form.difficulty}
+              <BrandedSelect className={inputCls} value={form.difficulty}
                 onChange={e => setField('difficulty', e.target.value)}>
                 <option value="">Select…</option>
                 {DIFFICULTIES.map(d => <option key={d} value={d}>{d}</option>)}
-              </select>
+              </BrandedSelect>
             </div>
           </div>
           <div className="space-y-1.5">

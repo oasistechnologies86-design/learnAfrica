@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { BrandedSelect } from '@/components/common/BrandedSelect';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Lock, CheckCircle2, ChevronLeft, Loader2, ShieldCheck,
@@ -407,7 +408,7 @@ export default function PaymentPage() {
                 <label htmlFor="payment-method" className="text-xs font-bold uppercase text-muted-foreground">
                   Payment method
                 </label>
-                <select
+                <BrandedSelect
                   id="payment-method"
                   value={provider}
                   onChange={e => setProvider(e.target.value)}
@@ -416,7 +417,7 @@ export default function PaymentPage() {
                   {PROVIDERS.map(method => (
                     <option key={method.id} value={method.id}>{method.name}</option>
                   ))}
-                </select>
+                </BrandedSelect>
                 <p className="text-xs text-muted-foreground mt-1.5">
                   {PROVIDERS.find(method => method.id === provider)?.hint}
                 </p>

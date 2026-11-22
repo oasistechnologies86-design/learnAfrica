@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import { BrandedSelect } from '@/components/common/BrandedSelect';
+import { BrandedDatePicker } from '@/components/common/BrandedDatePicker';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import {
@@ -188,19 +190,19 @@ export default function ReceiptsPage() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           <div className="space-y-1">
             <Label className="text-3xs uppercase font-bold">From</Label>
-            <Input type="date" value={filters.date_from}
+            <BrandedDatePicker value={filters.date_from}
               onChange={e => setFilters(f => ({ ...f, date_from: e.target.value }))}
               className="h-9 text-xs" />
           </div>
           <div className="space-y-1">
             <Label className="text-3xs uppercase font-bold">To</Label>
-            <Input type="date" value={filters.date_to}
+            <BrandedDatePicker value={filters.date_to}
               onChange={e => setFilters(f => ({ ...f, date_to: e.target.value }))}
               className="h-9 text-xs" />
           </div>
           <div className="space-y-1">
             <Label className="text-3xs uppercase font-bold">Status</Label>
-            <select value={filters.status}
+            <BrandedSelect value={filters.status}
               onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}
               className="w-full h-9 rounded-lg border border-input bg-background px-2 text-xs outline-none">
               <option value="">All</option>
@@ -208,18 +210,18 @@ export default function ReceiptsPage() {
               <option value="pending">Pending</option>
               <option value="failed">Failed</option>
               <option value="refunded">Refunded</option>
-            </select>
+            </BrandedSelect>
           </div>
           <div className="space-y-1">
             <Label className="text-3xs uppercase font-bold">Type</Label>
-            <select value={filters.type}
+            <BrandedSelect value={filters.type}
               onChange={e => setFilters(f => ({ ...f, type: e.target.value }))}
               className="w-full h-9 rounded-lg border border-input bg-background px-2 text-xs outline-none">
               <option value="">All</option>
               <option value="purchase">Course purchase</option>
               <option value="quiz_extra_attempt">Extra quiz attempt</option>
               <option value="payout">Payout</option>
-            </select>
+            </BrandedSelect>
           </div>
         </div>
         {activeFilters && (

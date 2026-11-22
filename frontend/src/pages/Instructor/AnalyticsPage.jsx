@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { BrandedSelect } from '@/components/common/BrandedSelect';
 import { DollarSign, Users, Target, Star, TrendingUp, Percent, Info } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/common/Card';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
@@ -331,13 +332,13 @@ function LessonDropoffCard() {
           <Info className="h-4 w-4 text-primary" /> Where Students Drop Off
         </CardTitle>
         {courses.length > 0 && (
-          <select
+          <BrandedSelect
             value={selectedId}
             onChange={e => setSelectedId(e.target.value)}
             className="h-8 rounded-md border border-input bg-background text-xs px-2 max-w-[180px] truncate"
           >
             {courses.map(c => <option key={c.course_id} value={c.course_id}>{c.title}</option>)}
-          </select>
+          </BrandedSelect>
         )}
       </CardHeader>
       <CardContent>

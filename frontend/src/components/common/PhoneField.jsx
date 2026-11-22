@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { BrandedSelect } from '@/components/common/BrandedSelect';
 import { Phone } from 'lucide-react'
 import { Input } from '@/components/common/Input'
 import { cn } from '@/lib/utils'
@@ -114,13 +115,14 @@ export function PhoneField({
   return (
     <div className={cn('space-y-2', className)}>
       <div className="flex w-full min-w-0 gap-2">
-        <select
+        <BrandedSelect
           aria-label="Country code"
+          containerClassName="w-[42%] min-w-[7.25rem] max-w-44 flex-none"
           value={country}
           onChange={onCountryChange}
           disabled={disabled}
           className={cn(
-            'h-10 w-[42%] min-w-[7.25rem] max-w-44 flex-none rounded-lg border border-input bg-background px-2 text-sm outline-none',
+            'h-10 w-full rounded-lg border border-input bg-background px-2 text-sm outline-none',
             'focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
             error && 'border-destructive focus-visible:ring-destructive',
             selectClassName
@@ -129,7 +131,7 @@ export function PhoneField({
           {countryOptions.map(option => (
             <option key={option.code} value={option.code}>{option.flag || countryFlag(option.code)} {option.dial} · {option.name}</option>
           ))}
-        </select>
+        </BrandedSelect>
         <div className="relative min-w-0 flex-1">
           <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input

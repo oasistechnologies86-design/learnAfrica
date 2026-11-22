@@ -35,18 +35,29 @@ export function DialogProvider({ children }) {
     return () => { delete window.LearnAfricaDialog; };
   }, [showAlert, confirm, prompt]);
 
-  const finish = (value) => {
+  const finish = useCallback((value) => {
     if (!active) return;
     active.resolve(value);
     setQueue(current => current.slice(1));
-  };
+  }, [active]);
+
+  useEffect(() => {
+    if (!active) return undefined;
+    const onKeyDown = event => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      finish(active.type === 'confirm' ? false : active.type === 'prompt' ? null : undefined);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [active, finish]);
 
   return (
     <DialogContext.Provider value={{ showAlert, confirm, prompt }}>
       {children}
       {active && (
         <div className="fixed inset-0 z-[12000] flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm"
-          onMouseDown={event => { if (event.target === event.currentTarget && active.type === 'alert') finish(undefined); }}>
+          onMouseDown={event => { if (event.target === event.currentTarget) finish(active.type === 'confirm' ? false : active.type === 'prompt' ? null : undefined); }}>
           <section role="alertdialog" aria-modal="true" aria-labelledby="la-dialog-title"
             aria-describedby="la-dialog-message"
             className="w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-2xl">

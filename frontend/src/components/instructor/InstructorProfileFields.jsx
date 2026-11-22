@@ -8,6 +8,7 @@
  * we show a dropdown; otherwise a clearly-labelled free-text box — never an
  * invented list.
  */
+import { BrandedSelect } from '@/components/common/BrandedSelect';
 import { useEffect, useMemo, useState } from 'react'
 import { IdCard, MapPin, Globe, Building2, AlertTriangle, Check } from 'lucide-react'
 import { Input, Label } from '@/components/common/Input'
@@ -80,7 +81,7 @@ export function InstructorProfileFields({
         <Label htmlFor="country" required>Country</Label>
         <div className="relative">
           <Globe className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <select
+          <BrandedSelect
             id="country"
             required
             value={country}
@@ -96,7 +97,7 @@ export function InstructorProfileFields({
             {(config?.countries || []).map((c) => (
               <option key={c.code} value={c.code}>{c.name}</option>
             ))}
-          </select>
+          </BrandedSelect>
         </div>
         {lockIdentity
           ? <Hint>Country is locked after you submit. Contact support if it needs changing.</Hint>
@@ -111,7 +112,7 @@ export function InstructorProfileFields({
             <Label htmlFor="id_type" required>Identification type</Label>
             <div className="relative">
               <IdCard className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <select
+              <BrandedSelect
                 id="id_type"
                 required
                 value={idType}
@@ -123,7 +124,7 @@ export function InstructorProfileFields({
               >
                 <option value="">Choose a document…</option>
                 {idTypes.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
+              </BrandedSelect>
             </div>
             <FieldError>{errors.id_type}</FieldError>
           </div>
@@ -192,7 +193,7 @@ export function InstructorProfileFields({
             <div className="space-y-2">
               <Label htmlFor="region">{hasSubdivisions ? 'State / region' : 'Region (optional)'}</Label>
               {hasSubdivisions ? (
-                <select
+                <BrandedSelect
                   id="region"
                   value={value.region || ''}
                   onChange={(e) => onChange({ region: e.target.value })}
@@ -201,7 +202,7 @@ export function InstructorProfileFields({
                 >
                   <option value="">Select…</option>
                   {subdivisions.map((s) => <option key={s.code} value={s.name}>{s.name}</option>)}
-                </select>
+                </BrandedSelect>
               ) : (
                 <Input id="region" value={value.region || ''}
                   onChange={(e) => onChange({ region: e.target.value })}

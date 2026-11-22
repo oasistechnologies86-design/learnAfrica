@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { BrandedSelect } from '@/components/common/BrandedSelect';
 import { Phone, Building2, CreditCard, Check, AlertCircle } from 'lucide-react'
 import { Input, Label } from '@/components/common/Input'
 import { Button } from '@/components/common/Button'
@@ -134,7 +135,7 @@ export function PaymentMethodForm({ value, onChange, onSave, showSaveButton = tr
         <div className="space-y-3">
           <div className="space-y-2">
             <Label>Mobile Money Provider *</Label>
-            <select
+            <BrandedSelect
               value={details.provider || ''}
               onChange={e => setField('provider', e.target.value)}
               className={cn(
@@ -144,7 +145,7 @@ export function PaymentMethodForm({ value, onChange, onSave, showSaveButton = tr
             >
               <option value="">— Select provider —</option>
               {MOMO_PROVIDERS_GH.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-            </select>
+            </BrandedSelect>
             {errFor('provider') && <p className="text-xs text-destructive">{errors.provider}</p>}
           </div>
           <div className="space-y-2">
@@ -169,7 +170,7 @@ export function PaymentMethodForm({ value, onChange, onSave, showSaveButton = tr
           {isGhana ? (
             <div className="space-y-2">
               <Label>Bank *</Label>
-              <select
+              <BrandedSelect
                 value={details.bank_code || ''}
                 onChange={e => {
                   const bank = GH_BANKS.find(b => b.code === e.target.value)
@@ -183,7 +184,7 @@ export function PaymentMethodForm({ value, onChange, onSave, showSaveButton = tr
               >
                 <option value="">— Select bank —</option>
                 {GH_BANKS.map(b => <option key={b.code} value={b.code}>{b.name}</option>)}
-              </select>
+              </BrandedSelect>
               {errFor('bank_name') && <p className="text-xs text-destructive">{errors.bank_name}</p>}
             </div>
           ) : (

@@ -6,6 +6,7 @@
  * (only when outgoing email is on), or dismiss it. The raw link is shown once
  * and can be copied; it is never stored or logged.
  */
+import { BrandedSelect } from '@/components/common/BrandedSelect';
 import { useCallback, useEffect, useState } from 'react';
 import { KeyRound, RefreshCw, Loader2, Copy, Check, Mail, Link2, XCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/common/Card';
@@ -138,14 +139,14 @@ export default function PasswordResetRequestsCard({ onChanged }) {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <select value={filter} onChange={e => setFilter(e.target.value)}
+            <BrandedSelect value={filter} onChange={e => setFilter(e.target.value)}
               className="h-9 rounded-lg border border-border bg-background px-2 text-xs">
               <option value="all">All</option>
               <option value="pending">Pending</option>
               <option value="link_sent">Link sent</option>
               <option value="completed">Completed</option>
               <option value="dismissed">Dismissed</option>
-            </select>
+            </BrandedSelect>
             <Button size="sm" variant="outline" onClick={load} className="gap-2">
               <RefreshCw className="h-3.5 w-3.5" /> Refresh
             </Button>

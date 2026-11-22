@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { BrandedSelect } from '@/components/common/BrandedSelect';
 import { X, Search, Loader2, ChevronLeft, ChevronRight, Users } from 'lucide-react';
 import { API_BASE } from '@/lib/api';
 import { formatPrice } from '@/lib/money';
@@ -132,14 +133,14 @@ export default function StudentsListModal({ endpoint, title = 'Students', subtit
               </div>
               <button type="submit" className="rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground">Search</button>
             </form>
-            <select value={progress} onChange={event => updateFilter(setProgress, event.target.value)}
+            <BrandedSelect value={progress} onChange={event => updateFilter(setProgress, event.target.value)}
               className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
               <option value="all">All progress</option>
               <option value="not_started">Not started</option>
               <option value="in_progress">In progress</option>
               <option value="completed">Completed</option>
-            </select>
-            <select value={payment} onChange={event => updateFilter(setPayment, event.target.value)}
+            </BrandedSelect>
+            <BrandedSelect value={payment} onChange={event => updateFilter(setPayment, event.target.value)}
               className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
               <option value="all">All payment statuses</option>
               <option value="paid">Paid</option>
@@ -147,13 +148,13 @@ export default function StudentsListModal({ endpoint, title = 'Students', subtit
               <option value="failed">Failed</option>
               <option value="not_required">Not required (free)</option>
               <option value="no_payment">No payment record</option>
-            </select>
-            <select value={enrollment} onChange={event => updateFilter(setEnrollment, event.target.value)}
+            </BrandedSelect>
+            <BrandedSelect value={enrollment} onChange={event => updateFilter(setEnrollment, event.target.value)}
               className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
               <option value="all">All enrolments</option>
               <option value="active">Active</option>
               <option value="expired">Expired</option>
-            </select>
+            </BrandedSelect>
           </div>
 
           {loading ? (

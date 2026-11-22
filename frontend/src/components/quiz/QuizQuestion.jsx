@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { BrandedSelect } from '@/components/common/BrandedSelect';
 
 export function QuizQuestion({
   question,
@@ -150,7 +151,7 @@ export function QuizQuestion({
       {/* ── Dropdown selection ── */}
       {qType === 'dropdown' && (
         <div className="space-y-2">
-          <select value={selectedAnswer === undefined || selectedAnswer === null ? '' : String(selectedAnswer)}
+          <BrandedSelect value={selectedAnswer === undefined || selectedAnswer === null ? '' : String(selectedAnswer)}
             onChange={event => {
               if (showResult) return;
               const value = event.target.value;
@@ -161,7 +162,7 @@ export function QuizQuestion({
               showResult ? Number(selectedAnswer) === Number(correctAnswer) ? 'border-success bg-success/10 text-success' : 'border-destructive bg-destructive/10' : 'border-border')}>
             <option value="">Choose an answer</option>
             {options.map((option, index) => <option key={index} value={index}>{option}</option>)}
-          </select>
+          </BrandedSelect>
           {showResult && <p className="text-xs text-muted-foreground">
             {Number(selectedAnswer) === Number(correctAnswer) ? 'Correct answer' : `Correct answer: ${options[correctAnswer] || ''}`}
           </p>}
