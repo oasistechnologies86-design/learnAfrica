@@ -3850,7 +3850,11 @@ function AdminBlogTab() {
     if (form.cover && !form.cover_alt.trim()) { setStatus({ type: 'error', msg: 'Add alt text describing the cover image.' }); return; }
     setBusy(true); setStatus(null);
     try {
-      const payload = { ...form, cover: normalizeBlogImageUrl(form.cover), og_image: normalizeBlogImageUrl(form.og_image), tags: form.tags.split(',').map(tag => tag.trim()).filter(Boolean) };
+      // contentEditable is not a controlled input. Read the live editor DOM
+      // immediately before saving so React state timing cannot submit old HTML.
+      const liveEditor = document.querySelector('[aria-label="Article body editor"]');
+      const latestBody = liveEditor ? liveEditor.innerHTML : form.body;
+      const payload = { ...form, body: sanitizeHtml(latestBody || ''), cover: normalizeBlogImageUrl(form.cover), og_image: normalizeBlogImageUrl(form.og_image), tags: form.tags.split(',').map(tag => tag.trim()).filter(Boolean) };
       const result = await API(editingId ? '/api/admin/blog/' + editingId : '/api/admin/blog', { method: editingId ? 'PUT' : 'POST', body: JSON.stringify(payload) });
       setStatus({ type: 'success', msg: editingId ? 'Post updated.' : 'Post created' + (result.slug ? ' at /blog/' + result.slug : '') + '.' });
       setShowForm(false); setForm(empty); setEditingId(null); await load();

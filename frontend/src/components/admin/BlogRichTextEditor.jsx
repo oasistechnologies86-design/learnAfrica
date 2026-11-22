@@ -49,7 +49,7 @@ export default function BlogRichTextEditor({ value = '', onChange }) {
   };
   const command = (name, arg) => {
     restore();
-    try { document.execCommand('styleWithCSS', false, true); document.execCommand(name, false, arg ?? null); } catch {}
+    try { document.execCommand('styleWithCSS', false, false); document.execCommand(name, false, arg ?? null); } catch {}
     publish(); syncFormats();
   };
   const applyFontSize = size => {

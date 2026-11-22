@@ -11,9 +11,17 @@ export class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    // Keep the diagnostic in the browser console for support without exposing
-    // internal error details to learners in production.
+    // Keep a structured diagnostic for support and identify stale deployment
+    // chunks separately from application rendering errors.
     console.error('Error caught by ErrorBoundary:', error, errorInfo);
+    try {
+      const message = String(error?.message || error || '');
+      if (/dynamically imported module|failed to fetch dynamically|loading chunk|chunkloaderror/i.test(message)) {
+        window.dispatchEvent(new CustomEvent('learnafrica:chunk-render-error', {
+          detail: { message, path: window.location.pathname, at: Date.now() },
+        }));
+      }
+    } catch { /* diagnostics must never create a second application error */ }
   }
 
   handleReset = () => {
