@@ -258,3 +258,5 @@ export default function AppUpdateNotice() {
 }
 
 const BUILD_ID = typeof __LEARN_AFRICA_BUILD_ID__ !== 'undefined' ? __LEARN_AFRICA_BUILD_ID__ : 'development';
+
+// Keep the live update backdrop rule shared across desktop and mobile viewports.
