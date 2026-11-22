@@ -31,7 +31,7 @@ function flattenOptions(children) {
  * Keeps the familiar select onChange contract: onChange({ target: { value } }).
  */
 export function BrandedSelect({
-  children, value, defaultValue, onChange, className = '', disabled = false,
+  children, value, defaultValue, onChange, className = '', containerClassName = '', disabled = false,
   id, name, required = false, placeholder, 'aria-label': ariaLabel,
   'aria-invalid': ariaInvalid, title,
 }) {
@@ -89,7 +89,7 @@ export function BrandedSelect({
   };
 
   return (
-    <div ref={rootRef} className="relative min-w-0">
+    <div ref={rootRef} className={`relative min-w-0 ${containerClassName}`}>
       <button
         id={id}
         type="button"
