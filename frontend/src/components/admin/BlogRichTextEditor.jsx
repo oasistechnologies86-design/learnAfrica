@@ -75,10 +75,10 @@ export default function BlogRichTextEditor({ value = '', onChange }) {
 
   const applyFontSize = value => {
     restore();
-    document.execCommand('styleWithCSS', false, true);
+    document.execCommand('styleWithCSS', false, false);
     document.execCommand('fontSize', false, value);
     const px = FONT_SIZES.find(item => item[1] === value)?.[2] || '16px';
-    editor.current?.querySelectorAll('font[size="7"],font[size="6"],font[size="5"],font[size="4"],font[size="3"],font[size="2"]').forEach(node => {
+    editor.current?.querySelectorAll('font[size="' + value + '"]').forEach(node => {
       const span = document.createElement('span');
       span.style.fontSize = px;
       span.innerHTML = node.innerHTML;
