@@ -248,16 +248,16 @@ export function SignupPage() {
       {
         id: 'student',
         icon: BookOpen,
-        badge: null,
-        title: 'Join as a Student',
-        description: 'Enroll in courses, learn at your own pace, and earn verifiable certificates.',
+        eyebrow: 'LEARN',
+        title: 'Continue as a student',
+        description: 'Explore courses, build skills and earn certificates.',
       },
       {
         id: 'instructor',
         icon: GraduationCap,
-        badge: 'Teach on LearnAfrica',
-        title: 'Join as an Instructor',
-        description: 'Create and manage your own courses, reach learners across Africa, and earn from every enrollment.',
+        eyebrow: 'TEACH',
+        title: 'Continue as an instructor',
+        description: 'Publish courses, teach learners and grow your reach.',
       },
     ]
     return (
@@ -265,42 +265,49 @@ export function SignupPage() {
         view="signup"
         onSwitch={() => navigate('/login')}
       >
-        <div className="space-y-6">
-          <div className="space-y-2 text-center">
-            <h1 className="text-3xl font-bold tracking-tight">Join LearnAfrica</h1>
-            <p className="text-muted-foreground">Choose how you want to get started</p>
+        <div className="w-full space-y-5 sm:space-y-6">
+          <div className="space-y-1.5 text-center">
+            <h1 className="text-2xl sm:text-[28px] font-bold tracking-tight">Join LearnAfrica</h1>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Choose the account that matches what you want to do.
+            </p>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 items-stretch">
+          <div className="flex flex-col gap-3">
             {options.map((opt) => (
               <button
                 key={opt.id}
                 type="button"
+                aria-label={opt.title}
                 onClick={() => {
                   setFormData(prev => ({ ...prev, isInstructor: opt.id === 'instructor' }))
                   setRoleChoice(opt.id)
                 }}
                 className={cn(
-                  'group relative text-left rounded-2xl border bg-card p-5 flex flex-col h-full',
-                  'transition-all duration-200 ease-out',
-                  'hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-lg',
-                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
-                  'active:translate-y-0 active:scale-[0.995]',
-                  opt.id === 'instructor' ? 'border-primary/30' : 'border-border'
+                  'group flex w-full items-center gap-3 rounded-xl border border-border bg-background/70 p-3.5 sm:p-4 text-left',
+                  'transition-colors duration-200 hover:border-primary/50 hover:bg-primary/[0.035]',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2',
+                  'active:bg-primary/[0.06]'
                 )}
               >
-                {opt.badge && (
-                  <span className="absolute right-4 top-4 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
-                    {opt.badge}
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10 transition-colors group-hover:bg-primary/15">
+                  <opt.icon className="h-5 w-5" strokeWidth={1.8} />
+                </span>
+
+                <span className="min-w-0 flex-1">
+                  <span className="mb-0.5 block text-[10px] font-bold tracking-[0.16em] text-primary">
+                    {opt.eyebrow}
                   </span>
-                )}
-                <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 ring-1 ring-primary/10 transition-transform duration-200 group-hover:scale-105">
-                  <opt.icon className="h-5 w-5 text-primary" />
-                </div>
-                <h2 className="mb-1.5 text-lg font-bold tracking-tight">{opt.title}</h2>
-                <p className="text-sm leading-relaxed text-muted-foreground">{opt.description}</p>
-                <span className="mt-auto inline-flex items-center gap-1 pt-4 text-sm font-semibold text-primary">
-                  Continue <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  <span className="block text-[15px] font-semibold leading-snug text-foreground sm:text-base">
+                    {opt.title}
+                  </span>
+                  <span className="mt-1 block text-xs leading-relaxed text-muted-foreground sm:text-[13px]">
+                    {opt.description}
+                  </span>
+                </span>
+
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-all group-hover:border-primary/30 group-hover:bg-primary group-hover:text-primary-foreground">
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </span>
               </button>
             ))}
