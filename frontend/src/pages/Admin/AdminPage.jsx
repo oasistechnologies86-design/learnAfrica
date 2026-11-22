@@ -3900,7 +3900,7 @@ function AdminBlogTab() {
             {form.excerpt && <p className="mt-3 text-base leading-7 text-muted-foreground">{form.excerpt}</p>}
             {form.author_name && <p className="mt-3 text-xs text-muted-foreground">{form.author_name}</p>}
             {form.cover && <img src={coverCandidates[coverCandidateIndex] || form.cover} alt={form.cover_alt || ''} className="my-6 max-h-80 w-full rounded-xl bg-muted object-contain"
-              onError={() => coverCandidateIndex < coverCandidates.length - 1 ? setCoverCandidateIndex(index => index + 1) : setStatus({ type: 'error', msg: 'This image could not be loaded. Check its sharing permissions or try another URL.' })} />}
+              onError={() => coverCandidateIndex < coverCandidates.length - 1 ? setCoverCandidateState({ source: form.cover, index: coverCandidateIndex + 1 }) : setStatus({ type: 'error', msg: 'This image could not be loaded. Check its sharing permissions or try another URL.' })} />}
             {form.body && /<[a-z][\s\S]*>/i.test(form.body)
               ? <div className="blog-article-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(form.body) }} />
               : <div className="blog-article-content whitespace-pre-wrap">{form.body || 'Your article content will appear here.'}</div>}
