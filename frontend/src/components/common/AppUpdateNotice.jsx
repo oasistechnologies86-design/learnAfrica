@@ -35,7 +35,7 @@ function UpdatePanel({ onRefresh, protectionMessage, preview = false }) {
           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100"><Rocket className="h-3.5 w-3.5" /></span>
           NEW VERSION AVAILABLE
         </div>
-        <h2 className="max-w-xl text-2xl font-extrabold leading-tight tracking-tight text-emerald-950 sm:text-3xl lg:text-[2.55rem]">A new LearnAfrica version is ready!</h2>
+        <h2 id="learnAfrica-update-title" className="max-w-xl text-2xl font-extrabold leading-tight tracking-tight text-emerald-950 sm:text-3xl lg:text-[2.55rem]">A new LearnAfrica version is ready!</h2>
         <p className="mt-3 max-w-lg text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">We’ve made improvements to give you a better and smoother learning experience.</p>
         <div className="mt-5 flex items-center gap-3 rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50 to-green-50 px-4 py-3.5">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-700 text-white shadow-md shadow-emerald-900/15"><ShieldCheck className="h-5 w-5" /></span>
