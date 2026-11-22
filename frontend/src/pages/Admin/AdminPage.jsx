@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import { BrandedSelect } from '@/components/common/BrandedSelect';
+import { BrandedDatePicker } from '@/components/common/BrandedDatePicker';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/common/Card';
@@ -1009,7 +1011,7 @@ export default function AdminPage() {
                 <div className="border-t border-border pt-4 space-y-3">
                   <h3 className="font-semibold text-sm">Record a financial movement</h3>
                   <form onSubmit={saveFinancialRecord} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <select
+                    <BrandedSelect
                       value={financialForm.record_type}
                       onChange={e => setFinancialForm(prev => ({
                         ...prev, record_type: e.target.value,
@@ -1019,7 +1021,7 @@ export default function AdminPage() {
                     >
                       <option value="expense">Business expense</option>
                       <option value="withdrawal">Owner withdrawal</option>
-                    </select>
+                    </BrandedSelect>
                     <input required maxLength={80} value={financialForm.category}
                       onChange={e => setFinancialForm(prev => ({ ...prev, category: e.target.value }))}
                       placeholder="Category (e.g. hosting, internet, equipment)"
@@ -1134,7 +1136,7 @@ export default function AdminPage() {
                   </label>
                   <label className="text-sm space-y-1">
                     <span className="font-medium">Effective from</span>
-                    <input type="date" value={paystackFeePolicy.effective_from || ''}
+                    <BrandedDatePicker value={paystackFeePolicy.effective_from || ''}
                       onChange={e => { setPaystackFeePolicy(p => ({ ...p, effective_from: e.target.value })); setFeePreview(null); }}
                       className="w-full rounded-lg border border-border bg-background px-3 py-2" />
                   </label>
@@ -1306,7 +1308,7 @@ export default function AdminPage() {
                                         onChange={e => setFeeOverrideEdits(prev => ({ ...prev, [inst.id]: e.target.value }))}
                                         className="w-24 rounded-md border border-border bg-background px-2 py-1 text-sm tabular-nums" />
                                       <span className="text-xs text-muted-foreground">%</span>
-                                      <input type="date" aria-label={"Paystack fee effective date for " + inst.name}
+                                      <BrandedDatePicker aria-label={"Paystack fee effective date for " + inst.name}
                                         value={feeOverrideDates[inst.id] ?? paystackFeePolicy.effective_from ?? ''}
                                         onChange={e => setFeeOverrideDates(prev => ({ ...prev, [inst.id]: e.target.value }))}
                                         className="rounded-md border border-border bg-background px-2 py-1 text-xs" />
@@ -1636,23 +1638,23 @@ export default function AdminPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm font-medium block mb-1">Audience</label>
-                      <select value={broadcast.role} onChange={e => setBroadcast(p => ({...p, role: e.target.value}))}
+                      <BrandedSelect value={broadcast.role} onChange={e => setBroadcast(p => ({...p, role: e.target.value}))}
                         className="w-full h-10 rounded-lg border border-input bg-background px-3 text-sm">
                         <option value="">All Users</option>
                         <option value="student">Students only</option>
                         <option value="instructor">Instructors only</option>
                         <option value="admin">Admins only</option>
-                      </select>
+                      </BrandedSelect>
                     </div>
                     <div>
                       <label className="text-sm font-medium block mb-1">Type</label>
-                      <select value={broadcast.type} onChange={e => setBroadcast(p => ({...p, type: e.target.value}))}
+                      <BrandedSelect value={broadcast.type} onChange={e => setBroadcast(p => ({...p, type: e.target.value}))}
                         className="w-full h-10 rounded-lg border border-input bg-background px-3 text-sm">
                         <option value="system">System</option>
                         <option value="info">Info</option>
                         <option value="achievement">Achievement</option>
                         <option value="reminder">Reminder</option>
-                      </select>
+                      </BrandedSelect>
                     </div>
                   </div>
                   <Button onClick={sendBroadcast} disabled={actionLoading === 'broadcast'} className="w-full">
@@ -1991,14 +1993,14 @@ export default function AdminPage() {
               ))}
               <div>
                 <label className="text-xs font-semibold uppercase text-muted-foreground block mb-1">Role</label>
-                <select value={editUser.role} onChange={e => setEditUser(p => ({...p, role: e.target.value}))}
+                <BrandedSelect value={editUser.role} onChange={e => setEditUser(p => ({...p, role: e.target.value}))}
                   disabled={editUser.role === 'superadmin' || editUser.id === user?.id}
                   className="w-full h-10 rounded-lg border border-input bg-background px-3 text-sm disabled:opacity-50">
                   <option value="student">student</option>
                   <option value="instructor">instructor</option>
                   <option value="admin">admin</option>
                   <option value="superadmin">superadmin</option>
-                </select>
+                </BrandedSelect>
               </div>
             </div>
             <div className="flex gap-3">
@@ -2433,11 +2435,11 @@ function AdminFooterTab() {
                 <Input value={link.url || ''} placeholder="/path or https://…"
                   onChange={(e) => setLink(key, i, { url: e.target.value })} />
                 {withAudience && (
-                  <select value={link.audience || 'all'}
+                  <BrandedSelect value={link.audience || 'all'}
                     onChange={(e) => setLink(key, i, { audience: e.target.value })}
                     className="h-10 rounded-lg border border-input bg-background px-2 text-sm">
                     {AUDIENCES.map((a) => <option key={a.value} value={a.value}>{a.label}</option>)}
-                  </select>
+                  </BrandedSelect>
                 )}
                 <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
                   <input type="checkbox" checked={link.enabled !== false}
@@ -3978,12 +3980,12 @@ function AdminCredentialsTab({ isSuperadmin }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <select value={type} onChange={e => setType(e.target.value)}
+          <BrandedSelect value={type} onChange={e => setType(e.target.value)}
             className="h-9 rounded-lg border border-input bg-background px-3 text-sm">
             <option value="all">All</option>
             <option value="certificate">Certificates</option>
             <option value="badge">Badges</option>
-          </select>
+          </BrandedSelect>
           <Input placeholder="Search ID, holder, course…" value={filter}
             onChange={e => setFilter(e.target.value)} className="w-64" />
           <Button variant="outline" onClick={load} className="gap-2"><RefreshCw className="h-4 w-4" /> Refresh</Button>
