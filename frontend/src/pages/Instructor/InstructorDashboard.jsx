@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { BrandedSelect } from '@/components/common/BrandedSelect';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/common/Card';
 import { cn } from '@/lib/utils';
@@ -707,7 +708,7 @@ export function InstructorDashboard() {
               onChange={e => { setTransactionSearch(e.target.value); setTransactionPage(1); }}
               placeholder="Search course, student or receipt"
               className="h-10 rounded-lg border border-border bg-background px-3 text-sm" />
-            <select value={transactionStatus}
+            <BrandedSelect value={transactionStatus}
               onChange={e => { setTransactionStatus(e.target.value); setTransactionPage(1); }}
               className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
               <option value="all">All transaction statuses</option>
@@ -715,7 +716,7 @@ export function InstructorDashboard() {
               <option value="pending">Pending</option>
               <option value="failed">Failed</option>
               <option value="refunded">Refunded</option>
-            </select>
+            </BrandedSelect>
           </div>
           {transactionsLoading ? (
             <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-primary/50" /></div>
@@ -848,19 +849,19 @@ export function InstructorDashboard() {
                 placeholder="Search name, email, phone or course"
                 className="h-10 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-sm" />
             </div>
-            <select value={studentCourse} onChange={e => { setStudentCourse(e.target.value); setStudentPage(1); }}
+            <BrandedSelect value={studentCourse} onChange={e => { setStudentCourse(e.target.value); setStudentPage(1); }}
               className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
               <option value="all">All my courses</option>
               {studentCourses.map(course => <option key={course.id} value={course.id}>{course.title}</option>)}
-            </select>
-            <select value={studentProgress} onChange={e => { setStudentProgress(e.target.value); setStudentPage(1); }}
+            </BrandedSelect>
+            <BrandedSelect value={studentProgress} onChange={e => { setStudentProgress(e.target.value); setStudentPage(1); }}
               className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
               <option value="all">All progress</option>
               <option value="not_started">Not started</option>
               <option value="in_progress">In progress</option>
               <option value="completed">Completed</option>
-            </select>
-            <select value={studentPayment} onChange={e => { setStudentPayment(e.target.value); setStudentPage(1); }}
+            </BrandedSelect>
+            <BrandedSelect value={studentPayment} onChange={e => { setStudentPayment(e.target.value); setStudentPage(1); }}
               className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
               <option value="all">All payment statuses</option>
               <option value="paid">Paid</option>
@@ -868,13 +869,13 @@ export function InstructorDashboard() {
               <option value="failed">Failed</option>
               <option value="not_required">Not required</option>
               <option value="no_payment">No payment record</option>
-            </select>
-            <select value={studentEnrollment} onChange={e => { setStudentEnrollment(e.target.value); setStudentPage(1); }}
+            </BrandedSelect>
+            <BrandedSelect value={studentEnrollment} onChange={e => { setStudentEnrollment(e.target.value); setStudentPage(1); }}
               className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
               <option value="all">All enrolments</option>
               <option value="active">Active</option>
               <option value="expired">Expired</option>
-            </select>
+            </BrandedSelect>
           </div>
           {studentsLoading ? (
             <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-primary/50" /></div>
