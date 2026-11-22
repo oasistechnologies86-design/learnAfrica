@@ -3846,7 +3846,7 @@ function AdminBlogTab() {
   };
   const save = async () => {
     if (!form.title.trim()) { setStatus({ type: 'error', msg: 'Title is required.' }); return; }
-    if (form.cover && !/^https?:\/\//i.test(form.cover) && !form.cover.startsWith('/')) { setStatus({ type: 'error', msg: 'Use a valid image URL.' }); return; }
+    if (form.cover && !/^https?:\/\//i.test(normalizeBlogImageUrl(form.cover)) && !form.cover.startsWith('/')) { setStatus({ type: 'error', msg: 'Use a valid image URL.' }); return; }
     if (form.cover && !form.cover_alt.trim()) { setStatus({ type: 'error', msg: 'Add alt text describing the cover image.' }); return; }
     setBusy(true); setStatus(null);
     try {
