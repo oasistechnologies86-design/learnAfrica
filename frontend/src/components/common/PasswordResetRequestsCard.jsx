@@ -1,5 +1,4 @@
 /**
-import { BrandedSelect } from '@/components/common/BrandedSelect';
  * PasswordResetRequestsCard — admin review of forgot-password requests.
  *
  * Lists every request (email, reason, date/time, status) and, per request, lets
@@ -7,6 +6,7 @@ import { BrandedSelect } from '@/components/common/BrandedSelect';
  * (only when outgoing email is on), or dismiss it. The raw link is shown once
  * and can be copied; it is never stored or logged.
  */
+import { BrandedSelect } from '@/components/common/BrandedSelect';
 import { useCallback, useEffect, useState } from 'react';
 import { KeyRound, RefreshCw, Loader2, Copy, Check, Mail, Link2, XCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/common/Card';
