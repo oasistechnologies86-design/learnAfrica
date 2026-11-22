@@ -15,6 +15,14 @@ const CSS = `
   padding-top:calc(20px + env(safe-area-inset-top,0px));
   padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));
 }
+/* Frosted-glass veil for the live update notice: keep the page visible
+   underneath while softly diffusing it. The admin preview remains untouched. */
+.la-root:not(.la-preview){
+  background:rgba(3,5,12,.14);
+  -webkit-backdrop-filter:blur(8px) saturate(115%);
+  backdrop-filter:blur(8px) saturate(115%);
+}
+
 .la-root, .la-root *{box-sizing:border-box}
 
 /* In-admin demonstration: keep the same card design, but render it inside
