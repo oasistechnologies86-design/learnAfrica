@@ -559,7 +559,7 @@ export function SignupPage() {
               </div>
             )}
 
-            <div className={cn('flex items-start gap-2 rounded-lg p-2 -m-2',
+            <div className={cn('flex items-start gap-2 rounded-lg px-2 pt-2 pb-4 -m-2',
               errors.verification && 'ring-1 ring-destructive bg-destructive/5')}>
               <input
                 type="checkbox"
