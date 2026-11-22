@@ -4,6 +4,9 @@ import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
 import { cn } from '@/lib/utils';
 import { API_BASE } from '@/lib/api';
+import { BrandedSelect } from '@/components/common/BrandedSelect';
+import { BrandedDatePicker } from '@/components/common/BrandedDatePicker';
+import { BrandedTimeField } from '@/components/common/BrandedTimeField';
 
 /**
  * LiveSessionsSection — shows scheduled live cohort sessions for a course.
@@ -304,24 +307,24 @@ function CreateSessionModal({ courseId, onClose, onCreated }) {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block text-xs font-bold text-muted-foreground mb-1 uppercase tracking-wider">Date</label>
-              <input type="date" value={date} onChange={e => setDate(e.target.value)} required
+              <BrandedDatePicker value={date} onChange={e => setDate(e.target.value)} required
                 className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
             </div>
             <div>
               <label className="block text-xs font-bold text-muted-foreground mb-1 uppercase tracking-wider">Time</label>
-              <input type="time" value={time} onChange={e => setTime(e.target.value)} required
+              <BrandedTimeField value={time} onChange={e => setTime(e.target.value)} required
                 className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
             </div>
           </div>
           <div>
             <label className="block text-xs font-bold text-muted-foreground mb-1 uppercase tracking-wider">Duration (minutes)</label>
-            <select value={duration} onChange={e => setDuration(e.target.value)}
+            <BrandedSelect value={duration} onChange={e => setDuration(e.target.value)}
               className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary">
               <option value={30}>30 min</option>
               <option value={60}>1 hour</option>
               <option value={90}>1.5 hours</option>
               <option value={120}>2 hours</option>
-            </select>
+            </BrandedSelect>
           </div>
           <div>
             <label className="block text-xs font-bold text-muted-foreground mb-1 uppercase tracking-wider">
