@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { BrandedSelect } from '@/components/common/BrandedSelect';
 import {
   BookOpen, Layout, X, ChevronRight, Plus, GripVertical, Video,
   HelpCircle, Link as LinkIcon, Trash2, ChevronDown, ChevronUp,
@@ -888,7 +889,7 @@ function CurriculumItemEditor({ item, index, onUpdate, onRemove, onMoveUp, onMov
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">
                   Select component
                 </label>
-                <select
+                <BrandedSelect
                   value={item.component_key || item.componentKey || ''}
                   onChange={e => onUpdate({ component_key: e.target.value, componentKey: e.target.value })}
                   className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
@@ -897,7 +898,7 @@ function CurriculumItemEditor({ item, index, onUpdate, onRemove, onMoveUp, onMov
                   {listCustomLessons().map(entry => (
                     <option key={entry.key} value={entry.key}>{entry.label}</option>
                   ))}
-                </select>
+                </BrandedSelect>
                 <p className="text-2xs text-muted-foreground mt-1.5">
                   Select the custom page students will see. Preview it here before saving or publishing the course.
                 </p>
@@ -1277,13 +1278,13 @@ export function CurriculumSection({
           <p className="mt-0.5 text-xs text-muted-foreground">Add several quizzes and all their questions to this course in one upload.</p>
         </div>
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 sm:justify-end">
-          <select value={selectedImportSectionId} onChange={event => setSelectedImportSectionId(event.target.value)}
+          <BrandedSelect value={selectedImportSectionId} onChange={event => setSelectedImportSectionId(event.target.value)}
             disabled={importingQuizzes || sections.length === 0}
             aria-label="Choose destination session for imported quizzes"
             className="h-9 min-w-[190px] flex-1 rounded-lg border border-input bg-background px-3 text-xs sm:flex-none">
             <option value="">Choose destination session</option>
             {sections.map((section, index) => <option key={section.id} value={section.id}>{section.title?.trim() || `Session ${index + 1}`}</option>)}
-          </select>
+          </BrandedSelect>
           <input ref={quizImportInputRef} type="file" accept="application/json,.json" className="hidden"
             onChange={handleQuizImport} />
           <Button type="button" variant="outline" size="sm" disabled={importingQuizzes || !selectedImportSectionId || sections.length === 0}
