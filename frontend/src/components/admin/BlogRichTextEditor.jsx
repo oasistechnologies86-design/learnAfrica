@@ -12,6 +12,8 @@ const tools = [
   { label: 'Align centre', command: 'justifyCenter', text: 'Centre' },
   { label: 'Align right', command: 'justifyRight', text: 'Right' },
   { label: 'Justify text', command: 'justifyFull', text: 'Justify' },
+  { label: 'Increase indent', command: 'indent', text: 'Indent' },
+  { label: 'Decrease indent', command: 'outdent', text: 'Outdent' },
   { label: 'Bulleted list', command: 'insertUnorderedList', text: '• List' },
   { label: 'Numbered list', command: 'insertOrderedList', text: '1. List' },
   { label: 'Quote', command: 'formatBlock', value: 'BLOCKQUOTE', text: 'Quote' },
