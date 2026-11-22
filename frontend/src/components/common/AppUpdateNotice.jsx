@@ -1,65 +1,158 @@
-/* global __LEARN_AFRICA_BUILD_ID__ */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Rocket, RefreshCw, ShieldCheck, GraduationCap, Sparkles } from 'lucide-react';
 
-const BUILD_ID = typeof __LEARN_AFRICA_BUILD_ID__ !== 'undefined' ? __LEARN_AFRICA_BUILD_ID__ : 'development';
+const CSS = `
+@import url("https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Manrope:wght@500;700&display=swap");
 
-function UpdateArtwork({ compact = false }) {
-  return (
-    <div className={'relative flex items-center justify-center overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-green-100 ' + (compact ? 'min-h-[190px] rounded-2xl' : 'min-h-[230px] sm:min-h-[330px] sm:rounded-l-[2rem]')}>
-      <div className="absolute -left-12 -top-16 h-52 w-52 rounded-full bg-emerald-300/30 blur-3xl" />
-      <div className="absolute -bottom-20 right-0 h-56 w-56 rounded-full bg-lime-300/30 blur-3xl" />
-      <div className="absolute h-40 w-40 rounded-full border border-emerald-300/50 sm:h-56 sm:w-56" />
-      <div className="absolute h-32 w-32 rounded-full border border-dashed border-emerald-400/60 sm:h-44 sm:w-44" />
-      <div className="absolute right-[17%] top-[18%] text-emerald-400"><Sparkles className="h-5 w-5" /></div>
-      <div className="absolute bottom-[20%] left-[17%] text-lime-500"><Sparkles className="h-4 w-4" /></div>
-      <div className="relative z-10 flex flex-col items-center">
-        <div className="relative flex h-24 w-24 items-center justify-center rounded-[2rem] border border-white/80 bg-gradient-to-br from-emerald-500 via-green-600 to-emerald-800 text-white shadow-[0_18px_50px_rgba(5,150,105,.35)] sm:h-32 sm:w-32 sm:rounded-[2.5rem]">
-          <GraduationCap className="h-12 w-12 sm:h-16 sm:w-16" strokeWidth={1.6} />
-          <span className="absolute -right-3 -top-3 flex h-11 w-11 items-center justify-center rounded-2xl border-4 border-white bg-lime-300 text-emerald-900 shadow-lg sm:h-14 sm:w-14">
-            <RefreshCw className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.5} />
-          </span>
-        </div>
-        <div className="mt-5 rounded-full border border-emerald-200/80 bg-white/80 px-4 py-1.5 text-[10px] font-extrabold tracking-[.24em] text-emerald-800 shadow-sm">LEARNAFRICA</div>
-      </div>
-    </div>
-  );
+.la-root{
+  --bg:#03050c; --card:#0a0f20; --text:#f4f7ff; --muted:#a3aed6; --line:rgba(255,255,255,.14);
+  --a:#ffb627; --b:#2fe02f; --btntext:#04101c;
+  color-scheme:dark;
+  position:fixed; inset:0; z-index:9999; overflow-x:hidden; overflow-y:auto;
+  background:var(--bg); color:var(--text);
+  font-family:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  display:grid; place-items:center;
+  padding:20px;
+  padding-top:calc(20px + env(safe-area-inset-top,0px));
+  padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));
 }
+.la-root, .la-root *{box-sizing:border-box}
 
-function UpdatePanel({ onRefresh, protectionMessage, preview = false, buttonRef }) {
+.la-card{position:relative;width:min(440px,100%);background:var(--card);border-radius:28px;padding:clamp(24px,5vw,36px);text-align:center;isolation:isolate}
+/* animated neon border */
+.la-card::before{content:"";position:absolute;inset:-2px;border-radius:34px;z-index:-1;
+  background:conic-gradient(from var(--ang,0deg),var(--a),var(--b),transparent 40%,var(--a));animation:la-turn 5s linear infinite}
+.la-card::after{content:"";position:absolute;inset:0;border-radius:32px;background:var(--card);z-index:-1}
+@property --ang{syntax:"<angle>";inherits:false;initial-value:0deg}
+@keyframes la-turn{to{--ang:360deg}}
+
+.la-logo{position:relative;width:clamp(96px,22vw,120px);aspect-ratio:1;margin:0 auto clamp(16px,4vw,22px)}
+.la-ring{position:absolute;inset:0;border-radius:50%;border:3px solid transparent;border-top-color:var(--b);border-right-color:var(--b);animation:la-spin 2.6s linear infinite}
+.la-ring.la-r2{inset:12px;border-top-color:var(--a);border-right-color:var(--a);animation-duration:4s;animation-direction:reverse}
+.la-logo svg{position:absolute;inset:20px;width:calc(100% - 40px);height:calc(100% - 40px);animation:la-pulse 2.4s ease-in-out infinite}
+.la-arrow{animation:la-rise 1.6s ease-in-out infinite}
+@keyframes la-spin{to{transform:rotate(360deg)}}
+@keyframes la-pulse{50%{transform:scale(1.08)}}
+@keyframes la-rise{0%{transform:translateY(8px);opacity:.2}50%{opacity:1}100%{transform:translateY(-8px);opacity:.2}}
+
+.la-h1{font-family:"Unbounded",system-ui,sans-serif;font-weight:800;font-size:clamp(23px,6vw,32px);line-height:1.08;letter-spacing:-.02em;margin:0 0 clamp(14px,3vw,22px);
+  background:linear-gradient(100deg,#ffb627,#2fe02f);-webkit-background-clip:text;background-clip:text;color:transparent}
+.la-lead{font-size:clamp(15px,3.4vw,16px);font-weight:700;line-height:1.5;margin:0 auto 12px;max-width:30ch}
+.la-safe{font-size:clamp(13px,3vw,14px);color:var(--muted);line-height:1.5;margin:0 auto clamp(20px,4vw,24px);max-width:34ch}
+
+.la-btn{position:relative;width:100%;border:0;border-radius:20px;padding:clamp(14px,3.5vw,16px);font:800 clamp(15px,3.6vw,16px) "Manrope",system-ui,sans-serif;color:var(--btntext);cursor:pointer;overflow:hidden;
+  background:linear-gradient(100deg,#ffb627,#2fe02f);transition:transform .2s,box-shadow .2s;box-shadow:0 14px 40px -12px #2fe02f}
+.la-btn:hover{transform:translateY(-3px);box-shadow:0 20px 48px -12px var(--b)}
+.la-btn:active{transform:scale(.98)}
+.la-btn:focus-visible{outline:3px solid var(--text);outline-offset:4px}
+.la-bar{position:absolute;inset:0;background:rgba(255,255,255,.4);transform:scaleX(0);transform-origin:left}
+.la-btn.la-go .la-bar{animation:la-fill 2s ease-in-out forwards}
+@keyframes la-fill{to{transform:scaleX(1)}}
+.la-btn span{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:12px}
+.la-dot{display:none;width:18px;height:18px;border-radius:50%;border:3px solid rgba(4,16,28,.3);border-top-color:#04101c;animation:la-spin .8s linear infinite}
+.la-btn.la-go .la-dot{display:inline-block}
+
+.la-chip{display:inline-flex;align-items:center;gap:10px;border:1.5px solid var(--line);border-radius:99px;padding:8px 16px;font-size:clamp(12px,3vw,14px);font-weight:700;color:var(--text);margin:0 0 clamp(16px,3.5vw,22px)}
+.la-pip{width:9px;height:9px;border-radius:50%;background:var(--b);box-shadow:0 0 12px var(--b);animation:la-blink 1.3s ease-in-out infinite}
+@keyframes la-blink{50%{opacity:.25}}
+.la-btn:not(.la-go){animation:la-call 1.8s ease-out infinite}
+@keyframes la-call{0%{box-shadow:0 0 0 0 rgba(47,224,47,.55)}80%,100%{box-shadow:0 0 0 22px rgba(47,224,47,0)}}
+.la-tap{width:20px;height:20px;animation:la-press 1.3s ease-in-out infinite}
+.la-btn.la-go .la-tap{display:none}
+@keyframes la-press{0%,100%{transform:translate(0,0)}45%{transform:translate(-3px,-3px)}60%{transform:translate(2px,2px) scale(.9)}}
+.la-req{margin:18px 0 0;font-size:clamp(12px,3vw,14px);color:var(--muted)}
+@media (prefers-reduced-motion: reduce){.la-root *,.la-root *::before,.la-root *::after{animation:none!important;transition:none!important}}
+`;
+
+function LearnAfricaUpdate({ onUpdate, buttonRef }) {
+  const [updating, setUpdating] = useState(false);
+  const timer = useRef(null);
+
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  const handleClick = () => {
+    if (updating) return;
+    setUpdating(true);
+    timer.current = window.setTimeout(() => {
+      try {
+        if (onUpdate) onUpdate();
+        else window.location.reload();
+      } catch {
+        setUpdating(false);
+      }
+    }, 2100);
+  };
+
   return (
-    <div className="relative grid w-full overflow-hidden rounded-[1.75rem] border border-white/80 bg-white shadow-[0_28px_90px_rgba(6,78,59,.22)] ring-1 ring-emerald-900/5 sm:grid-cols-[.82fr_1.18fr] sm:rounded-[2rem]">
-      <UpdateArtwork />
-      <div className="flex flex-col justify-center p-5 sm:p-8 lg:p-10">
-        <div className="mb-4 inline-flex w-fit items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] font-bold text-emerald-800">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100"><Rocket className="h-3.5 w-3.5" /></span>
-          NEW VERSION AVAILABLE
+    <div className="la-root">
+      <style>{CSS}</style>
+      <main
+        className="la-card"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="la-title"
+        aria-describedby="la-desc"
+      >
+        <div className="la-logo" aria-hidden="true">
+          <div className="la-ring" />
+          <div className="la-ring la-r2" />
+          <svg viewBox="0 0 100 100" fill="none">
+            <defs>
+              <linearGradient id="la-g" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stopColor="#ffb627" />
+                <stop offset="1" stopColor="#2fe02f" />
+              </linearGradient>
+            </defs>
+            <g
+              className="la-arrow"
+              stroke="url(#la-g)"
+              strokeWidth="10"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M50 78V26" />
+              <path d="M28 48l22-22 22 22" />
+            </g>
+          </svg>
         </div>
-        <h2 id="learnAfrica-update-title" className="max-w-xl text-2xl font-extrabold leading-tight tracking-tight text-emerald-950 sm:text-3xl lg:text-[2.55rem]">A new LearnAfrica version is ready!</h2>
-        <p id="learnAfrica-update-description" className="mt-3 max-w-lg text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">We’ve made improvements to give you a better and smoother learning experience.</p>
-        <div className="mt-5 flex items-center gap-3 rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50 to-green-50 px-4 py-3.5">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-700 text-white shadow-md shadow-emerald-900/15"><ShieldCheck className="h-5 w-5" /></span>
-          <p className="text-xs font-semibold leading-5 text-emerald-900 sm:text-sm">Your account and saved course progress remain safe.</p>
+
+        <div className="la-chip">
+          <i className="la-pip" />
+          New version available
         </div>
-        {protectionMessage && <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">{protectionMessage}</p>}
-        <button ref={buttonRef} type="button" onClick={onRefresh} disabled={preview} className="mt-6 flex min-h-14 w-full items-center justify-center gap-3 rounded-full border border-emerald-300/50 bg-gradient-to-r from-emerald-500 via-green-600 to-emerald-800 px-5 py-3 text-sm font-extrabold text-white shadow-[0_12px_28px_rgba(5,150,105,.28)] transition hover:-translate-y-0.5 hover:brightness-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300/70 disabled:cursor-default sm:text-base">
-          <RefreshCw className="h-5 w-5" /> Refresh to Update <span aria-hidden="true" className="text-xl leading-none">›</span>
+
+        <h1 className="la-h1" id="la-title">
+          A new LearnAfrica version is ready!
+        </h1>
+        <p className="la-lead" id="la-desc">
+          We’ve made improvements to give you a better and smoother learning experience.
+        </p>
+        <p className="la-safe">Your account and saved course progress remain safe.</p>
+
+        <button
+          ref={buttonRef}
+          type="button"
+          className={"la-btn" + (updating ? " la-go" : "")}
+          onClick={handleClick}
+          disabled={updating}
+        >
+          <div className="la-bar" />
+          <span>
+            <svg className="la-tap" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M5 3l14 7.5-6 1.8-2.2 6.2z" />
+            </svg>
+            <i className="la-dot" />
+            <b>{updating ? "Updating…" : "Click here to Refresh & Update"}</b>
+          </span>
         </button>
-      </div>
+
+        <p className="la-req">This update is required to continue learning.</p>
+      </main>
     </div>
   );
 }
 
 export function UpdateNoticePreview() {
-  return (
-    <div className="mx-auto w-full max-w-4xl overflow-hidden rounded-[2rem] bg-slate-200 p-3 sm:p-6">
-      <div className="mb-3 flex items-center gap-2 px-2 text-[10px] font-semibold uppercase tracking-[.18em] text-slate-500">
-        <span className="h-2 w-2 rounded-full bg-emerald-500" /> Student experience preview
-      </div>
-      <UpdatePanel preview onRefresh={() => {}} />
-      <p className="mt-3 text-center text-[10px] text-slate-500">Illustrative preview of the mandatory update screen.</p>
-    </div>
-  );
+  return <LearnAfricaUpdate onUpdate={() => {}} />;
 }
 
 function hasUnsavedChanges() {
@@ -84,8 +177,7 @@ export default function AppUpdateNotice() {
   const buttonRef = useRef(null);
 
   const revealWhenSafe = useCallback(() => {
-    // Never cover an unsaved form/editor. The next scheduled version check
-    // will display the mandatory screen once the current work is saved.
+    // Keep the existing protection: never cover an unsaved form/editor.
     if (!hasUnsavedChanges()) setAvailable(true);
   }, []);
 
@@ -122,7 +214,13 @@ export default function AppUpdateNotice() {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     buttonRef.current?.focus();
-    const blockEscape = event => { if (event.key === 'Escape' || event.key === 'Tab') { event.preventDefault(); event.stopPropagation(); buttonRef.current?.focus(); } };
+    const blockEscape = event => {
+      if (event.key === 'Escape' || event.key === 'Tab') {
+        event.preventDefault();
+        event.stopPropagation();
+        buttonRef.current?.focus();
+      }
+    };
     window.addEventListener('keydown', blockEscape, true);
     return () => {
       document.body.style.overflow = previousOverflow;
@@ -130,15 +228,8 @@ export default function AppUpdateNotice() {
     };
   }, [available]);
 
-  const refresh = () => window.location.reload();
   if (!available) return null;
-
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-emerald-950/55 px-3 py-5 backdrop-blur-md sm:px-6 sm:py-8" role="presentation">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_15%_15%,rgba(52,211,153,.24),transparent_42%),radial-gradient(ellipse_at_85%_85%,rgba(163,230,53,.18),transparent_40%)]" />
-      <div className="relative z-10 my-auto w-full max-w-5xl animate-in fade-in zoom-in-95 duration-300" role="dialog" aria-modal="true" aria-labelledby="learnAfrica-update-title" aria-describedby="learnAfrica-update-description">
-        <UpdatePanel onRefresh={refresh} protectionMessage="" buttonRef={buttonRef} />
-      </div>
-    </div>
-  );
+  return <LearnAfricaUpdate onUpdate={() => window.location.reload()} buttonRef={buttonRef} />;
 }
+
+const BUILD_ID = typeof __LEARN_AFRICA_BUILD_ID__ !== 'undefined' ? __LEARN_AFRICA_BUILD_ID__ : 'development';
