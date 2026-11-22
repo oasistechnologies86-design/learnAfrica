@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const pad = value => String(value).padStart(2, '0');
 const toISO = date => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
@@ -58,7 +59,7 @@ export function BrandedDatePicker({
       <button id={id} type="button" disabled={disabled} aria-label={ariaLabel}
         aria-haspopup="dialog" aria-expanded={open} aria-required={required || undefined}
         onClick={() => { setMonth(selected || new Date()); setOpen(current => !current); }}
-        className={`flex w-full items-center justify-between gap-2 text-left ${className} ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
+        className={cn('flex w-full items-center justify-between gap-2 rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary text-left', className, disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer')}>
         <span className={selected ? '' : 'text-muted-foreground'}>{displayDate(value) || placeholder}</span>
         <CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" />
       </button>
