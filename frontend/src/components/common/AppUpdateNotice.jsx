@@ -135,7 +135,7 @@ function LearnAfricaUpdate({ onUpdate, buttonRef, preview = false }) {
 
         <div className="la-chip">
           <i className="la-pip" />
-          New version available
+          New Update available
         </div>
 
         <h1 className="la-h1" id="la-title">
