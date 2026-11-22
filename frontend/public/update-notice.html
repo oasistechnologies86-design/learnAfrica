@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>LearnAfrica update</title>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Manrope:wght@500;700&display=swap");
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;color:#f4f7ff;color-scheme:dark}
+.la-root{--card:#0a0f20;--text:#f4f7ff;--muted:#a3aed6;--line:rgba(255,255,255,.14);--a:#ffb627;--b:#2fe02f;--btntext:#04101c;position:fixed;inset:0;z-index:9999;overflow:auto;background:rgba(3,5,12,.14);-webkit-backdrop-filter:blur(8px) saturate(115%);backdrop-filter:blur(8px) saturate(115%);color:var(--text);display:grid;place-items:center;padding:20px;padding-top:calc(20px + env(safe-area-inset-top,0px));padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+.la-card{position:relative;width:min(440px,100%);background:var(--card);border-radius:28px;padding:clamp(24px,5vw,36px);text-align:center;isolation:isolate}
+.la-card:before{content:"";position:absolute;inset:-2px;border-radius:34px;z-index:-1;background:conic-gradient(from var(--ang,0deg),var(--a),var(--b),transparent 40%,var(--a));animation:la-turn 5s linear infinite}
+.la-card:after{content:"";position:absolute;inset:0;border-radius:32px;background:var(--card);z-index:-1}
+@property --ang{syntax:"<angle>";inherits:false;initial-value:0deg}
+@keyframes la-turn{to{--ang:360deg}}
+.la-logo{position:relative;width:clamp(96px,22vw,120px);aspect-ratio:1;margin:0 auto clamp(16px,4vw,22px)}
+.la-ring{position:absolute;inset:0;border-radius:50%;border:3px solid transparent;border-top-color:var(--b);border-right-color:var(--b);animation:la-spin 2.6s linear infinite}
+.la-ring.r2{inset:12px;border-top-color:var(--a);border-right-color:var(--a);animation-duration:4s;animation-direction:reverse}
+.la-logo svg{position:absolute;inset:20px;width:calc(100% - 40px);height:calc(100% - 40px);animation:la-pulse 2.4s ease-in-out infinite}
+.la-arrow{animation:la-rise 1.6s ease-in-out infinite}
+@keyframes la-spin{to{transform:rotate(360deg)}}@keyframes la-pulse{50%{transform:scale(1.08)}}@keyframes la-rise{0%{transform:translateY(8px);opacity:.2}50%{opacity:1}100%{transform:translateY(-8px);opacity:.2}}
+.la-h1{font-family:"Unbounded",system-ui,sans-serif;font-weight:800;font-size:clamp(23px,6vw,32px);line-height:1.08;letter-spacing:-.02em;margin:0 0 clamp(14px,3vw,22px);background:linear-gradient(100deg,#ffb627,#2fe02f);-webkit-background-clip:text;background-clip:text;color:transparent}
+.la-lead{font-size:clamp(15px,3.4vw,16px);font-weight:700;line-height:1.5;margin:0 auto 12px;max-width:30ch}
+.la-safe{font-size:clamp(13px,3vw,14px);color:var(--muted);line-height:1.5;margin:0 auto clamp(20px,4vw,24px);max-width:34ch}
+.la-btn{position:relative;width:100%;border:0;border-radius:20px;padding:clamp(14px,3.5vw,16px);font:800 clamp(15px,3.6vw,16px) "Manrope",system-ui,sans-serif;color:var(--btntext);cursor:pointer;overflow:hidden;background:linear-gradient(100deg,#ffb627,#2fe02f);transition:transform .2s,box-shadow .2s;box-shadow:0 14px 40px -12px #2fe02f}
+.la-btn:hover{transform:translateY(-3px);box-shadow:0 20px 48px -12px var(--b)}.la-btn:active{transform:scale(.98)}.la-btn:focus-visible{outline:3px solid var(--text);outline-offset:4px}
+.la-bar{position:absolute;inset:0;background:rgba(255,255,255,.4);transform:scaleX(0);transform-origin:left}.la-btn.go .la-bar{animation:la-fill 2s ease-in-out forwards}@keyframes la-fill{to{transform:scaleX(1)}}
+.la-btn span{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:12px}.la-dot{display:none;width:18px;height:18px;border-radius:50%;border:3px solid rgba(4,16,28,.3);border-top-color:#04101c;animation:la-spin .8s linear infinite}.la-btn.go .la-dot{display:inline-block}
+.la-chip{display:inline-flex;align-items:center;gap:10px;border:1.5px solid var(--line);border-radius:99px;padding:8px 16px;font-size:clamp(12px,3vw,14px);font-weight:700;color:var(--text);margin:0 0 clamp(16px,3.5vw,22px)}
+.la-pip{width:9px;height:9px;border-radius:50%;background:var(--b);box-shadow:0 0 12px var(--b);animation:la-blink 1.3s ease-in-out infinite}@keyframes la-blink{50%{opacity:.25}}
+.la-btn:not(.go){animation:la-call 1.8s ease-out infinite}@keyframes la-call{0%{box-shadow:0 0 0 0 rgba(47,224,47,.55)}80%,100%{box-shadow:0 0 0 22px rgba(47,224,47,0)}}
+.la-tap{width:20px;height:20px;animation:la-press 1.3s ease-in-out infinite}.la-btn.go .la-tap{display:none}@keyframes la-press{0%,100%{transform:translate(0,0)}45%{transform:translate(-3px,-3px)}60%{transform:translate(2px,2px) scale(.9)}}
+.la-req{margin:18px 0 0;font-size:clamp(12px,3vw,14px);color:var(--muted)}
+@media(prefers-reduced-motion:reduce){.la-root *,.la-root *:before,.la-root *:after{animation:none!important;transition:none!important}}
+</style></head>
+<body><div class="la-root"><main class="la-card" role="alertdialog" aria-modal="true" aria-labelledby="la-title" aria-describedby="la-desc">
+<div class="la-logo" aria-hidden="true"><div class="la-ring"></div><div class="la-ring r2"></div><svg viewBox="0 0 100 100" fill="none"><defs><linearGradient id="la-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb627"/><stop offset="1" stop-color="#2fe02f"/></linearGradient></defs><g class="la-arrow" stroke="url(#la-g)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"><path d="M50 78V26"/><path d="M28 48l22-22 22 22"/></g></svg></div>
+<div class="la-chip"><i class="la-pip"></i>New version available</div>
+<h1 class="la-h1" id="la-title">A new LearnAfrica version is ready!</h1>
+<p class="la-lead" id="la-desc">We’ve made improvements to give you a better and smoother learning experience.</p>
+<p class="la-safe">Your account and saved course progress remain safe.</p>
+<button type="button" class="la-btn" id="update"><div class="la-bar"></div><span><svg class="la-tap" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 3l14 7.5-6 1.8-2.2 6.2z"/></svg><i class="la-dot"></i><b>Click here to Refresh &amp; Update</b></span></button>
+<p class="la-req">This update is required to continue learning.</p></main></div>
+<script>
+(()=>{const button=document.getElementById('update');let busy=false;button.focus();button.addEventListener('click',()=>{if(busy)return;busy=true;button.classList.add('go');button.disabled=true;button.querySelector('b').textContent='Updating…';setTimeout(()=>{window.parent.postMessage({type:'LEARNAFRICA_UPDATE_REFRESH'},'*')},2100)})})();
+</script></body></html>
