@@ -24,7 +24,7 @@ const ALLOWED_ATTRS = {
   TD: new Set(['colspan', 'rowspan']),
   TH: new Set(['colspan', 'rowspan']),
 };
-const GLOBAL_ATTRS = new Set(['class']);
+const GLOBAL_ATTRS = new Set(['class', 'style']);
 
 // Browsers strip tabs, newlines and NUL bytes before parsing a URL scheme, so
 // "java\tscript:" and "&#106;avascript:" both execute. We decode entities and
@@ -84,6 +84,12 @@ export function sanitizeHtml(html) {
       const name = attr.name.toLowerCase();
       if (name.startsWith('on') || (!allowed.has(name) && !GLOBAL_ATTRS.has(name))) {
         el.removeAttribute(attr.name);
+        continue;
+      }
+      if (name === 'style') {
+        const alignment = String(attr.value || '').match(/^\\s*text-align\\s*:\\s*(left|right|center|justify)\\s*;?\\s*$/i);
+        if (alignment) el.setAttribute('style', 'text-align: ' + alignment[1].toLowerCase());
+        else el.removeAttribute('style');
         continue;
       }
       if ((name === 'href' || name === 'src') && !isSafeUrl(attr.value)) {

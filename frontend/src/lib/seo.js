@@ -49,7 +49,7 @@ function upsertJsonLd(id, data) {
  * @param {string} [o.type]       OG type, e.g. 'website' or 'article'.
  * @param {object} [o.jsonLd]     Structured data object.
  */
-export function setSeo({ title, description, path, image, type = 'website', jsonLd } = {}) {
+export function setSeo({ title, description, path, image, imageAlt, type = 'website', jsonLd } = {}) {
   const origin = window.location.origin;
   const fullTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} — Learn skills that matter`;
   document.title = fullTitle;
@@ -65,6 +65,7 @@ export function setSeo({ title, description, path, image, type = 'website', json
   if (image) {
     const img = image.startsWith('http') ? image : `${origin}${image}`;
     upsertMeta('property', 'og:image', img);
+    if (imageAlt) upsertMeta('property', 'og:image:alt', imageAlt);
     upsertMeta('name', 'twitter:card', 'summary_large_image');
     upsertMeta('name', 'twitter:image', img);
   }
