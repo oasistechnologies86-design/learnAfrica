@@ -201,16 +201,19 @@ export default function ReceiptStatementPage() {
         </div>
 
         <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+          <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 sm:px-5 sm:py-4">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Paid by</div>
+            <div className="mt-1 break-words text-lg font-bold leading-snug text-foreground sm:text-xl">{tx.buyer?.name || 'Name not available'}</div>
+          </div>
           {/* Meta grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 sm:gap-y-4">
             <Meta label="Statement No" value={tx.statement_no || tx.receipt_id} mono />
-            <Meta label="Payment Date" value={fmtDate(tx.created_at)} />
+            <Meta label="Payment Date & Time" value={fmtDate(tx.created_at)} />
             <Meta label="Receipt No" value={tx.receipt_id} mono />
             <Meta label="Reference" value={tx.reference} mono />
-            <Meta label="Student" value={tx.buyer?.name} />
             <Meta label="Payment Method" value={formatPaymentMethod(tx.payment_method)} />
-            <Meta label="Account" value={tx.buyer?.email} />
-            <Meta label="Contact Number" value={tx.buyer?.phone || tx.buyer?.contact?.phone || tx.buyer?.contact?.phone_number || 'Contact number not provided'} />
+            {tx.buyer?.email && <Meta label="Account" value={tx.buyer.email} />}
+            {(tx.buyer?.phone || tx.buyer?.contact?.phone || tx.buyer?.contact?.phone_number) && <Meta label="Contact Number" value={tx.buyer.phone || tx.buyer.contact?.phone || tx.buyer.contact?.phone_number} />}
             <Meta label="Provider" value={tx.provider} />
           </div>
 
