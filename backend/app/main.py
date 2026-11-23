@@ -4199,7 +4199,7 @@ def create_app() -> Flask:
                           CAST(ue.expires_at AS TEXT) AS expires_at,
                           ic.cert_id AS certificate_id,
                           CAST(ic.issued_at AS TEXT) AS certificate_issued_at,
-                          ic.revoked_at AS certificate_revoked_at,
+                          CAST(ic.revoked_at AS TEXT) AS certificate_revoked_at,
                           CASE WHEN ue.expires_at IS NOT NULL AND ue.expires_at < CURRENT_TIMESTAMP
                                THEN 'expired' ELSE 'active' END AS enrollment_status,
                           tx.status AS transaction_status, tx.amount AS payment_amount,
@@ -5600,7 +5600,7 @@ def create_app() -> Flask:
         try:
             certificates = db.execute(
                 """SELECT cert_id AS certificate_id, course_id, course_name,
-                          CAST(issued_at AS TEXT) AS issued_at, revoked_at, revoke_reason
+                          CAST(issued_at AS TEXT) AS issued_at, CAST(revoked_at AS TEXT) AS revoked_at, revoke_reason
                    FROM issued_certificates WHERE user_id=?
                    ORDER BY issued_at DESC""",
                 (uid,)
