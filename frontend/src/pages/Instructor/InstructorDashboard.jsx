@@ -457,6 +457,7 @@ function InstructorGuide() {
 // ── Main Dashboard ─────────────────────────────────────────────────────────────
 export function InstructorDashboard() {
   const { user } = useAuth();
+  const isAdminViewer = ['admin', 'superadmin'].includes(user?.role);
   const [stats, setStats]   = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -508,7 +509,10 @@ export function InstructorDashboard() {
 
   useEffect(() => {
     const instructorId = user?.id || user?.user_id;
-    if (!instructorId) return;
+    if (!instructorId || isAdminViewer) {
+      setTransactionsLoading(false);
+      return;
+    }
     let active = true;
     setTransactionsLoading(true);
     api('/api/transactions')
@@ -528,7 +532,7 @@ export function InstructorDashboard() {
       })
       .finally(() => { if (active) setTransactionsLoading(false); });
     return () => { active = false; };
-  }, [user?.id, user?.user_id]);
+  }, [user?.id, user?.user_id, isAdminViewer]);
 
   const refreshStats = () => {
     api('/api/instructor/stats').then(setStats).catch(() => {});
@@ -615,7 +619,7 @@ export function InstructorDashboard() {
       </div>
 
       {/* Earnings card — full width, shows breakdown */}
-      {loading ? null : <EarningsCard stats={stats} onChanged={refreshStats} />}
+      {!isAdminViewer && (loading ? null : <EarningsCard stats={stats} onChanged={refreshStats} />)}
 
       {/* Monthly enrollments chart */}
       {chartData.length > 0 && (
@@ -676,11 +680,13 @@ export function InstructorDashboard() {
                     <td className="p-3 font-medium max-w-[180px] truncate">{c.title}</td>
                     <td className="p-3 text-center">{c.students}</td>
                     <td className="p-3 text-center">{c.completion_rate}%</td>
-                    <td className="p-3 text-right tabular-nums">{formatPrice(c.gross_revenue || 0)}</td>
-                    <td className="p-3 text-right tabular-nums">{formatPrice(c.paystack_fees || 0)}</td>
-                    <td className="p-3 text-right tabular-nums">{formatPrice(c.net_after_paystack || 0)}</td>
-                    <td className="p-3 text-right font-semibold tabular-nums">{formatPrice(c.instructor_earnings || 0)}</td>
-                    <td className="p-3 text-right tabular-nums">{formatPrice(c.platform_earnings || 0)}</td>
+                    {!isAdminViewer && <>
+                      <td className="p-3 text-right tabular-nums">{formatPrice(c.gross_revenue || 0)}</td>
+                      <td className="p-3 text-right tabular-nums">{formatPrice(c.paystack_fees || 0)}</td>
+                      <td className="p-3 text-right tabular-nums">{formatPrice(c.net_after_paystack || 0)}</td>
+                      <td className="p-3 text-right font-semibold tabular-nums">{formatPrice(c.instructor_earnings || 0)}</td>
+                      <td className="p-3 text-right tabular-nums">{formatPrice(c.platform_earnings || 0)}</td>
+                    </>}
                     <td className="p-3 text-center">
                       <span className="inline-flex items-center justify-center gap-1">
                         <Star className="h-3 w-3 fill-warning text-warning" />{c.rating || '—'}
@@ -694,8 +700,8 @@ export function InstructorDashboard() {
         </Card>
       )}
 
-      {/* Sales transaction history */}
-      <Card className="border-border/50 shadow-sm overflow-hidden">
+      {/* Sales transaction history is for the instructor account, not Admin review. */}
+      {!isAdminViewer && <Card className="border-border/50 shadow-sm overflow-hidden">
         <CardHeader className="border-b border-border pb-3">
           <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
             Course Payment Transactions
@@ -794,7 +800,7 @@ export function InstructorDashboard() {
             )}
           </div>
         </CardContent>
-      </Card>
+      </Card>}
 
       {/* Recent students */}
       {(stats?.recent_students || []).length > 0 && (
@@ -886,7 +892,7 @@ export function InstructorDashboard() {
               <table className="w-full text-sm">
                 <thead><tr className="border-b border-border text-left text-xs text-muted-foreground">
                   <th className="py-2 pr-3">Student</th><th className="py-2 pr-3">Course</th>
-                  <th className="py-2 pr-3">Enrolled</th><th className="py-2 pr-3 text-right">Progress</th>
+                  <th className="py-2 pr-3">Certificate</th><th className="py-2 pr-3">Enrolled</th><th className="py-2 pr-3 text-right">Progress</th>
                   <th className="py-2 pr-3 text-right">Payment</th><th className="py-2 text-right">Status</th>
                 </tr></thead>
                 <tbody>
@@ -897,6 +903,16 @@ export function InstructorDashboard() {
                         <p className="text-xs text-muted-foreground">{student.email || '—'}{student.phone ? ' · ' + student.phone : ''}</p>
                       </td>
                       <td className="py-3 pr-3">{student.course_title}</td>
+                      <td className="py-3 pr-3">
+                        {student.certificate_id ? (
+                          <div className="space-y-0.5">
+                            <span className={cn('text-xs font-semibold', student.certificate_revoked_at ? 'text-destructive' : 'text-success')}>
+                              {student.certificate_revoked_at ? 'Revoked' : 'Issued'}
+                            </span>
+                            <p className="max-w-36 break-all font-mono text-[10px] text-muted-foreground">{student.certificate_id}</p>
+                          </div>
+                        ) : <span className="text-xs text-muted-foreground">Not issued</span>}
+                      </td>
                       <td className="py-3 pr-3 text-xs text-muted-foreground">{student.enrolled_at ? String(student.enrolled_at).slice(0, 10) : '—'}</td>
                       <td className="py-3 pr-3 text-right tabular-nums">{student.progress}%</td>
                       <td className="py-3 pr-3 text-right">
