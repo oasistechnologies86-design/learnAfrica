@@ -61,6 +61,20 @@ orig_send = email_service.send_email
 email_service.send_email = fake_send
 # main.py imported email_service as a module, so patching the module attribute works.
 try:
+    unknown = c.post('/api/auth/forgot-password', json={'email': 'missing@example.com'})
+    check('unknown email rejected before email send',
+          unknown.status_code == 404 and
+          (unknown.get_json() or {}).get('code') == 'account_not_found',
+          str(unknown.status_code))
+    check('unknown email sends no reset email', len(sent) == 0, str(len(sent)))
+    with app.app_context():
+        db = get_db()
+        unknown_count = db.execute(
+            "SELECT COUNT(*) AS c FROM password_reset_requests WHERE LOWER(email)=?",
+            ('missing@example.com',)).fetchone()['c']
+    check('unknown email creates no reset request', int(unknown_count or 0) == 0,
+          str(unknown_count))
+
     r = c.post('/api/auth/forgot-password', json={'email': 'on@example.com',
                                                   'reason': 'Forgot Password'})
     body = r.get_json() or {}
