@@ -83,11 +83,26 @@ check('unknown email is not queued', int(unknown_count or 0) == 0, str(unknown_c
 r3 = c.post('/api/auth/forgot-password', json={'email': 'not-an-email'})
 check('invalid email rejected (400)', r3.status_code == 400, str(r3.status_code))
 
-# 4. Admin list shows the request with status
+# Add a legacy orphaned request to verify it is hidden from the admin
+# queue and excluded from the pending badge without deleting database history.
+with app.app_context():
+    db = get_db()
+    db.execute(
+        "INSERT INTO password_reset_requests (id,email,user_id,reason,status) "
+        "VALUES (?,?,?,?,?)",
+        ('orphan1', 'nobody@example.com', None, 'Forgot Password', 'pending'))
+    db.commit()
+
+# 4. Admin list shows valid requests only and badge count excludes orphaned rows.
 r = c.get('/api/admin/password-reset-requests', headers=admin_headers())
 reqs = (r.get_json() or {}).get('requests', [])
 check('admin list requires auth', c.get('/api/admin/password-reset-requests').status_code in (401, 403))
 check('request listed', any(x['email'] == 'sam@example.com' for x in reqs), str(len(reqs)))
+check('orphaned request hidden from admin list',
+      not any(x['email'] == 'nobody@example.com' for x in reqs), str([x['email'] for x in reqs]))
+counts_response = c.get('/api/admin/tab-counts', headers=admin_headers())
+reset_count = (counts_response.get_json() or {}).get('counts', {}).get('password_reset_requests')
+check('pending badge excludes orphaned request', reset_count == 1, str(reset_count))
 rid = next(x['id'] for x in reqs if x['email'] == 'sam@example.com')
 check('status is pending', next(x['status'] for x in reqs if x['id'] == rid) == 'pending')
 

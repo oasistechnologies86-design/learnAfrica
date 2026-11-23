@@ -4835,7 +4835,9 @@ def create_app() -> Flask:
                 return 0
 
         counts['password_reset_requests'] = _count(
-            "SELECT COUNT(*) AS c FROM password_reset_requests WHERE status='pending'")
+            "SELECT COUNT(*) AS c FROM password_reset_requests pr "
+            "INNER JOIN users u ON LOWER(u.email)=LOWER(pr.email) "
+            "WHERE pr.status='pending'")
         counts['applications'] = _count(
             "SELECT COUNT(*) AS c FROM instructor_applications WHERE status='pending'")
         return jsonify({'counts': counts})
@@ -11978,12 +11980,16 @@ def create_app() -> Flask:
         db = get_db()
         status = (request.args.get('status') or '').strip()
         try:
+            # Only show requests whose email currently belongs to a registered
+            # account. Historical orphaned requests remain in the database but
+            # are not actionable and must not appear in the admin queue.
+            base_sql = ('SELECT pr.* FROM password_reset_requests pr '
+                        'INNER JOIN users u ON LOWER(u.email)=LOWER(pr.email)')
             if status and status != 'all':
-                rows = db.execute('SELECT * FROM password_reset_requests '
-                                  'WHERE status=? ORDER BY created_at DESC', (status,)).fetchall()
+                rows = db.execute(base_sql + ' WHERE pr.status=? '
+                                  'ORDER BY pr.created_at DESC', (status,)).fetchall()
             else:
-                rows = db.execute('SELECT * FROM password_reset_requests '
-                                  'ORDER BY created_at DESC').fetchall()
+                rows = db.execute(base_sql + ' ORDER BY pr.created_at DESC').fetchall()
         except Exception as e:
             app.logger.error(f'list_password_reset_requests: {e}')
             return jsonify({'requests': []})
