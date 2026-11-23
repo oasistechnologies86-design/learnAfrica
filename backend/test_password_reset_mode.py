@@ -49,6 +49,8 @@ with app.app_context():
     for uid, name, email, role in [
         ('adm1', 'Admin', 'admin@example.com', 'admin'),
         ('stu1', 'Student', 'stu@example.com', 'student'),
+        ('fix1a', 'Reset Email Student', 'fix1a@example.com', 'student'),
+        ('fix1c', 'Manual Reset Student', 'fix1c@example.com', 'student'),
     ]:
         db.execute("INSERT INTO users (id,name,email,password_hash,role,is_active,token_version)"
                    " VALUES (?,?,?,?,?,1,0)",
@@ -214,8 +216,8 @@ check('email mode + failed send still says a link is on its way',
 check('the failed send is still reported to the admin as not sent',
       r.get('email_sent') is False, str(r))
 r2 = c.post('/api/auth/forgot-password', json={'email': 'fix1b@example.com'}).get_json() or {}
-check('email mode + unknown address shows the same email wording',
-      'administrator' not in (r2.get('message') or '').lower(), str(r2.get('message')))
+check('email mode + unknown address is explicitly rejected',
+      r2.get('code') == 'account_not_found' and "couldn't find an account" in (r2.get('error') or '').lower(), str(r2))
 email_service.send_via_sendpulse = _saved_sp
 
 # Manual mode still uses the admin wording.

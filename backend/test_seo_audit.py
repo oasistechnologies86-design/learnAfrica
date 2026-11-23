@@ -197,25 +197,21 @@ check('verify active certificate valid', r.get_json().get('valid') is True, r.ge
 
 r = c.post('/api/admin/credentials/revoke', headers=ad_hdr,
           json={'id': 'LA-CERT-TEST-0001', 'type': 'certificate', 'reason': 'test'})
-check('plain admin cannot revoke credential', r.status_code == 403, r.status_code)
-
-r = c.post('/api/admin/credentials/revoke', headers=sa_hdr,
-           json={'id': 'LA-CERT-TEST-0001', 'type': 'certificate', 'reason': 'test'})
-check('superadmin revokes certificate 200', r.status_code == 200, r.status_code)
+check('Admin can revoke certificate', r.status_code == 200, r.status_code)
 
 r = c.get('/api/verify?id=LA-CERT-TEST-0001')
 j = r.get_json()
 check('verify revoked certificate invalid', j.get('valid') is False and j.get('revoked') is True, j)
 
-r = c.post('/api/admin/credentials/restore', headers=sa_hdr,
+r = c.post('/api/admin/credentials/restore', headers=ad_hdr,
            json={'id': 'LA-CERT-TEST-0001', 'type': 'certificate'})
-check('superadmin restores certificate 200', r.status_code == 200, r.status_code)
+check('Admin restores certificate 200', r.status_code == 200, r.status_code)
 r = c.get('/api/verify?id=LA-CERT-TEST-0001')
 check('verify restored certificate valid', r.get_json().get('valid') is True, r.get_json())
 
-r = c.post('/api/admin/credentials/revoke', headers=sa_hdr,
+r = c.post('/api/admin/credentials/revoke', headers=ad_hdr,
            json={'id': 'LA-BADGE-TEST-0002', 'type': 'badge', 'reason': 'fraud'})
-check('superadmin revokes badge 200', r.status_code == 200, r.status_code)
+check('Admin revokes badge 200', r.status_code == 200, r.status_code)
 r = c.get('/api/verify?id=LA-BADGE-TEST-0002')
 j = r.get_json()
 check('verify revoked badge invalid', j.get('valid') is False and j.get('revoked') is True, j)
