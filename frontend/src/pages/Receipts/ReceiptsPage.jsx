@@ -174,9 +174,9 @@ export default function ReceiptsPage() {
   const activeFilters = filters.status || filters.type || filters.date_from || filters.date_to;
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-3xl">
+    <div className="container mx-auto px-3 py-5 sm:px-4 sm:py-8 max-w-3xl">
       {/* Header */}
-      <div className="mb-5">
+      <div className="mb-4 sm:mb-5">
         <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
           <ReceiptIcon className="h-6 w-6 text-primary" /> {isAdmin ? 'Transactions' : 'My Statements'}
         </h1>
@@ -203,7 +203,7 @@ export default function ReceiptsPage() {
       </Card>
 
       {/* Filters */}
-      <Card className="p-3 mb-4 space-y-3">
+      <Card className="p-2.5 sm:p-3 mb-4 space-y-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search by receipt, course or name…"
