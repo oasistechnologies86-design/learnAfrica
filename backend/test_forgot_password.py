@@ -8,7 +8,7 @@ Boots the real Flask app against a throwaway SQLite database and exercises:
   * the token is stored only as a hash (never in clear)
   * the link resets the password, bumps token_version, and is single-use
   * the admin "email link" endpoint is refused while email sending is off
-  * an unknown email yields the same generic response (no enumeration)
+  * an unknown email is rejected and never queued
 
     python backend/test_forgot_password.py
 """
@@ -67,10 +67,17 @@ r = c.post('/api/auth/forgot-password', json={'email': 'sam@example.com',
 check('request accepted (200)', r.status_code == 200, str(r.status_code))
 check('generic message returned', 'recorded' in (r.get_json() or {}).get('message', ''))
 
-# 2. Public request for an unknown email -> identical generic response
+# 2. Public request for an unknown email -> explicit not-found response,
+#    and no reset request is created for an address with no account.
 r2 = c.post('/api/auth/forgot-password', json={'email': 'nobody@example.com'})
-check('unknown email same response (no enumeration)',
-      r2.status_code == 200 and r2.get_json().get('message') == r.get_json().get('message'))
+check('unknown email rejected (404)',
+      r2.status_code == 404 and r2.get_json().get('code') == 'account_not_found')
+with app.app_context():
+    db = get_db()
+    unknown_count = db.execute(
+        "SELECT COUNT(*) AS c FROM password_reset_requests WHERE LOWER(email)=?",
+        ('nobody@example.com',)).fetchone()['c']
+check('unknown email is not queued', int(unknown_count or 0) == 0, str(unknown_count))
 
 # 3. Invalid email rejected
 r3 = c.post('/api/auth/forgot-password', json={'email': 'not-an-email'})

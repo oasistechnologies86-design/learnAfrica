@@ -8,8 +8,8 @@
  *                a Send button. The request is recorded for an administrator,
  *                who sends the link within the stated SLA (24 hours).
  *
- * The response is always worded the same way so the page never reveals whether
- * an account exists for the address.
+ * Unknown email addresses receive an explicit account-not-found message and
+ * cannot enter either the automatic or administrator-assisted reset flow.
  */
 import { BrandedSelect } from '@/components/common/BrandedSelect';
 import { useEffect, useRef, useState } from 'react';
@@ -110,6 +110,13 @@ export function ForgotPasswordPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
+        // An unknown account is a clear, non-retryable result. Keep the user on
+        // this form and explain that no reset can be started for this address.
+        if (data.code === 'account_not_found') {
+          setSent(false);
+          setError(data.error || "We couldn't find an account with that email address. Please check the email and try again.");
+          return;
+        }
         // Rate-limited (or cooldown): show how long to wait, don't fake success.
         if (data.retry_after) {
           startCooldown(data.retry_after);
