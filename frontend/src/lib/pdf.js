@@ -252,7 +252,7 @@ export async function drawStatementPdf(tx) {
   if (payerPhone) labelValue(doc, 'Contact Number', payerPhone, LEFT_X, y + 42, { valueStyle: 'normal', valueSize: 9, maxWidth: COL_W });
 
   const dateStr = tx?.created_at ? new Date(tx.created_at).toLocaleString('en-GB') : '—';
-  labelValue(doc, 'Payment Date', dateStr, RIGHT_X, y, { valueStyle: 'normal', valueSize: 9, align: 'right', maxWidth: COL_W });
+  labelValue(doc, 'Payment Date & Time', dateStr, RIGHT_X, y, { valueStyle: 'normal', valueSize: 9, align: 'right', maxWidth: COL_W });
   doc.setFont(SANS, 'bold');
   doc.setFontSize(7.5);
   doc.setTextColor(...BRAND.slateLite);
@@ -296,7 +296,7 @@ export async function drawStatementPdf(tx) {
       doc.addPage();
       pageNo += 1;
       statementHeader(doc, tx, pageNo);
-      y = 44;
+      y = 50;
     }
     doc.setFontSize(10);
     doc.setTextColor(...BRAND.ink);
