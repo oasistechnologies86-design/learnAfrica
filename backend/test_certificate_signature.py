@@ -114,6 +114,14 @@ with app.app_context():
     cert_id = cert['cert_id'] if cert else None
 check('certificate issued for a completed course', cert is not None and bool(cert_id), err or cert_id)
 
+r = c.get('/api/admin/users/stu1', headers={'Authorization': f'Bearer {adm}'})
+admin_student = (r.get_json() or {}).get('user') or {}
+check('Admin student details include the issued certificate',
+      r.status_code == 200 and any(x.get('certificate_id') == cert_id for x in admin_student.get('certificates', [])),
+      admin_student.get('certificates'))
+r = c.get('/api/admin/users/stu1', headers={'Authorization': f'Bearer {ins}'})
+check('instructor cannot access Admin student certificate details', r.status_code == 403, r.status_code)
+
 # ── Credential authority: the one Admin manages; instructors are read-only.
 r = c.post('/api/admin/credentials/revoke',
            json={'id': cert_id, 'type': 'certificate', 'reason': 'Test revocation'},
