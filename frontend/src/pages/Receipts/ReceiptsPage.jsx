@@ -275,6 +275,7 @@ export default function ReceiptsPage() {
           </Card>
         ) : filtered.map(t => {
           const isPayout = t.type === 'payout';
+          const payerName = isAdmin ? (t.user_name || t.user_email || '') : (t.user_name || '');
           return (
             <article
               key={t.id}
@@ -288,6 +289,11 @@ export default function ReceiptsPage() {
                   <div className="flex min-w-0 flex-1 items-start gap-3">
                     <StatusAvatar status={t.status} />
                     <div className="min-w-0 flex-1">
+                      {!isPayout && payerName && (
+                        <p className="mb-1 break-words text-sm font-bold text-foreground">
+                          {isAdmin ? 'Paid by' : 'Student'}: {payerName}
+                        </p>
+                      )}
                       <div className="flex min-w-0 flex-wrap items-center gap-2">
                         <span className="min-w-0 break-words text-sm font-semibold leading-snug text-foreground sm:text-base">
                           {t.course_title || (isPayout ? 'Payout' : 'Course purchase')}
@@ -297,16 +303,11 @@ export default function ReceiptsPage() {
                         )}
                       </div>
                       <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                        <span>{formatDate(t.created_at)}</span>
+                        <span>Payment date: {formatDate(t.created_at)}</span>
                         {t.receipt_id && (
                           <span className="min-w-0 break-all font-mono text-[10px] sm:text-xs">{t.receipt_id}</span>
                         )}
                       </div>
-                      {isAdmin && (t.user_name || t.user_email) && (
-                        <p className="mt-1 break-words text-xs text-muted-foreground">
-                          {t.user_name || t.user_email}
-                        </p>
-                      )}
                     </div>
                   </div>
 
@@ -320,7 +321,10 @@ export default function ReceiptsPage() {
                     </span>
                   </div>
                 </div>
-                <span className="sr-only">View statement details</span>
+                <div className="mt-3 flex items-center justify-end border-t border-border/70 pt-2 text-xs font-semibold text-primary">
+                  <span>View Statement</span>
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </div>
               </Link>
               <button
                 type="button"
