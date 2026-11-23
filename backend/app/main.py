@@ -8468,6 +8468,10 @@ def create_app() -> Flask:
                         pass
                 else:
                     d.pop('payment_details', None)  # Hide from non-admins
+                # Instructors need the payer's name for course receipts, but
+                # must not receive a student's account email in list data.
+                if role == 'instructor':
+                    d.pop('user_email', None)
                 out.append(d)
             return jsonify({'transactions': out, 'count': len(out)})
         except Exception as e:
@@ -8645,7 +8649,7 @@ def create_app() -> Flask:
                 'course_title': tx.get('course_title'),
                 'buyer': {
                     'name': tx.get('user_name') or '',
-                    'email': tx.get('user_email') or '',
+                    'email': (tx.get('user_email') or '') if (is_admin or is_buyer) else '',
                     'phone': buyer_phone,
                     'contact': pd,
                 },

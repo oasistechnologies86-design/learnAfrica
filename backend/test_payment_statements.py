@@ -56,6 +56,8 @@ with app.app_context():
         ('stuA', 'Ama Mensah', 'ama@example.com', 'student'),
         ('stuB', 'Kofi Owusu', 'kofi@example.com', 'student'),
         ('adm1', 'Admin User', 'admin@example.com', 'admin'),
+        ('insA', 'Instructor A', 'instructor-a@example.com', 'instructor'),
+        ('insB', 'Instructor B', 'instructor-b@example.com', 'instructor'),
     ]:
         db.execute("INSERT INTO users (id,name,email,password_hash,role,is_active,token_version)"
                    " VALUES (?,?,?,?,?,1,0)",
@@ -65,6 +67,8 @@ with app.app_context():
     from app.database import ensure_transactions_table
     ensure_transactions_table(db)
 
+    db.execute("INSERT INTO courses (id,title,instructor_id,instructor_name) VALUES ('c1','Python for Data Science','insA','Instructor A')")
+    db.execute("INSERT INTO courses (id,title,instructor_id,instructor_name) VALUES ('c_other','Other Course','insB','Instructor B')")
     # Successful single-course purchase by stuA.
     db.execute(
         """INSERT INTO transactions
@@ -98,6 +102,13 @@ with app.app_context():
                    '2 courses', 200.0, 'GHS', 'success', 'paystack', 'PSK-REF-3', ?, 'LA-STMT-CCCC-0003')""",
         (json.dumps(items),),
     )
+    db.execute(
+        """INSERT INTO transactions
+           (id, receipt_id, type, user_id, user_name, user_email, course_id, course_title,
+            amount, currency, status, provider, provider_ref, payment_method)
+           VALUES ('tx_other','LA-RCPT-DDDD-0004','purchase','stuB','Kofi Owusu','kofi@example.com',
+                   'c_other','Other Course', 40.0, 'GHS', 'success', 'paystack', 'PSK-REF-4', 'card')"""
+    )
     db.commit()
 
 c = app.test_client()
@@ -111,6 +122,8 @@ def login(email, pw='Pass12345!'):
 tokA = login('ama@example.com')
 tokB = login('kofi@example.com')
 tokAdm = login('admin@example.com')
+tokInstA = login('instructor-a@example.com')
+tokInstB = login('instructor-b@example.com')
 
 
 def get_tx(tok, tid):
@@ -155,7 +168,26 @@ check('multi-course total equals the sum of the lines',
 r = get_tx(tokAdm, 'tx_multi')
 check('admin can read any transaction', r.status_code == 200, r.status_code)
 
-# ── 6. Lookup by receipt_id also works for the owner ─────────────────────────
+# ── 6. Instructor access is course-scoped and contact details stay private ──
+r = get_tx(tokInstA, 'tx_success')
+tx = (r.get_json() or {}).get('transaction') or {}
+check('course instructor can read their course purchase', r.status_code == 200, r.status_code)
+check('instructor receives payer name', (tx.get('buyer') or {}).get('name') == 'Ama Mensah')
+check('instructor does not receive buyer email or phone',
+      not (tx.get('buyer') or {}).get('email') and not (tx.get('buyer') or {}).get('phone')
+      and not (tx.get('buyer') or {}).get('contact'))
+r = get_tx(tokInstB, 'tx_success')
+check('another instructor cannot open this course purchase', r.status_code == 404, r.status_code)
+r = c.get('/api/transactions', headers={'Authorization': f'Bearer {tokInstA}'})
+listed = (r.get_json() or {}).get('transactions') or []
+check('instructor list contains only their course purchases',
+      bool(listed) and all(row.get('course_id') == 'c1' for row in listed),
+      [row.get('course_id') for row in listed])
+check('instructor list includes payer name but omits payer email',
+      any(row.get('user_name') == 'Ama Mensah' for row in listed)
+      and all('user_email' not in row for row in listed))
+
+# ── 7. Lookup by receipt_id also works for the owner ─────────────────────────
 r = get_tx(tokA, 'LA-RCPT-AAAA-0001')
 check('owner can open a transaction by its receipt id', r.status_code == 200, r.status_code)
 
