@@ -666,11 +666,13 @@ export function InstructorDashboard() {
                   <th className="text-left p-3 font-medium text-muted-foreground">Course</th>
                   <th className="text-center p-3 font-medium text-muted-foreground">Students</th>
                   <th className="text-center p-3 font-medium text-muted-foreground">Completion</th>
-                  <th className="text-right p-3 font-medium text-muted-foreground">Gross</th>
-                  <th className="text-right p-3 font-medium text-muted-foreground">Paystack fees</th>
-                  <th className="text-right p-3 font-medium text-muted-foreground">After fees</th>
-                  <th className="text-right p-3 font-medium text-muted-foreground">Your share</th>
-                  <th className="text-right p-3 font-medium text-muted-foreground">Platform share</th>
+                  {!isAdminViewer && <>
+                    <th className="text-right p-3 font-medium text-muted-foreground">Gross</th>
+                    <th className="text-right p-3 font-medium text-muted-foreground">Paystack fees</th>
+                    <th className="text-right p-3 font-medium text-muted-foreground">After fees</th>
+                    <th className="text-right p-3 font-medium text-muted-foreground">Your share</th>
+                    <th className="text-right p-3 font-medium text-muted-foreground">Platform share</th>
+                  </>}
                   <th className="text-center p-3 font-medium text-muted-foreground">Rating</th>
                 </tr>
               </thead>
