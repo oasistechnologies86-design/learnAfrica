@@ -153,7 +153,7 @@ export default function ReceiptsPage() {
     <div className="container mx-auto px-4 py-8 max-w-3xl">
       {/* Header */}
       <div className="mb-5">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
+        <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
           <ReceiptIcon className="h-6 w-6 text-primary" /> {isAdmin ? 'Transactions' : 'My Statements'}
         </h1>
         <p className="text-sm text-muted-foreground mt-0.5">
@@ -165,11 +165,11 @@ export default function ReceiptsPage() {
 
       {/* Summary strip — mirrors the balance/usage header of a mobile-money app */}
       <Card className="mb-4 overflow-hidden">
-        <div className="bg-gradient-to-br from-primary to-primary/80 px-5 py-4 text-primary-foreground">
+        <div className="bg-gradient-to-br from-primary to-primary/80 px-4 py-3 sm:px-5 sm:py-4 text-primary-foreground">
           <div className="flex items-center gap-2 text-3xs font-bold uppercase tracking-wider text-primary-foreground/80">
             <Wallet className="h-3.5 w-3.5" /> Total paid
           </div>
-          <div className="mt-1 text-2xl font-bold tabular-nums">
+          <div className="mt-1 text-xl sm:text-2xl font-bold tabular-nums">
             {formatMoney(summary.paid, summary.currency)}
           </div>
           <div className="mt-0.5 text-2xs text-primary-foreground/80">
