@@ -548,7 +548,7 @@ export function InstructorDashboard() {
 
   const chartData = (stats?.monthly_enrollments || []).map(m => ({
     month: m.month?.slice(5) || m.month,
-    enrollments: m.count
+    enrollments: m.enrollments ?? m.count ?? 0
   }));
 
   const studentCourses = [...new Map(myStudents.map(student => [
