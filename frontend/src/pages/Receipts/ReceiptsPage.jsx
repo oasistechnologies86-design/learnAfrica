@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { io } from 'socket.io-client';
 import { BrandedSelect } from '@/components/common/BrandedSelect';
 import { BrandedDatePicker } from '@/components/common/BrandedDatePicker';
 import { createPortal } from 'react-dom';
@@ -97,6 +98,29 @@ export default function ReceiptsPage() {
   };
 
   useEffect(() => { loadRows(); /* eslint-disable-next-line */ }, [filters.date_from, filters.date_to, filters.status, filters.type]);
+
+  // Keep the latest filter-aware loader available to the socket callback.
+  const loadRowsRef = useRef(loadRows);
+  useEffect(() => { loadRowsRef.current = loadRows; }, [loadRows]);
+
+  // A statement can be hidden from another signed-in session. The server
+  // broadcasts a data-free event; every open receipt list reloads through its
+  // normal authenticated endpoint, so each account still sees only its own
+  // permitted records.
+  useEffect(() => {
+    const token = sessionStorage.getItem('auth_token');
+    if (!token) return undefined;
+    const socket = io(API_BASE || window.location.origin, {
+      auth: { token },
+      transports: ['websocket', 'polling'],
+    });
+    const refresh = () => loadRowsRef.current();
+    socket.on('statement_deleted', refresh);
+    return () => {
+      socket.off('statement_deleted', refresh);
+      socket.disconnect();
+    };
+  }, []);
 
   // Soft-delete from the list. Guarded against rapid/repeated taps and the
   // list is refreshed from the server on success.
