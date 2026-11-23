@@ -54,6 +54,7 @@ export function ForgotPasswordPage() {
   const [sent, setSent] = useState(false);
   const [message, setMessage] = useState('');
   const [mode, setMode] = useState(null); // 'email' | 'manual' | null = unknown
+  const [modeError, setModeError] = useState(false);
   const [slaHours, setSlaHours] = useState(24);
   const [expiresHours, setExpiresHours] = useState(1);
   const [supportEmail, setSupportEmail] = useState('support@learnafrica.com');
@@ -64,16 +65,22 @@ export function ForgotPasswordPage() {
 
   useEffect(() => {
     fetch(`${API_BASE}/api/auth/password-reset-mode`)
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error('Could not load password reset settings');
+        return r.json();
+      })
       .then(d => {
         // Prefer the explicit mode; fall back to the legacy email_enabled flag
         // so an older backend can never force the manual screen while email is
         // switched on.
         const m = d.mode || (d.email_enabled ? 'email' : 'manual');
         setMode(m === 'manual' ? 'manual' : 'email');
+        setModeError(false);
         if (d.sla_hours) setSlaHours(d.sla_hours);
       })
-      .catch(() => setMode('manual'));
+      // A settings/network failure is not proof that manual reset is enabled.
+      // Keep the user out of the manual request flow until the mode is known.
+      .catch(() => setModeError(true));
     // Support address shown to users — same value as the site footer.
     fetch(`${API_BASE}/api/site/footer`)
       .then(r => (r.ok ? r.json() : null))
@@ -247,7 +254,11 @@ export function ForgotPasswordPage() {
   if (mode === null) {
     return (
       <AuthShell>
-        <div className="py-10 text-center text-sm text-muted-foreground">Loading…</div>
+        <div className="py-10 text-center text-sm text-muted-foreground">
+          {modeError
+            ? 'Unable to load password reset options. Please refresh the page and try again.'
+            : 'Loading…'}
+        </div>
       </AuthShell>
     );
   }
