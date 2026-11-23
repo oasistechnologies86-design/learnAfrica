@@ -11765,11 +11765,10 @@ def create_app() -> Flask:
 
     @app.route('/api/auth/forgot-password', methods=['POST'])
     def forgot_password():
-        """Record a password-reset request and act on the admin's chosen mode.
+        """Process a password-reset request for an existing account only.
 
-        In 'email' mode the one-time link is emailed immediately; in 'manual'
-        mode the request is queued and the admins are notified. The response is
-        always worded the same way so it never reveals whether an account exists.
+        Unknown email addresses receive an explicit not-found response and are
+        never queued for administrator review or sent a reset link.
         """
         if not request.is_json:
             return jsonify({'error': 'JSON required'}), 400
@@ -11794,9 +11793,19 @@ def create_app() -> Flask:
         db = get_db()
         try:
             u = db.execute('SELECT id FROM users WHERE LOWER(email)=?', (email,)).fetchone()
-        except Exception:
-            u = None
-        uid = u['id'] if u else None
+        except Exception as e:
+            app.logger.error(f'forgot_password account lookup failed: {e}')
+            return jsonify({'error': 'We could not verify that account right now. Please try again later.',
+                            'code': 'account_lookup_failed'}), 500
+
+        # Unknown addresses must never enter the reset-request queue or reach
+        # the admin workflow. The frontend displays this explicit message.
+        if not u:
+            return jsonify({
+                'error': "We couldn't find an account with that email address. Please check the email and try again.",
+                'code': 'account_not_found',
+            }), 404
+        uid = u['id']
         try:
             existing = db.execute(
                 "SELECT id FROM password_reset_requests WHERE LOWER(email)=? "
@@ -11886,9 +11895,8 @@ def create_app() -> Flask:
             if newly_created and rid:
                 _notify_admins_reset_request(db, email, reason, rid)
 
-        # The user-facing message follows the MODE, not the delivery outcome, so
-        # the toggle does what it says and the page never reveals whether an
-        # account exists. A delivery failure is surfaced to admins, not students.
+        # The user-facing success message follows the MODE, not the delivery
+        # outcome. Unknown accounts have already been rejected above.
         if reset_mode == 'email':
             msg = ('If an account exists for that address, a reset link is on its '
                    'way. Check your spam folder if you do not see it.')
