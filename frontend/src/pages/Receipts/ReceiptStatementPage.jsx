@@ -39,9 +39,12 @@ const fmtDate = (s) => {
 
 function Meta({ label, value, mono }) {
   return (
-    <div>
-      <div className="text-3xs font-bold uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className={cn('text-sm font-semibold text-foreground break-words', mono && 'font-mono text-xs')}>{value || '—'}</div>
+    <div className="min-w-0">
+      <div className="text-[10px] sm:text-3xs font-bold uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className={cn(
+        'min-w-0 text-xs sm:text-sm font-semibold text-foreground [overflow-wrap:anywhere]',
+        mono && 'font-mono text-[10px] sm:text-xs'
+      )}>{value || '—'}</div>
     </div>
   );
 }
@@ -199,7 +202,7 @@ export default function ReceiptStatementPage() {
 
         <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
           {/* Meta grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 sm:gap-y-4">
             <Meta label="Statement No" value={tx.statement_no || tx.receipt_id} mono />
             <Meta label="Payment Date" value={fmtDate(tx.created_at)} />
             <Meta label="Receipt No" value={tx.receipt_id} mono />
@@ -217,18 +220,18 @@ export default function ReceiptStatementPage() {
               <FileText className="h-3.5 w-3.5" /> {isExtraAttempt ? 'Quiz attempt' : 'Courses'}
             </div>
             <div className="rounded-lg border border-border overflow-hidden">
-              <table className="w-full text-sm">
+              <table className="w-full table-fixed text-xs sm:text-sm">
                 <thead className="bg-muted/40">
                   <tr>
-                    <th className="px-4 py-2 text-left text-3xs font-bold uppercase text-muted-foreground">{isExtraAttempt ? 'Quiz attempt' : 'Course'}</th>
-                    <th className="px-4 py-2 text-right text-3xs font-bold uppercase text-muted-foreground">Amount</th>
+                    <th className="w-[68%] px-2 py-2 sm:px-4 text-left text-[10px] sm:text-3xs font-bold uppercase text-muted-foreground">{isExtraAttempt ? 'Quiz attempt' : 'Course'}</th>
+                    <th className="w-[32%] px-2 py-2 sm:px-4 text-right text-[10px] sm:text-3xs font-bold uppercase text-muted-foreground">Amount</th>
                   </tr>
                 </thead>
                 <tbody>
                   {items.map((it, i) => (
                     <tr key={i} className="border-t border-border">
-                      <td className="px-4 py-2.5 break-words">{it.title || 'Course'}</td>
-                      <td className="px-4 py-2.5 text-right font-semibold tabular-nums">{money(it.amount)}</td>
+                      <td className="min-w-0 px-2 py-2.5 sm:px-4 [overflow-wrap:anywhere]">{it.title || 'Course'}</td>
+                      <td className="px-2 py-2.5 sm:px-4 text-right font-semibold tabular-nums text-xs sm:text-sm">{money(it.amount)}</td>
                     </tr>
                   ))}
                 </tbody>
