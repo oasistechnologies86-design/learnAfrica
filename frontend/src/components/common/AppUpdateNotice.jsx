@@ -1,3 +1,4 @@
+/* global __LEARN_AFRICA_BUILD_ID__ */
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 const CSS = `
