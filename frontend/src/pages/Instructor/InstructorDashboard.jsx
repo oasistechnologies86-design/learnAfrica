@@ -666,13 +666,11 @@ export function InstructorDashboard() {
                   <th className="text-left p-3 font-medium text-muted-foreground">Course</th>
                   <th className="text-center p-3 font-medium text-muted-foreground">Students</th>
                   <th className="text-center p-3 font-medium text-muted-foreground">Completion</th>
-                  {!isAdminViewer && <>
-                    <th className="text-right p-3 font-medium text-muted-foreground">Gross</th>
-                    <th className="text-right p-3 font-medium text-muted-foreground">Paystack fees</th>
-                    <th className="text-right p-3 font-medium text-muted-foreground">After fees</th>
-                    <th className="text-right p-3 font-medium text-muted-foreground">Your share</th>
-                    <th className="text-right p-3 font-medium text-muted-foreground">Platform share</th>
-                  </>}
+                  <th className="text-right p-3 font-medium text-muted-foreground">Gross</th>
+                  <th className="text-right p-3 font-medium text-muted-foreground">Paystack fees</th>
+                  <th className="text-right p-3 font-medium text-muted-foreground">After fees</th>
+                  <th className="text-right p-3 font-medium text-muted-foreground">{isAdminViewer ? 'Instructor share' : 'Your share'}</th>
+                  <th className="text-right p-3 font-medium text-muted-foreground">{isAdminViewer ? 'LearnAfrica share' : 'Platform share'}</th>
                   <th className="text-center p-3 font-medium text-muted-foreground">Rating</th>
                 </tr>
               </thead>
@@ -682,13 +680,11 @@ export function InstructorDashboard() {
                     <td className="p-3 font-medium max-w-[180px] truncate">{c.title}</td>
                     <td className="p-3 text-center">{c.students}</td>
                     <td className="p-3 text-center">{c.completion_rate}%</td>
-                    {!isAdminViewer && <>
-                      <td className="p-3 text-right tabular-nums">{formatPrice(c.gross_revenue || 0)}</td>
-                      <td className="p-3 text-right tabular-nums">{formatPrice(c.paystack_fees || 0)}</td>
-                      <td className="p-3 text-right tabular-nums">{formatPrice(c.net_after_paystack || 0)}</td>
-                      <td className="p-3 text-right font-semibold tabular-nums">{formatPrice(c.instructor_earnings || 0)}</td>
-                      <td className="p-3 text-right tabular-nums">{formatPrice(c.platform_earnings || 0)}</td>
-                    </>}
+                    <td className="p-3 text-right tabular-nums">{formatPrice(c.gross_revenue || 0)}</td>
+                    <td className="p-3 text-right tabular-nums">{formatPrice(c.paystack_fees || 0)}</td>
+                    <td className="p-3 text-right tabular-nums">{formatPrice(c.net_after_paystack || 0)}</td>
+                    <td className="p-3 text-right font-semibold tabular-nums">{formatPrice(c.instructor_earnings || 0)}</td>
+                    <td className="p-3 text-right tabular-nums">{formatPrice(c.platform_earnings || 0)}</td>
                     <td className="p-3 text-center">
                       <span className="inline-flex items-center justify-center gap-1">
                         <Star className="h-3 w-3 fill-warning text-warning" />{c.rating || '—'}
