@@ -174,7 +174,7 @@ export default function ReceiptsPage() {
   const activeFilters = filters.status || filters.type || filters.date_from || filters.date_to;
 
   return (
-    <div className="container mx-auto px-3 py-5 sm:px-4 sm:py-8 max-w-3xl">
+    <div className="container mx-auto w-full max-w-5xl px-3 py-5 sm:px-4 sm:py-8">
       {/* Header */}
       <div className="mb-4 sm:mb-5">
         <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
@@ -276,54 +276,63 @@ export default function ReceiptsPage() {
         ) : filtered.map(t => {
           const isPayout = t.type === 'payout';
           return (
-            <div
+            <article
               key={t.id}
-              className="relative rounded-xl border border-border bg-card transition-colors hover:bg-muted/40 focus-within:ring-2 focus-within:ring-primary/30"
+              className="relative overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-primary/30 hover:bg-muted/20 focus-within:ring-2 focus-within:ring-primary/30"
             >
               <Link
                 to={`/receipts/${t.id}`}
-                className="block px-3 py-3 pr-12 focus:outline-none"
+                className="block p-3 pr-12 text-left focus:outline-none sm:p-4 sm:pr-14"
               >
-                <div className="flex items-center gap-3">
-                  <StatusAvatar status={t.status} />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="truncate text-sm font-semibold text-foreground">
-                        {t.course_title || (isPayout ? 'Payout' : 'Course purchase')}
-                      </span>
-                      {isPayout && (
-                        <span className="shrink-0 rounded bg-blue-500/10 px-1.5 py-0.5 text-3xs font-bold uppercase text-blue-500">Payout</span>
-                      )}
-                    </div>
-                    <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-2xs text-muted-foreground">
-                      <span>{formatDate(t.created_at)}</span>
-                      <span className="font-mono">{t.receipt_id}</span>
+                <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
+                  <div className="flex min-w-0 flex-1 items-start gap-3">
+                    <StatusAvatar status={t.status} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
+                        <span className="min-w-0 break-words text-sm font-semibold leading-snug text-foreground sm:text-base">
+                          {t.course_title || (isPayout ? 'Payout' : 'Course purchase')}
+                        </span>
+                        {isPayout && (
+                          <span className="shrink-0 rounded bg-blue-500/10 px-1.5 py-0.5 text-3xs font-bold uppercase text-blue-500">Payout</span>
+                        )}
+                      </div>
+                      <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                        <span>{formatDate(t.created_at)}</span>
+                        {t.receipt_id && (
+                          <span className="min-w-0 break-all font-mono text-[10px] sm:text-xs">{t.receipt_id}</span>
+                        )}
+                      </div>
                       {isAdmin && (t.user_name || t.user_email) && (
-                        <span className="truncate">· {t.user_name || t.user_email}</span>
+                        <p className="mt-1 break-words text-xs text-muted-foreground">
+                          {t.user_name || t.user_email}
+                        </p>
                       )}
                     </div>
                   </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1">
-                    <span className={cn('text-sm font-bold tabular-nums', isPayout ? 'text-blue-500' : 'text-foreground')}>
+
+                  <div className="flex items-center justify-between gap-3 border-t border-border/70 pt-2 sm:min-w-[190px] sm:justify-end sm:border-0 sm:pt-0">
+                    <StatusChip status={t.status} />
+                    <span className={cn(
+                      'shrink-0 text-base font-bold tabular-nums sm:min-w-[112px] sm:text-right sm:text-lg',
+                      isPayout ? 'text-blue-500' : 'text-foreground'
+                    )}>
                       {isPayout ? '+' : ''}{formatMoney(t.amount, t.currency)}
                     </span>
-                    <StatusChip status={t.status} />
                   </div>
                 </div>
+                <span className="sr-only">View statement details</span>
               </Link>
-              {/* Row delete — soft-deletes the statement (kept for the platform's
-                  records). Outside the Link so tapping it never opens the detail. */}
               <button
                 type="button"
                 aria-label="Delete statement"
                 title="Delete statement"
                 disabled={deletingId === t.id}
                 onClick={() => setConfirmDelete({ id: t.id, label: t.course_title || t.receipt_id })}
-                className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-50 transition-colors"
+                className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50 sm:right-3 sm:top-1/2 sm:-translate-y-1/2"
               >
                 {deletingId === t.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
               </button>
-            </div>
+            </article>
           );
         })}
       </div>
