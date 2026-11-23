@@ -114,6 +114,24 @@ with app.app_context():
     cert_id = cert['cert_id'] if cert else None
 check('certificate issued for a completed course', cert is not None and bool(cert_id), err or cert_id)
 
+# ── Credential authority: the one Admin manages; instructors are read-only.
+r = c.post('/api/admin/credentials/revoke',
+           json={'id': cert_id, 'type': 'certificate', 'reason': 'Test revocation'},
+           headers={'Authorization': f'Bearer {adm}'})
+check('Admin can revoke an issued certificate', r.status_code == 200, r.status_code)
+r = c.post('/api/admin/credentials/revoke',
+           json={'id': cert_id, 'type': 'certificate'},
+           headers={'Authorization': f'Bearer {ins}'})
+check('instructor cannot revoke a certificate', r.status_code == 403, r.status_code)
+r = c.post('/api/admin/credentials/restore',
+           json={'id': cert_id, 'type': 'certificate'},
+           headers={'Authorization': f'Bearer {ins}'})
+check('instructor cannot restore a certificate', r.status_code == 403, r.status_code)
+r = c.post('/api/admin/credentials/restore',
+           json={'id': cert_id, 'type': 'certificate'},
+           headers={'Authorization': f'Bearer {adm}'})
+check('Admin can restore a revoked certificate', r.status_code == 200, r.status_code)
+
 # ── 1. Admin reads the (initially unset) signatory ───────────────────────────
 r = c.get('/api/admin/certificate-signature', headers={'Authorization': f'Bearer {adm}'})
 d = r.get_json() or {}
