@@ -64,6 +64,8 @@ try:
         assert all(s['student_id'] in ('student-a', 'student-b')
                    for s in payload.get('students', []))
         assert 'WHERE c.instructor_id = ?' in db.last_sql
+        assert 'LEFT JOIN issued_certificates ic' in db.last_sql
+        assert 'ic.cert_id AS certificate_id' in db.last_sql
         assert db.last_params == ('instructor-a',)
 
     security_module._authenticate = lambda: (
