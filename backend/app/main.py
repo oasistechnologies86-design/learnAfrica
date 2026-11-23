@@ -8524,6 +8524,13 @@ def create_app() -> Flask:
                 db.commit()
                 audit('delete_transaction', 'transaction', tid, row['receipt_id'],
                       {'user_id': row['user_id'], 'instructor_id': row['instructor_id']})
+                # Notify open receipt lists to refresh. The event intentionally
+                # carries no transaction or personal data; each page reloads
+                # using its own authenticated API request and permissions.
+                try:
+                    socketio.emit('statement_deleted', {'updated': True})
+                except Exception:
+                    pass
             return jsonify({'message': 'Statement deleted from receipt views'})
         except Exception as e:
             app.logger.error(f'delete_transaction: {e}')
