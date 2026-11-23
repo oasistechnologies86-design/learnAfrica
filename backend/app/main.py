@@ -4197,6 +4197,9 @@ def create_app() -> Flask:
                           c.id AS course_id, c.title AS course_title, c.is_free,
                           ue.progress, CAST(ue.enrolled_at AS TEXT) AS enrolled_at,
                           CAST(ue.expires_at AS TEXT) AS expires_at,
+                          ic.cert_id AS certificate_id,
+                          CAST(ic.issued_at AS TEXT) AS certificate_issued_at,
+                          ic.revoked_at AS certificate_revoked_at,
                           CASE WHEN ue.expires_at IS NOT NULL AND ue.expires_at < CURRENT_TIMESTAMP
                                THEN 'expired' ELSE 'active' END AS enrollment_status,
                           tx.status AS transaction_status, tx.amount AS payment_amount,
@@ -4206,6 +4209,8 @@ def create_app() -> Flask:
                    FROM user_enrollments ue
                    JOIN users u ON u.id = ue.user_id
                    JOIN courses c ON c.id = ue.course_id
+                   LEFT JOIN issued_certificates ic
+                     ON ic.user_id = ue.user_id AND ic.course_id = ue.course_id
                    LEFT JOIN transactions tx ON tx.id = (
                        SELECT t2.id FROM transactions t2
                        WHERE t2.user_id = ue.user_id AND t2.course_id = ue.course_id
@@ -5590,6 +5595,22 @@ def create_app() -> Flask:
             ORDER BY ue.enrolled_at DESC
         ''', (uid,)).fetchall()
         ud['enrollments'] = [dict(r) for r in en]
+        # Certificate history belongs in the Admin's student detail view.
+        # The Admin-only route is already protected by @admin_required.
+        try:
+            certificates = db.execute(
+                """SELECT cert_id AS certificate_id, course_id, course_name,
+                          CAST(issued_at AS TEXT) AS issued_at, revoked_at, revoke_reason
+                   FROM issued_certificates WHERE user_id=?
+                   ORDER BY issued_at DESC""",
+                (uid,)
+            ).fetchall()
+            ud['certificates'] = [safe_dict(r) for r in certificates]
+        except Exception:
+            try:
+                if hasattr(db, '_conn'): db._conn.rollback()
+            except Exception: pass
+            ud['certificates'] = []
         bd = db.execute('SELECT badge_key, earned_at FROM user_badges WHERE user_id=?', (uid,)).fetchall()
         ud['badges'] = [dict(r) for r in bd]
         # Quiz activity — how many attempts, and the best score per quiz
@@ -6360,10 +6381,10 @@ def create_app() -> Flask:
     # ── CREDENTIAL REVOCATION (admin) ─────────────────────────────────────────────
     # Revoking does not delete the record: the public /api/verify check keeps the
     # ID resolvable but reports it as revoked, so a scanned QR or a link shows
-    # "this credential was revoked" instead of silently failing. Superadmin only,
-    # because cancelling someone's earned credential is a serious action.
+    # "this credential was revoked" instead of silently failing. Only the
+    # platform Admin may revoke an earned credential; instructors are excluded.
     @app.route('/api/admin/credentials/revoke', methods=['POST'])
-    @superadmin_required
+    @admin_required
     def admin_revoke_credential():
         """Revoke a certificate or badge.
         Body: { id, type: 'certificate'|'badge', reason? }"""
@@ -6412,7 +6433,7 @@ def create_app() -> Flask:
             return jsonify({'error': 'Failed to revoke credential', 'detail': _err_detail(e)}), 500
 
     @app.route('/api/admin/credentials/restore', methods=['POST'])
-    @superadmin_required
+    @admin_required
     def admin_restore_credential():
         """Undo a revocation.
         Body: { id, type: 'certificate'|'badge' }"""
