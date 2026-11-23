@@ -176,7 +176,7 @@ const P = A4_PORTRAIT;
 
 function statementHeader(doc, tx, pageNo) {
   doc.setFillColor(...BRAND.deepGreen);
-  doc.rect(0, 0, P.w, 30, 'F');
+  doc.rect(0, 0, P.w, 43, 'F');
   doc.setTextColor(...BRAND.white);
   doc.setFont(SANS, 'bold');
   doc.setFontSize(15);
@@ -185,8 +185,17 @@ function statementHeader(doc, tx, pageNo) {
   doc.setFontSize(8.5);
   doc.setTextColor(...BRAND.goldSoft);
   doc.text('PAYMENT STATEMENT', 15, 21, { charSpace: 1.6 });
+  doc.setFontSize(7);
+  doc.setTextColor(...BRAND.goldSoft);
+  doc.text('PREPARED FOR', 15, 29);
+  doc.setFont(SANS, 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(...BRAND.white);
+  const payerName = String(tx?.buyer?.name || 'Name not available');
+  doc.text(doc.splitTextToSize(payerName, P.w - 30).slice(0, 2), 15, 36);
   if (pageNo > 1) {
     doc.setFontSize(8);
+    doc.setTextColor(...BRAND.goldSoft);
     doc.text(`Page ${pageNo}`, P.w - 15, 21, { align: 'right' });
   }
 }
@@ -224,7 +233,7 @@ export async function drawStatementPdf(tx) {
   let pageNo = 1;
   statementHeader(doc, tx, pageNo);
 
-  let y = 44;
+  let y = 50;
   const cur = tx?.currency || 'GHS';
   const money = (n) => formatMoney(n, cur);
 
@@ -238,12 +247,9 @@ export async function drawStatementPdf(tx) {
 
   labelValue(doc, 'Statement No', tx?.statement_no || tx?.receipt_id || '—', LEFT_X, y, { maxWidth: COL_W });
   labelValue(doc, 'Receipt No', tx?.receipt_id || '—', LEFT_X, y + 14, { maxWidth: COL_W });
-  labelValue(doc, 'Student', tx?.buyer?.name || '—', LEFT_X, y + 28, { maxWidth: COL_W });
-  labelValue(doc, 'Account', tx?.buyer?.email || '—', LEFT_X, y + 42, { valueStyle: 'normal', valueSize: 9, maxWidth: COL_W });
+  if (tx?.buyer?.email) labelValue(doc, 'Account', tx.buyer.email, LEFT_X, y + 28, { valueStyle: 'normal', valueSize: 9, maxWidth: COL_W });
   const payerPhone = tx?.buyer?.phone || tx?.buyer?.contact?.phone || tx?.buyer?.contact?.phone_number || tx?.buyer?.contact?.mobile || '';
-  labelValue(doc, 'Contact Number', payerPhone || 'Contact number not provided', LEFT_X, y + 56, {
-    valueStyle: 'normal', valueSize: 9, maxWidth: COL_W,
-  });
+  if (payerPhone) labelValue(doc, 'Contact Number', payerPhone, LEFT_X, y + 42, { valueStyle: 'normal', valueSize: 9, maxWidth: COL_W });
 
   const dateStr = tx?.created_at ? new Date(tx.created_at).toLocaleString('en-GB') : '—';
   labelValue(doc, 'Payment Date', dateStr, RIGHT_X, y, { valueStyle: 'normal', valueSize: 9, align: 'right', maxWidth: COL_W });
@@ -262,7 +268,7 @@ export async function drawStatementPdf(tx) {
   labelValue(doc, 'Reference', tx?.reference || '—', RIGHT_X, y + 28, { valueStyle: 'normal', valueSize: 8.5, align: 'right', maxWidth: COL_W });
   labelValue(doc, 'Payment Method', formatPaymentMethod(tx?.payment_method), RIGHT_X, y + 42, { valueStyle: 'normal', valueSize: 9, align: 'right', maxWidth: COL_W });
 
-  y += 74;
+  y += 60;
   doc.setDrawColor(...BRAND.line);
   doc.setLineWidth(0.3);
   doc.line(15, y, P.w - 15, y);
