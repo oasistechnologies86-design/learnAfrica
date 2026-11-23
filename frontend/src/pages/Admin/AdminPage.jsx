@@ -1370,7 +1370,7 @@ export default function AdminPage() {
 
           {tab === 'Coupons' && <CouponsManager role="admin" />}
 
-          {tab === 'Credentials' && <AdminCredentialsTab isSuperadmin={user && user.role === 'superadmin'} />}
+          {tab === 'Credentials' && <AdminCredentialsTab canManage={user && ['admin', 'superadmin'].includes(user.role)} />}
           {tab === 'Certificate Signature' && <AdminCertificateSignatureTab />}
 
           {tab === 'Forgot Password Requests' && (
@@ -1889,6 +1889,37 @@ export default function AdminPage() {
                     <p className="text-xs text-muted-foreground">Badges</p>
                   </div>
                 </div>
+              )}
+
+              {selectedUser.role === 'student' && (
+                <section className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold">Certificates</p>
+                    <span className="text-xs text-muted-foreground">{selectedUser.certificates?.length || 0} issued</span>
+                  </div>
+                  {selectedUser.certificates?.length ? (
+                    <div className="space-y-2">
+                      {selectedUser.certificates.map(certificate => (
+                        <div key={certificate.certificate_id} className="rounded-lg border border-border/60 bg-muted/20 p-3">
+                          <p className="text-sm font-semibold">{certificate.course_name || 'Course certificate'}</p>
+                          <p className="mt-1 break-all font-mono text-xs text-muted-foreground">{certificate.certificate_id}</p>
+                          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+                            <span className={certificate.revoked_at ? 'font-semibold text-destructive' : 'font-semibold text-success'}>
+                              {certificate.revoked_at ? 'Revoked' : 'Active'}
+                            </span>
+                            <span className="text-muted-foreground">
+                              Issued {certificate.issued_at ? String(certificate.issued_at).slice(0, 10) : 'date unavailable'}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="rounded-lg border border-dashed border-border p-3 text-xs text-muted-foreground">
+                      No certificates have been issued to this student.
+                    </p>
+                  )}
+                </section>
               )}
 
               {/* Instructor: courses taught */}
@@ -3919,7 +3950,7 @@ function AdminBlogTab() {
 }
 
 // ── Admin: Audit Log ──────────────────────────────────────────────────────────
-function AdminCredentialsTab({ isSuperadmin }) {
+function AdminCredentialsTab({ canManage }) {
   const [creds, setCreds]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
@@ -4007,9 +4038,9 @@ function AdminCredentialsTab({ isSuperadmin }) {
         </div>
       )}
 
-      {!isSuperadmin && (
+      {!canManage && (
         <div className="rounded-xl border border-warning/30 bg-warning/5 px-4 py-2 text-sm text-warning">
-          Only a superadmin can revoke or restore a credential. You can review them here.
+          Only the Admin can revoke or restore a credential.
         </div>
       )}
 
@@ -4068,7 +4099,7 @@ function AdminCredentialsTab({ isSuperadmin }) {
                         : <span className="text-success font-semibold">Active</span>}
                     </td>
                     <td className="p-3 text-right">
-                      {isSuperadmin && (c.revoked_at ? (
+                      {canManage && (c.revoked_at ? (
                         <Button size="sm" variant="outline" disabled={busyId === c.cred_id}
                           onClick={() => doRestore(c)}>Restore</Button>
                       ) : (

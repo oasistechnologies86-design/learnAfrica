@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { io } from 'socket.io-client';
 import { BrandedSelect } from '@/components/common/BrandedSelect';
 import { BrandedDatePicker } from '@/components/common/BrandedDatePicker';
 import { createPortal } from 'react-dom';
@@ -98,6 +99,29 @@ export default function ReceiptsPage() {
 
   useEffect(() => { loadRows(); /* eslint-disable-next-line */ }, [filters.date_from, filters.date_to, filters.status, filters.type]);
 
+  // Keep the latest filter-aware loader available to the socket callback.
+  const loadRowsRef = useRef(loadRows);
+  useEffect(() => { loadRowsRef.current = loadRows; }, [loadRows]);
+
+  // A statement can be hidden from another signed-in session. The server
+  // broadcasts a data-free event; every open receipt list reloads through its
+  // normal authenticated endpoint, so each account still sees only its own
+  // permitted records.
+  useEffect(() => {
+    const token = sessionStorage.getItem('auth_token');
+    if (!token) return undefined;
+    const socket = io(API_BASE || window.location.origin, {
+      auth: { token },
+      transports: ['websocket', 'polling'],
+    });
+    const refresh = () => loadRowsRef.current();
+    socket.on('statement_deleted', refresh);
+    return () => {
+      socket.off('statement_deleted', refresh);
+      socket.disconnect();
+    };
+  }, []);
+
   // Soft-delete from the list. Guarded against rapid/repeated taps and the
   // list is refreshed from the server on success.
   const handleDelete = async () => {
@@ -150,10 +174,10 @@ export default function ReceiptsPage() {
   const activeFilters = filters.status || filters.type || filters.date_from || filters.date_to;
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-3xl">
+    <div className="container mx-auto px-3 py-5 sm:px-4 sm:py-8 max-w-3xl">
       {/* Header */}
-      <div className="mb-5">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
+      <div className="mb-4 sm:mb-5">
+        <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
           <ReceiptIcon className="h-6 w-6 text-primary" /> {isAdmin ? 'Transactions' : 'My Statements'}
         </h1>
         <p className="text-sm text-muted-foreground mt-0.5">
@@ -165,11 +189,11 @@ export default function ReceiptsPage() {
 
       {/* Summary strip — mirrors the balance/usage header of a mobile-money app */}
       <Card className="mb-4 overflow-hidden">
-        <div className="bg-gradient-to-br from-primary to-primary/80 px-5 py-4 text-primary-foreground">
+        <div className="bg-gradient-to-br from-primary to-primary/80 px-4 py-3 sm:px-5 sm:py-4 text-primary-foreground">
           <div className="flex items-center gap-2 text-3xs font-bold uppercase tracking-wider text-primary-foreground/80">
             <Wallet className="h-3.5 w-3.5" /> Total paid
           </div>
-          <div className="mt-1 text-2xl font-bold tabular-nums">
+          <div className="mt-1 text-xl sm:text-2xl font-bold tabular-nums">
             {formatMoney(summary.paid, summary.currency)}
           </div>
           <div className="mt-0.5 text-2xs text-primary-foreground/80">
@@ -179,7 +203,7 @@ export default function ReceiptsPage() {
       </Card>
 
       {/* Filters */}
-      <Card className="p-3 mb-4 space-y-3">
+      <Card className="p-2.5 sm:p-3 mb-4 space-y-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search by receipt, course or name…"

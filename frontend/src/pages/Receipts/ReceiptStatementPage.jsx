@@ -165,7 +165,7 @@ export default function ReceiptStatementPage() {
           : 'This payment has an unrecognised status. Please contact support.';
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-3xl">
+    <div className="container mx-auto px-3 py-5 sm:px-4 sm:py-8 max-w-3xl">
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <Link to="/receipts" className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Back to receipts
@@ -189,7 +189,7 @@ export default function ReceiptStatementPage() {
 
       <Card className="overflow-hidden">
         {/* Header band */}
-        <div className="bg-[#0B3D2E] px-6 py-5 text-white flex items-start justify-between gap-4">
+        <div className="bg-[#0B3D2E] px-4 py-4 sm:px-6 sm:py-5 text-white flex items-start justify-between gap-4">
           <div>
             <div className="text-lg font-bold leading-tight">LearnAfrica</div>
             <div className="text-3xs font-bold uppercase tracking-[0.28em] text-amber-200 mt-1">Payment Statement</div>
@@ -197,7 +197,7 @@ export default function ReceiptStatementPage() {
           <StatusPill status={tx.status} />
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
           {/* Meta grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
             <Meta label="Statement No" value={tx.statement_no || tx.receipt_id} mono />
@@ -249,7 +249,7 @@ export default function ReceiptStatementPage() {
                   <span className="font-semibold tabular-nums">- {money(discount)}</span>
                 </div>
               )}
-              <div className="flex justify-between border-t border-border pt-2 text-base">
+              <div className="flex justify-between border-t border-border pt-2 text-sm sm:text-base">
                 <span className="font-bold text-[#0B3D2E] dark:text-emerald-300">Total Paid</span>
                 <span className="font-bold tabular-nums text-[#0B3D2E] dark:text-emerald-300">{money(tx.amount)}</span>
               </div>
@@ -257,7 +257,7 @@ export default function ReceiptStatementPage() {
           </div>
 
           {/* Confirmation */}
-          <div className="rounded-lg bg-muted/40 border border-border p-4 text-sm text-muted-foreground italic">
+          <div className="rounded-lg bg-muted/40 border border-border p-3 sm:p-4 text-xs sm:text-sm text-muted-foreground italic">
             {confirmation}
           </div>
 
