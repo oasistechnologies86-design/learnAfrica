@@ -188,8 +188,8 @@ def _ghana_card_gps_error(d):
 # use the maintained datasets in app/countries.py. Completeness is
 # always derived from persisted, validated data — never from a client flag.
 INSTRUCTOR_PROFILE_FIELDS = (
-    'country', 'id_type', 'id_number', 'region', 'district', 'city',
-    'street_address', 'postal_code', 'digital_address', 'phone',
+    'country', 'id_type', 'id_number', 'region', 'city',
+    'postal_code', 'digital_address', 'phone',
 )
 
 
