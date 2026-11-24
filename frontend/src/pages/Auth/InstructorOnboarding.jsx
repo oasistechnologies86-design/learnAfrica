@@ -120,9 +120,8 @@ export default function InstructorOnboarding() {
         payment_details: paymentMethod.details,
         payment_country: payoutCountry,
       });
-      // If email verification is required, redirect to /verify-email — payment
-      // method setup will happen after they verify (they can add it later from
-      // their instructor settings).
+      // Payout details have already been validated and stored by the signup
+      // endpoint, even if the applicant must verify their email first.
       if (result && result.needs_verification) {
         navigate('/verify-email', { state: { email: result.email || locationState.email } });
         return;
