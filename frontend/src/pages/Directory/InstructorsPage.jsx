@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen, Loader2, GraduationCap } from 'lucide-react';
+import { Loader2, GraduationCap } from 'lucide-react';
 import { Card, CardContent } from '@/components/common/Card';
 import { API_BASE } from '@/lib/api';
 import { setSeo } from '@/lib/seo';
@@ -77,11 +77,6 @@ export default function InstructorsPage() {
                         {inst.instructor_title || inst.instructor_field}
                       </p>
                     )}
-                    <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <BookOpen className="h-3.5 w-3.5" /> {inst.course_count} courses
-                      </span>
-                    </div>
                   </div>
                 </CardContent>
               </Card>

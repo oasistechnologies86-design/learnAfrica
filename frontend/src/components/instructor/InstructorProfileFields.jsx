@@ -87,8 +87,7 @@ export function InstructorProfileFields({
             value={country}
             disabled={lockIdentity}
             onChange={(e) => onChange({ country: e.target.value, id_type: '', id_number: '',
-                                         region: '', district: '', city: '', street_address: '',
-                                         postal_code: '', digital_address: '' })}
+                                         region: '', city: '', postal_code: '', digital_address: '' })}
             aria-invalid={errors.country ? true : undefined}
             className={cn(selectClass, 'pl-10', lockIdentity && 'opacity-70 cursor-not-allowed',
               errors.country && 'border-destructive focus-visible:ring-destructive')}
@@ -212,12 +211,6 @@ export function InstructorProfileFields({
               {!hasSubdivisions && <Hint>We do not have a verified list for this country, so please type it.</Hint>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="district">District (optional)</Label>
-              <Input id="district" value={value.district || ''}
-                onChange={(e) => onChange({ district: e.target.value })}
-                placeholder="Type your district" />
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="city" required>City / locality</Label>
               <div className="relative">
                 <Building2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -238,15 +231,6 @@ export function InstructorProfileFields({
                 placeholder={postalRequired ? 'Required for this country' : 'If your country uses one'} />
               <FieldError>{errors.postal_code}</FieldError>
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="street_address" required>Street address</Label>
-            <Input id="street_address" required value={value.street_address || ''}
-              onChange={(e) => onChange({ street_address: e.target.value })}
-              invalid={!!errors.street_address}
-              placeholder="House number and street" />
-            <FieldError>{errors.street_address}</FieldError>
           </div>
 
           {digital && (

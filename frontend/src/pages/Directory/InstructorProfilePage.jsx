@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { MapPin, Globe, BookOpen, Loader2, ChevronLeft } from 'lucide-react';
+import { MapPin, Globe, Loader2, ChevronLeft } from 'lucide-react';
 import { Card, CardContent } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { API_BASE } from '@/lib/api';
@@ -83,9 +83,6 @@ export default function InstructorProfilePage() {
             </p>
           )}
           <div className="mt-3 flex flex-wrap items-center gap-4 justify-center sm:justify-start text-sm text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <BookOpen className="h-4 w-4" /> {instructor.course_count} courses
-            </span>
             {instructor.location && (
               <span className="flex items-center gap-1">
                 <MapPin className="h-4 w-4" /> {instructor.location}

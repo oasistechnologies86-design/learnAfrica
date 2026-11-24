@@ -188,8 +188,8 @@ def _ghana_card_gps_error(d):
 # use the maintained datasets in app/countries.py. Completeness is
 # always derived from persisted, validated data — never from a client flag.
 INSTRUCTOR_PROFILE_FIELDS = (
-    'country', 'id_type', 'id_number', 'region', 'district', 'city',
-    'street_address', 'postal_code', 'digital_address', 'phone',
+    'country', 'id_type', 'id_number', 'region', 'city',
+    'postal_code', 'digital_address', 'phone',
 )
 
 
@@ -289,8 +289,6 @@ def _validate_instructor_profile(d, require_address=True):
     if require_address:
         if not clean['city']:
             errors['city'] = 'City or locality is required.'
-        if not clean['street_address']:
-            errors['street_address'] = 'Street address is required.'
         if req['postal_required'] and not clean['postal_code']:
             errors['postal_code'] = 'Postal code is required for this country.'
 
@@ -330,7 +328,7 @@ def _instructor_profile_complete(db, user_id):
         if err:
             return False
         req = cm.profile_requirements(country)
-        if not r.get('city') or not r.get('street_address'):
+        if not r.get('city'):
             return False
         if req['postal_required'] and not r.get('postal_code'):
             return False
@@ -1022,10 +1020,11 @@ def create_app() -> Flask:
             # and address rules). With no `country` we keep the original Ghana
             # Card + GhanaPost GPS requirement so older clients still work.
             _signup_profile = None
+            _signup_payout = None
             if role == 'instructor':
                 _country_in = str(d.get('country') or '').strip().upper()
                 if _country_in:
-                    _signup_profile, _perr = _validate_instructor_profile(d, require_address=False)
+                    _signup_profile, _perr = _validate_instructor_profile(d, require_address=True)
                     if _perr:
                         return jsonify({'error': 'Please correct the highlighted fields.',
                                         'errors': _perr}), 400
@@ -1041,6 +1040,18 @@ def create_app() -> Flask:
                         return jsonify({'error': 'You must accept the instructor terms and conditions.'}), 400
                     if not d.get('accept_verification'):
                         return jsonify({'error': 'You must acknowledge the information-verification statement.'}), 400
+
+                # Payout destination is mandatory for every instructor signup,
+                # including legacy clients without the country-aware identity block.
+                _payout_method = str(d.get('payment_method') or '').strip().lower()
+                _payout_country = str(d.get('payment_country') or _country_in or 'GH').strip().upper()
+                _payout_details = d.get('payment_details') or {}
+                if _payout_method not in ('momo', 'bank'):
+                    return jsonify({'error': 'Please choose a valid payout method.'}), 400
+                _signup_payout, _payout_error = _validate_payout_details(
+                    _payout_method, _payout_details, _payout_country)
+                if _payout_error:
+                    return jsonify({'error': _payout_error}), 400
 
             # Force-add columns inline if missing (defensive against failed migrations)
             if app.config.get('USE_POSTGRES'):
@@ -1093,6 +1104,18 @@ def create_app() -> Flask:
                 # Minimal fallback - just core columns
                 db.execute('INSERT INTO users (id,name,email,password_hash,role) VALUES(?,?,?,?,?)',
                            (uid, d['name'], email, generate_password_hash(d['password']), role))
+
+            # Save the required instructor payout destination as part of
+            # account creation, including accounts awaiting email verification.
+            if role == 'instructor' and _signup_payout is not None:
+                ensure_column(db, 'users', 'payment_method', 'TEXT')
+                ensure_column(db, 'users', 'payment_details', 'TEXT')
+                ensure_column(db, 'users', 'payment_country', "TEXT DEFAULT 'GH'")
+                db.execute(
+                    'UPDATE users SET payment_method=?, payment_details=?, payment_country=? WHERE id=?',
+                    (str(d.get('payment_method') or '').strip().lower(),
+                     json.dumps(_signup_payout), str(d.get('payment_country') or (_signup_profile or {}).get('country') or 'GH').upper(), uid)
+                )
 
             # Best-effort user_stats and user_settings creation
             try:
@@ -2907,12 +2930,6 @@ def create_app() -> Flask:
             out = []
             for r in rows:
                 d = dict(r)
-                d['course_count'] = db.execute(
-                    "SELECT COUNT(*) AS c FROM courses WHERE instructor_id=? AND is_published=1",
-                    (d['id'],)).fetchone()['c']
-                d['student_count'] = db.execute(
-                    "SELECT COUNT(*) AS c FROM user_enrollments e JOIN courses c ON c.id=e.course_id"
-                    " WHERE c.instructor_id=? AND c.is_published=1", (d['id'],)).fetchone()['c']
                 out.append(d)
             return jsonify({'instructors': out})
         except Exception as e:
@@ -2943,7 +2960,6 @@ def create_app() -> Flask:
                 " WHERE c.instructor_id=? AND c.is_published=1 ORDER BY c.created_at DESC",
                 (uid,)).fetchall()
             d['courses'] = safe_list(courses)
-            d['course_count'] = len(d['courses'])
             return jsonify({'instructor': d})
         except Exception as e:
             app.logger.error(f'get_public_instructor: {e}')
@@ -10323,8 +10339,10 @@ def create_app() -> Flask:
                             'fee': cfg['fee'], 'currency': cfg['currency']})
         except Exception as e:
             app.logger.error(f'public_instructor_registration: {e}')
-            # Fail safe: present as free rather than blocking signup on a read error.
-            return jsonify({'mode': 'free', 'is_free': True, 'fee': 0, 'currency': 'GHS'})
+            # Do not misrepresent a configured paid fee as free if the settings
+            # store is temporarily unavailable. The public UI will show a retry
+            # message and the signup endpoint remains authoritative.
+            return jsonify({'error': 'Instructor registration fee is temporarily unavailable.'}), 503
 
     # ────────────────────────────────────────────────────────────────────────
     # ── INTERNATIONAL INSTRUCTOR PROFILE — country-aware config + completion

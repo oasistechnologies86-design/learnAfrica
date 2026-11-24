@@ -691,7 +691,7 @@ function InstructorCTASection() {
       .then(setReg)
       .catch(() => {});
   }, []);
-  const isFree = reg?.is_free !== false;
+  const isFree = reg?.is_free === true;
   return (
     <section ref={ref} className="py-16 sm:py-20 border-t border-border">
       <div className={cn('container mx-auto px-4 transition-opacity duration-700', visible ? 'opacity-100' : 'opacity-0')}>
@@ -702,9 +702,11 @@ function InstructorCTASection() {
             <p className="text-muted-foreground mb-6">
               Create courses, reach learners across the continent, and earn from your expertise.
               {' '}
-              {reg && (isFree
-                ? 'Instructor registration is completely free.'
-                : `Instructor registration is ${reg.currency || 'GHS'} ${Number(reg.fee || 0).toFixed(2)} — a one-time fee.`)}
+              {reg && (reg.error
+                ? 'The current instructor registration fee could not be confirmed. Please try again shortly.'
+                : isFree
+                  ? 'Instructor registration is currently free.'
+                  : `Instructor registration is ${reg.currency || 'GHS'} ${Number(reg.fee || 0).toFixed(2)} — a one-time fee.`)}
             </p>
             <div className="flex gap-4 flex-wrap">
               <Link to="/signup/instructor-info">
