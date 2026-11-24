@@ -295,14 +295,14 @@ export function SignupPage() {
                   aria-label={opt.action}
                   onClick={() => chooseRole(opt.id)}
                   className={cn(
-                    'group flex min-h-0 min-w-0 w-full flex-col items-start rounded-2xl border p-3 text-left shadow-sm sm:min-h-[270px] sm:p-6',
-                    'transition-all duration-200 hover:-translate-y-0.5',
-                    'border-primary/30 shadow-[0_0_0_1px_hsl(var(--primary)/0.16),0_0_16px_-8px_hsl(var(--primary)/0.45)] hover:border-primary/60 hover:shadow-[0_0_0_1px_hsl(var(--primary)/0.32),0_0_24px_-6px_hsl(var(--primary)/0.62)]',
+                    'group flex min-h-0 min-w-0 w-full flex-col items-start rounded-2xl border border-primary/60 p-3 text-left sm:min-h-[270px] sm:p-6',
+                    'bg-card shadow-[0_0_0_1px_hsl(var(--primary)/0.42),0_0_18px_2px_hsl(var(--primary)/0.28)]',
+                    'transition-all duration-200 hover:-translate-y-0.5 hover:border-primary hover:shadow-[0_0_0_1px_hsl(var(--primary)/0.65),0_0_26px_5px_hsl(var(--primary)/0.38)]',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
-                    'active:translate-y-0 active:shadow-sm',
+                    'active:translate-y-0',
                     isInstructor
-                      ? 'border-primary/40 bg-gradient-to-br from-primary/[0.09] via-card to-card hover:border-primary/70'
-                      : 'border-border bg-card hover:border-primary/50 hover:bg-muted/20'
+                      ? 'bg-gradient-to-br from-primary/[0.10] via-card to-card'
+                      : 'hover:bg-muted/20'
                   )}
                 >
                   <span className="mb-1.5 flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 transition-transform duration-200 group-hover:scale-105 sm:mb-3 sm:h-12 sm:w-12">
