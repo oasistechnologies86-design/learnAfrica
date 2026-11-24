@@ -354,7 +354,7 @@ export function SignupPage() {
                       <span className="min-w-0">
                         <span className="block text-sm font-bold text-success">Student registration is always FREE</span>
                         <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
-                          No fee to create your student account. Some courses may have their own fees.
+                          
                         </span>
                       </span>
                     </span>
