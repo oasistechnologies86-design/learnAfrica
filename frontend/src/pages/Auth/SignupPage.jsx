@@ -353,9 +353,6 @@ export function SignupPage() {
                       <CreditCard className="mt-0.5 h-4 w-4 shrink-0 text-success" />
                       <span className="min-w-0">
                         <span className="block text-sm font-bold text-success">Student registration is always FREE</span>
-                        <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
-                          
-                        </span>
                       </span>
                     </span>
                   )}
