@@ -18,10 +18,11 @@ export default function InstructorInfoPage() {
     fetch(`${API_BASE}/api/instructor-registration`)
       .then(r => r.json())
       .then(setReg)
-      .catch(() => setReg({ is_free: true, fee: 0, currency: 'GHS' }));
+      .catch(() => setReg({ error: true }));
   }, []);
 
-  const isFree = reg?.is_free !== false;
+  const isFree = reg?.is_free === true;
+  const hasError = !!reg?.error;
   const fee = Number(reg?.fee || 0);
   const currency = reg?.currency || 'GHS';
 
@@ -45,6 +46,8 @@ export default function InstructorInfoPage() {
           <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" /> Checking registration fee…
           </span>
+        ) : hasError ? (
+          <p className="text-sm font-semibold text-muted-foreground">We couldn't confirm the instructor registration fee. Please refresh and try again.</p>
         ) : isFree ? (
           <>
             <div className="flex items-center justify-center gap-2"><CreditCard className="h-5 w-5 text-success" /><p className="text-lg font-bold text-success">Instructor registration is FREE for now</p></div>
