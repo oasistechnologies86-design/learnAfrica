@@ -65,6 +65,8 @@ def signup_instructor(email, extra=None):
             'role': 'instructor',
             'ghana_card_number': 'GHA-123456789-0',
             'ghana_post_gps': 'GA-123-4567', 'phone': '+233244123456',
+            'payment_method': 'momo', 'payment_country': 'GH',
+            'payment_details': {'provider': 'MTN', 'phone': '0244123456', 'account_name': 'Applicant'},
             'accept_terms': True, 'accept_verification': True}
     if extra:
         body.update(extra)
@@ -83,6 +85,8 @@ r = signup_instructor('badcard@example.com', {'ghana_card_number': '1234'})
 check('instructor signup rejected with malformed Ghana Card', r.status_code == 400, r.status_code)
 r = signup_instructor('nogps@example.com', {'ghana_post_gps': ''})
 check('instructor signup rejected without a digital address', r.status_code == 400, r.status_code)
+r = signup_instructor('nopayout@example.com', {'payment_method': '', 'payment_details': {}})
+check('instructor signup rejected without a payout method', r.status_code == 400, r.status_code)
 r = signup_instructor('freetext-address@example.com', {'ghana_post_gps': 'Near the community library, Adenta'})
 check('instructor signup accepts a free-text Ghana digital address',
       r.status_code in (200, 201), (r.get_json() or {}).get('error', r.status_code))
