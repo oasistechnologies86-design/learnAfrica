@@ -111,7 +111,7 @@ export function SignupPage() {
     fetch(`${API_BASE}/api/instructor-registration`)
       .then(r => r.json())
       .then(d => { if (alive) setRegInfo(d) })
-      .catch(() => { if (alive) setRegInfo({ is_free: true, fee: 0, currency: 'GHS' }) })
+      .catch(() => { if (alive) setRegInfo({ error: true }) })
     return () => { alive = false }
   }, [])
 
@@ -308,10 +308,10 @@ export function SignupPage() {
                   {opt.id === 'instructor' && (
                     <span className={cn(
                       'mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold',
-                      regInfo?.is_free === false ? 'bg-primary/10 text-primary' : 'bg-success/10 text-success'
+                      regInfo?.is_free === false ? 'bg-primary/10 text-primary' : regInfo?.error ? 'bg-muted text-muted-foreground' : 'bg-success/10 text-success'
                     )}>
                       <CreditCard className="h-3.5 w-3.5" />
-                      {regInfo === null ? 'Checking registration fee…' : regInfo.is_free
+                      {regInfo === null ? 'Checking registration fee…' : regInfo.error ? 'Registration fee unavailable — please try again' : regInfo.is_free
                         ? 'FREE · No registration fee for now'
                         : `PAID · ${regInfo.currency || 'GHS'} ${Number(regInfo.fee || 0).toFixed(2)}`}
                     </span>
@@ -362,21 +362,23 @@ export function SignupPage() {
       {isInstructorFlow && (
         <div className={cn(
           'flex items-center gap-3 rounded-xl border p-3',
-          regInfo?.is_free === false ? 'border-primary/30 bg-primary/10' : 'border-success/30 bg-success/10'
+          regInfo?.is_free === false ? 'border-primary/30 bg-primary/10' : regInfo?.error ? 'border-border bg-muted/40' : 'border-success/30 bg-success/10'
         )}>
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-background/80 text-primary">
             <CreditCard className="h-5 w-5" />
           </span>
           <div className="min-w-0">
             <p className={cn('text-sm font-bold', regInfo?.is_free === false ? 'text-primary' : 'text-success')}>
-              {regInfo === null ? 'Checking instructor registration fee…' : regInfo.is_free
+              {regInfo === null ? 'Checking instructor registration fee…' : regInfo.error ? 'Registration fee unavailable' : regInfo.is_free
                 ? 'FREE · No registration fee for now'
                 : `PAID · ${regInfo.currency || 'GHS'} ${Number(regInfo.fee || 0).toFixed(2)}`}
             </p>
             <p className="text-xs text-muted-foreground">
-              {regInfo?.is_free === false
-                ? 'One-time fee, payable after submitting your application.'
-                : 'There is currently no charge to register as an instructor.'}
+              {regInfo?.error
+                ? 'Please refresh this page before continuing so we can confirm the current fee.'
+                : regInfo?.is_free === false
+                  ? 'One-time fee, payable after submitting your application.'
+                  : 'There is currently no charge to register as an instructor.'}
             </p>
           </div>
         </div>
