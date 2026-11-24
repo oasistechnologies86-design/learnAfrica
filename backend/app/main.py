@@ -1020,6 +1020,7 @@ def create_app() -> Flask:
             # and address rules). With no `country` we keep the original Ghana
             # Card + GhanaPost GPS requirement so older clients still work.
             _signup_profile = None
+            _signup_payout = None
             if role == 'instructor':
                 _country_in = str(d.get('country') or '').strip().upper()
                 if _country_in:
@@ -1031,6 +1032,18 @@ def create_app() -> Flask:
                         return jsonify({'error': 'You must accept the instructor terms and conditions.'}), 400
                     if not d.get('accept_verification'):
                         return jsonify({'error': 'You must acknowledge the information-verification statement.'}), 400
+                    # Payout destination is collected before account creation and
+                    # validated server-side so it is saved even when email
+                    # verification delays the authenticated profile setup.
+                    _payout_method = str(d.get('payment_method') or '').strip().lower()
+                    _payout_country = str(d.get('payment_country') or _country_in or 'GH').strip().upper()
+                    _payout_details = d.get('payment_details') or {}
+                    if _payout_method not in ('momo', 'bank'):
+                        return jsonify({'error': 'Please choose a valid payout method.'}), 400
+                    _signup_payout, _payout_error = _validate_payout_details(
+                        _payout_method, _payout_details, _payout_country)
+                    if _payout_error:
+                        return jsonify({'error': _payout_error}), 400
                 else:
                     _card, _gps = _validate_ghana_card_gps(d)
                     if _card is None or _gps is None:
@@ -1091,6 +1104,18 @@ def create_app() -> Flask:
                 # Minimal fallback - just core columns
                 db.execute('INSERT INTO users (id,name,email,password_hash,role) VALUES(?,?,?,?,?)',
                            (uid, d['name'], email, generate_password_hash(d['password']), role))
+
+            # Save the required instructor payout destination as part of
+            # account creation, including accounts awaiting email verification.
+            if role == 'instructor' and _signup_payout is not None:
+                ensure_column(db, 'users', 'payment_method', 'TEXT')
+                ensure_column(db, 'users', 'payment_details', 'TEXT')
+                ensure_column(db, 'users', 'payment_country', "TEXT DEFAULT 'GH'")
+                db.execute(
+                    'UPDATE users SET payment_method=?, payment_details=?, payment_country=? WHERE id=?',
+                    (str(d.get('payment_method') or '').strip().lower(),
+                     json.dumps(_signup_payout), str(d.get('payment_country') or _signup_profile.get('country') or 'GH').upper(), uid)
+                )
 
             # Best-effort user_stats and user_settings creation
             try:
