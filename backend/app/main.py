@@ -10339,8 +10339,10 @@ def create_app() -> Flask:
                             'fee': cfg['fee'], 'currency': cfg['currency']})
         except Exception as e:
             app.logger.error(f'public_instructor_registration: {e}')
-            # Fail safe: present as free rather than blocking signup on a read error.
-            return jsonify({'mode': 'free', 'is_free': True, 'fee': 0, 'currency': 'GHS'})
+            # Do not misrepresent a configured paid fee as free if the settings
+            # store is temporarily unavailable. The public UI will show a retry
+            # message and the signup endpoint remains authoritative.
+            return jsonify({'error': 'Instructor registration fee is temporarily unavailable.'}), 503
 
     # ────────────────────────────────────────────────────────────────────────
     # ── INTERNATIONAL INSTRUCTOR PROFILE — country-aware config + completion
