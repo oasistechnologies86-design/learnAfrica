@@ -274,9 +274,9 @@ export function SignupPage() {
         view="signup"
         onSwitch={() => navigate('/login')}
       >
-        <div className="w-full space-y-5 sm:space-y-6">
-          <div className="space-y-1.5 text-center">
-            <h1 className="text-2xl font-bold tracking-tight sm:text-[28px]">Get Started with LearnAfrica</h1>
+        <div className="w-full space-y-4 sm:space-y-6">
+          <div className="space-y-1 text-center">
+            <h1 className="text-xl font-bold tracking-tight sm:text-[28px]">Get Started with LearnAfrica</h1>
             <p className="text-sm leading-relaxed text-muted-foreground">
               Choose how you would like to join.
             </p>
@@ -295,31 +295,31 @@ export function SignupPage() {
                   aria-label={opt.action}
                   onClick={() => chooseRole(opt.id)}
                   className={cn(
-                    'group flex min-h-[270px] min-w-0 w-full flex-col items-start rounded-2xl border p-5 text-left shadow-sm',
+                    'group flex min-h-[220px] min-w-0 w-full flex-col items-start rounded-2xl border p-4 text-left shadow-sm sm:min-h-[270px] sm:p-6',
                     'transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
-                    'active:translate-y-0 active:shadow-sm sm:p-6',
+                    'active:translate-y-0 active:shadow-sm',
                     isInstructor
                       ? 'border-primary/40 bg-gradient-to-br from-primary/[0.09] via-card to-card hover:border-primary/70'
                       : 'border-border bg-card hover:border-primary/50 hover:bg-muted/20'
                   )}
                 >
-                  <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 transition-transform duration-200 group-hover:scale-105">
-                    <Icon className="h-6 w-6" strokeWidth={1.9} />
+                  <span className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 transition-transform duration-200 group-hover:scale-105 sm:mb-3 sm:h-12 sm:w-12">
+                    <Icon className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={1.9} />
                   </span>
                   <span className="mb-1 text-[10px] font-bold tracking-[0.16em] text-primary">
                     {opt.eyebrow}
                   </span>
-                  <span className="text-lg font-bold leading-snug text-foreground">
+                  <span className="text-base font-bold leading-snug text-foreground sm:text-lg">
                     {opt.title}
                   </span>
-                  <span className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  <span className="mt-1.5 text-xs leading-relaxed text-muted-foreground sm:mt-2 sm:text-sm">
                     {opt.description}
                   </span>
 
                   {isInstructor ? (
                     <span className={cn(
-                      'mt-4 flex w-full items-start gap-2.5 rounded-xl border px-3.5 py-3',
+                      'mt-3 flex w-full items-start gap-2 rounded-xl border px-3 py-2.5 sm:mt-4 sm:gap-2.5 sm:px-3.5 sm:py-3',
                       feeUnavailable
                         ? 'border-border bg-muted/50'
                         : feeIsFree
@@ -349,7 +349,7 @@ export function SignupPage() {
                       </span>
                     </span>
                   ) : (
-                    <span className="mt-4 flex w-full items-start gap-2.5 rounded-xl border border-success/25 bg-success/10 px-3.5 py-3">
+                    <span className="mt-3 flex w-full items-start gap-2 rounded-xl border border-success/25 bg-success/10 px-3 py-2.5 sm:mt-4 sm:gap-2.5 sm:px-3.5 sm:py-3">
                       <CreditCard className="mt-0.5 h-4 w-4 shrink-0 text-success" />
                       <span className="min-w-0">
                         <span className="block text-sm font-bold text-success">Student registration is always FREE</span>
@@ -358,7 +358,7 @@ export function SignupPage() {
                   )}
 
                   <span className={cn(
-                    'mt-auto flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold shadow-sm',
+                    'mt-3 flex min-h-10 w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold shadow-sm sm:mt-auto sm:min-h-11 sm:py-3 sm:text-sm',
                     'transition-all duration-200 group-hover:shadow-md',
                     isInstructor
                       ? 'bg-primary text-primary-foreground group-hover:brightness-110'
