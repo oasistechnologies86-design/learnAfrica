@@ -67,10 +67,22 @@ AH = {'Authorization': f'Bearer {adm_tok}'}
 
 
 def signup_instructor(email, extra=None):
+    extra = extra or {}
+    country = str(extra.get('country') or 'GH').upper()
+    payout = ({
+        'payment_method': 'momo',
+        'payment_country': 'GH',
+        'payment_details': {'provider': 'MTN', 'phone': '0244123456', 'account_name': 'Applicant'},
+    } if country == 'GH' else {
+        'payment_method': 'bank',
+        'payment_country': country,
+        'payment_details': {'bank_name': 'Example Bank', 'account_name': 'Applicant',
+                            'account_number': '1234567890', 'swift': 'EXAMP123'},
+    })
     body = {'name': 'Applicant', 'email': email, 'password': 'Pass12345!',
-            'role': 'instructor', 'phone': '+233244123456', 'accept_terms': True, 'accept_verification': True}
-    if extra:
-        body.update(extra)
+            'role': 'instructor', 'phone': '+233244123456', 'accept_terms': True,
+            'accept_verification': True, **payout}
+    body.update(extra)
     return c.post('/api/auth/signup', json=body)
 
 
@@ -122,6 +134,13 @@ check('international profile persisted',
       row and row['country'] == 'US' and row['id_type'] == 'drivers_licence'
       and row['id_number'] == 'A1234-5678' and row['phone'] == '+14155552671',
       dict(row) if row else None)
+with app.app_context():
+    payout = get_db().execute(
+        "SELECT payment_method,payment_country,payment_details FROM users WHERE email=?",
+        ('us_ins@example.com',)).fetchone()
+check('required payout destination is saved during signup',
+      payout and payout['payment_method'] == 'bank' and payout['payment_country'] == 'US'
+      and payout['payment_details'], dict(payout) if payout else None)
 
 # Unknown country is rejected rather than guessed
 r = signup_instructor('bad_country@example.com', {
@@ -129,12 +148,11 @@ r = signup_instructor('bad_country@example.com', {
 check('unknown country rejected on signup', r.status_code == 400, r.status_code)
 
 # US requires a postal code
-# Address is deferred to the completion page, so signup without it succeeds;
-# the postal code is enforced when the profile is actually completed.
+# Required city/locality and country-mandated postal code are collected during signup.
 r = signup_instructor('nopostal@example.com', {
     'country': 'GB', 'id_type': 'passport', 'id_number': 'GB1234567',
     'city': 'London', 'street_address': '10 Downing St', 'phone': '+442079460958'})
-check('GB signup succeeds and defers address to completion', r.status_code in (200, 201), r.get_json())
+check('GB signup requires a postal code during registration', r.status_code == 400, r.get_json())
 
 # ── Profile-completion gate (server enforced) ────────────────────────────────
 # A pending instructor cannot reach instructor features regardless.
@@ -152,14 +170,17 @@ r = c.get('/api/instructor/profile', headers=PH)
 check('profile endpoint reports complete for a full international profile',
       r.status_code == 200 and (r.get_json() or {}).get('complete') is True, r.get_json())
 
-# Now create an instructor whose profile is deliberately incomplete: a country
-# that requires a postal code, but none supplied at signup (require_address=False
-# on signup), then approve and confirm the gate blocks instructor features.
+# Create a valid instructor, then simulate a legacy/incomplete saved profile
+# to verify that the server-side completion gate still requires city + postal.
 r = signup_instructor('incomplete@example.com', {
     'country': 'GB', 'id_type': 'passport', 'id_number': 'GB1234567',
-    'phone': '+442079460958'})
-check('GB instructor signup succeeds without an address', r.status_code in (200, 201), r.get_json())
+    'city': 'London', 'postal_code': 'SW1A 2AA', 'phone': '+442079460958'})
+check('GB instructor signup succeeds with required location details', r.status_code in (200, 201), r.get_json())
 inc_uid = uid_of('incomplete@example.com')
+with app.app_context():
+    db = get_db()
+    db.execute('UPDATE instructor_applications SET city=NULL, postal_code=NULL, profile_completed_at=NULL WHERE user_id=?', (inc_uid,))
+    db.commit()
 approve(inc_uid)
 inc_tok = login('incomplete@example.com')
 IH = {'Authorization': f'Bearer {inc_tok}'}
@@ -172,8 +193,7 @@ check('incomplete profile is reported incomplete',
 
 # Completing it unblocks instructor features.
 r = c.put('/api/instructor/profile', json={
-    'city': 'London', 'street_address': '10 Downing St',
-    'postal_code': 'SW1A 2AA', 'phone': '+442079460958'}, headers=IH)
+    'city': 'London', 'postal_code': 'SW1A 2AA', 'phone': '+442079460958'}, headers=IH)
 check('profile completion succeeds', r.status_code == 200 and (r.get_json() or {}).get('complete') is True,
       r.get_json())
 r = c.get('/api/instructor/courses', headers=IH)
@@ -183,8 +203,13 @@ check('completed instructor can now reach instructor features', r.status_code ==
 r = c.put('/api/instructor/profile', json={'complete': True, 'profile_complete': True}, headers=IH)
 check('client-supplied complete flag is ignored (still complete here)', r.status_code in (200, 400))
 r = signup_instructor('fake@example.com', {'country': 'GB', 'id_type': 'passport',
-                                           'id_number': 'GB9999999', 'phone': '+447911123456'})
+                                           'id_number': 'GB9999999', 'city': 'London',
+                                           'postal_code': 'SW1A 2AA', 'phone': '+447911123456'})
 fake_uid = uid_of('fake@example.com')
+with app.app_context():
+    db = get_db()
+    db.execute('UPDATE instructor_applications SET city=NULL, profile_completed_at=NULL WHERE user_id=?', (fake_uid,))
+    db.commit()
 approve(fake_uid)
 fake_tok = login('fake@example.com')
 FH = {'Authorization': f'Bearer {fake_tok}'}
@@ -197,8 +222,7 @@ check('fake completion still blocked', r.status_code == 403, r.status_code)
 # ── Frozen identity: instructor cannot change it, admin can ──────────────────
 r = c.put('/api/instructor/profile', json={
     'country': 'FR', 'id_type': 'passport', 'id_number': 'FR0000000',
-    'city': 'London', 'street_address': '10 Downing St',
-    'postal_code': 'SW1A 2AA'}, headers=IH)
+    'city': 'London', 'postal_code': 'SW1A 2AA'}, headers=IH)
 check('instructor cannot change frozen country/ID via profile endpoint', r.status_code == 200)
 with app.app_context():
     row = get_db().execute('SELECT country,id_number FROM instructor_applications WHERE user_id=?',
