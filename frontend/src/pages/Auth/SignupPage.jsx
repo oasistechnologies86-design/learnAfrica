@@ -259,7 +259,7 @@ export function SignupPage() {
         icon: GraduationCap,
         eyebrow: 'TEACH',
         title: 'Become an Instructor',
-        description: 'Share your knowledge, create and publish courses, reach learners and earn from course purchases.',
+        description: 'Share your knowledge, create and publish courses, reach learners, and earn commissions from course purchases.',
         action: 'Register as Instructor',
       },
     ]
@@ -353,9 +353,6 @@ export function SignupPage() {
                       <CreditCard className="mt-0.5 h-4 w-4 shrink-0 text-success" />
                       <span className="min-w-0">
                         <span className="block text-sm font-bold text-success">Student registration is always FREE</span>
-                        <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
-                          No fee to create your student account. Some courses may have their own fees.
-                        </span>
                       </span>
                     </span>
                   )}
