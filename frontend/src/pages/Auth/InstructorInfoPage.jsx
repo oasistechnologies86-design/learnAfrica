@@ -47,12 +47,12 @@ export default function InstructorInfoPage() {
           </span>
         ) : isFree ? (
           <>
-            <p className="text-lg font-bold text-success">Instructor registration is FREE</p>
+            <div className="flex items-center justify-center gap-2"><CreditCard className="h-5 w-5 text-success" /><p className="text-lg font-bold text-success">Instructor registration is FREE for now</p></div>
             <p className="text-xs text-muted-foreground mt-1">No registration fee is charged.</p>
           </>
         ) : (
           <>
-            <p className="text-sm font-semibold text-muted-foreground">One-time instructor registration fee</p>
+            <div className="flex items-center justify-center gap-2"><CreditCard className="h-5 w-5 text-primary" /><p className="text-sm font-semibold text-muted-foreground">One-time instructor registration fee</p></div>
             <p className="text-2xl font-black text-primary">{currency} {fee.toFixed(2)}</p>
             <p className="text-xs text-muted-foreground mt-1">
               Payable after you submit your application, before your account is activated.
