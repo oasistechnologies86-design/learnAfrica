@@ -295,7 +295,7 @@ export function SignupPage() {
                   aria-label={opt.action}
                   onClick={() => chooseRole(opt.id)}
                   className={cn(
-                    'group flex min-h-[220px] min-w-0 w-full flex-col items-start rounded-2xl border p-4 text-left shadow-sm sm:min-h-[270px] sm:p-6',
+                    'group flex min-h-0 min-w-0 w-full flex-col items-start rounded-2xl border p-3 text-left shadow-sm sm:min-h-[270px] sm:p-6',
                     'transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
                     'active:translate-y-0 active:shadow-sm',
@@ -304,31 +304,31 @@ export function SignupPage() {
                       : 'border-border bg-card hover:border-primary/50 hover:bg-muted/20'
                   )}
                 >
-                  <span className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 transition-transform duration-200 group-hover:scale-105 sm:mb-3 sm:h-12 sm:w-12">
-                    <Icon className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={1.9} />
+                  <span className="mb-1.5 flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 transition-transform duration-200 group-hover:scale-105 sm:mb-3 sm:h-12 sm:w-12">
+                    <Icon className="h-4 w-4 sm:h-6 sm:w-6" strokeWidth={1.9} />
                   </span>
-                  <span className="mb-1 text-[10px] font-bold tracking-[0.16em] text-primary">
+                  <span className="mb-0.5 text-[9px] font-bold tracking-[0.16em] text-primary sm:mb-1 sm:text-[10px]">
                     {opt.eyebrow}
                   </span>
-                  <span className="text-base font-bold leading-snug text-foreground sm:text-lg">
+                  <span className="text-[15px] font-bold leading-snug text-foreground sm:text-lg">
                     {opt.title}
                   </span>
-                  <span className="mt-1.5 text-xs leading-relaxed text-muted-foreground sm:mt-2 sm:text-sm">
+                  <span className="mt-1 text-[11px] leading-snug text-muted-foreground sm:mt-2 sm:text-sm sm:leading-relaxed">
                     {opt.description}
                   </span>
 
                   {isInstructor ? (
                     <span className={cn(
-                      'mt-3 flex w-full items-start gap-2 rounded-xl border px-3 py-2.5 sm:mt-4 sm:gap-2.5 sm:px-3.5 sm:py-3',
+                      'mt-2 flex w-full items-start gap-1.5 rounded-xl border px-2.5 py-2 sm:mt-4 sm:gap-2.5 sm:px-3.5 sm:py-3',
                       feeUnavailable
                         ? 'border-border bg-muted/50'
                         : feeIsFree
                           ? 'border-success/25 bg-success/10'
                           : 'border-primary/25 bg-primary/10'
                     )}>
-                      <CreditCard className={cn('mt-0.5 h-4 w-4 shrink-0', feeIsFree ? 'text-success' : 'text-primary')} />
+                      <CreditCard className={cn('mt-0.5 h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4', feeIsFree ? 'text-success' : 'text-primary')} />
                       <span className="min-w-0">
-                        <span className={cn('block text-sm font-bold', feeIsFree ? 'text-success' : 'text-foreground')}>
+                        <span className={cn('block text-xs font-bold sm:text-sm', feeIsFree ? 'text-success' : 'text-foreground')}>
                           {regInfo === null
                             ? 'Checking registration fee…'
                             : regInfo.error
@@ -337,7 +337,7 @@ export function SignupPage() {
                                 ? 'Instructor registration is FREE'
                                 : 'Instructor registration requires payment'}
                         </span>
-                        <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
+                        <span className="mt-0.5 block text-[10px] leading-snug text-muted-foreground sm:text-xs sm:leading-relaxed">
                           {regInfo === null
                             ? 'Please wait while we confirm the current fee.'
                             : regInfo.error
@@ -349,16 +349,16 @@ export function SignupPage() {
                       </span>
                     </span>
                   ) : (
-                    <span className="mt-3 flex w-full items-start gap-2 rounded-xl border border-success/25 bg-success/10 px-3 py-2.5 sm:mt-4 sm:gap-2.5 sm:px-3.5 sm:py-3">
+                    <span className="mt-2 flex w-full items-start gap-1.5 rounded-xl border border-success/25 bg-success/10 px-2.5 py-2 sm:mt-4 sm:gap-2.5 sm:px-3.5 sm:py-3">
                       <CreditCard className="mt-0.5 h-4 w-4 shrink-0 text-success" />
                       <span className="min-w-0">
-                        <span className="block text-sm font-bold text-success">Student registration is always FREE</span>
+                        <span className="block text-xs font-bold text-success sm:text-sm">Student registration is always FREE</span>
                       </span>
                     </span>
                   )}
 
                   <span className={cn(
-                    'mt-3 flex min-h-10 w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold shadow-sm sm:mt-auto sm:min-h-11 sm:py-3 sm:text-sm',
+                    'mt-2 flex min-h-9 w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-[11px] font-semibold shadow-sm sm:mt-auto sm:min-h-11 sm:py-3 sm:text-sm',
                     'transition-all duration-200 group-hover:shadow-md',
                     isInstructor
                       ? 'bg-primary text-primary-foreground group-hover:brightness-110'
