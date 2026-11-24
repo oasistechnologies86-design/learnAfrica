@@ -289,8 +289,6 @@ def _validate_instructor_profile(d, require_address=True):
     if require_address:
         if not clean['city']:
             errors['city'] = 'City or locality is required.'
-        if not clean['street_address']:
-            errors['street_address'] = 'Street address is required.'
         if req['postal_required'] and not clean['postal_code']:
             errors['postal_code'] = 'Postal code is required for this country.'
 
@@ -330,7 +328,7 @@ def _instructor_profile_complete(db, user_id):
         if err:
             return False
         req = cm.profile_requirements(country)
-        if not r.get('city') or not r.get('street_address'):
+        if not r.get('city'):
             return False
         if req['postal_required'] and not r.get('postal_code'):
             return False
@@ -1025,7 +1023,7 @@ def create_app() -> Flask:
             if role == 'instructor':
                 _country_in = str(d.get('country') or '').strip().upper()
                 if _country_in:
-                    _signup_profile, _perr = _validate_instructor_profile(d, require_address=False)
+                    _signup_profile, _perr = _validate_instructor_profile(d, require_address=True)
                     if _perr:
                         return jsonify({'error': 'Please correct the highlighted fields.',
                                         'errors': _perr}), 400
@@ -2907,12 +2905,6 @@ def create_app() -> Flask:
             out = []
             for r in rows:
                 d = dict(r)
-                d['course_count'] = db.execute(
-                    "SELECT COUNT(*) AS c FROM courses WHERE instructor_id=? AND is_published=1",
-                    (d['id'],)).fetchone()['c']
-                d['student_count'] = db.execute(
-                    "SELECT COUNT(*) AS c FROM user_enrollments e JOIN courses c ON c.id=e.course_id"
-                    " WHERE c.instructor_id=? AND c.is_published=1", (d['id'],)).fetchone()['c']
                 out.append(d)
             return jsonify({'instructors': out})
         except Exception as e:
@@ -2943,7 +2935,6 @@ def create_app() -> Flask:
                 " WHERE c.instructor_id=? AND c.is_published=1 ORDER BY c.created_at DESC",
                 (uid,)).fetchall()
             d['courses'] = safe_list(courses)
-            d['course_count'] = len(d['courses'])
             return jsonify({'instructor': d})
         except Exception as e:
             app.logger.error(f'get_public_instructor: {e}')
