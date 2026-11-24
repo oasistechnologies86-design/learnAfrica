@@ -1114,7 +1114,7 @@ def create_app() -> Flask:
                 db.execute(
                     'UPDATE users SET payment_method=?, payment_details=?, payment_country=? WHERE id=?',
                     (str(d.get('payment_method') or '').strip().lower(),
-                     json.dumps(_signup_payout), str(d.get('payment_country') or _signup_profile.get('country') or 'GH').upper(), uid)
+                     json.dumps(_signup_payout), str(d.get('payment_country') or (_signup_profile or {}).get('country') or 'GH').upper(), uid)
                 )
 
             # Best-effort user_stats and user_settings creation
