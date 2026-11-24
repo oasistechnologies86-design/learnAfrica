@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Globe, MapPin, FileText, ArrowLeft, Loader2, Clock, Briefcase, CreditCard } from 'lucide-react';
+import { Globe, FileText, ArrowLeft, Loader2, Clock, Briefcase, CreditCard } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Input, Label } from '@/components/common/Input';
 import { PhoneField } from '@/components/common/PhoneField';
@@ -21,7 +21,7 @@ export default function InstructorOnboarding() {
   const isGhana = payoutCountry === 'GH';
 
   const [formData, setFormData] = useState({
-    bio: '', title: '', location: '', website: '',
+    bio: '', title: '', location: [locationState?.city, locationState?.region].filter(Boolean).join(', ') || user?.location || '', website: '',
     // Signup collects the contact number once. Google applicants add it here.
     phone: locationState?.phone || user?.phone || '',
   });
@@ -53,8 +53,6 @@ export default function InstructorOnboarding() {
       e.bio = 'Please provide a bio of at least 50 characters.';
     if (!formData.title)
       e.title = 'Your field / specialisation is required.';
-    if (!formData.location)
-      e.location = 'Location is required.';
     if (viaGoogle && !String(formData.phone || '').trim())
       e.phone = 'Phone number is required.';
     if (!isPaymentValid())
@@ -85,13 +83,20 @@ export default function InstructorOnboarding() {
                 ? { ...paymentMethod.details, phone: normalizeGhPhone(paymentMethod.details?.phone) }
                 : paymentMethod.details,
             };
-            await fetch(`${API_BASE}/api/users/me/payment-method`, {
+            const saved = await fetch(`${API_BASE}/api/users/me/payment-method`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
               body: JSON.stringify(payload),
             });
+            const savedData = await saved.json().catch(() => ({}));
+            if (!saved.ok) throw new Error(savedData.error || 'Could not save your payout details.');
+          } else {
+            throw new Error('Your session is not ready. Please sign in again to save your payout details.');
           }
-        } catch (_) { /* non-fatal */ }
+        } catch (saveError) {
+          setErrors({ submit: saveError.message || 'Could not save your payout details. Please try again.' });
+          return;
+        }
         try { await refreshProfile(); } catch (_) {}
         // Paid instructor registration: route to checkout before the pending screen.
         try {
@@ -109,7 +114,12 @@ export default function InstructorOnboarding() {
       }
 
       // Step 1: create the account (signup)
-      const result = await signup({ ...locationState, ...formData, role: 'instructor' });
+      const result = await signup({
+        ...locationState, ...formData, role: 'instructor',
+        payment_method: paymentMethod.method,
+        payment_details: paymentMethod.details,
+        payment_country: payoutCountry,
+      });
       // If email verification is required, redirect to /verify-email — payment
       // method setup will happen after they verify (they can add it later from
       // their instructor settings).
@@ -117,23 +127,7 @@ export default function InstructorOnboarding() {
         navigate('/verify-email', { state: { email: result.email || locationState.email } });
         return;
       }
-      // Step 2: immediately save the payment method (token is now set by signup)
-      try {
-        const token = sessionStorage.getItem('auth_token');
-        if (token) {
-          const payload = {
-            ...paymentMethod,
-            details: (isGhana && paymentMethod.method === 'momo')
-              ? { ...paymentMethod.details, phone: normalizeGhPhone(paymentMethod.details?.phone) }
-              : paymentMethod.details,
-          };
-          await fetch(`${API_BASE}/api/users/me/payment-method`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-            body: JSON.stringify(payload),
-          });
-        }
-      } catch (_) { /* non-fatal — they can complete it from Profile */ }
+      // The backend validates and stores payout details atomically with signup.
       // Paid instructor registration: send them to checkout before the pending screen.
       if (result && result.requires_registration_payment) {
         navigate('/instructor/registration-payment');
@@ -219,20 +213,6 @@ export default function InstructorOnboarding() {
             This appears on your profile and course pages so students know your expertise.
           </p>
           {errors.title && <p className="text-xs text-destructive font-medium">{errors.title}</p>}
-        </div>
-
-        {/* Location */}
-        <div className="space-y-2">
-          <Label htmlFor="location" required className="text-xs font-bold uppercase tracking-wider">
-            Your Location
-          </Label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input id="location" required value={formData.location}
-              onChange={e => set('location', e.target.value)}
-              placeholder="e.g. Accra, Ghana" className="pl-10" />
-          </div>
-          {errors.location && <p className="text-xs text-destructive font-medium">{errors.location}</p>}
         </div>
 
         {/* Google-created accounts have not passed through the signup phone field. */}
