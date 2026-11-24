@@ -259,7 +259,7 @@ export function SignupPage() {
         icon: GraduationCap,
         eyebrow: 'TEACH',
         title: 'Become an Instructor',
-        description: 'Share your knowledge, create and publish courses, reach learners and earn from course purchases.',
+        description: 'Share your knowledge, create and publish courses, reach learners, and earn commissions from course purchases.',
         action: 'Register as Instructor',
       },
     ]
