@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Eye, EyeOff, Mail, Lock, User, GraduationCap, X, Check, BookOpen, ArrowRight, IdCard, ShieldCheck, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, User, GraduationCap, X, Check, BookOpen, ArrowRight, IdCard, ShieldCheck, Loader2, CreditCard } from 'lucide-react'
 import { AuthCard } from '@/components/auth/AuthCard'
 import { Field } from '@/components/auth/Field'
 import { PhoneField } from '@/components/common/PhoneField'
@@ -56,7 +56,7 @@ export function SignupPage() {
   // InstructorProfileFields component can own the whole block.
   const [instructor, setInstructor] = useState({
     country: '', id_type: '', id_number: '',
-    region: '', district: '', city: '', street_address: '', postal_code: '',
+    region: '', city: '', postal_code: '',
     digital_address: '', phone: '',
   })
   const [idConfirm, setIdConfirm] = useState('')
@@ -104,17 +104,17 @@ export function SignupPage() {
     })
   }
 
-  // Fetch the instructor registration config once the instructor form is shown,
+  // Fetch the authoritative instructor registration fee for both the account-type
+  // chooser and the instructor signup form.
   // so the applicant sees the exact fee before entering details.
   useEffect(() => {
-    if (!formData.isInstructor) return
     let alive = true
-    fetch(`${API_BASE}/api/instructor-registration`)
+    fetch(`${API_BASE}/api/instructor-registration`
       .then(r => r.json())
       .then(d => { if (alive) setRegInfo(d) })
       .catch(() => { if (alive) setRegInfo({ is_free: true, fee: 0, currency: 'GHS' }) })
     return () => { alive = false }
-  }, [formData.isInstructor])
+  }, [])
 
   // Live evaluation of each rule
   const ruleStatuses = useMemo(
@@ -164,6 +164,8 @@ export function SignupPage() {
                  normalizeIdNumber(instructor.country, instructor.id_type, instructor.id_number)) {
         newErrors.id_number = 'The two identification numbers do not match.'
       }
+      if (!String(instructor.city || '').trim()) newErrors.city = 'City or locality is required.'
+      if (requirements?.postal_required && !String(instructor.postal_code || '').trim()) newErrors.postal_code = 'Postal code is required for this country.'
       if (instructor.country === 'GH' && !String(instructor.digital_address || '').trim()) {
         newErrors.digital_address = 'Your digital address is required'
       }
@@ -207,8 +209,8 @@ export function SignupPage() {
             // Legacy Ghana field kept in sync so nothing downstream breaks.
             ghana_card_number: instructor.id_type === 'ghana_card' ? idNumberNorm : '',
             ghana_post_gps: instructor.country === 'GH' ? String(instructor.digital_address || '').trim().toUpperCase() : '',
-            region: instructor.region, district: instructor.district, city: instructor.city,
-            street_address: instructor.street_address, postal_code: instructor.postal_code,
+            region: instructor.region, city: instructor.city,
+            postal_code: instructor.postal_code,
             digital_address: instructor.digital_address,
             accept_terms: true,
             accept_verification: true,
@@ -304,6 +306,17 @@ export function SignupPage() {
                   <span className="mt-1 block text-xs leading-relaxed text-muted-foreground sm:text-[13px]">
                     {opt.description}
                   </span>
+                  {opt.id === 'instructor' && (
+                    <span className={cn(
+                      'mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold',
+                      regInfo?.is_free === false ? 'bg-primary/10 text-primary' : 'bg-success/10 text-success'
+                    )}>
+                      <CreditCard className="h-3.5 w-3.5" />
+                      {regInfo === null ? 'Checking registration fee…' : regInfo.is_free
+                        ? 'FREE · No registration fee for now'
+                        : `PAID · ${regInfo.currency || 'GHS'} ${Number(regInfo.fee || 0).toFixed(2)}`}
+                    </span>
+                  )}
                 </span>
 
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-all group-hover:border-primary/30 group-hover:bg-primary group-hover:text-primary-foreground">
@@ -346,6 +359,29 @@ export function SignupPage() {
             : 'It only takes a minute to get set up.'}
         </p>
       </div>
+
+      {isInstructorFlow && (
+        <div className={cn(
+          'flex items-center gap-3 rounded-xl border p-3',
+          regInfo?.is_free === false ? 'border-primary/30 bg-primary/10' : 'border-success/30 bg-success/10'
+        )}>
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-background/80 text-primary">
+            <CreditCard className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <p className={cn('text-sm font-bold', regInfo?.is_free === false ? 'text-primary' : 'text-success')}>
+              {regInfo === null ? 'Checking instructor registration fee…' : regInfo.is_free
+                ? 'FREE · No registration fee for now'
+                : `PAID · ${regInfo.currency || 'GHS'} ${Number(regInfo.fee || 0).toFixed(2)}`}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {regInfo?.is_free === false
+                ? 'One-time fee, payable after submitting your application.'
+                : 'There is currently no charge to register as an instructor.'}
+            </p>
+          </div>
+        </div>
+      )}
 
       <form ref={formRef} onSubmit={handleSubmit} className="space-y-4" noValidate>
         {isInstructorFlow ? (
@@ -543,21 +579,6 @@ export function SignupPage() {
               idConfirm={idConfirm}
               onIdConfirmChange={setIdConfirm}
             />
-
-            {regInfo && (
-              <div className={cn('rounded-[10px] border p-3 text-sm',
-                regInfo.is_free ? 'bg-success/10 border-success/30' : 'bg-primary/10 border-primary/30')}>
-                {regInfo.is_free ? (
-                  <p className="font-medium text-success">Instructor registration is free.</p>
-                ) : (
-                  <p className="text-foreground">
-                    A one-time instructor registration fee of{' '}
-                    <strong>{regInfo.currency || 'GHS'} {Number(regInfo.fee || 0).toFixed(2)}</strong>{' '}
-                    applies. You&apos;ll pay it after submitting your application, before your account is activated.
-                  </p>
-                )}
-              </div>
-            )}
 
             <div className={cn('flex items-start gap-2 rounded-lg px-2 pt-2 pb-4 -m-2',
               errors.verification && 'ring-1 ring-destructive bg-destructive/5')}>
