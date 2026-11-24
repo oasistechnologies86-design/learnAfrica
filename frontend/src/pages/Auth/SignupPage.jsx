@@ -106,10 +106,9 @@ export function SignupPage() {
 
   // Fetch the authoritative instructor registration fee for both the account-type
   // chooser and the instructor signup form.
-  // so the applicant sees the exact fee before entering details.
   useEffect(() => {
     let alive = true
-    fetch(`${API_BASE}/api/instructor-registration`
+    fetch(`${API_BASE}/api/instructor-registration`)
       .then(r => r.json())
       .then(d => { if (alive) setRegInfo(d) })
       .catch(() => { if (alive) setRegInfo({ is_free: true, fee: 0, currency: 'GHS' }) })
