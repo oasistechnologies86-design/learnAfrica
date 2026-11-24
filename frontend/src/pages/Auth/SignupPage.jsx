@@ -623,7 +623,7 @@ export function SignupPage() {
 
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={isLoading || (isInstructorFlow && (regInfo === null || !!regInfo.error))}
           className={cn(
             'inline-flex h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-primary text-sm font-bold text-primary-foreground',
             'shadow-[0_10px_24px_-10px_var(--primary)] transition-all duration-200',
