@@ -296,7 +296,8 @@ export function SignupPage() {
                   onClick={() => chooseRole(opt.id)}
                   className={cn(
                     'group flex min-h-0 min-w-0 w-full flex-col items-start rounded-2xl border p-3 text-left shadow-sm sm:min-h-[270px] sm:p-6',
-                    'transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg',
+                    'transition-all duration-200 hover:-translate-y-0.5',
+                    'border-primary/30 shadow-[0_0_0_1px_hsl(var(--primary)/0.16),0_0_16px_-8px_hsl(var(--primary)/0.45)] hover:border-primary/60 hover:shadow-[0_0_0_1px_hsl(var(--primary)/0.32),0_0_24px_-6px_hsl(var(--primary)/0.62)]',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
                     'active:translate-y-0 active:shadow-sm',
                     isInstructor
