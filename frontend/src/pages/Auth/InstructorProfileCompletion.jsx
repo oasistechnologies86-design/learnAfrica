@@ -99,7 +99,6 @@ export default function InstructorProfileCompletion() {
       }
     }
     if (!profile.city) errs.city = 'City or locality is required.'
-    if (!profile.street_address) errs.street_address = 'Street address is required.'
     if (requirements?.postal_required && !profile.postal_code) {
       errs.postal_code = 'Postal code is required for this country.'
     }
@@ -131,8 +130,7 @@ export default function InstructorProfileCompletion() {
       // Identity is only sent while it is still editable; once frozen the server
       // ignores it anyway.
       const payload = {
-        region: profile.region || '', district: profile.district || '',
-        city: profile.city || '', street_address: profile.street_address || '',
+        region: profile.region || '', city: profile.city || '',
         postal_code: profile.postal_code || '', digital_address: profile.digital_address || '',
         phone: profile.phone || '',
       }
