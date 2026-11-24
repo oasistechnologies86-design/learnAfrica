@@ -250,17 +250,25 @@ export function SignupPage() {
         id: 'student',
         icon: BookOpen,
         eyebrow: 'LEARN',
-        title: 'Continue as a student',
-        description: 'Explore courses, build skills and earn certificates.',
+        title: 'Join as a Student',
+        description: 'Create your account for free, explore courses and build your skills with LearnAfrica.',
+        action: 'Sign Up as Student',
       },
       {
         id: 'instructor',
         icon: GraduationCap,
         eyebrow: 'TEACH',
-        title: 'Continue as an instructor',
-        description: 'Publish courses, teach learners and grow your reach.',
+        title: 'Become an Instructor',
+        description: 'Share your knowledge, create and publish courses, reach learners and earn from course purchases.',
+        action: 'Register as Instructor',
       },
     ]
+
+    const chooseRole = (id) => {
+      setFormData(prev => ({ ...prev, isInstructor: id === 'instructor' }))
+      setRoleChoice(id)
+    }
+
     return (
       <AuthCard
         view="signup"
@@ -268,61 +276,103 @@ export function SignupPage() {
       >
         <div className="w-full space-y-5 sm:space-y-6">
           <div className="space-y-1.5 text-center">
-            <h1 className="text-2xl sm:text-[28px] font-bold tracking-tight">Join LearnAfrica</h1>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-[28px]">Get Started with LearnAfrica</h1>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Choose the account that matches what you want to do.
+              Choose how you would like to join.
             </p>
           </div>
 
-          <div className="flex flex-col gap-3">
-            {options.map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                aria-label={opt.title}
-                onClick={() => {
-                  setFormData(prev => ({ ...prev, isInstructor: opt.id === 'instructor' }))
-                  setRoleChoice(opt.id)
-                }}
-                className={cn(
-                  'group flex w-full items-center gap-3 rounded-xl border border-border bg-background/70 p-3.5 sm:p-4 text-left',
-                  'transition-colors duration-200 hover:border-primary/50 hover:bg-primary/[0.035]',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2',
-                  'active:bg-primary/[0.06]'
-                )}
-              >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10 transition-colors group-hover:bg-primary/15">
-                  <opt.icon className="h-5 w-5" strokeWidth={1.8} />
-                </span>
-
-                <span className="min-w-0 flex-1">
-                  <span className="mb-0.5 block text-[10px] font-bold tracking-[0.16em] text-primary">
+          <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2">
+            {options.map((opt) => {
+              const isInstructor = opt.id === 'instructor'
+              const feeUnavailable = isInstructor && (regInfo === null || regInfo.error)
+              const feeIsFree = isInstructor && regInfo?.is_free === true
+              const Icon = opt.icon
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  aria-label={opt.action}
+                  onClick={() => chooseRole(opt.id)}
+                  className={cn(
+                    'group flex min-h-[270px] min-w-0 w-full flex-col items-start rounded-2xl border p-5 text-left shadow-sm',
+                    'transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+                    'active:translate-y-0 active:shadow-sm sm:p-6',
+                    isInstructor
+                      ? 'border-primary/40 bg-gradient-to-br from-primary/[0.09] via-card to-card hover:border-primary/70'
+                      : 'border-border bg-card hover:border-primary/50 hover:bg-muted/20'
+                  )}
+                >
+                  <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 transition-transform duration-200 group-hover:scale-105">
+                    <Icon className="h-6 w-6" strokeWidth={1.9} />
+                  </span>
+                  <span className="mb-1 text-[10px] font-bold tracking-[0.16em] text-primary">
                     {opt.eyebrow}
                   </span>
-                  <span className="block text-[15px] font-semibold leading-snug text-foreground sm:text-base">
+                  <span className="text-lg font-bold leading-snug text-foreground">
                     {opt.title}
                   </span>
-                  <span className="mt-1 block text-xs leading-relaxed text-muted-foreground sm:text-[13px]">
+                  <span className="mt-2 text-sm leading-relaxed text-muted-foreground">
                     {opt.description}
                   </span>
-                  {opt.id === 'instructor' && (
+
+                  {isInstructor ? (
                     <span className={cn(
-                      'mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold',
-                      regInfo?.is_free === false ? 'bg-primary/10 text-primary' : regInfo?.error ? 'bg-muted text-muted-foreground' : 'bg-success/10 text-success'
+                      'mt-4 flex w-full items-start gap-2.5 rounded-xl border px-3.5 py-3',
+                      feeUnavailable
+                        ? 'border-border bg-muted/50'
+                        : feeIsFree
+                          ? 'border-success/25 bg-success/10'
+                          : 'border-primary/25 bg-primary/10'
                     )}>
-                      <CreditCard className="h-3.5 w-3.5" />
-                      {regInfo === null ? 'Checking registration fee…' : regInfo.error ? 'Registration fee unavailable — please try again' : regInfo.is_free
-                        ? 'FREE · No registration fee for now'
-                        : `PAID · ${regInfo.currency || 'GHS'} ${Number(regInfo.fee || 0).toFixed(2)}`}
+                      <CreditCard className={cn('mt-0.5 h-4 w-4 shrink-0', feeIsFree ? 'text-success' : 'text-primary')} />
+                      <span className="min-w-0">
+                        <span className={cn('block text-sm font-bold', feeIsFree ? 'text-success' : 'text-foreground')}>
+                          {regInfo === null
+                            ? 'Checking registration fee…'
+                            : regInfo.error
+                              ? 'Registration fee unavailable'
+                              : regInfo.is_free
+                                ? 'Instructor registration is FREE'
+                                : 'Instructor registration requires payment'}
+                        </span>
+                        <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
+                          {regInfo === null
+                            ? 'Please wait while we confirm the current fee.'
+                            : regInfo.error
+                              ? 'Please try again shortly.'
+                              : regInfo.is_free
+                                ? 'No registration payment is required.'
+                                : `${regInfo.currency || 'GHS'} ${Number(regInfo.fee || 0).toFixed(2)} one-time registration fee.`}
+                        </span>
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="mt-4 flex w-full items-start gap-2.5 rounded-xl border border-success/25 bg-success/10 px-3.5 py-3">
+                      <CreditCard className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-bold text-success">Student registration is always FREE</span>
+                        <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
+                          No fee to create your student account. Some courses may have their own fees.
+                        </span>
+                      </span>
                     </span>
                   )}
-                </span>
 
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-all group-hover:border-primary/30 group-hover:bg-primary group-hover:text-primary-foreground">
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                </span>
-              </button>
-            ))}
+                  <span className={cn(
+                    'mt-auto flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold shadow-sm',
+                    'transition-all duration-200 group-hover:shadow-md',
+                    isInstructor
+                      ? 'bg-primary text-primary-foreground group-hover:brightness-110'
+                      : 'bg-foreground text-background group-hover:bg-primary group-hover:text-primary-foreground'
+                  )}>
+                    {opt.action}
+                    <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+                  </span>
+                </button>
+              )
+            })}
           </div>
 
           <p className="text-center text-sm text-muted-foreground">
