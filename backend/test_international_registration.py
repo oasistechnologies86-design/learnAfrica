@@ -134,6 +134,27 @@ check('international profile persisted',
       row and row['country'] == 'US' and row['id_type'] == 'drivers_licence'
       and row['id_number'] == 'A1234-5678' and row['phone'] == '+14155552671',
       dict(row) if row else None)
+
+# Ghana's simplified address arrangement needs locality + digital address,
+# not a street address.
+r = signup_instructor('ghana_simple@example.com', {
+    'country': 'GH', 'id_type': 'ghana_card', 'id_number': 'GHA-123456789-0',
+    'region': 'Greater Accra', 'city': 'Accra',
+    'digital_address': 'GA-123-4567', 'phone': '+233244123456'})
+check('Ghana instructor signup succeeds without a street address',
+      r.status_code in (200, 201), r.get_json())
+with app.app_context():
+    gh = get_db().execute(
+        'SELECT country,region,city,street_address,digital_address FROM instructor_applications ia '
+        'JOIN users u ON u.id=ia.user_id WHERE u.email=?', ('ghana_simple@example.com',)).fetchone()
+check('Ghana locality and digital address are stored without requiring street address',
+      gh and gh['city'] == 'Accra' and gh['digital_address'] == 'GA-123-4567'
+      and not gh['street_address'], dict(gh) if gh else None)
+
+r = signup_instructor('missing_city@example.com', {
+    'country': 'GH', 'id_type': 'ghana_card', 'id_number': 'GHA-123456789-0',
+    'digital_address': 'GA-123-4567', 'phone': '+233244123456'})
+check('instructor signup rejects missing city/locality', r.status_code == 400, r.get_json())
 with app.app_context():
     payout = get_db().execute(
         "SELECT payment_method,payment_country,payment_details FROM users WHERE email=?",
