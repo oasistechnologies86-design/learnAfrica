@@ -1032,18 +1032,6 @@ def create_app() -> Flask:
                         return jsonify({'error': 'You must accept the instructor terms and conditions.'}), 400
                     if not d.get('accept_verification'):
                         return jsonify({'error': 'You must acknowledge the information-verification statement.'}), 400
-                    # Payout destination is collected before account creation and
-                    # validated server-side so it is saved even when email
-                    # verification delays the authenticated profile setup.
-                    _payout_method = str(d.get('payment_method') or '').strip().lower()
-                    _payout_country = str(d.get('payment_country') or _country_in or 'GH').strip().upper()
-                    _payout_details = d.get('payment_details') or {}
-                    if _payout_method not in ('momo', 'bank'):
-                        return jsonify({'error': 'Please choose a valid payout method.'}), 400
-                    _signup_payout, _payout_error = _validate_payout_details(
-                        _payout_method, _payout_details, _payout_country)
-                    if _payout_error:
-                        return jsonify({'error': _payout_error}), 400
                 else:
                     _card, _gps = _validate_ghana_card_gps(d)
                     if _card is None or _gps is None:
@@ -1052,6 +1040,18 @@ def create_app() -> Flask:
                         return jsonify({'error': 'You must accept the instructor terms and conditions.'}), 400
                     if not d.get('accept_verification'):
                         return jsonify({'error': 'You must acknowledge the information-verification statement.'}), 400
+
+                # Payout destination is mandatory for every instructor signup,
+                # including legacy clients without the country-aware identity block.
+                _payout_method = str(d.get('payment_method') or '').strip().lower()
+                _payout_country = str(d.get('payment_country') or _country_in or 'GH').strip().upper()
+                _payout_details = d.get('payment_details') or {}
+                if _payout_method not in ('momo', 'bank'):
+                    return jsonify({'error': 'Please choose a valid payout method.'}), 400
+                _signup_payout, _payout_error = _validate_payout_details(
+                    _payout_method, _payout_details, _payout_country)
+                if _payout_error:
+                    return jsonify({'error': _payout_error}), 400
 
             # Force-add columns inline if missing (defensive against failed migrations)
             if app.config.get('USE_POSTGRES'):
