@@ -376,6 +376,18 @@ export default function EmailSendersCard() {
               </p>
             </div>
 
+            {cfg.enabled && !SLOTS.some(slot => {
+              const sender = cfg[slot.id] || {};
+              return sender.connected && sender.active;
+            }) && (
+              <div className="rounded-lg border border-warning/40 bg-warning/5 p-3 text-sm">
+                <p className="font-semibold text-warning">No active email sender is ready</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Email sending is ON, but none of the connected providers is enabled. Automatic password-reset emails will go to Manual Fallback until at least one sender is connected and marked Enabled.
+                </p>
+              </div>
+            )}
+
             <details className="rounded-lg border border-border p-3 text-xs text-muted-foreground">
               <summary className="cursor-pointer font-semibold text-foreground">Quick guide</summary>
               <ul className="mt-2 space-y-1 list-disc pl-4">

@@ -86,7 +86,7 @@ try:
 finally:
     email_service.send_email = orig_send
 
-# A token row was created and marked link_sent.
+# A token row was created and the confirmed email delivery was recorded.
 with app.app_context():
     db = get_db()
     tok = db.execute('SELECT token_hash, used FROM password_reset_tokens WHERE user_id=?',
@@ -95,7 +95,7 @@ with app.app_context():
     check('only hash stored', tok is not None and len(tok['token_hash']) == 64)
     req = db.execute("SELECT status FROM password_reset_requests WHERE LOWER(email)='on@example.com'"
                      ).fetchone()
-    check('request status link_sent', req is not None and req['status'] == 'link_sent',
+    check('request status email_sent', req is not None and req['status'] == 'email_sent',
           str(req['status'] if req else None))
 
 # No admin notification should exist: the user was auto-emailed, so there is
