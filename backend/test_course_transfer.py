@@ -31,6 +31,7 @@ with app.app_context():
     db = get_db()
     for uid, name, email, role, status in [
         ('admin1', 'Platform Admin', 'admin-transfer@example.com', 'admin', 'none'),
+        ('admin2', 'Second Platform Admin', 'admin2-transfer@example.com', 'admin', 'none'),
         ('old1', 'Original Instructor', 'old-transfer@example.com', 'instructor', 'approved'),
         ('new1', 'Receiving Instructor', 'new-transfer@example.com', 'instructor', 'approved'),
         ('student1', 'Enrolled Student', 'student-transfer@example.com', 'student', 'none'),
@@ -81,9 +82,10 @@ def auth(value):
 
 
 admin_token = token('admin-transfer@example.com')
+admin2_token = token('admin2-transfer@example.com')
 old_token = token('old-transfer@example.com')
 new_token = token('new-transfer@example.com')
-check('transfer test accounts authenticate', bool(admin_token and old_token and new_token))
+check('transfer test accounts authenticate', bool(admin_token and admin2_token and old_token and new_token))
 
 # Admin-initiated deletion must obey the same ownership protection.
 response = client.delete('/api/admin/users/old1', headers=auth(admin_token))
@@ -159,6 +161,30 @@ response = client.post('/api/instructor/course-transfers', json={
     'course_id': 'course-transfer-1', 'recipient_id': 'student1', 'reason': 'Invalid recipient test.'
 }, headers=auth(new_token))
 check('student account cannot receive course ownership', response.status_code == 400, response.status_code)
+
+# Admin accounts are valid recipients too; a different Admin performs final review.
+admin_recipient_request = client.post('/api/instructor/course-transfers', json={
+    'course_id': 'course-transfer-1', 'recipient_id': 'admin1',
+    'reason': 'Admin will take over platform ownership of this course.'
+}, headers=auth(new_token))
+admin_request_id = (admin_recipient_request.get_json() or {}).get('request_id')
+check('approved instructor can request transfer to an Admin account',
+      admin_recipient_request.status_code == 201 and bool(admin_request_id))
+admin_accept = client.post(f'/api/instructor/course-transfers/{admin_request_id}/respond',
+                           json={'decision': 'accept'}, headers=auth(admin_token))
+check('Admin recipient can accept the transfer', admin_accept.status_code == 200, admin_accept.status_code)
+admin_approve = client.post(f'/api/admin/course-transfers/{admin_request_id}/decision',
+                            json={'decision': 'approve', 'unpaid_earnings_action': 'keep_original'},
+                            headers=auth(admin2_token))
+check('a different Admin can approve transfer to the Admin account',
+      admin_approve.status_code == 200, admin_approve.status_code)
+with app.app_context():
+    db = get_db()
+    final_course = db.execute("SELECT instructor_id,original_instructor_id FROM courses WHERE id='course-transfer-1'").fetchone()
+    final_history = db.execute("SELECT * FROM course_transfer_history WHERE course_id='course-transfer-1'").fetchall()
+check('Admin can become the new course owner without losing original-owner history',
+      bool(final_course and final_course['instructor_id'] == 'admin1' and
+           final_course['original_instructor_id'] == 'old1' and len(final_history) == 2))
 
 print()
 if failures:
