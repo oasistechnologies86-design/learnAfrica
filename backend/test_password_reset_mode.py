@@ -224,6 +224,8 @@ fallback_item = next((item for item in admin_rows if item.get('email') == 'fix1a
 check('admin request list exposes Manual Fallback and the delivery reason',
       fallback_item and fallback_item.get('status') == 'manual_fallback' and 'SendPulse send failed' in (fallback_item.get('delivery_error') or ''),
       str(fallback_item))
+check('failed automatic email leaves no undisclosed active reset token',
+      fallback_item is not None and fallback_item.get('has_active_link') is False, str(fallback_item))
 counts = (c.get('/api/admin/tab-counts', headers=ADMIN).get_json() or {}).get('counts', {})
 check('manual fallback is included in the admin tab badge', counts.get('password_reset_requests', 0) >= 1, str(counts))
 
