@@ -1998,8 +1998,10 @@ def create_app() -> Flask:
                 return jsonify({'error': 'Your account must remain active and approved to accept a course.'}), 403
         new_status = 'accepted' if decision == 'accept' else 'declined'
         db.execute(
-            "UPDATE course_transfer_requests SET recipient_status=?,recipient_responded_at=CURRENT_TIMESTAMP WHERE id=?",
-            (new_status, request_id)
+            """UPDATE course_transfer_requests SET recipient_status=?,
+               admin_status=CASE WHEN ?='declined' THEN 'declined' ELSE admin_status END,
+               recipient_responded_at=CURRENT_TIMESTAMP WHERE id=?""",
+            (new_status, new_status, request_id)
         )
         try:
             create_notification(db, row['from_instructor_id'], 'system',
@@ -2036,7 +2038,7 @@ def create_app() -> Flask:
                  FROM course_transfer_requests r LEFT JOIN courses c ON c.id=r.course_id"""
         params = []
         if status == 'pending':
-            sql += " WHERE r.admin_status='pending' AND r.recipient_status='accepted'"
+            sql += " WHERE r.admin_status='pending'"
         elif status == 'all':
             pass
         elif status in ('approved','rejected','cancelled'):
@@ -2059,8 +2061,10 @@ def create_app() -> Flask:
         if earnings_action not in ('keep_original','reassign_unpaid'):
             return jsonify({'error': 'Invalid unpaid earnings decision.'}), 400
         row = db.execute("SELECT * FROM course_transfer_requests WHERE id=?", (request_id,)).fetchone()
-        if not row or row['admin_status'] != 'pending' or row['recipient_status'] != 'accepted':
-            return jsonify({'error': 'This request is not awaiting Admin approval.'}), 409
+        if not row or row['admin_status'] != 'pending':
+            return jsonify({'error': 'This request is no longer awaiting Admin review.'}), 409
+        if decision == 'approve' and row['recipient_status'] != 'accepted':
+            return jsonify({'error': 'The selected recipient must accept before Admin can approve the transfer.'}), 409
         course = db.execute("SELECT * FROM courses WHERE id=?", (row['course_id'],)).fetchone()
         recipient = _transfer_recipient(db, row['to_instructor_id'])
         if decision == 'approve':
@@ -6399,6 +6403,15 @@ def create_app() -> Flask:
             return jsonify({'error': 'You cannot delete your own account'}), 403
         if target['deleted_at']:
             return jsonify({'message': 'Account is already in Deleted Accounts'}), 200
+        if target['role'] == 'instructor':
+            owned = db.execute("SELECT id,title FROM courses WHERE instructor_id=? ORDER BY created_at", (uid,)).fetchall()
+            if owned:
+                return jsonify({
+                    'error': 'This instructor still owns courses. Transfer or reassign every course before deleting the account.',
+                    'code': 'COURSES_MUST_BE_TRANSFERRED',
+                    'courses': [{'id': row['id'], 'title': row['title']} for row in owned],
+                    'count': len(owned)
+                }), 409
         db.execute("UPDATE users SET is_active=0,deleted_at=CURRENT_TIMESTAMP,deleted_by=?,deletion_reason='admin_action',token_version=COALESCE(token_version,0)+1,updated_at=CURRENT_TIMESTAMP WHERE id=?",
                    (g.current_user['user_id'],uid))
         db.execute("INSERT INTO account_deletion_events (id,user_id,user_name,user_email,user_role,instructor_status,event_type,actor_user_id) VALUES (?,?,?,?,?,?,?,?)",
