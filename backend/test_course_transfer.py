@@ -185,6 +185,13 @@ with app.app_context():
 check('Admin can become the new course owner without losing original-owner history',
       bool(final_course and final_course['instructor_id'] == 'admin1' and
            final_course['original_instructor_id'] == 'old1' and len(final_history) == 2))
+admin_self_delete = client.delete('/api/users/account',
+    json={'email': 'admin-transfer@example.com'}, headers=auth(admin_token))
+check('Admin recipient cannot delete an account while owning a course',
+      admin_self_delete.status_code == 409, admin_self_delete.status_code)
+admin_delete_other = client.delete('/api/admin/users/admin1', headers=auth(admin2_token))
+check('Admin cannot delete another Admin who owns a course',
+      admin_delete_other.status_code == 409, admin_delete_other.status_code)
 
 print()
 if failures:
