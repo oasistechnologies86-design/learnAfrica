@@ -370,7 +370,7 @@ function heroFor(user, isAuthenticated) {
   if (!isAuthenticated) {
     return {
       badge: 'Built in Ghana, for learners across Africa',
-      title: <>Learn skills that open doors, <span className="text-primary">right here in Africa</span></>,
+      title: <>Learn skills that open doors, <span className="text-emerald-300">right here in Africa</span></>,
       text: 'Practical courses from people who understand your world. Learn on your phone at your own pace, earn a certificate anyone can verify, and grow with a community that cheers you on.',
       primary: { to: '/signup', label: 'Get Started Free' },
       secondary: [
@@ -508,24 +508,32 @@ export function LandingPage() {
     <div className="flex flex-col">
 
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden border-b border-border bg-gradient-to-b from-muted/40 via-background to-background">
-        {/* Decorative gradient blobs */}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-          <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
-          <div className="absolute top-40 -left-24 h-72 w-72 rounded-full bg-accent/10 blur-3xl" />
-        </div>
+      <section className={cn('relative overflow-hidden border-b', !isAuthenticated ? 'min-h-[620px] sm:min-h-[680px] flex items-center bg-slate-950' : 'border-border bg-gradient-to-b from-muted/40 via-background to-background')}>
+        {!isAuthenticated && (
+          <>
+            <img src="/hero-community.jpg" alt="" aria-hidden="true" fetchPriority="high" className="absolute inset-0 h-full w-full object-cover object-center" />
+            <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/80 to-slate-950/35" />
+            <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-transparent to-slate-950/20" />
+          </>
+        )}
+        {isAuthenticated && (
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+            <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+            <div className="absolute top-40 -left-24 h-72 w-72 rounded-full bg-accent/10 blur-3xl" />
+          </div>
+        )}
 
-        <div className="container mx-auto px-4 relative py-14 sm:py-20 lg:py-24">
-          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+        <div className={cn('container mx-auto px-4 relative py-14 sm:py-20 lg:py-24', !isAuthenticated && 'z-10')}>
+          <div className={cn('grid items-center gap-12 lg:gap-16', isAuthenticated ? 'lg:grid-cols-2' : 'grid-cols-1')}>
             {/* ── Text column ── */}
-            <div className={cn(!isAuthenticated ? 'max-w-xl' : 'max-w-2xl')}>
-              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background/70 px-4 py-1.5 text-sm font-medium text-muted-foreground">
-                <Zap className="h-4 w-4 text-primary" /> {hero.badge}
+            <div className={cn(!isAuthenticated ? 'max-w-3xl' : 'max-w-2xl')}>
+              <div className={cn('inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium', !isAuthenticated ? 'border-white/25 bg-black/25 text-white/90 backdrop-blur-md' : 'border-border bg-background/70 text-muted-foreground')}>
+                <Zap className={cn('h-4 w-4', !isAuthenticated ? 'text-emerald-300' : 'text-primary')} /> {hero.badge}
               </div>
-              <h1 className="mt-6 text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
+              <h1 className={cn('mt-6 text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl', !isAuthenticated && 'max-w-3xl text-white')}>
                 {hero.title}
               </h1>
-              <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
+              <p className={cn('mt-6 text-lg leading-relaxed', !isAuthenticated ? 'max-w-2xl text-white/85 sm:text-xl' : 'text-muted-foreground')}>
                 {hero.text}
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
@@ -534,7 +542,7 @@ export function LandingPage() {
                 </Link>
                 {hero.secondary.map(({ to, label, icon: Icon }) => (
                   <Link key={to} to={to}>
-                    <Button variant="outline" size="lg" className="gap-2 bg-background/70">{Icon && <Icon className="h-5 w-5" />}{label}</Button>
+                    <Button variant="outline" size="lg" className={cn('gap-2', !isAuthenticated && 'border-white/50 bg-white/10 text-white hover:bg-white/20 hover:text-white')}>{Icon && <Icon className="h-5 w-5" />}{label}</Button>
                   </Link>
                 ))}
               </div>
@@ -547,13 +555,13 @@ export function LandingPage() {
                 </div>
                 <div>
                   <div className="flex gap-0.5">{[...Array(5)].map((_,i) => <Star key={i} className="h-4 w-4 fill-warning text-warning" />)}</div>
-                  <p className="text-sm text-muted-foreground">Trusted by learners across Africa</p>
+                  <p className={cn('text-sm', !isAuthenticated ? 'text-white/80' : 'text-muted-foreground')}>Trusted by learners across Africa</p>
                 </div>
               </div>
             </div>
 
             {/* ── Visual column ── */}
-            <div className="relative mx-auto w-full max-w-lg lg:max-w-none">
+            {isAuthenticated && <div className="relative mx-auto w-full max-w-lg lg:max-w-none">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-border/60 aspect-[4/3]">
                   <img
                     src={isAuthenticated ? '/hero-community.jpg' : '/tech-skills.jpg'}
@@ -587,7 +595,7 @@ export function LandingPage() {
                     <p className="text-xs text-muted-foreground mt-1">certificates</p>
                   </div>
                 </div>
-              </div>
+              </div>}
           </div>
         </div>
       </section>
