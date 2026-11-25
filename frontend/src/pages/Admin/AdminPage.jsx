@@ -426,6 +426,10 @@ export default function AdminPage() {
 
   const saveSplit = async () => {
     const instructorShare = Number(splitForm.instructor_share);
+    if (!Number.isFinite(instructorShare) || instructorShare < 0 || instructorShare > 100) {
+      showStatus('error', 'Enter an instructor share between 0 and 100.');
+      return;
+    }
     const platformShare = 100 - instructorShare;
     if (!(await window.LearnAfricaDialog.confirm(`Apply this platform-wide revenue split to future eligible transactions?\n\nInstructor: ${instructorShare}%\nLearnAfrica: ${platformShare.toFixed(2)}%`))) return;
     setSavingSplit(true);
