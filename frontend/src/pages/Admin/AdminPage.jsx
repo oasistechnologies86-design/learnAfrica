@@ -130,6 +130,9 @@ export default function AdminPage() {
   const [actionLoading, setActionLoading] = useState('');
   const [appFilter, setAppFilter] = useState('pending');
   const [search, setSearch] = useState('');
+  const [instructorAccountFilter, setInstructorAccountFilter] = useState('all');
+  const [instructorReviewFilter, setInstructorReviewFilter] = useState('all');
+  const [instructorCourseFilter, setInstructorCourseFilter] = useState('all');
   const [broadcast, setBroadcast] = useState({ title: '', message: '', role: '', type: 'system' });
   const [broadcastStatus, setBroadcastStatus] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -219,8 +222,26 @@ export default function AdminPage() {
   useEffect(() => { if (tab === 'Applications') load('Applications'); }, [appFilter]);
   useEffect(() => { if (tab === 'Guide') load('Guide'); }, [tab === 'Guide']);
 
+  const filteredInstructors = instructors.filter(inst => {
+    const query = search.trim().toLowerCase();
+    const matchesSearch = !query || [inst.name, inst.email, inst.location]
+      .some(value => String(value || '').toLowerCase().includes(query));
+    const matchesAccount = instructorAccountFilter === 'all' ||
+      (instructorAccountFilter === 'active' ? !!inst.is_active : !inst.is_active);
+    const reviewStatus = String(inst.instructor_status || '').toLowerCase();
+    const matchesReview = instructorReviewFilter === 'all' || reviewStatus === instructorReviewFilter;
+    const courseCount = Number(inst.course_count || 0);
+    const matchesCourses = instructorCourseFilter === 'all' ||
+      (instructorCourseFilter === 'has_courses' ? courseCount > 0 : courseCount === 0);
+    return matchesSearch && matchesAccount && matchesReview && matchesCourses;
+  });
+
   // ── CRUD helpers ──────────────────────────────────────────────────────────
   const reviewApp = async (uid, action, note = '') => {
+    const application = applications.find(item => item.user_id === uid);
+    const label = application?.name || application?.email || 'this applicant';
+    const verb = action === 'approve' ? 'approve' : 'reject';
+    if (!(await window.LearnAfricaDialog.confirm(`Are you sure you want to ${verb} ${label}'s instructor application?`))) return;
     setActionLoading(uid + action);
     try {
       await API(`/api/admin/instructor-applications/${uid}/review`, { method: 'PUT', body: JSON.stringify({ action, note }) });
@@ -243,6 +264,10 @@ export default function AdminPage() {
   };
 
   const toggleSuspend = async (uid) => {
+    const instructor = instructors.find(item => item.id === uid);
+    const label = instructor?.name || instructor?.email || 'this instructor';
+    const action = instructor?.is_active ? 'suspend' : 'reactivate';
+    if (!(await window.LearnAfricaDialog.confirm(`Are you sure you want to ${action} ${label}? This changes their account access.`))) return;
     setActionLoading(uid + 'suspend');
     try {
       const res = await API(`/api/admin/users/${uid}/suspend`, { method: 'PUT' });
@@ -265,6 +290,9 @@ export default function AdminPage() {
   };
 
   const setCourseStatus = async (cid, status) => {
+    const course = courses.find(item => item.id === cid);
+    const action = status === 'suspended' ? 'suspend' : 'restore';
+    if (!(await window.LearnAfricaDialog.confirm(`Are you sure you want to ${action} “${course?.title || 'this course'}”?`))) return;
     setActionLoading(cid + status);
     try {
       await API(`/api/admin/courses/${cid}/status`, { method: 'PUT', body: JSON.stringify({ status }) });
@@ -684,15 +712,31 @@ export default function AdminPage() {
           {/* ── INSTRUCTORS ── */}
           {tab === 'Instructors' && (
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="relative flex-1 max-w-sm">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search instructors…" value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+              <div className="space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div className="relative flex-1 min-w-0">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input placeholder="Search name, email or location…" value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+                  </div>
+                  <p className="text-sm text-muted-foreground whitespace-nowrap">{filteredInstructors.length} of {instructors.length} instructors</p>
                 </div>
-                <p className="text-sm text-muted-foreground">{filterList(instructors, ['name','email']).length} instructors</p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <select aria-label="Filter by account status" value={instructorAccountFilter} onChange={e => setInstructorAccountFilter(e.target.value)} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
+                    <option value="all">All account statuses</option><option value="active">Active accounts</option><option value="suspended">Suspended accounts</option>
+                  </select>
+                  <select aria-label="Filter by instructor review status" value={instructorReviewFilter} onChange={e => setInstructorReviewFilter(e.target.value)} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
+                    <option value="all">All application statuses</option><option value="approved">Approved</option><option value="pending">Pending</option><option value="rejected">Rejected</option>
+                  </select>
+                  <select aria-label="Filter by course presence" value={instructorCourseFilter} onChange={e => setInstructorCourseFilter(e.target.value)} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
+                    <option value="all">All course activity</option><option value="has_courses">Has courses</option><option value="no_courses">No courses</option>
+                  </select>
+                </div>
+                {(search || instructorAccountFilter !== 'all' || instructorReviewFilter !== 'all' || instructorCourseFilter !== 'all') && (
+                  <div className="flex justify-end"><Button size="sm" variant="outline" onClick={() => { setSearch(''); setInstructorAccountFilter('all'); setInstructorReviewFilter('all'); setInstructorCourseFilter('all'); }}>Clear filters</Button></div>
+                )}
               </div>
               <div className="space-y-4">
-                {filterList(instructors, ['name','email']).map(inst => (
+                {filteredInstructors.map(inst => (
                   <Card key={inst.id} className="overflow-hidden">
                     <div className="p-5">
                       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -771,6 +815,9 @@ export default function AdminPage() {
                     </div>
                   </Card>
                 ))}
+                {filteredInstructors.length === 0 && (
+                  <div className="rounded-xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground">No instructors match your search and filters.</div>
+                )}
               </div>
             </div>
           )}
