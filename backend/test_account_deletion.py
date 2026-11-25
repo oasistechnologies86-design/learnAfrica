@@ -64,6 +64,7 @@ def auth(value):
 admin_token = token('admin@example.com')
 student_token = token('student@example.com')
 instructor_token = token('instructor@example.com')
+student2_token = token('student2@example.com')
 check('test accounts can authenticate', bool(admin_token and student_token and instructor_token))
 
 # Student-requested deletion: row and financial history remain; session is revoked.
@@ -75,7 +76,7 @@ with app.app_context():
     tx = db.execute("SELECT id FROM transactions WHERE id='tx1'").fetchone()
     event = db.execute("SELECT event_type FROM account_deletion_events WHERE user_id='stu1'").fetchone()
 check('self-deleted user is retained but inactive', bool(row and row['deleted_at'] and not row['is_active']))
-check('self-deletion revokes existing token', client.get('/api/users/me', headers=auth(student_token)).status_code in (401, 403))
+check('self-deletion revokes existing token', client.get('/api/users/settings', headers=auth(student_token)).status_code in (401, 403))
 check('financial transaction remains after deletion', bool(tx))
 check('self-deletion event is recorded', bool(event and event['event_type'] == 'self_deleted'))
 
@@ -98,7 +99,7 @@ check('admin deletion is a soft-delete', admin_delete.status_code == 200, admin_
 listed = client.get('/api/admin/deleted-accounts?q=student2&role=student', headers=auth(admin_token))
 accounts = (listed.get_json() or {}).get('accounts', [])
 check('admin can search and filter deleted accounts', listed.status_code == 200 and len(accounts) == 1)
-check('non-admin cannot view deleted accounts', client.get('/api/admin/deleted-accounts', headers=auth(token('student2@example.com'))).status_code == 403)
+check('non-admin cannot view deleted accounts', client.get('/api/admin/deleted-accounts', headers=auth(student2_token)).status_code == 403)
 history = client.get('/api/admin/deleted-accounts/stu2/history', headers=auth(admin_token))
 check('deletion history is available', history.status_code == 200 and bool((history.get_json() or {}).get('events')))
 # The filtered bulk clear must not clear the separately deleted instructor.
@@ -108,8 +109,9 @@ with app.app_context():
     db = get_db()
     stu2 = db.execute("SELECT deletion_cleared_at FROM users WHERE id='stu2'").fetchone()
     ins1 = db.execute("SELECT deletion_cleared_at FROM users WHERE id='ins1'").fetchone()
+    retained_stu2 = db.execute("SELECT id FROM users WHERE id='stu2'").fetchone()
 check('bulk clear hides only matching account', bool(stu2 and stu2['deletion_cleared_at']) and ins1 and not ins1['deletion_cleared_at'])
-check('cleared account remains retained in database', bool(db.execute("SELECT id FROM users WHERE id='stu2'").fetchone()))
+check('cleared account remains retained in database', bool(retained_stu2))
 
 print()
 if failures:
