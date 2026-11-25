@@ -21,6 +21,7 @@ def _ensure_columns(db):
     ensure_column(db, 'password_reset_requests', 'link_generated_at', 'TIMESTAMP')
     ensure_column(db, 'password_reset_requests', 'last_action_at', 'TIMESTAMP')
     ensure_column(db, 'password_reset_requests', 'fallback_at', 'TIMESTAMP')
+    ensure_column(db, 'password_reset_requests', 'completed_at', 'TIMESTAMP')
 
 
 def _utc_now_sql():
@@ -150,7 +151,7 @@ def register_password_reset_tracking(app):
                     'legacy_unknown'
                 )
             row['effective_handling_method'] = method
-            for field in ('created_at', 'email_sent_at', 'link_generated_at', 'last_action_at', 'fallback_at', 'resolved_at'):
+            for field in ('created_at', 'email_sent_at', 'link_generated_at', 'last_action_at', 'fallback_at', 'completed_at', 'resolved_at'):
                 row[field + '_iso'] = _as_iso_utc(row.get(field))
             enriched.append(row)
         payload['requests'] = enriched
