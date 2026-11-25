@@ -27,16 +27,25 @@ import {
 export function PaymentMethodForm({ value, onChange, onSave, showSaveButton = true, requireBefore = null, country: countryProp }) {
   const country = String(countryProp || value?.country || 'GH').toUpperCase()
   const isGhana = country === 'GH'
-  const [method, setMethod]   = useState(value?.method || (isGhana ? 'momo' : 'bank'))
-  const [details, setDetails] = useState(value?.details  || {})
+  const [method, setMethod] = useState(value?.method || (isGhana ? 'momo' : 'bank'))
+  // Keep a separate draft for each payout method. Switching tabs must never
+  // clear the saved method's details or copy blank details into the parent.
+  const [detailsByMethod, setDetailsByMethod] = useState(() => ({
+    [value?.method || (isGhana ? 'momo' : 'bank')]: value?.details || {},
+  }))
+  const details = detailsByMethod[method] || {}
   const [saving, setSaving]   = useState(false)
   const [status, setStatus]   = useState(null) // {type, msg}
   const [touched, setTouched] = useState(false)
 
   useEffect(() => {
     if (value) {
-      setMethod(value.method || (country === 'GH' ? 'momo' : 'bank'))
-      setDetails(value.details || {})
+      const incomingMethod = value.method || (country === 'GH' ? 'momo' : 'bank')
+      setMethod(incomingMethod)
+      setDetailsByMethod(previous => ({
+        ...previous,
+        [incomingMethod]: value.details || {},
+      }))
     }
   }, [value, country])
 
@@ -45,11 +54,13 @@ export function PaymentMethodForm({ value, onChange, onSave, showSaveButton = tr
   }
 
   const changeMethod = (m) => {
-    setMethod(m); setDetails({}); setStatus(null); setTouched(false); propagate(m, country, {})
+    // A tab change is a view selection, not a payout update.
+    setMethod(m); setStatus(null); setTouched(false)
   }
   const setField = (k, v) => {
     const nd = { ...details, [k]: v }
-    setDetails(nd); propagate(method, country, nd)
+    setDetailsByMethod(previous => ({ ...previous, [method]: nd }))
+    propagate(method, country, nd)
   }
 
   const { valid, errors } = validatePayoutDetails(method, details, country)
@@ -175,7 +186,8 @@ export function PaymentMethodForm({ value, onChange, onSave, showSaveButton = tr
                 onChange={e => {
                   const bank = GH_BANKS.find(b => b.code === e.target.value)
                   const nd = { ...details, bank_code: e.target.value, bank_name: bank?.name || '' }
-                  setDetails(nd); propagate(method, country, nd)
+                  setDetailsByMethod(previous => ({ ...previous, [method]: nd }))
+                  propagate(method, country, nd)
                 }}
                 className={cn(
                   'w-full h-10 rounded-lg border border-input bg-background px-3 text-sm focus:ring-2 focus:ring-primary outline-none',
