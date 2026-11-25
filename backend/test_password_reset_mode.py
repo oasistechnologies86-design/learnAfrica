@@ -30,6 +30,14 @@ app.config['TESTING'] = True
 app.config['DATABASE'] = _tmp.name
 app.config['USE_POSTGRES'] = False
 
+failures = []
+
+
+def check(name, cond, extra=''):
+    print(('PASS' if cond else 'FAIL') + f' - {name}' + (f' [{extra}]' if extra else ''))
+    if not cond:
+        failures.append(name)
+
 # Timestamp serialization regression: Flask HTTP-date strings and database
 # timestamp strings must remain parseable for both current and legacy requests.
 check('RFC 1123 timestamps serialize to ISO UTC',
@@ -41,13 +49,6 @@ check('database timestamps serialize to ISO UTC',
 check('invalid timestamps stay null instead of becoming misleading dates',
       _as_iso_utc('not-a-date') is None)
 
-failures = []
-
-
-def check(name, cond, extra=''):
-    print(('PASS' if cond else 'FAIL') + f' - {name}' + (f' [{extra}]' if extra else ''))
-    if not cond:
-        failures.append(name)
 
 
 with app.app_context():
