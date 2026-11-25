@@ -238,6 +238,7 @@ export default function AdminPage() {
   }, []);
   useEffect(() => { loadTabCounts(); }, [loadTabCounts, tab]);
   useEffect(() => { if (tab === 'Applications') load('Applications'); }, [appFilter]);
+  useEffect(() => { if (tab === 'Deleted Accounts') load('Deleted Accounts'); }, [deletedSearch, deletedRole]);
   useEffect(() => { if (tab === 'Guide') load('Guide'); }, [tab === 'Guide']);
 
   const filteredEarningsInstructors = (earnings?.instructors || []).filter(inst => {
@@ -324,7 +325,7 @@ export default function AdminPage() {
 
   const clearDeletedAccount = async (uid) => { if (!(await window.LearnAfricaDialog.confirm('Clear this account from the Deleted Accounts list? Its application, learning, receipt, payout and audit records will be retained.'))) return; try { await API(`/api/admin/deleted-accounts/${uid}/clear`, { method: 'POST' }); showStatus('success', 'Account cleared from the list; protected records retained.'); await load('Deleted Accounts'); } catch (e) { showStatus('error', e.message); } };
 
-  const clearAllDeletedAccounts = async () => { if (!deletedAccounts.length) return; if (!(await window.LearnAfricaDialog.confirm(`Clear all ${deletedAccounts.length} deleted account(s) from this list? Protected records will be retained.`))) return; try { const d = await API('/api/admin/deleted-accounts/clear-all', { method: 'POST' }); showStatus('success', d.message); await load('Deleted Accounts'); } catch (e) { showStatus('error', e.message); } };
+  const clearAllDeletedAccounts = async () => { if (!deletedAccounts.length) return; if (!(await window.LearnAfricaDialog.confirm(`Clear all ${deletedAccounts.length} account(s) currently matching these filters? Protected records will be retained.`))) return; try { const params = new URLSearchParams(); if (deletedSearch.trim()) params.set('q', deletedSearch.trim()); if (deletedRole !== 'all') params.set('role', deletedRole); const d = await API(`/api/admin/deleted-accounts/clear-all?${params.toString()}`, { method: 'POST' }); showStatus('success', d.message); await load('Deleted Accounts'); } catch (e) { showStatus('error', e.message); } };
 
   const setCourseStatus = async (cid, status) => {
     const course = courses.find(item => item.id === cid);
@@ -669,6 +670,7 @@ export default function AdminPage() {
             {t === 'Instructors' && <GraduationCap className="h-3.5 w-3.5" />}
             {t === 'Courses' && <BookOpen className="h-3.5 w-3.5" />}
             {t === 'Applications' && <UserCheck className="h-3.5 w-3.5" />}
+            {t === 'Deleted Accounts' && <Trash2 className="h-3.5 w-3.5" />}
             {t === 'Broadcast' && <Bell className="h-3.5 w-3.5" />}
             {t === 'Credentials' && <Award className="h-3.5 w-3.5" />}
             {t}
