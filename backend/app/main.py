@@ -5207,36 +5207,233 @@ def create_app() -> Flask:
 
         return jsonify({'message': f'Course set to {status}'})
     
+    def _ensure_broadcasts_table(db):
+        """Create the broadcast management ledger additively on either database."""
+        db.execute("""CREATE TABLE IF NOT EXISTS admin_broadcasts (
+            id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            message TEXT NOT NULL,
+            role_target TEXT,
+            notification_type TEXT NOT NULL DEFAULT 'system',
+            status TEXT NOT NULL DEFAULT 'draft',
+            recipient_count INTEGER NOT NULL DEFAULT 0,
+            delivered_count INTEGER NOT NULL DEFAULT 0,
+            failed_count INTEGER NOT NULL DEFAULT 0,
+            archived INTEGER NOT NULL DEFAULT 0,
+            created_by TEXT,
+            created_by_name TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            sent_at TIMESTAMP
+        )""")
+        db.commit()
+
+    def _broadcast_send(db, row):
+        role_target = row['role_target']
+        query = 'SELECT id FROM users WHERE is_active=1'
+        params = []
+        if role_target:
+            query += ' AND role=?'
+            params.append(role_target)
+        recipients = db.execute(query, params).fetchall()
+        delivered = 0
+        for user in recipients:
+            notification_id = create_notification(
+                db, user['id'], row['notification_type'], row['title'],
+                row['message'], f"broadcast_{row['id']}", app.config.get('USE_POSTGRES')
+            )
+            if notification_id:
+                delivered += 1
+        failed = len(recipients) - delivered
+        status = 'sent' if failed == 0 else ('partial' if delivered else 'failed')
+        db.execute(
+            'UPDATE admin_broadcasts SET status=?,recipient_count=?,delivered_count=?,failed_count=?,sent_at=?,updated_at=? WHERE id=?',
+            (status, len(recipients), delivered, failed, datetime.now().isoformat(), datetime.now().isoformat(), row['id'])
+        )
+        db.commit()
+        audit('broadcast_send' if not row['sent_at'] else 'broadcast_resend', 'broadcast', row['id'], row['title'],
+              {'recipients': len(recipients), 'delivered': delivered, 'failed': failed, 'role': role_target or 'all'})
+        return {'status': status, 'recipients': len(recipients), 'delivered': delivered, 'failed': failed}
+
+    @app.route('/api/admin/broadcasts', methods=['GET'])
+    @admin_required
+    def admin_broadcasts_list():
+        db = get_db()
+        _ensure_broadcasts_table(db)
+        search_term = (request.args.get('q') or '').strip()
+        status_filter = (request.args.get('status') or '').strip()
+        audience_filter = (request.args.get('role') or '').strip()
+        where, params = [], []
+        if search_term:
+            where.append('(LOWER(title) LIKE ? OR LOWER(message) LIKE ?)')
+            params.extend([f'%{search_term.lower()}%', f'%{search_term.lower()}%'])
+        if status_filter:
+            where.append('status=?'); params.append(status_filter)
+        if audience_filter:
+            where.append("COALESCE(role_target,'')=?"); params.append(audience_filter)
+        include_archived = request.args.get('archived') == 'true'
+        where.append('archived=?')
+        params.append(1 if include_archived else 0)
+        clause = ' WHERE ' + ' AND '.join(where)
+        rows = db.execute(
+            'SELECT * FROM admin_broadcasts' + clause + ' ORDER BY created_at DESC LIMIT 200',
+            params
+        ).fetchall()
+        total = db.execute('SELECT COUNT(*) AS c FROM admin_broadcasts' + clause, params).fetchone()['c']
+        return jsonify({'broadcasts': safe_list(rows), 'total': total})
+
+    @app.route('/api/admin/broadcasts', methods=['POST'])
+    @admin_required
+    def admin_broadcast_create():
+        d = request.get_json() or {}
+        title, message = str(d.get('title') or '').strip(), str(d.get('message') or '').strip()
+        if not title or not message:
+            return jsonify({'error': 'Title and message are required.'}), 400
+        role_target = d.get('role') or None
+        if role_target not in (None, 'student', 'instructor', 'admin', 'superadmin'):
+            return jsonify({'error': 'Invalid audience.'}), 400
+        notification_type = d.get('type') or 'system'
+        if notification_type not in ('system', 'info', 'achievement', 'reminder'):
+            return jsonify({'error': 'Invalid notification type.'}), 400
+        db = get_db()
+        _ensure_broadcasts_table(db)
+        actor = g.current_user or {}
+        broadcast_id = str(uuid.uuid4())
+        action = d.get('action') or 'draft'
+        if action not in ('draft', 'send'):
+            return jsonify({'error': 'Invalid broadcast action.'}), 400
+        db.execute(
+            '''INSERT INTO admin_broadcasts
+               (id,title,message,role_target,notification_type,status,created_by,created_by_name)
+               VALUES(?,?,?,?,?,?,?,?)''',
+            (broadcast_id, title, message, role_target, notification_type, 'draft',
+             actor.get('user_id'), actor.get('name'))
+        )
+        db.commit()
+        audit('broadcast_create', 'broadcast', broadcast_id, title, {'role': role_target or 'all', 'status': 'draft'})
+        if action == 'send':
+            row = db.execute('SELECT * FROM admin_broadcasts WHERE id=?', (broadcast_id,)).fetchone()
+            result = _broadcast_send(db, row)
+            return jsonify({'id': broadcast_id, 'message': f"Broadcast {result['status']}: {result['delivered']} of {result['recipients']} delivered.", **result})
+        return jsonify({'id': broadcast_id, 'message': 'Broadcast saved as draft.', 'status': 'draft'})
+
+    @app.route('/api/admin/broadcasts/<broadcast_id>', methods=['PUT'])
+    @admin_required
+    def admin_broadcast_update(broadcast_id):
+        d = request.get_json() or {}
+        title, message = str(d.get('title') or '').strip(), str(d.get('message') or '').strip()
+        if not title or not message:
+            return jsonify({'error': 'Title and message are required.'}), 400
+        role_target = d.get('role') or None
+        if role_target not in (None, 'student', 'instructor', 'admin', 'superadmin'):
+            return jsonify({'error': 'Invalid audience.'}), 400
+        notification_type = d.get('type') or 'system'
+        if notification_type not in ('system', 'info', 'achievement', 'reminder'):
+            return jsonify({'error': 'Invalid notification type.'}), 400
+        db = get_db()
+        _ensure_broadcasts_table(db)
+        current = db.execute('SELECT * FROM admin_broadcasts WHERE id=?', (broadcast_id,)).fetchone()
+        if not current:
+            return jsonify({'error': 'Broadcast not found.'}), 404
+        if current['status'] != 'draft':
+            return jsonify({'error': 'Only drafts can be edited. Sent broadcasts are immutable; duplicate them to make changes.'}), 409
+        db.execute(
+            'UPDATE admin_broadcasts SET title=?,message=?,role_target=?,notification_type=?,updated_at=? WHERE id=?',
+            (title, message, role_target, notification_type, datetime.now().isoformat(), broadcast_id)
+        )
+        db.commit()
+        audit('broadcast_edit', 'broadcast', broadcast_id, title, {'status': 'draft'})
+        return jsonify({'message': 'Draft updated.'})
+
+    @app.route('/api/admin/broadcasts/<broadcast_id>/send', methods=['POST'])
+    @admin_required
+    def admin_broadcast_send(broadcast_id):
+        db = get_db()
+        _ensure_broadcasts_table(db)
+        row = db.execute('SELECT * FROM admin_broadcasts WHERE id=? AND archived=0', (broadcast_id,)).fetchone()
+        if not row:
+            return jsonify({'error': 'Broadcast not found.'}), 404
+        if row['status'] in ('sent', 'partial', 'failed'):
+            # Explicit resend is supported, but never triggered by a retrying save request.
+            pass
+        result = _broadcast_send(db, row)
+        return jsonify({'message': f"Broadcast {result['status']}: {result['delivered']} of {result['recipients']} delivered.", **result})
+
+    @app.route('/api/admin/broadcasts/<broadcast_id>/duplicate', methods=['POST'])
+    @admin_required
+    def admin_broadcast_duplicate(broadcast_id):
+        db = get_db()
+        _ensure_broadcasts_table(db)
+        row = db.execute('SELECT * FROM admin_broadcasts WHERE id=?', (broadcast_id,)).fetchone()
+        if not row:
+            return jsonify({'error': 'Broadcast not found.'}), 404
+        actor = g.current_user or {}
+        new_id = str(uuid.uuid4())
+        db.execute(
+            '''INSERT INTO admin_broadcasts
+               (id,title,message,role_target,notification_type,status,created_by,created_by_name)
+               VALUES(?,?,?,?,?,'draft',?,?)''',
+            (new_id, row['title'], row['message'], row['role_target'], row['notification_type'],
+             actor.get('user_id'), actor.get('name'))
+        )
+        db.commit()
+        audit('broadcast_duplicate', 'broadcast', new_id, row['title'], {'source_id': broadcast_id})
+        return jsonify({'id': new_id, 'message': 'A draft copy was created.'})
+
+    @app.route('/api/admin/broadcasts/<broadcast_id>/archive', methods=['POST'])
+    @admin_required
+    def admin_broadcast_archive(broadcast_id):
+        db = get_db()
+        _ensure_broadcasts_table(db)
+        row = db.execute('SELECT * FROM admin_broadcasts WHERE id=?', (broadcast_id,)).fetchone()
+        if not row:
+            return jsonify({'error': 'Broadcast not found.'}), 404
+        db.execute('UPDATE admin_broadcasts SET archived=1,updated_at=? WHERE id=?',
+                   (datetime.now().isoformat(), broadcast_id))
+        db.commit()
+        audit('broadcast_archive', 'broadcast', broadcast_id, row['title'], {'status': row['status']})
+        return jsonify({'message': 'Broadcast archived.'})
+
+    @app.route('/api/admin/broadcasts/<broadcast_id>', methods=['DELETE'])
+    @admin_required
+    def admin_broadcast_delete(broadcast_id):
+        db = get_db()
+        _ensure_broadcasts_table(db)
+        row = db.execute('SELECT * FROM admin_broadcasts WHERE id=?', (broadcast_id,)).fetchone()
+        if not row:
+            return jsonify({'error': 'Broadcast not found.'}), 404
+        # Remove only notifications explicitly linked to this broadcast. The audit entry remains.
+        db.execute('DELETE FROM user_notifications WHERE data=?', (f'broadcast_{broadcast_id}',))
+        db.execute('DELETE FROM admin_broadcasts WHERE id=?', (broadcast_id,))
+        db.commit()
+        audit('broadcast_delete', 'broadcast', broadcast_id, row['title'],
+              {'status': row['status'], 'removed_notifications': True})
+        return jsonify({'message': 'Broadcast and its linked in-app notifications were permanently deleted.'})
+
     @app.route('/api/admin/broadcast', methods=['POST'])
     @admin_required
     def broadcast_notification():
-        try:
-            d = request.get_json() or {}
-            if not d.get('title') or not d.get('message'):
-                return jsonify({'error': 'title and message required'}), 400
-            role_target = d.get('role')  # None = all users
-            db = get_db()
-            q = 'SELECT id FROM users WHERE is_active=1'
-            params = []
-            if role_target:
-                q += ' AND role=?'; params.append(role_target)
-            users = db.execute(q, params).fetchall()
-            for u in users:
-                create_notification(db, u['id'], d.get('type','system'),
-                    d['title'], d['message'], f'broadcast_{uuid.uuid4()}', app.config.get('USE_POSTGRES'))
-
-            audit('broadcast', 'broadcast', None, d['title'],
-                  {'recipients': len(users), 'role': role_target or 'all'})
-            return jsonify({'message': f'Broadcast sent to {len(users)} users'})
-    
-        except Exception as e:
-            import traceback
-            app.logger.error('broadcast error: ' + traceback.format_exc())
-            try:
-                db = getattr(g, '_db', None)
-                if db and hasattr(db, '_conn'): db._conn.rollback()
-            except Exception: pass
-            return jsonify({'error': 'Failed', 'detail': _err_detail(e)}), 500
+        # Backwards-compatible endpoint for older clients.
+        d = request.get_json() or {}
+        d['action'] = 'send'
+        title, message = str(d.get('title') or '').strip(), str(d.get('message') or '').strip()
+        if not title or not message:
+            return jsonify({'error': 'title and message required'}), 400
+        db = get_db()
+        _ensure_broadcasts_table(db)
+        actor = g.current_user or {}
+        broadcast_id = str(uuid.uuid4())
+        db.execute(
+            '''INSERT INTO admin_broadcasts
+               (id,title,message,role_target,notification_type,status,created_by,created_by_name)
+               VALUES(?,?,?,?,?,'draft',?,?)''',
+            (broadcast_id, title, message, d.get('role') or None, d.get('type') or 'system',
+             actor.get('user_id'), actor.get('name'))
+        )
+        db.commit()
+        row = db.execute('SELECT * FROM admin_broadcasts WHERE id=?', (broadcast_id,)).fetchone()
+        result = _broadcast_send(db, row)
+        return jsonify({'message': f"Broadcast {result['status']}: {result['delivered']} of {result['recipients']} delivered.", 'id': broadcast_id, **result})
     
     # ── LEADERBOARD ───────────────────────────────────────────────────────────────
     @app.route('/api/leaderboard', methods=['GET'])
