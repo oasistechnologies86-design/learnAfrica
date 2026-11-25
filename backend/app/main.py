@@ -11333,6 +11333,10 @@ def create_app() -> Flask:
     # can be delivered, so we always fall back to 'manual'.
     RESET_SLA_HOURS = 24
 
+    def _ensure_password_reset_request_columns(db):
+        """Additive, idempotent safety migration for reset-delivery diagnostics."""
+        ensure_column(db, 'password_reset_requests', 'delivery_error', 'TEXT')
+
     def _effective_password_reset_mode(db):
         """Resolve the password-reset mode actually in force.
 
@@ -12030,19 +12034,27 @@ def create_app() -> Flask:
             html_body, text_body,
             use_postgres=app.config.get('USE_POSTGRES'))
 
-    def _notify_admins_reset_request(db, email, reason, rid):
-        """In-app heads-up to every admin that a reset request needs attention.
-        In-app only (no email) and never contains a token or link. Failures are
-        swallowed so they can never break the user's request."""
+    def _notify_admins_reset_request(db, email, reason, rid, delivery_error=None):
+        """Notify admins about a queued reset, including an automatic-send failure.
+
+        Notifications never contain a reset token or link. Failure details are
+        operational diagnostics only and are shown in the admin-only request card.
+        """
         try:
             admins = db.execute(
                 "SELECT id FROM users WHERE role IN ('admin','superadmin')").fetchall()
+            fallback = bool(delivery_error)
+            title = 'Password reset email failed — manual action needed' if fallback else 'New password reset request'
+            message = (f'{email} requested a password reset ({reason}). Gmail/automatic '
+                       f'delivery failed: {delivery_error}. Open the Forgot Password Requests '
+                       'tab to generate a fresh link and send or share it.' if fallback else
+                       f'{email} asked for help ({reason}). Open the Forgot Password '
+                       'Requests tab to generate a link.')
             for a in admins:
                 create_notification(
-                    db, a['id'], 'system', 'New password reset request',
-                    f'{email} asked for help ({reason}). Open the Forgot Password '
-                    'Requests tab to generate a link.',
-                    f'pwd_reset_{rid}', app.config.get('USE_POSTGRES'))
+                    db, a['id'], 'system', title, message,
+                    f'pwd_reset_{rid}_fallback' if fallback else f'pwd_reset_{rid}',
+                    app.config.get('USE_POSTGRES'))
         except Exception as e:
             app.logger.warning(f'reset request admin notification failed: {e}')
 
@@ -12089,6 +12101,7 @@ def create_app() -> Flask:
                 'retry_after': retry,
             }), 429
         db = get_db()
+        _ensure_password_reset_request_columns(db)
         try:
             u = db.execute('SELECT id FROM users WHERE LOWER(email)=?', (email,)).fetchone()
         except Exception as e:
@@ -12107,7 +12120,8 @@ def create_app() -> Flask:
         try:
             existing = db.execute(
                 "SELECT id FROM password_reset_requests WHERE LOWER(email)=? "
-                "AND status IN ('pending','link_sent') ORDER BY created_at DESC LIMIT 1",
+                "AND status IN ('pending','link_generated','link_sent','email_sent','manual_fallback') "
+                "ORDER BY created_at DESC LIMIT 1",
                 (email,)).fetchone()
         except Exception:
             existing = None
@@ -12159,19 +12173,31 @@ def create_app() -> Flask:
                 link = f'{_reset_link_base()}/reset-password?token={raw}'
                 ok, err = _send_reset_email(db, email, link)
                 if ok:
-                    db.execute("UPDATE password_reset_requests SET status='link_sent' WHERE id=?",
+                    db.execute("UPDATE password_reset_requests SET status='email_sent', delivery_error=NULL WHERE id=?",
                                (rid,))
                     db.commit()
                     audit('password_reset_link_emailed', 'user', uid, email,
                           {'request_id': rid, 'auto': True})
                     auto_sent = True
                 else:
-                    app.logger.warning(f'auto reset email failed for {email}: {err}')
+                    delivery_error = (err or 'Automatic email delivery failed')[:1000]
+                    db.execute("UPDATE password_reset_requests SET status='manual_fallback', delivery_error=? WHERE id=?",
+                               (delivery_error, rid))
+                    db.commit()
+                    app.logger.warning(f'auto reset email failed for {email}: {delivery_error}')
             except Exception as e:
-                app.logger.error(f'forgot_password auto-send failed: {e}')
-            # A failed send still needs a human; a clean send does not.
+                delivery_error = f'Automatic reset email exception: {e}'[:1000]
+                app.logger.error(f'forgot_password auto-send failed: {delivery_error}')
+                if rid:
+                    try:
+                        db.execute("UPDATE password_reset_requests SET status='manual_fallback', delivery_error=? WHERE id=?",
+                                   (delivery_error, rid))
+                        db.commit()
+                    except Exception:
+                        app.logger.exception('could not record password-reset fallback status')
+            # A failed send is explicitly queued for admin action; a clean send is not.
             if not auto_sent and rid:
-                _notify_admins_reset_request(db, email, reason, rid)
+                _notify_admins_reset_request(db, email, reason, rid, delivery_error)
         else:
             # Manual mode, or an unknown address in email mode: queue the request
             # once for a human, and notify the admins only on that first request
@@ -12195,12 +12221,18 @@ def create_app() -> Flask:
 
         # The user-facing success message follows the MODE, not the delivery
         # outcome. Unknown accounts have already been rejected above.
-        if reset_mode == 'email':
-            msg = ('If an account exists for that address, a reset link is on its '
-                   'way. Check your spam folder if you do not see it.')
+        if reset_mode == 'email' and auto_sent:
+            msg = ('Your password reset email has been sent. Check your inbox and spam folder.')
+            response_mode = 'email'
+        elif reset_mode == 'email':
+            msg = ('Automatic email delivery could not be completed. Your request has '
+                   'been forwarded to the admin team, who can prepare and send a reset link.')
+            response_mode = 'manual'
         else:
             msg = generic
-        return jsonify({'message': msg, 'email_sent': auto_sent, 'mode': reset_mode,
+            response_mode = 'manual'
+        return jsonify({'message': msg, 'email_sent': auto_sent, 'mode': response_mode,
+                        'delivery_status': 'email_sent' if auto_sent else ('manual_fallback' if reset_mode == 'email' else 'pending'),
                         'sla_hours': RESET_SLA_HOURS,
                         'expires_hours': RESET_LINK_HOURS,
                         'resend_cooldown': RESET_RESEND_COOLDOWN_SECONDS})
@@ -12212,6 +12244,7 @@ def create_app() -> Flask:
         if not raw:
             return jsonify({'valid': False, 'error': 'Missing token'}), 400
         db = get_db()
+        _ensure_password_reset_request_columns(db)
         row = db.execute('SELECT * FROM password_reset_tokens WHERE token_hash=?',
                          (_hash_reset_token(raw),)).fetchone()
         if not row or int(row['used'] or 0) or _dt_expired(row['expires_at']):
@@ -12256,8 +12289,8 @@ def create_app() -> Flask:
                    'updated_at=CURRENT_TIMESTAMP WHERE id=?',
                    (generate_password_hash(pw), tv + 1, u['id']))
         db.execute('UPDATE password_reset_tokens SET used=1 WHERE id=?', (row['id'],))
-        db.execute("UPDATE password_reset_requests SET status='completed', resolved_at=? "
-                   "WHERE user_id=? AND status IN ('pending','link_sent')",
+        db.execute("UPDATE password_reset_requests SET status='completed', delivery_error=NULL, resolved_at=? "
+                   "WHERE user_id=? AND status IN ('pending','link_generated','link_sent','email_sent','manual_fallback')",
                    (datetime.utcnow(), u['id']))
         db.commit()
         audit('password_reset_completed', 'user', u['id'], None, {})
@@ -12274,6 +12307,7 @@ def create_app() -> Flask:
     @admin_required
     def list_password_reset_requests():
         db = get_db()
+        _ensure_password_reset_request_columns(db)
         status = (request.args.get('status') or '').strip()
         try:
             # Only show requests whose email currently belongs to a registered
@@ -12310,16 +12344,20 @@ def create_app() -> Flask:
     def generate_password_reset_link(rid):
         """Create a one-time, time-limited link for the account behind a request."""
         db = get_db()
+        _ensure_password_reset_request_columns(db)
         req = db.execute('SELECT * FROM password_reset_requests WHERE id=?', (rid,)).fetchone()
         if not req:
             return jsonify({'error': 'Request not found'}), 404
+        if req['status'] in ('completed', 'dismissed'):
+            return jsonify({'error': 'This request is already resolved and cannot generate another link.'}), 409
         email = (req['email'] or '').strip().lower()
         u = db.execute('SELECT id, email FROM users WHERE LOWER(email)=?', (email,)).fetchone()
         if not u:
             return jsonify({'error': 'No account exists for this email address.'}), 404
         raw, expires = _create_reset_token(db, u['id'], request_id=rid,
                                            created_by=g.current_user.get('user_id'))
-        db.execute("UPDATE password_reset_requests SET status='link_sent' WHERE id=?", (rid,))
+        if req['status'] != 'manual_fallback':
+            db.execute("UPDATE password_reset_requests SET status='link_generated' WHERE id=?", (rid,))
         db.commit()
         link = f'{_reset_link_base()}/reset-password?token={raw}'
         audit('password_reset_link_generated', 'user', u['id'], email,
@@ -12329,7 +12367,7 @@ def create_app() -> Flask:
             create_notification(
                 db, u['id'], 'system', 'Password reset link ready',
                 'An administrator prepared a password reset link for your account. '
-                'Ask them to send it to you, then use it within 12 hours.',
+                f'Ask them to send it to you, then use it within {_reset_expiry_phrase()}.',
                 f'pwd_reset_{rid}', app.config.get('USE_POSTGRES'))
         except Exception as e:
             app.logger.warning(f'reset link user notification failed: {e}')
@@ -12346,24 +12384,48 @@ def create_app() -> Flask:
         if not link:
             return jsonify({'error': 'Generate a link first'}), 400
         db = get_db()
+        _ensure_password_reset_request_columns(db)
         cfg = email_service.load_email_config(db)
         if not cfg.get('enabled'):
-            return jsonify({'error': 'Email sending is turned off. '
-                                     'Copy the link and share it manually.'}), 400
+            return jsonify({'error': 'Email sending is turned off. Copy the link and share it manually.'}), 400
         req = db.execute('SELECT * FROM password_reset_requests WHERE id=?', (rid,)).fetchone()
         if not req:
             return jsonify({'error': 'Request not found'}), 404
+        if req['status'] in ('completed', 'dismissed'):
+            return jsonify({'error': 'This request is already resolved.'}), 409
+        # Only email a currently valid, unused token that belongs to this exact
+        # request and account. Never trust an arbitrary URL supplied by a client.
+        token_match = re.search(r'(?:[?&])token=([^&#]+)', link)
+        raw_token = token_match.group(1) if token_match else ''
+        token_row = db.execute(
+            'SELECT id FROM password_reset_tokens WHERE token_hash=? AND request_id=? '
+            'AND user_id=? AND used=0 AND expires_at>? LIMIT 1',
+            (_hash_reset_token(raw_token), rid, req['user_id'], datetime.utcnow())
+        ).fetchone() if raw_token else None
+        if not token_row:
+            return jsonify({'error': 'This reset link is invalid, expired, already used, or belongs to another request. Generate a fresh link.'}), 400
+        canonical_link = f'{_reset_link_base()}/reset-password?token={raw_token}'
         to = (req['email'] or '').strip()
-        ok, err = _send_reset_email(db, to, link)
+        ok, err = _send_reset_email(db, to, canonical_link)
         if not ok:
-            return jsonify({'error': err or 'Could not send email'}), 400
-        audit('password_reset_link_emailed', 'user', None, to, {'request_id': rid})
-        return jsonify({'message': f'Reset link emailed to {to}'})
+            delivery_error = (err or 'Could not send email')[:1000]
+            db.execute('UPDATE password_reset_requests SET delivery_error=? WHERE id=?',
+                       (delivery_error, rid))
+            db.commit()
+            audit('password_reset_link_email_failed', 'user', req['user_id'], to,
+                  {'request_id': rid, 'error': delivery_error})
+            return jsonify({'error': delivery_error, 'delivery_error': delivery_error}), 400
+        db.execute("UPDATE password_reset_requests SET status='email_sent', delivery_error=NULL WHERE id=?",
+                   (rid,))
+        db.commit()
+        audit('password_reset_link_emailed', 'user', req['user_id'], to, {'request_id': rid})
+        return jsonify({'message': f'Reset link emailed to {to}', 'status': 'email_sent'})
 
     @app.route('/api/admin/password-reset-requests/<rid>/dismiss', methods=['POST'])
     @admin_required
     def dismiss_password_reset_request(rid):
         db = get_db()
+        _ensure_password_reset_request_columns(db)
         req = db.execute('SELECT id FROM password_reset_requests WHERE id=?', (rid,)).fetchone()
         if not req:
             return jsonify({'error': 'Request not found'}), 404
