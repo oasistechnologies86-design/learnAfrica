@@ -1023,8 +1023,8 @@ def create_app() -> Flask:
             _signup_payout = None
             if role == 'instructor':
                 bio_words = re.findall(r'\S+', str(d.get('bio') or '').strip())
-                if len(bio_words) < 50:
-                    return jsonify({'error': f'Professional bio must contain at least 50 words. You provided {len(bio_words)}.'}), 400
+                if len(bio_words) < 20:
+                    return jsonify({'error': f'Professional bio must contain at least 20 words. You provided {len(bio_words)}.'}), 400
                 _country_in = str(d.get('country') or '').strip().upper()
                 if _country_in:
                     _signup_profile, _perr = _validate_instructor_profile(d, require_address=True)
@@ -1728,8 +1728,8 @@ def create_app() -> Flask:
                 role_row = db.execute('SELECT role FROM users WHERE id=?', (g.current_user['user_id'],)).fetchone()
                 if role_row and role_row['role'] == 'instructor':
                     bio_words = re.findall(r'\S+', str(d.get('bio') or '').strip())
-                    if len(bio_words) < 50:
-                        return jsonify({'error': f'Professional bio must contain at least 50 words. You provided {len(bio_words)}.'}), 400
+                    if len(bio_words) < 20:
+                        return jsonify({'error': f'Professional bio must contain at least 20 words. You provided {len(bio_words)}.'}), 400
             fields, vals = [], []
             for f in ('name','avatar','bio','location','website','instructor_title','instructor_field'):
                 if f in d:
