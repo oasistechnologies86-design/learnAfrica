@@ -122,7 +122,7 @@ def register_password_reset_tracking(app):
             if method not in ('manual_mode', 'automatic_email', 'manual_fallback'):
                 status = row.get('status')
                 method = (
-                    'manual_fallback' if status == 'manual_fallback' else
+                    'manual_fallback' if status == 'manual_fallback' or row.get('delivery_error') else
                     'automatic_email' if status in ('email_sent', 'link_sent') else
                     'manual_mode' if status in ('pending', 'link_generated') else
                     'legacy_unknown'
