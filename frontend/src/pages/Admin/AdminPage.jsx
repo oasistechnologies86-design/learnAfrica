@@ -397,7 +397,6 @@ export default function AdminPage() {
     finally { setActionLoading(''); }
   };
 
-  const sendBroadcast = () => saveBroadcast('send');
 
   const viewUserDetail = async (uid) => {
     try {
@@ -1871,7 +1870,7 @@ export default function AdminPage() {
                   <Input value={broadcastSearch} placeholder="Search title or message…" onChange={e => setBroadcastSearch(e.target.value)} />
                   <BrandedSelect value={broadcastStatusFilter} onChange={e => setBroadcastStatusFilter(e.target.value)} className="h-10 rounded-lg border border-input bg-background px-3 text-sm">
                     <option value="all">All statuses</option><option value="draft">Draft</option>
-                    <option value="sent">Sent</option><option value="partial">Partially sent</option><option value="failed">Failed</option>
+                    <option value="sent">Sent</option><option value="partial">Partially sent</option><option value="failed">Failed</option><option value="legacy">Historical (legacy)</option>
                   </BrandedSelect>
                   <BrandedSelect value={broadcastAudienceFilter} onChange={e => setBroadcastAudienceFilter(e.target.value)} className="h-10 rounded-lg border border-input bg-background px-3 text-sm">
                     <option value="all">All audiences</option><option value="">All active users</option>
