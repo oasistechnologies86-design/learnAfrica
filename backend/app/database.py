@@ -883,6 +883,10 @@ TABLES = [
         reason TEXT,
         status TEXT DEFAULT 'pending',
         delivery_error TEXT,
+        handling_method TEXT,
+        email_sent_at TIMESTAMP,
+        link_generated_at TIMESTAMP,
+        last_action_at TIMESTAMP,
         note TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         resolved_at TIMESTAMP,
@@ -906,6 +910,10 @@ TABLES = [
 MIGRATIONS = [
     # Password-reset delivery diagnostics are additive for existing installations.
     "ALTER TABLE password_reset_requests ADD COLUMN IF NOT EXISTS delivery_error TEXT",
+    "ALTER TABLE password_reset_requests ADD COLUMN IF NOT EXISTS handling_method TEXT",
+    "ALTER TABLE password_reset_requests ADD COLUMN IF NOT EXISTS email_sent_at TIMESTAMP",
+    "ALTER TABLE password_reset_requests ADD COLUMN IF NOT EXISTS link_generated_at TIMESTAMP",
+    "ALTER TABLE password_reset_requests ADD COLUMN IF NOT EXISTS last_action_at TIMESTAMP",
     # Additive blog metadata migrations; existing articles are preserved.
     "ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS cover_alt TEXT",
     "ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS category TEXT",
