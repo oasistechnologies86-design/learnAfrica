@@ -34,7 +34,7 @@ def _as_iso_utc(value):
     if not value:
         return None
     value = value.replace(' ', 'T', 1) if ' ' in value and 'T' not in value else value
-    if not re.search(r'(?:Z|[+-]\\d{2}:?\\d{2})$', value, re.I):
+    if not re.search(r'(?:Z|[+-]\d{2}:?\d{2})$', value, re.I):
         value += 'Z'
     return value
 
