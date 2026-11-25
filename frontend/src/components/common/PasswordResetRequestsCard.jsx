@@ -132,7 +132,7 @@ export default function PasswordResetRequestsCard({ onChanged }) {
       const dateValue = activeTab === 'gmail'
         ? (row.email_sent_at_iso || row.email_sent_at || row.created_at_iso || row.created_at)
         : activeTab === 'fallback'
-          ? (row.last_action_at_iso || row.last_action_at || row.created_at_iso || row.created_at)
+          ? (row.fallback_at_iso || row.fallback_at || row.created_at_iso || row.created_at)
           : (row.created_at_iso || row.created_at);
       const day = dateInputValue(dateValue);
       if (fromDate && (!day || day < fromDate)) return false;
