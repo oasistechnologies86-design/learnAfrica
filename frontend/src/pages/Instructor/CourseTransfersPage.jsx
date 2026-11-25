@@ -3,7 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import { API_BASE } from '@/lib/api';
 import { Button } from '@/components/common/Button';
 import { Card, CardContent } from '@/components/common/Card';
-import { ArrowRightLeft, RefreshCw, Loader2, CheckCircle2, XCircle, Clock, History } from 'lucide-react';
+import { ArrowRightLeft, RefreshCw, Loader2, CheckCircle2, XCircle, History } from 'lucide-react';
 
 const api = async (path, options = {}) => {
   const token = sessionStorage.getItem('auth_token');
