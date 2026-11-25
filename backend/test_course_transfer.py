@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 os.environ.setdefault('SECRET_KEY', 'test-secret-not-for-production')
 
 from app import create_app  # noqa: E402
-from app.database import init_db, get_db  # noqa: E402
+from app.database import init_db, get_db, ensure_transactions_table  # noqa: E402
 from werkzeug.security import generate_password_hash  # noqa: E402
 
 _tmp = tempfile.NamedTemporaryFile(suffix='.db', delete=False)
@@ -29,6 +29,7 @@ def check(name, condition, extra=''):
 with app.app_context():
     init_db(app)
     db = get_db()
+    ensure_transactions_table(db)
     for uid, name, email, role, status in [
         ('admin1', 'Platform Admin', 'admin-transfer@example.com', 'admin', 'none'),
         ('admin2', 'Second Platform Admin', 'admin2-transfer@example.com', 'admin', 'none'),
