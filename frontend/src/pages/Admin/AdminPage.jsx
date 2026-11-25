@@ -1898,16 +1898,21 @@ export default function AdminPage() {
                           <div className="flex flex-wrap items-center gap-2">
                             <h3 className="font-semibold break-words">{item.title}</h3>
                             <span className={cn('rounded-full px-2 py-0.5 text-xs font-semibold capitalize',
-                              item.status === 'sent' ? 'bg-success/10 text-success' : item.status === 'failed' ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground')}>{item.status}</span>
+                              item.status === 'sent' ? 'bg-success/10 text-success' : item.status === 'failed' ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground')}>{item.status === 'legacy' ? 'Historical (legacy)' : item.status}</span>
                             {item.archived ? <span className="text-xs text-muted-foreground">Archived</span> : null}
                           </div>
                           <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap break-words line-clamp-3">{item.message}</p>
+                          <details className="mt-2 text-sm">
+                            <summary className="cursor-pointer text-primary font-medium">View full message and details</summary>
+                            <p className="mt-2 rounded-lg bg-muted/30 p-3 whitespace-pre-wrap break-words">{item.message}</p>
+                          </details>
                           <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-muted-foreground">
                             <span>Audience: {item.role_target || 'All active users'}</span>
                             <span>Created: {item.created_at ? new Date(item.created_at).toLocaleString() : '—'}</span>
                             <span>By: {item.created_by_name || 'Admin'}</span>
-                            <span>Delivered: {Number(item.delivered_count || 0)}/{Number(item.recipient_count || 0)}</span>
-                            {Number(item.failed_count || 0) > 0 && <span className="text-destructive">Failed: {item.failed_count}</span>}
+                            {item.status !== 'legacy' && <span>Delivered: {Number(item.delivered_count || 0)}/{Number(item.recipient_count || 0)}</span>}
+                            {item.status !== 'legacy' && Number(item.failed_count || 0) > 0 && <span className="text-destructive">Failed: {item.failed_count}</span>}
+                            {item.status === 'legacy' && <span>Delivery details unavailable for this older record</span>}
                           </div>
                         </div>
                       </div>
