@@ -130,7 +130,7 @@ export default function CourseTransfersPage() {
             <label className="space-y-1 text-xs"><span className="font-semibold">Admin note (optional)</span><input value={note} onChange={e => setNote(e.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" placeholder="Reason or audit note" /></label>
             <div className="flex gap-2"><Button size="sm" disabled={!!busy} onClick={() => run(item.id, `/api/admin/course-transfers/${item.id}/decision`, { decision: 'approve', unpaid_earnings_action: earningsAction, note })}>Approve transfer</Button><Button size="sm" variant="destructive" disabled={!!busy} onClick={() => run(item.id, `/api/admin/course-transfers/${item.id}/decision`, { decision: 'reject', note })}>Reject</Button></div>
           </div>}
-          {item.admin_status === 'pending' && item.recipient_status !== 'accepted' && <p className="text-xs text-muted-foreground">Waiting for the selected recipient to accept or decline.</p>}
+          {item.admin_status === 'pending' && item.recipient_status !== 'accepted' && <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-xs text-muted-foreground">Waiting for the selected recipient to accept or decline. Admin may reject the request at this stage.</p><Button size="sm" variant="destructive" disabled={!!busy} onClick={() => run(item.id, `/api/admin/course-transfers/${item.id}/decision`, { decision: 'reject', note })}>Reject request</Button></div>}
         </CardContent></Card>)}
       </section>}
 
