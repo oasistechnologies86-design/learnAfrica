@@ -163,6 +163,8 @@ export default function AdminPage() {
   const [feePreview, setFeePreview] = useState(null);
   const [savingFeePolicy, setSavingFeePolicy] = useState(false);
   const [feeOverrideEdits, setFeeOverrideEdits] = useState({});
+  const [earningsInstructorSearch, setEarningsInstructorSearch] = useState('');
+  const [earningsInstructorCourseFilter, setEarningsInstructorCourseFilter] = useState('all');
   const [savingFeeOverride, setSavingFeeOverride] = useState('');
 
   const showStatus = (type, msg) => {
@@ -222,6 +224,16 @@ export default function AdminPage() {
   useEffect(() => { if (tab === 'Applications') load('Applications'); }, [appFilter]);
   useEffect(() => { if (tab === 'Guide') load('Guide'); }, [tab === 'Guide']);
 
+  const filteredEarningsInstructors = (earnings?.instructors || []).filter(inst => {
+    const query = earningsInstructorSearch.trim().toLowerCase();
+    const matchesSearch = !query || [inst.name, inst.email]
+      .some(value => String(value || '').toLowerCase().includes(query));
+    const courseCount = Number(inst.course_count || 0);
+    const matchesCourses = earningsInstructorCourseFilter === 'all' ||
+      (earningsInstructorCourseFilter === 'has_courses' ? courseCount > 0 : courseCount === 0);
+    return matchesSearch && matchesCourses;
+  });
+
   const filteredInstructors = instructors.filter(inst => {
     const query = search.trim().toLowerCase();
     const matchesSearch = !query || [inst.name, inst.email, inst.location]
@@ -256,6 +268,7 @@ export default function AdminPage() {
   };
 
   const changeRole = async (uid, role) => {
+    if (!(await window.LearnAfricaDialog.confirm(`Change this account's role to ${role}? This changes the account's access and permissions.`))) return;
     setActionLoading(uid + 'role');
     try {
       await API(`/api/admin/users/${uid}/role`, { method: 'PUT', body: JSON.stringify({ role }) });
@@ -1223,6 +1236,9 @@ export default function AdminPage() {
                       }}>Preview impact</Button>
                     <Button className="flex-1" disabled={savingFeePolicy}
                       onClick={async () => {
+                        const rate = Number(paystackFeePolicy.default_rate_pct);
+                        if (!Number.isFinite(rate) || rate < 0 || rate > 100) { showStatus('error', 'Enter a Paystack fee rate between 0 and 100.'); return; }
+                        if (!(await window.LearnAfricaDialog.confirm(`Save the default Paystack fee rate of ${rate}% effective from ${paystackFeePolicy.effective_from || 'the selected date'}? This affects the financial calculations for the selected period; recorded payouts are not rewritten.`))) return;
                         setSavingFeePolicy(true);
                         try {
                           const saved = await API('/api/admin/paystack-fee-policy', { method: 'PUT', body: JSON.stringify({
@@ -1389,6 +1405,10 @@ export default function AdminPage() {
                                     <div className="flex flex-wrap gap-1 mt-2">
                                       <Button size="sm" disabled={savingFeeOverride === inst.id || feeOverrideEdits[inst.id] === undefined || feeOverrideEdits[inst.id] === ''}
                                         onClick={async () => {
+                                          const rate = Number(feeOverrideEdits[inst.id]);
+                                          const effectiveFrom = feeOverrideDates[inst.id] || paystackFeePolicy.effective_from;
+                                          if (!Number.isFinite(rate) || rate < 0 || rate > 100) { showStatus('error', 'Enter an instructor Paystack fee rate between 0 and 100.'); return; }
+                                          if (!(await window.LearnAfricaDialog.confirm(`Save a Paystack fee rate of ${rate}% for ${inst.name || inst.email || 'this instructor'} from ${effectiveFrom || 'the selected date'}?`))) return;
                                           setSavingFeeOverride(inst.id);
                                           try {
                                             await API('/api/admin/instructors/' + inst.id + '/paystack-fee-policy', { method: 'PUT', body: JSON.stringify({ rate_pct: Number(feeOverrideEdits[inst.id]), effective_from: feeOverrideDates[inst.id] || paystackFeePolicy.effective_from }) });
@@ -1400,6 +1420,7 @@ export default function AdminPage() {
                                       {(paystackFeePolicy.instructor_overrides || {})[inst.id] && (
                                         <Button size="sm" variant="outline" disabled={savingFeeOverride === inst.id}
                                           onClick={async () => {
+                                            if (!(await window.LearnAfricaDialog.confirm(`Reset ${inst.name || inst.email || 'this instructor'} to the default Paystack fee rate?`))) return;
                                             setSavingFeeOverride(inst.id);
                                             try {
                                               await API('/api/admin/instructors/' + inst.id + '/paystack-fee-policy', { method: 'PUT', body: JSON.stringify({ reset_to_default: true }) });
@@ -1424,6 +1445,54 @@ export default function AdminPage() {
                   ) : (
                     <div className="p-8 text-center text-muted-foreground text-sm">No paid course sales yet.</div>
                   )}
+                </Card>
+              )}
+              {earnings && (
+                <Card className="overflow-hidden">
+                  <div className="p-5 border-b border-border bg-muted/20 space-y-3">
+                    <div>
+                      <h2 className="font-bold text-base flex items-center gap-2"><Search className="h-4 w-4 text-primary" /> Search Instructors</h2>
+                      <p className="text-xs text-muted-foreground mt-1">Find an instructor in the earnings records without changing the separate Instructors tab search.</p>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_220px_auto] gap-2">
+                      <div className="relative min-w-0">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input aria-label="Search earnings instructors by name or email" placeholder="Search instructor name or email…" value={earningsInstructorSearch} onChange={e => setEarningsInstructorSearch(e.target.value)} className="pl-9" />
+                      </div>
+                      <select aria-label="Filter earnings instructors by course activity" value={earningsInstructorCourseFilter} onChange={e => setEarningsInstructorCourseFilter(e.target.value)} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
+                        <option value="all">All course activity</option>
+                        <option value="has_courses">Has courses</option>
+                        <option value="no_courses">No courses</option>
+                      </select>
+                      <Button size="sm" variant="outline" disabled={!earningsInstructorSearch && earningsInstructorCourseFilter === 'all'} onClick={() => { setEarningsInstructorSearch(''); setEarningsInstructorCourseFilter('all'); }}>Clear</Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{filteredEarningsInstructors.length} of {(earnings.instructors || []).length} instructors</p>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted/20 border-b border-border">
+                        <tr>
+                          <th className="p-3 text-left font-medium text-muted-foreground">Instructor</th>
+                          <th className="p-3 text-center font-medium text-muted-foreground">Courses</th>
+                          <th className="p-3 text-right font-medium text-muted-foreground">Gross</th>
+                          <th className="p-3 text-right font-medium text-muted-foreground">Paystack fees</th>
+                          <th className="p-3 text-right font-medium text-muted-foreground">Instructor earnings</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredEarningsInstructors.map((inst, index) => (
+                          <tr key={inst.id || index} className="border-b border-border/40 hover:bg-muted/20">
+                            <td className="p-3"><p className="font-medium">{inst.name || 'Unnamed instructor'}</p><p className="text-xs text-muted-foreground break-all">{inst.email}</p></td>
+                            <td className="p-3 text-center tabular-nums">{inst.course_count ?? 0}</td>
+                            <td className="p-3 text-right tabular-nums">{formatPrice(inst.gross_revenue || 0)}</td>
+                            <td className="p-3 text-right tabular-nums">{formatPrice(inst.paystack_fees || 0)}</td>
+                            <td className="p-3 text-right font-semibold tabular-nums">{formatPrice(inst.instructor_earnings || 0)}</td>
+                          </tr>
+                        ))}
+                        {filteredEarningsInstructors.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">No instructors match this search and filter.</td></tr>}
+                      </tbody>
+                    </table>
+                  </div>
                 </Card>
               )}
               {!earnings && <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary/50" /></div>}
