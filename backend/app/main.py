@@ -860,39 +860,39 @@ def create_app() -> Flask:
                 used INTEGER DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )""")
-                """CREATE TABLE IF NOT EXISTS course_transfer_requests (
-                    id TEXT PRIMARY KEY,
-                    course_id TEXT NOT NULL,
-                    course_title TEXT,
-                    from_instructor_id TEXT NOT NULL,
-                    from_instructor_name TEXT,
-                    to_instructor_id TEXT NOT NULL,
-                    to_instructor_name TEXT,
-                    reason TEXT,
-                    recipient_status TEXT NOT NULL DEFAULT 'pending',
-                    admin_status TEXT NOT NULL DEFAULT 'pending',
-                    admin_note TEXT,
-                    unpaid_earnings_action TEXT NOT NULL DEFAULT 'keep_original',
-                    requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    recipient_responded_at TIMESTAMP,
-                    decided_at TIMESTAMP,
-                    decided_by TEXT,
-                    completed_at TIMESTAMP
-                )""",
-                """CREATE TABLE IF NOT EXISTS course_transfer_history (
-                    id TEXT PRIMARY KEY,
-                    course_id TEXT NOT NULL,
-                    course_title TEXT,
-                    from_instructor_id TEXT NOT NULL,
-                    from_instructor_name TEXT,
-                    to_instructor_id TEXT NOT NULL,
-                    to_instructor_name TEXT,
-                    transfer_request_id TEXT,
-                    reason TEXT,
-                    unpaid_earnings_action TEXT DEFAULT 'keep_original',
-                    actor_user_id TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )""",
+            stmts.append("""CREATE TABLE IF NOT EXISTS course_transfer_requests (
+                id TEXT PRIMARY KEY,
+                course_id TEXT NOT NULL,
+                course_title TEXT,
+                from_instructor_id TEXT NOT NULL,
+                from_instructor_name TEXT,
+                to_instructor_id TEXT NOT NULL,
+                to_instructor_name TEXT,
+                reason TEXT,
+                recipient_status TEXT NOT NULL DEFAULT 'pending',
+                admin_status TEXT NOT NULL DEFAULT 'pending',
+                admin_note TEXT,
+                unpaid_earnings_action TEXT NOT NULL DEFAULT 'keep_original',
+                requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                recipient_responded_at TIMESTAMP,
+                decided_at TIMESTAMP,
+                decided_by TEXT,
+                completed_at TIMESTAMP
+            )""")
+            stmts.append("""CREATE TABLE IF NOT EXISTS course_transfer_history (
+                id TEXT PRIMARY KEY,
+                course_id TEXT NOT NULL,
+                course_title TEXT,
+                from_instructor_id TEXT NOT NULL,
+                from_instructor_name TEXT,
+                to_instructor_id TEXT NOT NULL,
+                to_instructor_name TEXT,
+                transfer_request_id TEXT,
+                reason TEXT,
+                unpaid_earnings_action TEXT DEFAULT 'keep_original',
+                actor_user_id TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )""")
             # Also ensure the new columns on transactions exist (idempotent)
             extra_cols = [
                 "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS coupon_code TEXT",
