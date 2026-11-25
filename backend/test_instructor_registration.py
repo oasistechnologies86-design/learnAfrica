@@ -82,8 +82,8 @@ check('instructor registration defaults to free', body.get('is_free') is True an
 # ── Item 4: Ghana details required on instructor signup ──────────────────────
 r = signup_instructor('shortbio@example.com', {'bio': 'I teach technology.'})
 check('instructor signup rejects a bio below 20 words', r.status_code == 400 and '20 words' in (r.get_json() or {}).get('error', ''), r.get_json())
-r = signup_instructor('exact20@example.com', {'bio': 'I teach practical technology skills through clear lessons, useful examples, supportive feedback, and projects that help learners grow with confidence every day.'})
-check('instructor signup accepts a bio of at least 20 words', r.status_code in (200, 201), (r.get_json() or {}).get('error', r.status_code))
+r = signup_instructor('exact20@example.com', {'bio': 'I teach practical technology skills through clear lessons, useful examples, supportive feedback, and projects that help learners grow confidently daily.'})
+check('instructor signup accepts a bio of exactly 20 words', r.status_code in (200, 201), (r.get_json() or {}).get('error', r.status_code))
 
 r = signup_instructor('nocard@example.com', {'ghana_card_number': '', 'ghana_post_gps': 'GA-123-4567'})
 check('instructor signup rejected without Ghana Card', r.status_code == 400, r.status_code)
