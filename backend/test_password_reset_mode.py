@@ -333,6 +333,12 @@ def complete_request_for(email, password):
     if not token_match:
         return item, None, None
     token_value = token_match.group(1)
+    rejected = c.post('/api/auth/reset-password', json={
+        'token': token_value, 'password': password,
+        'confirm_password': 'mismatched-confirmation',
+    })
+    check(f'{email} mismatched confirmation is rejected before completion',
+          rejected.status_code == 400, str(rejected.status_code))
     result = c.post('/api/auth/reset-password', json={
         'token': token_value, 'password': password,
         'confirm_password': password,
