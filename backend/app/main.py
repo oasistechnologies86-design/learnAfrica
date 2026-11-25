@@ -12181,6 +12181,9 @@ def create_app() -> Flask:
                     auto_sent = True
                 else:
                     delivery_error = (err or 'Automatic email delivery failed')[:1000]
+                    # The raw link was never delivered or exposed to an admin.
+                    # Revoke that token; the admin will mint a fresh link.
+                    db.execute('UPDATE password_reset_tokens SET used=1 WHERE request_id=? AND used=0', (rid,))
                     db.execute("UPDATE password_reset_requests SET status='manual_fallback', delivery_error=? WHERE id=?",
                                (delivery_error, rid))
                     db.commit()
@@ -12190,6 +12193,7 @@ def create_app() -> Flask:
                 app.logger.error(f'forgot_password auto-send failed: {delivery_error}')
                 if rid:
                     try:
+                        db.execute('UPDATE password_reset_tokens SET used=1 WHERE request_id=? AND used=0', (rid,))
                         db.execute("UPDATE password_reset_requests SET status='manual_fallback', delivery_error=? WHERE id=?",
                                    (delivery_error, rid))
                         db.commit()
