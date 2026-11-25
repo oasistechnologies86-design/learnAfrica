@@ -39,6 +39,13 @@ with app.app_context():
             "INSERT INTO users (id,name,email,password_hash,role,instructor_status,is_active,token_version) "
             "VALUES (?,?,?,?,?,?,1,0)",
             (uid, name, email, generate_password_hash('Pass12345!'), role, status))
+    for uid, name in [('old1', 'Original Instructor'), ('new1', 'Receiving Instructor')]:
+        db.execute(
+            """INSERT INTO instructor_applications
+               (id,user_id,status,bio,applied_at,ghana_card_number,ghana_post_gps)
+               VALUES (?,?, 'approved', 'Experienced instructor', CURRENT_TIMESTAMP,
+                       'GHA-123456789-0', 'GA-123-4567')""",
+            (f'app-{uid}', uid))
     db.execute(
         """INSERT INTO courses (id,title,instructor_id,instructor_name,is_published,is_visible)
            VALUES ('course-transfer-1','Transferred Course','old1','Original Instructor',1,1)""")
