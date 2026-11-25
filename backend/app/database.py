@@ -395,6 +395,17 @@ def ensure_transactions_table(db):
 # Each string is a CREATE TABLE IF NOT EXISTS statement.
 # Written in Postgres syntax — SQLite auto-adapts SERIAL → INTEGER PRIMARY KEY AUTOINCREMENT.
 TABLES = [
+    """CREATE TABLE IF NOT EXISTS account_deletion_events (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        user_name TEXT,
+        user_email TEXT,
+        user_role TEXT,
+        instructor_status TEXT,
+        event_type TEXT NOT NULL DEFAULT 'deleted',
+        actor_user_id TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )""",
     """CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
@@ -909,6 +920,12 @@ TABLES = [
 
 # Column migrations for existing databases
 MIGRATIONS = [
+    # Account deletion is a reversible soft-delete marker; existing users remain intact.
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_by TEXT",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS deletion_reason TEXT",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS deletion_cleared_at TIMESTAMP",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS deletion_cleared_by TEXT",
     # Password-reset delivery diagnostics are additive for existing installations.
     "ALTER TABLE password_reset_requests ADD COLUMN IF NOT EXISTS delivery_error TEXT",
     "ALTER TABLE password_reset_requests ADD COLUMN IF NOT EXISTS handling_method TEXT",
