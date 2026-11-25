@@ -43,7 +43,7 @@ function parseResetTimestamp(value) {
   let normalized = value.trim();
   if (!normalized) return null;
   normalized = normalized.replace(' ', 'T');
-  if (!/(?:Z|[+-]\\d{2}:?\\d{2})$/i.test(normalized)) normalized += 'Z';
+  if (!/(?:Z|[+-]\d{2}:?\d{2})$/i.test(normalized)) normalized += 'Z';
   const date = new Date(normalized);
   return Number.isFinite(date.getTime()) ? date : null;
 }
