@@ -12280,6 +12280,7 @@ def create_app() -> Flask:
         if not _rate_limit(f'reset:ip:{ip}', 10, 900):
             return jsonify({'error': 'Too many attempts. Please try again later.'}), 429
         db = get_db()
+        _ensure_password_reset_request_columns(db)
         row = db.execute('SELECT * FROM password_reset_tokens WHERE token_hash=?',
                          (_hash_reset_token(raw),)).fetchone()
         if not row or int(row['used'] or 0) or _dt_expired(row['expires_at']):
