@@ -234,6 +234,20 @@ export default function PasswordResetRequestsCard({ onChanged }) {
         </div>
       </CardHeader>
       <CardContent>
+        <details className="mb-4 rounded-xl border border-primary/20 bg-primary/5 p-3">
+          <summary className="cursor-pointer select-none text-sm font-semibold text-primary">
+            Forgot Password Guide — Admin
+          </summary>
+          <div className="mt-3 space-y-3 text-xs leading-relaxed text-muted-foreground">
+            <div><strong className="text-foreground">Automatic Email:</strong> When email mode is enabled and delivery succeeds, LearnAfrica sends the one-time reset link. “Email Sent” confirms delivery only; it does not mean the password has changed.</div>
+            <div><strong className="text-foreground">Manual Mode:</strong> When the administrator has selected Manual Mode, the request is queued for admin action. Generate a reset link, then securely share it with the student or email it from this panel when email sending is enabled.</div>
+            <div><strong className="text-foreground">Manual Fallback:</strong> If automatic email delivery fails, the request is routed to the admin. The original fallback classification remains even if you later generate or email a replacement link.</div>
+            <div><strong className="text-foreground">Link Generated / Link Sent:</strong> These indicate that a reset link was created or shared. Links are time-limited and single-use. Generating a newer link invalidates older unused links for that account.</div>
+            <div><strong className="text-foreground">Completed:</strong> This appears only after the student successfully saves a new password. Failed, expired, or merely opened links are not completed.</div>
+            <div><strong className="text-foreground">Tabs and filters:</strong> All Requests shows every request; Gmail Sent shows requests with an email-sent event; Manual shows requests originating in Manual Mode; Manual Fallback shows requests routed to admin after automatic delivery failed. Search by student name/email and use status/date filters to narrow results.</div>
+            <p className="rounded-lg border border-border bg-background/70 p-2"><strong className="text-foreground">Security:</strong> Never post reset links in public channels. Share them only with the account holder and remind them not to share the link or their new password.</p>
+          </div>
+        </details>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2 mb-4">
           <label className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -282,6 +296,8 @@ export default function PasswordResetRequestsCard({ onChanged }) {
               const created = row.created_at_iso || row.created_at;
               const sent = row.email_sent_at_iso || row.email_sent_at;
               const generated = row.link_generated_at_iso || row.link_generated_at;
+              const fallback = row.fallback_at_iso || row.fallback_at;
+              const completed = row.completed_at_iso || row.completed_at || (row.status === 'completed' ? row.resolved_at_iso || row.resolved_at : null);
               const lastAction = row.last_action_at_iso || row.last_action_at || row.resolved_at_iso || row.resolved_at;
               const due = dueBy(created);
               const isOpen = !['completed', 'dismissed'].includes(row.status);
@@ -291,10 +307,12 @@ export default function PasswordResetRequestsCard({ onChanged }) {
                     <div className="min-w-0">
                       <p className="font-medium text-sm truncate">{row.student_name || row.email}</p>
                       <p className="text-xs text-muted-foreground break-all">{row.email}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{row.reason || 'Forgot Password'} · Requested {fmt(created)}</p>
-                      {sent && <p className="text-xs text-success mt-0.5">Email sent {fmt(sent)}</p>}
-                      {generated && <p className="text-xs text-muted-foreground mt-0.5">Link generated {fmt(generated)}</p>}
-                      {lastAction && <p className="text-xs text-muted-foreground mt-0.5">Last admin/system action {fmt(lastAction)}</p>}
+                      <p className="text-xs text-muted-foreground mt-1">{row.reason || 'Forgot Password'} · Requested Date: {fmt(created)}</p>
+                      {sent && <p className="text-xs text-success mt-0.5">Email Sent Date: {fmt(sent)}</p>}
+                      {generated && <p className="text-xs text-muted-foreground mt-0.5">Link Generated Date: {fmt(generated)}</p>}
+                      {fallback && <p className="text-xs text-orange-700 mt-0.5">Fallback Date: {fmt(fallback)}</p>}
+                      {completed && <p className="text-xs text-success mt-0.5">Completed Date: {fmt(completed)}</p>}
+                      {lastAction && <p className="text-xs text-muted-foreground mt-0.5">Last Action Date: {fmt(lastAction)}</p>}
                       {isOpen && due && (
                         <p className={`text-xs mt-1 ${due < new Date() ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
                           {due < new Date() ? `Overdue — was due ${fmt(due.toISOString())}` : `Send by ${fmt(due.toISOString())}`}
