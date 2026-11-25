@@ -238,7 +238,7 @@ export default function AdminPage() {
   }, []);
   useEffect(() => { loadTabCounts(); }, [loadTabCounts, tab]);
   useEffect(() => { if (tab === 'Applications') load('Applications'); }, [appFilter]);
-  useEffect(() => { if (tab === 'Deleted Accounts') load('Deleted Accounts'); }, [deletedSearch, deletedRole]);
+  useEffect(() => { if (tab === 'Deleted Accounts') load('Deleted Accounts'); }, [deletedSearch, deletedRole, tab, load]);
   useEffect(() => { if (tab === 'Guide') load('Guide'); }, [tab === 'Guide']);
 
   const filteredEarningsInstructors = (earnings?.instructors || []).filter(inst => {
@@ -311,11 +311,11 @@ export default function AdminPage() {
 
   const deleteUser = async (uid, role) => {
     if (role === 'superadmin') { showStatus('error', 'Cannot delete the super admin account.'); return; }
-    if (!(await window.LearnAfricaDialog.confirm('Permanently delete this user? This cannot be undone.'))) return;
+    if (!(await window.LearnAfricaDialog.confirm('Move this account to Deleted Accounts? Account access will be disabled. Application, learning, payment, receipt, payout and audit history will be retained. You can clear the list entry later.'))) return;
     setActionLoading(uid + 'delete');
     try {
       await API(`/api/admin/users/${uid}`, { method: 'DELETE' });
-      showStatus('success', 'User deleted permanently.');
+      showStatus('success', 'Account moved to Deleted Accounts. History retained.');
       await load(tab);
     } catch (e) { showStatus('error', e.message); }
     setActionLoading('');
