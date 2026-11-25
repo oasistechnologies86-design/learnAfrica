@@ -5227,6 +5227,32 @@ def create_app() -> Flask:
             sent_at TIMESTAMP
         )""")
         db.commit()
+        # Import prior audit-only broadcasts once. The old sender did not retain
+        # message bodies or delivery receipts, so these are clearly marked legacy.
+        try:
+            legacy_rows = db.execute("SELECT * FROM audit_log WHERE action='broadcast' ORDER BY created_at ASC").fetchall()
+            for legacy in legacy_rows:
+                legacy_id = f"legacy_{legacy['id']}"
+                if db.execute('SELECT id FROM admin_broadcasts WHERE id=?', (legacy_id,)).fetchone():
+                    continue
+                details = {}
+                try:
+                    details = json.loads(legacy['details'] or '{}')
+                except Exception:
+                    pass
+                db.execute(
+                    '''INSERT INTO admin_broadcasts
+                       (id,title,message,role_target,status,created_by,created_by_name,created_at,updated_at)
+                       VALUES(?,?,?,?,?,?,?,?,?)''',
+                    (legacy_id, legacy['target_label'] or 'Previous broadcast',
+                     'Message content and per-user delivery receipts were not retained by the previous broadcast system.',
+                     None if details.get('role') in (None, 'all') else details.get('role'),
+                     'legacy', legacy['actor_id'], legacy['actor_name'],
+                     legacy['created_at'], legacy['created_at'])
+                )
+            db.commit()
+        except Exception as migration_error:
+            app.logger.warning(f'Legacy broadcast history import skipped: {migration_error}')
 
     def _broadcast_send(db, row):
         role_target = row['role_target']
@@ -5238,6 +5264,15 @@ def create_app() -> Flask:
         recipients = db.execute(query, params).fetchall()
         delivered = 0
         for user in recipients:
+            # A retry only fills missing deliveries; it never sends a duplicate
+            # notification to a user who already received this broadcast.
+            already_delivered = db.execute(
+                'SELECT id FROM user_notifications WHERE user_id=? AND data=? LIMIT 1',
+                (user['id'], f"broadcast_{row['id']}")
+            ).fetchone()
+            if already_delivered:
+                delivered += 1
+                continue
             notification_id = create_notification(
                 db, user['id'], row['notification_type'], row['title'],
                 row['message'], f"broadcast_{row['id']}", app.config.get('USE_POSTGRES')
@@ -5245,7 +5280,7 @@ def create_app() -> Flask:
             if notification_id:
                 delivered += 1
         failed = len(recipients) - delivered
-        status = 'sent' if failed == 0 else ('partial' if delivered else 'failed')
+        status = 'sent' if recipients and failed == 0 else ('partial' if delivered else 'failed')
         db.execute(
             'UPDATE admin_broadcasts SET status=?,recipient_count=?,delivered_count=?,failed_count=?,sent_at=?,updated_at=? WHERE id=?',
             (status, len(recipients), delivered, failed, datetime.now().isoformat(), datetime.now().isoformat(), row['id'])
@@ -5393,6 +5428,20 @@ def create_app() -> Flask:
         db.commit()
         audit('broadcast_archive', 'broadcast', broadcast_id, row['title'], {'status': row['status']})
         return jsonify({'message': 'Broadcast archived.'})
+
+    @app.route('/api/admin/broadcasts/<broadcast_id>/restore', methods=['POST'])
+    @admin_required
+    def admin_broadcast_restore(broadcast_id):
+        db = get_db()
+        _ensure_broadcasts_table(db)
+        row = db.execute('SELECT * FROM admin_broadcasts WHERE id=?', (broadcast_id,)).fetchone()
+        if not row:
+            return jsonify({'error': 'Broadcast not found.'}), 404
+        db.execute('UPDATE admin_broadcasts SET archived=0,updated_at=? WHERE id=?',
+                   (datetime.now().isoformat(), broadcast_id))
+        db.commit()
+        audit('broadcast_restore', 'broadcast', broadcast_id, row['title'], {'status': row['status']})
+        return jsonify({'message': 'Broadcast restored to active history.'})
 
     @app.route('/api/admin/broadcasts/<broadcast_id>', methods=['DELETE'])
     @admin_required
