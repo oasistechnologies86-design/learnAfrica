@@ -284,6 +284,7 @@ export default function PasswordResetRequestsCard({ onChanged }) {
               const created = row.created_at_iso || row.created_at;
               const sent = row.email_sent_at_iso || row.email_sent_at;
               const legacySentDate = !sent && ['email_sent', 'link_sent'].includes(row.status) ? created : null;
+              const fallbackDate = !row.fallback_at_iso && !row.fallback_at && row.status === 'manual_fallback' ? created : null;
               const generated = row.link_generated_at_iso || row.link_generated_at;
               const lastAction = row.last_action_at_iso || row.last_action_at || row.resolved_at_iso || row.resolved_at;
               const due = dueBy(created);
@@ -296,6 +297,7 @@ export default function PasswordResetRequestsCard({ onChanged }) {
                       <p className="text-xs text-muted-foreground break-all">{row.email}</p>
                       <p className="text-xs text-muted-foreground mt-1">{row.reason || 'Forgot Password'} · Requested {fmt(created)}</p>
                       {sent ? <p className="text-xs text-success mt-0.5">Email sent {fmt(sent)}</p> : legacySentDate && <p className="text-xs text-success mt-0.5">Email sent · exact send time unavailable; request received {fmt(legacySentDate)}</p>}
+                      {fallbackDate && <p className="text-xs text-orange-700 mt-0.5">Manual fallback · exact fallback time unavailable; request received {fmt(fallbackDate)}</p>}
                       {generated && <p className="text-xs text-muted-foreground mt-0.5">Link generated {fmt(generated)}</p>}
                       {lastAction && <p className="text-xs text-muted-foreground mt-0.5">Last admin/system action {fmt(lastAction)}</p>}
                       {isOpen && due && (
