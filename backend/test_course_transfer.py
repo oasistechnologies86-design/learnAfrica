@@ -56,6 +56,9 @@ with app.app_context():
            VALUES ('session-transfer-1','course-transfer-1','old1','Live class',
                    '2027-01-01 10:00:00',60,'https://example.com/meeting')""")
     db.execute(
+        """INSERT INTO user_enrollments (user_id,course_id,progress)
+           VALUES ('student1','course-transfer-1',65)""")
+    db.execute(
         """INSERT INTO coupons
            (id,code,discount_type,discount_value,applies_to,course_id,created_by)
            VALUES ('coupon-transfer-1','MOVECOURSE','percent',10,'course','course-transfer-1','old1')""")
@@ -133,6 +136,7 @@ with app.app_context():
     coupon = db.execute("SELECT created_by FROM coupons WHERE id='coupon-transfer-1'").fetchone()
     transaction = db.execute("SELECT instructor_id,payout_status FROM transactions WHERE id='tx-transfer-1'").fetchone()
     history = db.execute("SELECT * FROM course_transfer_history WHERE course_id='course-transfer-1'").fetchall()
+    enrollment = db.execute("SELECT progress FROM user_enrollments WHERE user_id='student1' AND course_id='course-transfer-1'").fetchone()
 check('course ownership changes without changing course identity',
       bool(course and course['instructor_id'] == 'new1' and course['instructor_name'] == 'Receiving Instructor'))
 check('original creator is retained for audit',
@@ -144,6 +148,7 @@ check('course coupon management transfers to new owner',
 check('historical unpaid transaction stays with original instructor by default',
       bool(transaction and transaction['instructor_id'] == 'old1' and transaction['payout_status'] == 'pending'))
 check('ownership history is recorded', len(history) == 1)
+check('existing student enrollment and progress remain unchanged', bool(enrollment and enrollment['progress'] == 65))
 new_owner_courses = client.get('/api/instructor/courses', headers=auth(new_token))
 old_owner_courses = client.get('/api/instructor/courses', headers=auth(old_token))
 new_titles = [row.get('title') for row in (new_owner_courses.get_json() or {}).get('courses', [])]
