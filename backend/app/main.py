@@ -12398,11 +12398,11 @@ def create_app() -> Flask:
         token_match = re.search(r'(?:[?&])token=([^&#]+)', link)
         raw_token = token_match.group(1) if token_match else ''
         token_row = db.execute(
-            'SELECT id FROM password_reset_tokens WHERE token_hash=? AND request_id=? '
-            'AND user_id=? AND used=0 AND expires_at>? LIMIT 1',
-            (_hash_reset_token(raw_token), rid, req['user_id'], datetime.utcnow())
+            'SELECT id, expires_at FROM password_reset_tokens WHERE token_hash=? AND request_id=? '
+            'AND user_id=? AND used=0 LIMIT 1',
+            (_hash_reset_token(raw_token), rid, req['user_id'])
         ).fetchone() if raw_token else None
-        if not token_row:
+        if not token_row or _dt_expired(token_row['expires_at']):
             return jsonify({'error': 'This reset link is invalid, expired, already used, or belongs to another request. Generate a fresh link.'}), 400
         canonical_link = f'{_reset_link_base()}/reset-password?token={raw_token}'
         to = (req['email'] or '').strip()
