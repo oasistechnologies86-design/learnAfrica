@@ -330,6 +330,8 @@ export default function AdminPage() {
 
   const sendBroadcast = async () => {
     if (!broadcast.title || !broadcast.message) { showStatus('error', 'Title and message required.'); return; }
+    const audience = broadcast.role || 'all eligible users';
+    if (!(await window.LearnAfricaDialog.confirm(`Send “${broadcast.title}” to ${audience}? This notification will be delivered to the selected audience.`))) return;
     setActionLoading('broadcast');
     try {
       const res = await API('/api/admin/broadcast', { method: 'POST', body: JSON.stringify(broadcast) });
@@ -401,6 +403,7 @@ export default function AdminPage() {
 
   const saveUserEdit = async () => {
     if (!editUser) return;
+    if (!(await window.LearnAfricaDialog.confirm(`Save the account detail changes for ${editUser.name || editUser.email || 'this user'}?`))) return;
     setActionLoading('editUser');
     try {
       await API(`/api/admin/users/${editUser.id}`, { method: 'PUT', body: JSON.stringify(editUser) });
