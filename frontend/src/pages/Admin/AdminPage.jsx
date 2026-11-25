@@ -135,6 +135,12 @@ export default function AdminPage() {
   const [instructorCourseFilter, setInstructorCourseFilter] = useState('all');
   const [broadcast, setBroadcast] = useState({ title: '', message: '', role: '', type: 'system' });
   const [broadcastStatus, setBroadcastStatus] = useState(null);
+  const [broadcastHistory, setBroadcastHistory] = useState([]);
+  const [broadcastEditingId, setBroadcastEditingId] = useState(null);
+  const [broadcastSearch, setBroadcastSearch] = useState('');
+  const [broadcastStatusFilter, setBroadcastStatusFilter] = useState('all');
+  const [broadcastAudienceFilter, setBroadcastAudienceFilter] = useState('all');
+  const [showArchivedBroadcasts, setShowArchivedBroadcasts] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [studentsView, setStudentsView] = useState(null);
   const [identityForm, setIdentityForm] = useState(null); // admin edit of frozen country/ID
@@ -205,15 +211,20 @@ export default function AdminPage() {
           setFinancialSummary({ error: financeError.message });
         }
       }
+      else if (section === 'Broadcast') {
+        const d = await API(`/api/admin/broadcasts?archived=${showArchivedBroadcasts ? 'true' : 'false'}`);
+        setBroadcastHistory(d.broadcasts || []);
+      }
       else if (section === 'Guide') {
         const d = await API('/api/admin/instructor-guide');
         setGuideSteps(d.steps || []);
       }
     } catch (e) { showStatus('error', e.message); }
     setLoading(false);
-  }, [appFilter]);
+  }, [appFilter, showArchivedBroadcasts]);
 
   useEffect(() => { load(tab); }, [tab]);
+  useEffect(() => { if (tab === 'Broadcast') load('Broadcast'); }, [showArchivedBroadcasts]);
 
   const loadTabCounts = useCallback(() => {
     API('/api/admin/tab-counts')
@@ -328,18 +339,64 @@ export default function AdminPage() {
     setActionLoading('');
   };
 
-  const sendBroadcast = async () => {
-    if (!broadcast.title || !broadcast.message) { showStatus('error', 'Title and message required.'); return; }
-    const audience = broadcast.role || 'all eligible users';
-    if (!(await window.LearnAfricaDialog.confirm(`Send “${broadcast.title}” to ${audience}? This notification will be delivered to the selected audience.`))) return;
+  const refreshBroadcastHistory = async () => {
+    const d = await API(`/api/admin/broadcasts?archived=${showArchivedBroadcasts ? 'true' : 'false'}`);
+    setBroadcastHistory(d.broadcasts || []);
+  };
+
+  const saveBroadcast = async (action = 'draft') => {
+    if (!broadcast.title.trim() || !broadcast.message.trim()) {
+      setBroadcastStatus({ type: 'error', msg: 'Title and message are required.' });
+      return;
+    }
+    if (action === 'send') {
+      const audience = broadcast.role || 'all active users';
+      if (!(await window.LearnAfricaDialog.confirm(`Send “${broadcast.title}” to ${audience}? Please confirm the audience and message.`))) return;
+    }
     setActionLoading('broadcast');
     try {
-      const res = await API('/api/admin/broadcast', { method: 'POST', body: JSON.stringify(broadcast) });
-      setBroadcastStatus({ type: 'success', msg: res.message });
+      const payload = { ...broadcast, action };
+      const res = broadcastEditingId
+        ? await API(`/api/admin/broadcasts/${broadcastEditingId}`, { method: 'PUT', body: JSON.stringify(payload) })
+        : await API('/api/admin/broadcasts', { method: 'POST', body: JSON.stringify(payload) });
+      setBroadcastStatus({ type: 'success', msg: res.message || (action === 'send' ? 'Broadcast sent.' : 'Draft saved.') });
       setBroadcast({ title: '', message: '', role: '', type: 'system' });
+      setBroadcastEditingId(null);
+      await refreshBroadcastHistory();
     } catch (e) { setBroadcastStatus({ type: 'error', msg: e.message }); }
-    setActionLoading('');
+    finally { setActionLoading(''); }
   };
+
+  const editBroadcast = (item) => {
+    if (item.status !== 'draft') return;
+    setBroadcastEditingId(item.id);
+    setBroadcast({ title: item.title || '', message: item.message || '', role: item.role_target || '', type: item.notification_type || 'system' });
+    setBroadcastStatus({ type: 'success', msg: 'Draft loaded for editing. Sent broadcasts cannot be changed.' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const runBroadcastAction = async (item, action) => {
+    const prompts = {
+      send: `Send “${item.title}” to ${item.role_target || 'all active users'} now?`,
+      resend: `Retry any failed deliveries for “${item.title}”? Users who already received it will not receive a duplicate.`,
+      archive: `Archive “${item.title}”? It will be hidden from the active history.`,
+      restore: `Restore “${item.title}” to the active broadcast history?`,
+      delete: `Permanently delete “${item.title}” and remove all linked in-app notifications? This cannot be undone.`,
+      duplicate: `Create a new draft copy of “${item.title}”?`,
+    };
+    if (!(await window.LearnAfricaDialog.confirm(prompts[action]))) return;
+    setActionLoading(`broadcast-${item.id}`);
+    try {
+      let result;
+      if (action === 'delete') result = await API(`/api/admin/broadcasts/${item.id}`, { method: 'DELETE' });
+      else if (action === 'send' || action === 'resend') result = await API(`/api/admin/broadcasts/${item.id}/send`, { method: 'POST' });
+      else result = await API(`/api/admin/broadcasts/${item.id}/${action}`, { method: 'POST' });
+      setBroadcastStatus({ type: 'success', msg: result.message || 'Broadcast updated.' });
+      await refreshBroadcastHistory();
+    } catch (e) { setBroadcastStatus({ type: 'error', msg: e.message }); }
+    finally { setActionLoading(''); }
+  };
+
 
   const viewUserDetail = async (uid) => {
     try {
@@ -1727,11 +1784,14 @@ export default function AdminPage() {
           )}
 
           {tab === 'Broadcast' && (
-            <div className="max-w-2xl space-y-6">
-              <Card className="p-6 space-y-5">
-                <div>
-                  <h2 className="text-lg font-bold flex items-center gap-2"><Bell className="h-5 w-5 text-primary" />Send Notification</h2>
-                  <p className="text-sm text-muted-foreground mt-1">Broadcast a message to all users or a specific role.</p>
+            <div className="space-y-6">
+              <Card className="p-5 sm:p-6 space-y-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-bold flex items-center gap-2"><Bell className="h-5 w-5 text-primary" />{broadcastEditingId ? 'Edit Draft' : 'Create Broadcast'}</h2>
+                    <p className="text-sm text-muted-foreground mt-1">Create a draft, preview its audience, then send when ready.</p>
+                  </div>
+                  {broadcastEditingId && <Button type="button" variant="outline" onClick={() => { setBroadcastEditingId(null); setBroadcast({ title: '', message: '', role: '', type: 'system' }); }}>Cancel edit</Button>}
                 </div>
                 {broadcastStatus && (
                   <div className={cn('p-3 rounded-xl text-sm font-medium flex items-center gap-2 border',
@@ -1740,24 +1800,18 @@ export default function AdminPage() {
                     {broadcastStatus.msg}
                   </div>
                 )}
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium block mb-1">Title</label>
-                    <Input value={broadcast.title} placeholder="Notification title"
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium block">Title</label>
+                    <Input value={broadcast.title} maxLength={160} placeholder="Notification title"
                       onChange={e => setBroadcast(p => ({...p, title: e.target.value}))} />
                   </div>
-                  <div>
-                    <label className="text-sm font-medium block mb-1">Message</label>
-                    <textarea value={broadcast.message} placeholder="Your message…"
-                      onChange={e => setBroadcast(p => ({...p, message: e.target.value}))}
-                      className="w-full min-h-[100px] rounded-lg border border-input bg-background px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-primary outline-none" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-sm font-medium block mb-1">Audience</label>
                       <BrandedSelect value={broadcast.role} onChange={e => setBroadcast(p => ({...p, role: e.target.value}))}
                         className="w-full h-10 rounded-lg border border-input bg-background px-3 text-sm">
-                        <option value="">All Users</option>
+                        <option value="">All active users</option>
                         <option value="student">Students only</option>
                         <option value="instructor">Instructors only</option>
                         <option value="admin">Admins only</option>
@@ -1767,17 +1821,111 @@ export default function AdminPage() {
                       <label className="text-sm font-medium block mb-1">Type</label>
                       <BrandedSelect value={broadcast.type} onChange={e => setBroadcast(p => ({...p, type: e.target.value}))}
                         className="w-full h-10 rounded-lg border border-input bg-background px-3 text-sm">
-                        <option value="system">System</option>
-                        <option value="info">Info</option>
-                        <option value="achievement">Achievement</option>
-                        <option value="reminder">Reminder</option>
+                        <option value="system">System</option><option value="info">Info</option>
+                        <option value="achievement">Achievement</option><option value="reminder">Reminder</option>
                       </BrandedSelect>
                     </div>
                   </div>
-                  <Button onClick={sendBroadcast} disabled={actionLoading === 'broadcast'} className="w-full">
-                    {actionLoading === 'broadcast' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                    Send Notification
+                </div>
+                <div>
+                  <label className="text-sm font-medium block mb-1">Message</label>
+                  <textarea value={broadcast.message} maxLength={10000} placeholder="Write your announcement…"
+                    onChange={e => setBroadcast(p => ({...p, message: e.target.value}))}
+                    className="w-full min-h-[120px] rounded-lg border border-input bg-background px-3 py-2 text-sm resize-y focus:ring-2 focus:ring-primary outline-none" />
+                  <p className="text-xs text-muted-foreground text-right mt-1">{broadcast.message.length}/10,000</p>
+                </div>
+                <div className="rounded-xl border border-border bg-muted/20 p-4 space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Live preview</p>
+                  <div className="rounded-lg border border-border bg-card p-4">
+                    <p className="font-semibold break-words">{broadcast.title || 'Your notification title'}</p>
+                    <p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap break-words">{broadcast.message || 'Your announcement message will appear here.'}</p>
+                    <p className="text-xs text-muted-foreground mt-3">Audience: {broadcast.role || 'All active users'} · Type: {broadcast.type}</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button onClick={() => saveBroadcast('draft')} disabled={actionLoading === 'broadcast'} variant="outline">
+                    {actionLoading === 'broadcast' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Save Draft
                   </Button>
+                  <Button onClick={() => saveBroadcast(broadcastEditingId ? 'draft' : 'send')} disabled={actionLoading === 'broadcast'}>
+                    {actionLoading === 'broadcast' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                    {broadcastEditingId ? 'Update Draft' : 'Send Broadcast'}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">Sent broadcasts are preserved as a record and cannot be edited. Duplicate one to prepare a corrected or updated message.</p>
+              </Card>
+
+              <Card className="p-5 sm:p-6 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-bold">Broadcast History</h2>
+                    <p className="text-sm text-muted-foreground">Review delivery results and manage previous announcements.</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">{broadcastHistory.length} records</span>
+                    <Button size="sm" variant="outline" onClick={() => load('Broadcast')}>Refresh</Button>
+                    <Button size="sm" variant="outline" onClick={() => setShowArchivedBroadcasts(v => !v)}>{showArchivedBroadcasts ? 'View active' : 'View archived'}</Button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <Input value={broadcastSearch} placeholder="Search title or message…" onChange={e => setBroadcastSearch(e.target.value)} />
+                  <BrandedSelect value={broadcastStatusFilter} onChange={e => setBroadcastStatusFilter(e.target.value)} className="h-10 rounded-lg border border-input bg-background px-3 text-sm">
+                    <option value="all">All statuses</option><option value="draft">Draft</option>
+                    <option value="sent">Sent</option><option value="partial">Partially sent</option><option value="failed">Failed</option><option value="legacy">Historical (legacy)</option>
+                  </BrandedSelect>
+                  <BrandedSelect value={broadcastAudienceFilter} onChange={e => setBroadcastAudienceFilter(e.target.value)} className="h-10 rounded-lg border border-input bg-background px-3 text-sm">
+                    <option value="all">All audiences</option><option value="">All active users</option>
+                    <option value="student">Students</option><option value="instructor">Instructors</option><option value="admin">Admins</option>
+                  </BrandedSelect>
+                </div>
+                <div className="space-y-3">
+                  {broadcastHistory.filter(item => {
+                    const q = broadcastSearch.trim().toLowerCase();
+                    return (!q || `${item.title || ''} ${item.message || ''}`.toLowerCase().includes(q))
+                      && (broadcastStatusFilter === 'all' || item.status === broadcastStatusFilter)
+                      && (broadcastAudienceFilter === 'all' || (item.role_target || '') === broadcastAudienceFilter);
+                  }).length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">No broadcasts match these filters.</div>
+                  ) : broadcastHistory.filter(item => {
+                    const q = broadcastSearch.trim().toLowerCase();
+                    return (!q || `${item.title || ''} ${item.message || ''}`.toLowerCase().includes(q))
+                      && (broadcastStatusFilter === 'all' || item.status === broadcastStatusFilter)
+                      && (broadcastAudienceFilter === 'all' || (item.role_target || '') === broadcastAudienceFilter);
+                  }).map(item => (
+                    <div key={item.id} className="rounded-xl border border-border p-4 space-y-3">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="font-semibold break-words">{item.title}</h3>
+                            <span className={cn('rounded-full px-2 py-0.5 text-xs font-semibold capitalize',
+                              item.status === 'sent' ? 'bg-success/10 text-success' : item.status === 'failed' ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground')}>{item.status === 'legacy' ? 'Historical (legacy)' : item.status}</span>
+                            {item.archived ? <span className="text-xs text-muted-foreground">Archived</span> : null}
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap break-words line-clamp-3">{item.message}</p>
+                          <details className="mt-2 text-sm">
+                            <summary className="cursor-pointer text-primary font-medium">View full message and details</summary>
+                            <p className="mt-2 rounded-lg bg-muted/30 p-3 whitespace-pre-wrap break-words">{item.message}</p>
+                          </details>
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-muted-foreground">
+                            <span>Audience: {item.role_target || 'All active users'}</span>
+                            <span>Created: {item.created_at ? new Date(item.created_at).toLocaleString() : '—'}</span>
+                            <span>By: {item.created_by_name || 'Admin'}</span>
+                            {item.status !== 'legacy' && <span>Delivered: {Number(item.delivered_count || 0)}/{Number(item.recipient_count || 0)}</span>}
+                            {item.status !== 'legacy' && Number(item.failed_count || 0) > 0 && <span className="text-destructive">Failed: {item.failed_count}</span>}
+                            {item.status === 'legacy' && <span>Delivery details unavailable for this older record</span>}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2 border-t border-border/60 pt-3">
+                        {item.status === 'draft' && <Button size="sm" variant="outline" onClick={() => editBroadcast(item)}>Edit draft</Button>}
+                        {item.status === 'draft' && <Button size="sm" onClick={() => runBroadcastAction(item, 'send')}>Send</Button>}
+                        {(item.status === 'partial' || item.status === 'failed') && <Button size="sm" variant="outline" onClick={() => runBroadcastAction(item, 'resend')}>Retry failed deliveries</Button>}
+                        <Button size="sm" variant="outline" onClick={() => runBroadcastAction(item, 'duplicate')}>Duplicate</Button>
+                        {!showArchivedBroadcasts && <Button size="sm" variant="outline" onClick={() => runBroadcastAction(item, 'archive')}>Archive</Button>}
+                        {showArchivedBroadcasts && <Button size="sm" variant="outline" onClick={() => runBroadcastAction(item, 'restore')}>Restore</Button>}
+                        <Button size="sm" variant="destructive" onClick={() => runBroadcastAction(item, 'delete')}>Delete permanently</Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </Card>
             </div>
