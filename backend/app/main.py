@@ -11336,6 +11336,8 @@ def create_app() -> Flask:
     def _ensure_password_reset_request_columns(db):
         """Additive, idempotent safety migration for reset-delivery diagnostics."""
         ensure_column(db, 'password_reset_requests', 'delivery_error', 'TEXT')
+        ensure_column(db, 'password_reset_requests', 'completed_at', 'TIMESTAMP')
+        ensure_column(db, 'password_reset_requests', 'last_action_at', 'TIMESTAMP')
 
     def _effective_password_reset_mode(db):
         """Resolve the password-reset mode actually in force.
@@ -12290,14 +12292,47 @@ def create_app() -> Flask:
             tv = int(u['token_version'] or 0)
         except Exception:
             tv = 0
-        db.execute('UPDATE users SET password_hash=?, token_version=?, '
-                   'updated_at=CURRENT_TIMESTAMP WHERE id=?',
-                   (generate_password_hash(pw), tv + 1, u['id']))
-        db.execute('UPDATE password_reset_tokens SET used=1 WHERE id=?', (row['id'],))
-        db.execute("UPDATE password_reset_requests SET status='completed', delivery_error=NULL, resolved_at=? "
-                   "WHERE user_id=? AND status IN ('pending','link_generated','link_sent','email_sent','manual_fallback')",
-                   (datetime.utcnow(), u['id']))
-        db.commit()
+        # Consume the token conditionally before changing the password. This
+        # prevents two concurrent submissions from reusing the same one-time link.
+        consumed = db.execute(
+            'UPDATE password_reset_tokens SET used=1 WHERE id=? AND used=0',
+            (row['id'],)
+        )
+        if consumed.rowcount != 1:
+            db.rollback()
+            return jsonify({'error': 'This reset link has already been used or is no longer valid.'}), 400
+        completed_at = datetime.utcnow()
+        try:
+            db.execute('UPDATE users SET password_hash=?, token_version=?, '
+                       'updated_at=CURRENT_TIMESTAMP WHERE id=?',
+                       (generate_password_hash(pw), tv + 1, u['id']))
+            request_id = row['request_id'] if 'request_id' in row.keys() else None
+            if request_id:
+                db.execute(
+                    "UPDATE password_reset_requests SET status='completed', delivery_error=NULL, "
+                    "completed_at=?, resolved_at=?, last_action_at=? "
+                    "WHERE id=? AND user_id=? AND status IN "
+                    "('pending','link_generated','link_sent','email_sent','manual_fallback')",
+                    (completed_at, completed_at, completed_at, request_id, u['id'])
+                )
+            else:
+                # Legacy tokens without a request reference resolve only the
+                # newest active request for this account, never every request.
+                latest = db.execute(
+                    "SELECT id FROM password_reset_requests WHERE user_id=? AND status IN "
+                    "('pending','link_generated','link_sent','email_sent','manual_fallback') "
+                    "ORDER BY created_at DESC LIMIT 1", (u['id'],)
+                ).fetchone()
+                if latest:
+                    db.execute(
+                        "UPDATE password_reset_requests SET status='completed', delivery_error=NULL, "
+                        "completed_at=?, resolved_at=?, last_action_at=? WHERE id=?",
+                        (completed_at, completed_at, completed_at, latest['id'])
+                    )
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
         audit('password_reset_completed', 'user', u['id'], None, {})
         try:
             create_notification(
