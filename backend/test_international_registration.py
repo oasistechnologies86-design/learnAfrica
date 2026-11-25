@@ -80,7 +80,9 @@ def signup_instructor(email, extra=None):
                             'account_number': '1234567890', 'swift': 'EXAMP123'},
     })
     body = {'name': 'Applicant', 'email': email, 'password': 'Pass12345!',
-            'role': 'instructor', 'phone': '+233244123456', 'accept_terms': True,
+            'role': 'instructor',
+            'bio': 'Experienced instructor teaching practical technology skills with clear lessons, useful examples, supportive feedback, and projects that help learners grow confidently.',
+            'phone': '+233244123456', 'accept_terms': True,
             'accept_verification': True, **payout}
     body.update(extra)
     return c.post('/api/auth/signup', json=body)
