@@ -102,7 +102,7 @@ export default function PasswordResetRequestsCard({ onChanged }) {
   const load = useCallback(() => {
     setLoading(true);
     API('/api/admin/password-reset-requests?status=all')
-      .then(data => setRequests(Array.isArray(data.requests) ? data.requests : []))
+      .then(data => { setRequests(Array.isArray(data.requests) ? data.requests : []); setPage(1); })
       .catch(error => setMsg({ type: 'error', text: error.message || 'Could not load password-reset requests.' }))
       .finally(() => setLoading(false));
   }, []);
