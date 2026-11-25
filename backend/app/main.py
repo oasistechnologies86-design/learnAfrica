@@ -1809,12 +1809,27 @@ def create_app() -> Flask:
     def delete_account():
         d = request.get_json() or {}
         db = get_db()
-        u = db.execute('SELECT email FROM users WHERE id=?',(g.current_user['user_id'],)).fetchone()
-        if not u or (d.get('email','').lower() != u['email'].lower()):
+        uid = g.current_user['user_id']
+        u = db.execute('SELECT id,name,email,role,instructor_status,deleted_at FROM users WHERE id=?',(uid,)).fetchone()
+        if not u or (str(d.get('email') or '').strip().lower() != str(u['email'] or '').lower()):
             return jsonify({'error': 'Email does not match'}), 400
-        db.execute('UPDATE users SET is_active=0 WHERE id=?',(g.current_user['user_id'],))
+        if u['deleted_at']:
+            return jsonify({'message': 'Account is already deleted'}), 200
+        db.execute("UPDATE users SET is_active=0,deleted_at=CURRENT_TIMESTAMP,deleted_by=?,deletion_reason='self_service',token_version=COALESCE(token_version,0)+1,updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                   (uid, uid))
+        db.execute("INSERT INTO account_deletion_events (id,user_id,user_name,user_email,user_role,instructor_status,event_type,actor_user_id) VALUES (?,?,?,?,?,?,?,?)",
+                   (str(uuid.uuid4()),uid,u['name'],u['email'],u['role'],u['instructor_status'],'self_deleted',uid))
+        admins = db.execute("SELECT id FROM users WHERE role IN ('admin','superadmin') AND is_active=1").fetchall()
+        for admin in admins:
+            try:
+                create_notification(db, admin['id'], 'system', 'Account deleted',
+                    f"{u['name'] or u['email']} ({u['role']}) deleted their LearnAfrica account.",
+                    f"account_deleted_{uid}", app.config.get('USE_POSTGRES'))
+            except Exception as notify_error:
+                app.logger.warning(f'account deletion admin notification failed: {notify_error}')
         db.commit()
-        return jsonify({'message': 'Account deleted'})
+        audit('account_self_deleted', 'user', uid, u['email'], {'role':u['role'],'instructor_status':u['instructor_status']})
+        return jsonify({'message': 'Account deleted. Your account access has been disabled.'})
     
     # ── INSTRUCTOR APPLICATION ────────────────────────────────────────────────────
     @app.route('/api/instructor/apply', methods=['POST'])
@@ -4877,8 +4892,12 @@ def create_app() -> Flask:
     def list_applications():
         db = get_db()
         status_filter = request.args.get('status', 'pending')
-        rows = db.execute('''SELECT ia.*,u.name,u.email,u.avatar FROM instructor_applications ia
-                             JOIN users u ON u.id=ia.user_id
+        rows = db.execute('''SELECT ia.*,u.name,u.email,u.avatar,
+                                    u.deleted_at AS account_deleted_at,
+                                    u.deleted_by AS account_deleted_by,
+                                    u.role AS account_role
+                             FROM instructor_applications ia
+                             LEFT JOIN users u ON u.id=ia.user_id
                              WHERE ia.status=? ORDER BY ia.submitted_at DESC''', (status_filter,)).fetchall()
         return jsonify({'applications': safe_list(rows)})
     
@@ -4909,6 +4928,9 @@ def create_app() -> Flask:
             
             app_row = db.execute('SELECT * FROM instructor_applications WHERE user_id=?',(uid,)).fetchone()
             if not app_row: return jsonify({'error': 'Application not found'}), 404
+            account = db.execute('SELECT deleted_at,is_active FROM users WHERE id=?',(uid,)).fetchone()
+            if not account or account['deleted_at'] or not account['is_active']:
+                return jsonify({'error': 'This account has been deleted or disabled. The application is retained for history and cannot be approved.'}), 409
             if action == 'approve' and _setting_flag(db, 'require_payout_before_approval', False) and _instructor_missing_payout(db, uid):
                 return jsonify({'error': 'This applicant has not added a payout method yet. '
                                          'They must add one on their Profile page before they can be approved.'}), 400
@@ -6073,20 +6095,76 @@ def create_app() -> Flask:
     def admin_delete_user(uid):
         pass  # os imported at top
         db = get_db()
-        target = db.execute('SELECT role, email FROM users WHERE id=?', (uid,)).fetchone()
+        target = db.execute('SELECT id,name,role,email,instructor_status,deleted_at FROM users WHERE id=?', (uid,)).fetchone()
         if not target: return jsonify({'error': 'Not found'}), 404
         if target['role'] == 'superadmin':
             return jsonify({'error': 'The superadmin account cannot be deleted'}), 403
-        default_email = os.environ.get('ADMIN_EMAIL', os.environ.get('ADMIN_EMAIL', 'admin@learnafrica.com')).lower()
-        if target['email'].lower() == default_email:
+        default_email = os.environ.get('ADMIN_EMAIL', 'admin@learnafrica.com').lower()
+        if str(target['email'] or '').lower() == default_email:
             return jsonify({'error': 'The default admin account cannot be deleted'}), 403
         if uid == g.current_user['user_id']:
             return jsonify({'error': 'You cannot delete your own account'}), 403
-        db.execute('DELETE FROM users WHERE id=?', (uid,))
+        if target['deleted_at']:
+            return jsonify({'message': 'Account is already in Deleted Accounts'}), 200
+        db.execute("UPDATE users SET is_active=0,deleted_at=CURRENT_TIMESTAMP,deleted_by=?,deletion_reason='admin_action',token_version=COALESCE(token_version,0)+1,updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                   (g.current_user['user_id'],uid))
+        db.execute("INSERT INTO account_deletion_events (id,user_id,user_name,user_email,user_role,instructor_status,event_type,actor_user_id) VALUES (?,?,?,?,?,?,?,?)",
+                   (str(uuid.uuid4()),uid,target['name'],target['email'],target['role'],target['instructor_status'],'admin_deleted',g.current_user['user_id']))
         db.commit()
-        audit('delete_user', 'user', uid, target['email'], {})
-        return jsonify({'message': 'User deleted permanently'})
+        audit('delete_user_soft', 'user', uid, target['email'], {'role':target['role']})
+        return jsonify({'message': 'Account moved to Deleted Accounts. Related learning and financial records were retained.'})
     
+    @app.route('/api/admin/deleted-accounts', methods=['GET'])
+    @admin_required
+    def admin_deleted_accounts():
+        db = get_db()
+        q = (request.args.get('q') or '').strip().lower()
+        role = (request.args.get('role') or '').strip().lower()
+        sql = """SELECT id,name,email,role,instructor_status,created_at,deleted_at,deleted_by,deletion_reason
+                 FROM users WHERE deleted_at IS NOT NULL AND deletion_cleared_at IS NULL"""
+        params = []
+        if q:
+            sql += " AND (LOWER(COALESCE(name,'')) LIKE ? OR LOWER(COALESCE(email,'')) LIKE ?)"
+            params.extend([f'%{q}%',f'%{q}%'])
+        if role in ('student','instructor','admin','superadmin'):
+            sql += " AND LOWER(COALESCE(role,''))=?"
+            params.append(role)
+        sql += " ORDER BY deleted_at DESC"
+        rows = db.execute(sql,tuple(params)).fetchall()
+        return jsonify({'accounts':safe_list(rows),'count':len(rows)})
+
+    @app.route('/api/admin/deleted-accounts/<uid>/history', methods=['GET'])
+    @admin_required
+    def admin_deleted_account_history(uid):
+        db = get_db()
+        rows = db.execute("SELECT id,user_id,user_name,user_email,user_role,instructor_status,event_type,actor_user_id,created_at FROM account_deletion_events WHERE user_id=? ORDER BY created_at DESC",(uid,)).fetchall()
+        return jsonify({'events':safe_list(rows)})
+
+    @app.route('/api/admin/deleted-accounts/<uid>/clear', methods=['POST'])
+    @admin_required
+    def admin_clear_deleted_account(uid):
+        db = get_db()
+        row = db.execute("SELECT id FROM users WHERE id=? AND deleted_at IS NOT NULL AND deletion_cleared_at IS NULL",(uid,)).fetchone()
+        if not row:
+            return jsonify({'error':'Deleted account not found'}),404
+        db.execute("UPDATE users SET deletion_cleared_at=CURRENT_TIMESTAMP,deletion_cleared_by=? WHERE id=?",(g.current_user['user_id'],uid))
+        db.execute("INSERT INTO account_deletion_events (id,user_id,event_type,actor_user_id) VALUES (?,?,?,?)",(str(uuid.uuid4()),uid,'cleared_from_admin_list',g.current_user['user_id']))
+        db.commit()
+        audit('deleted_account_cleared','user',uid,None,{'scope':'single'})
+        return jsonify({'message':'Account cleared from the Deleted Accounts list. Protected records were retained.'})
+
+    @app.route('/api/admin/deleted-accounts/clear-all', methods=['POST'])
+    @admin_required
+    def admin_clear_all_deleted_accounts():
+        db = get_db()
+        count_row = db.execute("SELECT COUNT(*) AS c FROM users WHERE deleted_at IS NOT NULL AND deletion_cleared_at IS NULL").fetchone()
+        count = int((count_row['c'] if count_row else 0) or 0)
+        db.execute("UPDATE users SET deletion_cleared_at=CURRENT_TIMESTAMP,deletion_cleared_by=? WHERE deleted_at IS NOT NULL AND deletion_cleared_at IS NULL",(g.current_user['user_id'],))
+        db.execute("INSERT INTO account_deletion_events (id,user_id,event_type,actor_user_id) VALUES (?,?,?,?)",(str(uuid.uuid4()),'all','cleared_all_from_admin_list',g.current_user['user_id']))
+        db.commit()
+        audit('deleted_accounts_cleared_all','user','all',None,{'count':count})
+        return jsonify({'message':f'{count} deleted account(s) cleared from the list. Protected records were retained.','count':count})
+
     @app.route('/api/admin/users/<uid>', methods=['PUT'])
     @admin_required
     def admin_update_user(uid):
