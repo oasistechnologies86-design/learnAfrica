@@ -219,6 +219,13 @@ with app.app_context():
 check('failed delivery is tagged manual_fallback with its provider error',
       row and row['status'] == 'manual_fallback' and 'SendPulse send failed' in (row['delivery_error'] or ''),
       str(dict(row) if row else None))
+admin_rows = (c.get('/api/admin/password-reset-requests', headers=ADMIN).get_json() or {}).get('requests', [])
+fallback_item = next((item for item in admin_rows if item.get('email') == 'fix1a@example.com'), None)
+check('admin request list exposes Manual Fallback and the delivery reason',
+      fallback_item and fallback_item.get('status') == 'manual_fallback' and 'SendPulse send failed' in (fallback_item.get('delivery_error') or ''),
+      str(fallback_item))
+counts = (c.get('/api/admin/tab-counts', headers=ADMIN).get_json() or {}).get('counts', {})
+check('manual fallback is included in the admin tab badge', counts.get('password_reset_requests', 0) >= 1, str(counts))
 r2 = c.post('/api/auth/forgot-password', json={'email': 'fix1b@example.com'}).get_json() or {}
 check('email mode + unknown address is explicitly rejected',
       r2.get('code') == 'account_not_found' and "couldn't find an account" in (r2.get('error') or '').lower(), str(r2))
