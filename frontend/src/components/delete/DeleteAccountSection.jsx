@@ -50,8 +50,7 @@ export default function DeleteAccountSection({ userEmail, onCancel }) {
                 Danger Zone
               </h3>
               <p className="text-sm text-muted-foreground max-w-lg">
-                This will permanently delete all data associated with <strong>{userEmail}</strong>.
-                This action cannot be undone.
+                This will disable the account for <strong>{userEmail}</strong>. Required learning, application, payment, receipt, payout and audit records may be retained for operational or legal reasons. The account cannot sign in again.
               </p>
             </div>
             <button onClick={onCancel}

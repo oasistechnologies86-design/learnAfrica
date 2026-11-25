@@ -107,7 +107,7 @@ const ROLE_BADGE = ({ role }) => (
   </span>
 );
 
-const TABS = ['Overview', 'Students', 'Leaderboard', 'Instructors', 'Courses', 'Applications', 'Broadcast', 'Blog', 'Earnings', 'Payouts', 'Receipts', 'Coupons', 'Credentials', 'Certificate Signature', 'Settings', 'Forgot Password Requests', 'Footer', 'Guide', 'Audit Log'];
+const TABS = ['Overview', 'Students', 'Leaderboard', 'Instructors', 'Courses', 'Applications', 'Deleted Accounts', 'Broadcast', 'Blog', 'Earnings', 'Payouts', 'Receipts', 'Coupons', 'Credentials', 'Certificate Signature', 'Settings', 'Forgot Password Requests', 'Footer', 'Guide', 'Audit Log'];
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -121,6 +121,10 @@ export default function AdminPage() {
   const [tabCounts, setTabCounts] = useState({ password_reset_requests: 0, applications: 0 });
   const [stats, setStats] = useState(null);
   const [applications, setApplications] = useState([]);
+  const [deletedAccounts, setDeletedAccounts] = useState([]);
+  const [deletedSearch, setDeletedSearch] = useState('');
+  const [deletedRole, setDeletedRole] = useState('all');
+  const [deletedHistory, setDeletedHistory] = useState({});
   const [users, setUsers] = useState([]);
   const [students, setStudents] = useState([]);
   const [adminLeaderboard, setAdminLeaderboard] = useState([]);
@@ -187,6 +191,7 @@ export default function AdminPage() {
       else if (section === 'Instructors') { const d = await API('/api/admin/instructors'); setInstructors(d.instructors); }
       else if (section === 'Courses')     { const d = await API('/api/admin/courses'); setCourses(d.courses); }
       else if (section === 'Applications'){ const d = await API(`/api/admin/instructor-applications?status=${appFilter}`); setApplications(d.applications); }
+      else if (section === 'Deleted Accounts'){ const params = new URLSearchParams(); if (deletedSearch.trim()) params.set('q', deletedSearch.trim()); if (deletedRole !== 'all') params.set('role', deletedRole); const d = await API(`/api/admin/deleted-accounts?${params.toString()}`); setDeletedAccounts(d.accounts || []); }
       else if (section === 'Earnings') {
         const [earnData, splitData] = await Promise.all([
           API('/api/admin/earnings'),
@@ -221,7 +226,7 @@ export default function AdminPage() {
       }
     } catch (e) { showStatus('error', e.message); }
     setLoading(false);
-  }, [appFilter, showArchivedBroadcasts]);
+  }, [appFilter, showArchivedBroadcasts, deletedSearch, deletedRole]);
 
   useEffect(() => { load(tab); }, [tab]);
   useEffect(() => { if (tab === 'Broadcast') load('Broadcast'); }, [showArchivedBroadcasts]);
@@ -233,6 +238,7 @@ export default function AdminPage() {
   }, []);
   useEffect(() => { loadTabCounts(); }, [loadTabCounts, tab]);
   useEffect(() => { if (tab === 'Applications') load('Applications'); }, [appFilter]);
+  useEffect(() => { if (tab === 'Deleted Accounts') load('Deleted Accounts'); }, [deletedSearch, deletedRole, tab, load]);
   useEffect(() => { if (tab === 'Guide') load('Guide'); }, [tab === 'Guide']);
 
   const filteredEarningsInstructors = (earnings?.instructors || []).filter(inst => {
@@ -305,15 +311,21 @@ export default function AdminPage() {
 
   const deleteUser = async (uid, role) => {
     if (role === 'superadmin') { showStatus('error', 'Cannot delete the super admin account.'); return; }
-    if (!(await window.LearnAfricaDialog.confirm('Permanently delete this user? This cannot be undone.'))) return;
+    if (!(await window.LearnAfricaDialog.confirm('Move this account to Deleted Accounts? Account access will be disabled. Application, learning, payment, receipt, payout and audit history will be retained. You can clear the list entry later.'))) return;
     setActionLoading(uid + 'delete');
     try {
       await API(`/api/admin/users/${uid}`, { method: 'DELETE' });
-      showStatus('success', 'User deleted permanently.');
+      showStatus('success', 'Account moved to Deleted Accounts. History retained.');
       await load(tab);
     } catch (e) { showStatus('error', e.message); }
     setActionLoading('');
   };
+
+  const loadDeletedHistory = async (uid) => { try { const d = await API(`/api/admin/deleted-accounts/${uid}/history`); setDeletedHistory(prev => ({ ...prev, [uid]: d.events || [] })); } catch (e) { showStatus('error', e.message); } };
+
+  const clearDeletedAccount = async (uid) => { if (!(await window.LearnAfricaDialog.confirm('Clear this account from the Deleted Accounts list? Its application, learning, receipt, payout and audit records will be retained.'))) return; try { await API(`/api/admin/deleted-accounts/${uid}/clear`, { method: 'POST' }); showStatus('success', 'Account cleared from the list; protected records retained.'); await load('Deleted Accounts'); } catch (e) { showStatus('error', e.message); } };
+
+  const clearAllDeletedAccounts = async () => { if (!deletedAccounts.length) return; if (!(await window.LearnAfricaDialog.confirm(`Clear all ${deletedAccounts.length} account(s) currently matching these filters? Protected records will be retained.`))) return; try { const params = new URLSearchParams(); if (deletedSearch.trim()) params.set('q', deletedSearch.trim()); if (deletedRole !== 'all') params.set('role', deletedRole); const d = await API(`/api/admin/deleted-accounts/clear-all?${params.toString()}`, { method: 'POST' }); showStatus('success', d.message); await load('Deleted Accounts'); } catch (e) { showStatus('error', e.message); } };
 
   const setCourseStatus = async (cid, status) => {
     const course = courses.find(item => item.id === cid);
@@ -658,6 +670,7 @@ export default function AdminPage() {
             {t === 'Instructors' && <GraduationCap className="h-3.5 w-3.5" />}
             {t === 'Courses' && <BookOpen className="h-3.5 w-3.5" />}
             {t === 'Applications' && <UserCheck className="h-3.5 w-3.5" />}
+            {t === 'Deleted Accounts' && <Trash2 className="h-3.5 w-3.5" />}
             {t === 'Broadcast' && <Bell className="h-3.5 w-3.5" />}
             {t === 'Credentials' && <Award className="h-3.5 w-3.5" />}
             {t}
@@ -1068,7 +1081,9 @@ export default function AdminPage() {
                         )}
                         {app.admin_note && <p className="text-xs italic text-muted-foreground border-l-2 border-border pl-2">{app.admin_note}</p>}
                       </div>
-                      {appFilter === 'pending' ? (
+                      {app.account_deleted_at || app.account_is_active === 0 ? (
+                        <div className="shrink-0 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"><p className="font-semibold">{app.account_deleted_at ? 'Account deleted' : 'Account inactive'}</p><p className="text-xs">{app.account_deleted_at ? `Deleted ${new Date(app.account_deleted_at).toLocaleString()}` : 'Deletion date/reason was not recorded on this older account.'}</p><p className="mt-1 text-xs">Approval is disabled. This application remains for history.</p></div>
+                      ) : appFilter === 'pending' ? (
                         <div className="flex gap-2 shrink-0">
                           <Button size="sm" disabled={actionLoading === app.user_id + 'approve'} onClick={() => reviewApp(app.user_id, 'approve')}
                             className="bg-success text-white hover:bg-success/90">
@@ -1535,6 +1550,26 @@ export default function AdminPage() {
 
           {tab === 'Payouts' && <AdminPayoutsTab />}
           {tab === 'Receipts' && <AdminReceiptsTab />}
+
+          {tab === 'Deleted Accounts' && (
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+                <div><h2 className="text-lg font-bold">Deleted accounts</h2><p className="text-sm text-muted-foreground">Review account deletion history. Clearing only hides an entry here; protected learning and financial records remain.</p></div>
+                <Button size="sm" variant="destructive" disabled={!deletedAccounts.length} onClick={clearAllDeletedAccounts}>Clear all ({deletedAccounts.length})</Button>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"/><Input className="pl-9" placeholder="Search name or email…" value={deletedSearch} onChange={e => setDeletedSearch(e.target.value)} /></div>
+                <select className="h-10 rounded-md border border-border bg-background px-3 text-sm" value={deletedRole} onChange={e => setDeletedRole(e.target.value)}><option value="all">All roles</option><option value="student">Students</option><option value="instructor">Instructors</option><option value="admin">Admins</option></select>
+                <Button size="sm" variant="outline" onClick={() => load('Deleted Accounts')}><RefreshCw className="h-4 w-4 mr-1"/>Refresh</Button>
+              </div>
+              {!deletedAccounts.length ? <div className="rounded-xl border border-border p-10 text-center text-sm text-muted-foreground">No deleted accounts to display.</div> : deletedAccounts.map(account => (
+                <Card key={account.id} className="p-4 sm:p-5"><div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3"><div className="min-w-0"><p className="font-semibold">{account.name || 'Name unavailable'}</p><p className="text-sm text-muted-foreground break-all">{account.email}</p><div className="mt-2 flex flex-wrap gap-2 text-xs"><span className="rounded-full bg-muted px-2 py-1 capitalize">{account.role}</span><span className="rounded-full bg-destructive/10 text-destructive px-2 py-1">Deleted {account.deleted_at ? new Date(account.deleted_at).toLocaleString() : 'date unavailable'}</span>{account.instructor_status && <span className="rounded-full bg-muted px-2 py-1">Instructor status: {account.instructor_status}</span>}</div><p className="mt-2 text-xs text-muted-foreground">Reason: {account.deletion_reason === 'self_service' ? 'User requested deletion' : 'Admin initiated deletion'}</p>
+                  <button className="mt-3 text-xs font-semibold text-primary hover:underline" onClick={() => deletedHistory[account.id] ? setDeletedHistory(prev => ({...prev,[account.id]:null})) : loadDeletedHistory(account.id)}>{deletedHistory[account.id] ? 'Hide history' : 'View deletion history'}</button>
+                  {deletedHistory[account.id] && <div className="mt-2 rounded-lg bg-muted/40 p-3 space-y-1">{deletedHistory[account.id].map(event => <p key={event.id} className="text-xs text-muted-foreground">{String(event.event_type || '').replaceAll('_',' ')} · {event.created_at ? new Date(event.created_at).toLocaleString() : 'Date unavailable'}</p>)}</div>}
+                </div><Button size="sm" variant="outline" className="text-destructive border-destructive/30" onClick={() => clearDeletedAccount(account.id)}><Trash2 className="h-4 w-4 mr-1"/>Clear from list</Button></div></Card>
+              ))}
+            </div>
+          )}
 
           {tab === 'Audit Log' && <AdminAuditLogTab />}
 
