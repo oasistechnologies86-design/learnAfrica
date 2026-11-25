@@ -18,6 +18,7 @@ from app import create_app  # noqa: E402
 from app.main import socketio  # noqa: E402,F401
 from app.database import init_db, get_db  # noqa: E402
 from app import email_service  # noqa: E402
+from app.password_reset_tracking import _as_iso_utc  # noqa: E402
 from werkzeug.security import generate_password_hash  # noqa: E402
 
 _tmp = tempfile.NamedTemporaryFile(suffix='.db', delete=False)
@@ -28,6 +29,17 @@ app = create_app()
 app.config['TESTING'] = True
 app.config['DATABASE'] = _tmp.name
 app.config['USE_POSTGRES'] = False
+
+# Timestamp serialization regression: Flask HTTP-date strings and database
+# timestamp strings must remain parseable for both current and legacy requests.
+check('RFC 1123 timestamps serialize to ISO UTC',
+      _as_iso_utc('Wed, 25 Nov 2026 14:20:00 GMT') == '2026-11-25T14:20:00Z',
+      str(_as_iso_utc('Wed, 25 Nov 2026 14:20:00 GMT')))
+check('database timestamps serialize to ISO UTC',
+      _as_iso_utc('2026-11-25 14:20:00') == '2026-11-25T14:20:00Z',
+      str(_as_iso_utc('2026-11-25 14:20:00')))
+check('invalid timestamps stay null instead of becoming misleading dates',
+      _as_iso_utc('not-a-date') is None)
 
 failures = []
 
