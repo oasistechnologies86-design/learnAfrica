@@ -104,7 +104,7 @@ function TestimonialsSection() {
   // Separate, small auto-advancing strip of real community photos. Kept
   // deliberately independent from the named quote carousel below so no
   // photo is ever implied to belong to a specific named testimonial-giver.
-  const COMMUNITY_PHOTOS = ['/carousel-collab.jpg', '/carousel-library.webp', '/carousel-lab.webp'];
+  const COMMUNITY_PHOTOS = ['/carousel-collab.jpg', '/carousel-library.webp', '/carousel-lab.webp', '/carousel-study-outdoors.jpg', '/carousel-graduation-group.jpg'];
   const [photoIdx, setPhotoIdx] = useState(0);
   useEffect(() => {
     const id = setInterval(() => setPhotoIdx(i => (i + 1) % COMMUNITY_PHOTOS.length), 4000);
@@ -511,7 +511,7 @@ export function LandingPage() {
       <section className={cn('relative overflow-hidden border-b', !isAuthenticated ? 'min-h-[620px] sm:min-h-[680px] flex items-center bg-slate-950' : 'border-border bg-gradient-to-b from-muted/40 via-background to-background')}>
         {!isAuthenticated && (
           <>
-            <img src="/student2.jpg" alt="" aria-hidden="true" fetchPriority="high" className="absolute inset-0 h-full w-full object-cover object-center" />
+            <img src="/hero-graduation-female.jpg" alt="" aria-hidden="true" fetchPriority="high" className="absolute inset-0 h-full w-full object-cover object-center" />
             <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/80 to-slate-950/35" />
             <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-transparent to-slate-950/20" />
           </>
@@ -564,8 +564,8 @@ export function LandingPage() {
             {isAuthenticated && <div className="relative mx-auto w-full max-w-lg lg:max-w-none">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-border/60 aspect-[4/3]">
                   <img
-                    src="/student2.jpg"
-                    alt="A female LearnAfrica student holding a laptop"
+                    src="/hero-study-female.jpg"
+                    alt="A female LearnAfrica student using a laptop"
                     loading="lazy"
                     className="h-full w-full object-cover"
                   />
