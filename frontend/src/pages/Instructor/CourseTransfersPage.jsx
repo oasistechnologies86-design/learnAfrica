@@ -26,6 +26,7 @@ export default function CourseTransfersPage() {
   const isAdmin = ['admin', 'superadmin'].includes(user?.role);
   const [data, setData] = useState({ courses: [], recipients: [], incoming: [], outgoing: [] });
   const [adminRequests, setAdminRequests] = useState([]);
+  const [transferHistory, setTransferHistory] = useState({});
   const [courseId, setCourseId] = useState('');
   const [recipientId, setRecipientId] = useState('');
   const [reason, setReason] = useState('');
@@ -60,6 +61,19 @@ export default function CourseTransfersPage() {
     } catch (error) {
       setMessage({ type: 'error', text: error.message });
     } finally { setBusy(''); }
+  };
+
+  const toggleHistory = async courseId => {
+    if (transferHistory[courseId]) {
+      setTransferHistory(previous => ({ ...previous, [courseId]: null }));
+      return;
+    }
+    try {
+      const result = await api(`/api/admin/course-transfers/${courseId}/history`);
+      setTransferHistory(previous => ({ ...previous, [courseId]: result.history || [] }));
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message });
+    }
   };
 
   const submit = event => {
@@ -131,6 +145,9 @@ export default function CourseTransfersPage() {
             <div className="flex gap-2"><Button size="sm" disabled={!!busy} onClick={() => run(item.id, `/api/admin/course-transfers/${item.id}/decision`, { decision: 'approve', unpaid_earnings_action: earningsAction, note })}>Approve transfer</Button><Button size="sm" variant="destructive" disabled={!!busy} onClick={() => run(item.id, `/api/admin/course-transfers/${item.id}/decision`, { decision: 'reject', note })}>Reject</Button></div>
           </div>}
           {item.admin_status === 'pending' && item.recipient_status !== 'accepted' && <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-xs text-muted-foreground">Waiting for the selected recipient to accept or decline. Admin may reject the request at this stage.</p><Button size="sm" variant="destructive" disabled={!!busy} onClick={() => run(item.id, `/api/admin/course-transfers/${item.id}/decision`, { decision: 'reject', note })}>Reject request</Button></div>}
+          <div><button type="button" onClick={() => toggleHistory(item.course_id)} className="text-xs font-semibold text-primary hover:underline"> {transferHistory[item.course_id] ? 'Hide ownership history' : 'View ownership history'}</button>
+            {Array.isArray(transferHistory[item.course_id]) && <div className="mt-2 space-y-1 rounded-lg bg-muted/40 p-3">{transferHistory[item.course_id].length ? transferHistory[item.course_id].map(event => <p key={event.id} className="text-xs text-muted-foreground">{event.from_instructor_name} → {event.to_instructor_name} · {when(event.created_at)} · Unpaid earnings: {event.unpaid_earnings_action || 'keep original'}</p>) : <p className="text-xs text-muted-foreground">No completed transfer history yet.</p>}</div>}
+          </div>
         </CardContent></Card>)}
       </section>}
 
