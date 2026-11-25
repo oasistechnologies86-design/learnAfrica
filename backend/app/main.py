@@ -1849,7 +1849,7 @@ def create_app() -> Flask:
             return jsonify({'error': 'Email does not match'}), 400
         if u['deleted_at']:
             return jsonify({'message': 'Account is already deleted'}), 200
-        if u['role'] == 'instructor':
+        if u['role'] in ('instructor', 'admin', 'superadmin'):
             owned = db.execute(
                 "SELECT id,title FROM courses WHERE instructor_id=? ORDER BY created_at",
                 (uid,)
@@ -6414,7 +6414,7 @@ def create_app() -> Flask:
             return jsonify({'error': 'You cannot delete your own account'}), 403
         if target['deleted_at']:
             return jsonify({'message': 'Account is already in Deleted Accounts'}), 200
-        if target['role'] == 'instructor':
+        if target['role'] in ('instructor', 'admin', 'superadmin'):
             owned = db.execute("SELECT id,title FROM courses WHERE instructor_id=? ORDER BY created_at", (uid,)).fetchall()
             if owned:
                 return jsonify({
