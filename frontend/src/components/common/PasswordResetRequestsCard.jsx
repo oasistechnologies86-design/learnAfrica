@@ -78,7 +78,7 @@ function matchesTab(row, tab) {
     ['email_sent', 'link_sent'].includes(row.status) ? 'automatic_email' :
     ['pending', 'link_generated'].includes(row.status) ? 'manual_mode' : 'legacy_unknown'
   );
-  if (tab === 'gmail') return row.status === 'email_sent';
+  if (tab === 'gmail') return Boolean(row.email_sent_at_iso || row.email_sent_at || row.status === 'email_sent');
   if (tab === 'manual') return method === 'manual_mode';
   if (tab === 'fallback') return method === 'manual_fallback' || row.status === 'manual_fallback';
   return true;
@@ -129,7 +129,12 @@ export default function PasswordResetRequestsCard({ onChanged }) {
       if (statusFilter !== 'all' && row.status !== statusFilter) return false;
       const haystack = `${row.student_name || ''} ${row.email || ''}`.toLowerCase();
       if (query && !haystack.includes(query)) return false;
-      const day = dateInputValue(row.created_at_iso || row.created_at);
+      const dateValue = activeTab === 'gmail'
+        ? (row.email_sent_at_iso || row.email_sent_at || row.created_at_iso || row.created_at)
+        : activeTab === 'fallback'
+          ? (row.last_action_at_iso || row.last_action_at || row.created_at_iso || row.created_at)
+          : (row.created_at_iso || row.created_at);
+      const day = dateInputValue(dateValue);
       if (fromDate && (!day || day < fromDate)) return false;
       if (toDate && (!day || day > toDate)) return false;
       return true;
