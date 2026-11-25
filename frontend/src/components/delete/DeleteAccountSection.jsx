@@ -50,7 +50,7 @@ export default function DeleteAccountSection({ userEmail, onCancel }) {
                 Danger Zone
               </h3>
               <p className="text-sm text-muted-foreground max-w-lg">
-                This will disable the account for <strong>{userEmail}</strong>. Required learning, application, payment, receipt, payout and audit records may be retained for operational or legal reasons. The account cannot sign in again.
+                This will disable the account for <strong>{userEmail}</strong>. If this is an instructor account, transfer or reassign every course you own before continuing. Required learning, application, payment, receipt, payout and audit records may be retained for operational or legal reasons. The account cannot sign in again.
               </p>
             </div>
             <button onClick={onCancel}
