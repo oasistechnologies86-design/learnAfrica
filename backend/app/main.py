@@ -12397,6 +12397,8 @@ def create_app() -> Flask:
             return jsonify({'error': 'Request not found'}), 404
         if req['status'] in ('completed', 'dismissed'):
             return jsonify({'error': 'This request is already resolved.'}), 409
+        if req['status'] == 'email_sent':
+            return jsonify({'error': 'This reset link has already been emailed. Generate a fresh link before sending another email.'}), 409
         # Only email a currently valid, unused token that belongs to this exact
         # request and account. Never trust an arbitrary URL supplied by a client.
         token_match = re.search(r'(?:[?&])token=([^&#]+)', link)
