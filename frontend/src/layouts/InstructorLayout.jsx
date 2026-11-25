@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, Link, Navigate, useLocation } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Sidebar from '../components/layout/Sidebar';
 import { Menu, Clock, XCircle, RefreshCw, CreditCard } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { API_BASE } from '@/lib/api';
 
 /**
  * Instructor layout — wraps every /instructor/* route.
@@ -18,10 +19,29 @@ export default function InstructorLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { user, registrationPaymentDue, profileComplete } = useAuth();
   const location = useLocation();
+  const [payoutState, setPayoutState] = useState('checking');
+
 
   // Admin and superadmin always bypass the pending/rejected gate (they manage instructors)
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
   const status = user?.instructor_status;
+
+  // Pending applicants also need a truthful payout status. Registration saves
+  // the payout destination before the review screen, so read the persisted
+  // record instead of unconditionally asking every applicant to set it up.
+  useEffect(() => {
+    if (isAdmin || status !== 'pending') return;
+    let active = true;
+    const token = sessionStorage.getItem('auth_token');
+    fetch(`${API_BASE}/api/users/me/payment-method`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }).then(async response => {
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || 'Could not verify payout details.');
+      if (active) setPayoutState(data.configured ? 'configured' : 'missing');
+    }).catch(() => { if (active) setPayoutState('error'); });
+    return () => { active = false; };
+  }, [isAdmin, status, user?.id]);
 
   // A pending instructor who still owes the registration fee is sent to
   // checkout instead of the dead-end "Application Pending" screen, so the paid
@@ -56,17 +76,35 @@ export default function InstructorLayout() {
             Please refresh this page from time to time to check whether your application has been approved.
           </p>
           <div className="w-full max-w-md p-4 rounded-xl border border-primary/30 bg-primary/[0.04] text-left">
-            <p className="text-sm font-semibold flex items-center gap-2">
-              <CreditCard className="h-4 w-4 text-primary" /> Set up your payout method now
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Add the number or bank account where you want your earnings sent. You can do this
-              while you wait — it means you are ready to publish the moment you are approved.
-            </p>
-            <Link to="/profile"
-              className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
-              <CreditCard className="h-4 w-4" /> Go to my Profile
-            </Link>
+            {payoutState === 'checking' ? (
+              <p className="text-sm text-muted-foreground flex items-center gap-2"><RefreshCw className="h-4 w-4 animate-spin" /> Checking your saved payout method…</p>
+            ) : payoutState === 'configured' ? (
+              <>
+                <p className="text-sm font-semibold flex items-center gap-2 text-success">
+                  <CreditCard className="h-4 w-4" /> Payout method successfully set up
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Your payout details were saved successfully. You can review or update them in your profile.
+                </p>
+                <Link to="/profile" className="inline-flex items-center gap-2 mt-3 text-sm font-semibold text-primary hover:underline">
+                  View payout method
+                </Link>
+              </>
+            ) : payoutState === 'missing' ? (
+              <>
+                <p className="text-sm font-semibold flex items-center gap-2"><CreditCard className="h-4 w-4 text-primary" /> Set up your payout method</p>
+                <p className="text-xs text-muted-foreground mt-1">Add the mobile money number or bank account where your earnings should be sent.</p>
+                <Link to="/profile" className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
+                  <CreditCard className="h-4 w-4" /> Go to my Profile
+                </Link>
+              </>
+            ) : (
+              <>
+                <p className="text-sm font-semibold text-warning">We couldn't verify your payout setup</p>
+                <p className="text-xs text-muted-foreground mt-1">Your saved details have not been confirmed. Please check your profile or try again.</p>
+                <Link to="/profile" className="inline-flex items-center gap-2 mt-3 text-sm font-semibold text-primary hover:underline">Check my payout details</Link>
+              </>
+            )}
           </div>
           <button
             onClick={() => window.location.reload()}

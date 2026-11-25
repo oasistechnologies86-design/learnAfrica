@@ -63,6 +63,7 @@ AH = {'Authorization': f'Bearer {adm_tok}'}
 def signup_instructor(email, extra=None):
     body = {'name': 'Applicant', 'email': email, 'password': 'Pass12345!',
             'role': 'instructor',
+            'bio': 'Experienced instructor sharing practical knowledge through clear lessons and supportive guidance for learners at every stage. I focus on useful skills, thoughtful explanations, real projects, and helping students build confidence while solving meaningful problems in their chosen fields. My approach combines patience, feedback, collaboration, and consistent practice to support lasting professional growth.',
             'ghana_card_number': 'GHA-123456789-0',
             'ghana_post_gps': 'GA-123-4567', 'phone': '+233244123456',
             'payment_method': 'momo', 'payment_country': 'GH',
@@ -79,6 +80,9 @@ body = r.get_json() or {}
 check('instructor registration defaults to free', body.get('is_free') is True and body.get('fee') == 0, body)
 
 # ── Item 4: Ghana details required on instructor signup ──────────────────────
+r = signup_instructor('shortbio@example.com', {'bio': 'I teach technology.'})
+check('instructor signup rejects a bio below 50 words', r.status_code == 400 and '50 words' in (r.get_json() or {}).get('error', ''), r.get_json())
+
 r = signup_instructor('nocard@example.com', {'ghana_card_number': '', 'ghana_post_gps': 'GA-123-4567'})
 check('instructor signup rejected without Ghana Card', r.status_code == 400, r.status_code)
 r = signup_instructor('badcard@example.com', {'ghana_card_number': '1234'})
