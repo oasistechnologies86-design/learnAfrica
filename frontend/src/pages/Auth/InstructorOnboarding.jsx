@@ -199,7 +199,7 @@ export default function InstructorOnboarding() {
               className={`flex min-h-[140px] w-full rounded-md border bg-background pl-10 pr-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 resize-none ${errors.bio || (formData.bio.length > 0 && !bioIsValid) ? 'border-destructive focus-visible:ring-destructive' : 'border-input'}`} />
           </div>
           <div className="flex items-center justify-between gap-3 text-xs">
-            <p id="bio-guidance" className="text-muted-foreground">Write at least {BIO_MIN_WORDS} words about your experience, expertise and teaching approach.</p>
+            <p id="bio-guidance" className="text-muted-foreground">Write at least 20 words or more about your experience, expertise, and teaching approach. A strong bio increases your chances of being approved as a LearnAfrica instructor.</p>
             <span id="bio-counter" className={`shrink-0 font-semibold tabular-nums ${formData.bio.length > 0 && !bioIsValid ? 'text-destructive' : 'text-muted-foreground'}`}>{bioWordCount}/{BIO_MIN_WORDS} words</span>
           </div>
           {errors.bio && <p id="bio-error" role="alert" className="text-xs text-destructive font-medium">{errors.bio}</p>}
