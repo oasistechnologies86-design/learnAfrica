@@ -75,6 +75,10 @@ old_token = token('old-transfer@example.com')
 new_token = token('new-transfer@example.com')
 check('transfer test accounts authenticate', bool(admin_token and old_token and new_token))
 
+# Admin-initiated deletion must obey the same ownership protection.
+response = client.delete('/api/admin/users/old1', headers=auth(admin_token))
+check('Admin cannot delete an instructor who still owns a course', response.status_code == 409, response.status_code)
+
 # The owner cannot delete an instructor account while the course is still assigned.
 response = client.delete('/api/users/account', json={'email': 'old-transfer@example.com'}, headers=auth(old_token))
 check('self-deletion is blocked while instructor owns a course',
@@ -121,6 +125,12 @@ check('course coupon management transfers to new owner',
 check('historical unpaid transaction stays with original instructor by default',
       bool(transaction and transaction['instructor_id'] == 'old1' and transaction['payout_status'] == 'pending'))
 check('ownership history is recorded', len(history) == 1)
+new_owner_courses = client.get('/api/instructor/courses', headers=auth(new_token))
+old_owner_courses = client.get('/api/instructor/courses', headers=auth(old_token))
+new_titles = [row.get('title') for row in (new_owner_courses.get_json() or {}).get('courses', [])]
+old_titles = [row.get('title') for row in (old_owner_courses.get_json() or {}).get('courses', [])]
+check('new owner gains access to transferred course', 'Transferred Course' in new_titles)
+check('former owner loses management access to transferred course', 'Transferred Course' not in old_titles)
 
 # After the course is transferred, account deletion can proceed.
 response = client.delete('/api/users/account', json={'email': 'old-transfer@example.com'}, headers=auth(old_token))
