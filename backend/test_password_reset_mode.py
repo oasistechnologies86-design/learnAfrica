@@ -321,8 +321,16 @@ check('reconnect clears the provider error row',
 
 # ── FIX 4: successful password change completes only its own request ───────
 def complete_request_for(email, password):
-    rows = (c.get('/api/admin/password-reset-requests', headers=ADMIN).get_json() or {}).get('requests', [])
-    item = next((entry for entry in rows if entry.get('email') == email), None)
+    # Read the test-created request directly so this regression isolates the
+    # reset endpoint instead of depending on admin-list presentation/filtering.
+    with app.app_context():
+        db = get_db()
+        request_row = db.execute(
+            "SELECT id, email, handling_method FROM password_reset_requests "
+            "WHERE LOWER(email)=LOWER(?) ORDER BY created_at DESC LIMIT 1",
+            (email,)
+        ).fetchone()
+        item = dict(request_row) if request_row else None
     if not item:
         return None, None, None
     generated = c.post(f"/api/admin/password-reset-requests/{item['id']}/generate-link",
