@@ -7,6 +7,7 @@ timestamps, and enriches the admin list with student names and ISO timestamps.
 import json
 import re
 from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from functools import wraps
 
 from flask import jsonify, make_response, request
@@ -27,17 +28,32 @@ def _utc_now_sql():
 
 
 def _as_iso_utc(value):
+    """Normalize database, ISO, and Flask HTTP-date timestamps to UTC ISO-8601."""
     if value is None or value == '':
         return None
-    if hasattr(value, 'isoformat'):
-        value = value.isoformat()
-    value = str(value).strip()
-    if not value:
-        return None
-    value = value.replace(' ', 'T', 1) if ' ' in value and 'T' not in value else value
-    if not re.search(r'(?:Z|[+-]\d{2}:?\d{2})$', value, re.I):
-        value += 'Z'
-    return value
+    if isinstance(value, datetime):
+        parsed = value
+    else:
+        raw = str(value).strip()
+        if not raw:
+            return None
+        parsed = None
+        # Flask's default JSON provider serializes datetime as RFC 2822.
+        try:
+            parsed = parsedate_to_datetime(raw)
+        except (TypeError, ValueError, OverflowError):
+            pass
+        if parsed is None:
+            normalized = raw.replace(' ', 'T', 1) if ' ' in raw and 'T' not in raw else raw
+            if normalized.endswith(('Z', 'z')):
+                normalized = normalized[:-1] + '+00:00'
+            try:
+                parsed = datetime.fromisoformat(normalized)
+            except (TypeError, ValueError, OverflowError):
+                return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc).isoformat(timespec='seconds').replace('+00:00', 'Z')
 
 
 def _response_json(result):
