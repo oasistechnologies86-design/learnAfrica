@@ -226,6 +226,28 @@ check('admin request list exposes Manual Fallback and the delivery reason',
       str(fallback_item))
 counts = (c.get('/api/admin/tab-counts', headers=ADMIN).get_json() or {}).get('counts', {})
 check('manual fallback is included in the admin tab badge', counts.get('password_reset_requests', 0) >= 1, str(counts))
+
+# Admin can safely prepare a fresh link and email it after automatic delivery fails.
+req_id = fallback_item.get('id') if fallback_item else None
+bad_link = c.post(f'/api/admin/password-reset-requests/{req_id}/email-link',
+                  json={'link': 'https://example.invalid/reset-password?token=forged'}, headers=ADMIN) if req_id else None
+check('admin email action rejects an arbitrary or forged reset link',
+      bad_link is not None and bad_link.status_code == 400, str(bad_link.status_code if bad_link else None))
+link_result = c.post(f'/api/admin/password-reset-requests/{req_id}/generate-link', headers=ADMIN) if req_id else None
+fresh_link = (link_result.get_json() or {}).get('link', '') if link_result else ''
+_saved_send_email = email_service.send_email
+email_service.send_email = lambda *args, **kwargs: (True, None)
+try:
+    sent_result = c.post(f'/api/admin/password-reset-requests/{req_id}/email-link',
+                         json={'link': fresh_link}, headers=ADMIN) if fresh_link else None
+finally:
+    email_service.send_email = _saved_send_email
+check('admin can email the valid generated link after fallback',
+      sent_result is not None and sent_result.status_code == 200, str(sent_result.status_code if sent_result else None))
+with app.app_context():
+    row = get_db().execute("SELECT status, delivery_error FROM password_reset_requests WHERE LOWER(email)='fix1a@example.com'").fetchone()
+check('successful admin email clears fallback and records Email Sent',
+      row and row['status'] == 'email_sent' and not row['delivery_error'], str(dict(row) if row else None))
 r2 = c.post('/api/auth/forgot-password', json={'email': 'fix1b@example.com'}).get_json() or {}
 check('email mode + unknown address is explicitly rejected',
       r2.get('code') == 'account_not_found' and "couldn't find an account" in (r2.get('error') or '').lower(), str(r2))
