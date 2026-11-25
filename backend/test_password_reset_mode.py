@@ -324,7 +324,7 @@ def complete_request_for(email, password):
     rows = (c.get('/api/admin/password-reset-requests', headers=ADMIN).get_json() or {}).get('requests', [])
     item = next((entry for entry in rows if entry.get('email') == email), None)
     if not item:
-        return None, None
+        return None, None, None
     generated = c.post(f"/api/admin/password-reset-requests/{item['id']}/generate-link",
                        headers=ADMIN)
     link = (generated.get_json() or {}).get('link', '')
