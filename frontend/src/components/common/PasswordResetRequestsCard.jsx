@@ -26,7 +26,7 @@ const STATUS_STYLES = {
 
 const STATUS_LABELS = {
   pending: 'Pending', manual_fallback: 'Manual Fallback',
-  link_generated: 'Link Generated', link_sent: 'Link Generated',
+  link_generated: 'Link Generated', link_sent: 'Link Sent',
   email_sent: 'Email Sent', completed: 'Completed', dismissed: 'Dismissed',
 };
 
@@ -120,6 +120,7 @@ export default function PasswordResetRequestsCard({ onChanged }) {
       const d = await API(`/api/admin/password-reset-requests/${rid}/email-link`, {
         method: 'POST', body: JSON.stringify({ link }),
       });
+      setLinks(prev => { const next = { ...prev }; delete next[rid]; return next; });
       setMsg({ type: 'success', text: d.message });
       load();
     } catch (e) { setMsg({ type: 'error', text: e.message }); }
@@ -206,7 +207,7 @@ export default function PasswordResetRequestsCard({ onChanged }) {
 
                 {r.delivery_error && (
                   <p className="mt-2 rounded-lg border border-destructive/20 bg-destructive/5 px-2.5 py-2 text-xs text-destructive break-words">
-                    <strong>Automatic delivery error:</strong> {r.delivery_error}
+                    <strong>Email delivery error:</strong> {r.delivery_error}
                   </p>
                 )}
                 <div className="mt-3 flex flex-wrap gap-2">
