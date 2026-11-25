@@ -875,14 +875,14 @@ TABLES = [
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )""",
-    # Forgot-password: a user asks for help, an admin reviews it. No automatic
-    # email is ever sent from the request itself.
+    # Password-reset requests track both manual review and automatic delivery.
     """CREATE TABLE IF NOT EXISTS password_reset_requests (
         id TEXT PRIMARY KEY,
         email TEXT NOT NULL,
         user_id TEXT,
         reason TEXT,
         status TEXT DEFAULT 'pending',
+        delivery_error TEXT,
         note TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         resolved_at TIMESTAMP,
@@ -904,6 +904,8 @@ TABLES = [
 
 # Column migrations for existing databases
 MIGRATIONS = [
+    # Password-reset delivery diagnostics are additive for existing installations.
+    "ALTER TABLE password_reset_requests ADD COLUMN IF NOT EXISTS delivery_error TEXT",
     # Additive blog metadata migrations; existing articles are preserved.
     "ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS cover_alt TEXT",
     "ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS category TEXT",
