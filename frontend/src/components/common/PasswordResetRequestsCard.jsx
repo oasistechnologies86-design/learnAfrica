@@ -157,6 +157,7 @@ export default function PasswordResetRequestsCard({ onChanged }) {
               <option value="pending">Pending</option>
               <option value="manual_fallback">Manual Fallback</option>
               <option value="link_generated">Link Generated</option>
+              <option value="link_sent">Link Sent (older requests)</option>
               <option value="email_sent">Email Sent</option>
               <option value="completed">Completed</option>
               <option value="dismissed">Dismissed</option>
