@@ -224,6 +224,7 @@ export default function AdminPage() {
   }, [appFilter, showArchivedBroadcasts]);
 
   useEffect(() => { load(tab); }, [tab]);
+  useEffect(() => { if (tab === 'Broadcast') load('Broadcast'); }, [showArchivedBroadcasts]);
 
   const loadTabCounts = useCallback(() => {
     API('/api/admin/tab-counts')
@@ -362,11 +363,6 @@ export default function AdminPage() {
       setBroadcast({ title: '', message: '', role: '', type: 'system' });
       setBroadcastEditingId(null);
       await refreshBroadcastHistory();
-      if (action === 'send' && !broadcastEditingId && res.id) {
-        const sent = await API(`/api/admin/broadcasts/${res.id}/send`, { method: 'POST' });
-        setBroadcastStatus({ type: 'success', msg: sent.message });
-        await refreshBroadcastHistory();
-      }
     } catch (e) { setBroadcastStatus({ type: 'error', msg: e.message }); }
     finally { setActionLoading(''); }
   };
@@ -1842,7 +1838,7 @@ export default function AdminPage() {
                   <Button onClick={() => saveBroadcast('draft')} disabled={actionLoading === 'broadcast'} variant="outline">
                     {actionLoading === 'broadcast' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Save Draft
                   </Button>
-                  <Button onClick={sendBroadcast} disabled={actionLoading === 'broadcast'}>
+                  <Button onClick={() => saveBroadcast(broadcastEditingId ? 'draft' : 'send')} disabled={actionLoading === 'broadcast'}>
                     {actionLoading === 'broadcast' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
                     {broadcastEditingId ? 'Update Draft' : 'Send Broadcast'}
                   </Button>
