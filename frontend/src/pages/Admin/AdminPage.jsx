@@ -378,8 +378,9 @@ export default function AdminPage() {
   const runBroadcastAction = async (item, action) => {
     const prompts = {
       send: `Send “${item.title}” to ${item.role_target || 'all active users'} now?`,
-      resend: `Resend “${item.title}” to ${item.role_target || 'all active users'}? Users may receive it again.`,
+      resend: `Retry any failed deliveries for “${item.title}”? Users who already received it will not receive a duplicate.`,
       archive: `Archive “${item.title}”? It will be hidden from the active history.`,
+      restore: `Restore “${item.title}” to the active broadcast history?`,
       delete: `Permanently delete “${item.title}” and remove all linked in-app notifications? This cannot be undone.`,
       duplicate: `Create a new draft copy of “${item.title}”?`,
     };
@@ -1834,6 +1835,14 @@ export default function AdminPage() {
                     className="w-full min-h-[120px] rounded-lg border border-input bg-background px-3 py-2 text-sm resize-y focus:ring-2 focus:ring-primary outline-none" />
                   <p className="text-xs text-muted-foreground text-right mt-1">{broadcast.message.length}/10,000</p>
                 </div>
+                <div className="rounded-xl border border-border bg-muted/20 p-4 space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Live preview</p>
+                  <div className="rounded-lg border border-border bg-card p-4">
+                    <p className="font-semibold break-words">{broadcast.title || 'Your notification title'}</p>
+                    <p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap break-words">{broadcast.message || 'Your announcement message will appear here.'}</p>
+                    <p className="text-xs text-muted-foreground mt-3">Audience: {broadcast.role || 'All active users'} · Type: {broadcast.type}</p>
+                  </div>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   <Button onClick={() => saveBroadcast('draft')} disabled={actionLoading === 'broadcast'} variant="outline">
                     {actionLoading === 'broadcast' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Save Draft
@@ -1905,9 +1914,10 @@ export default function AdminPage() {
                       <div className="flex flex-wrap gap-2 border-t border-border/60 pt-3">
                         {item.status === 'draft' && <Button size="sm" variant="outline" onClick={() => editBroadcast(item)}>Edit draft</Button>}
                         {item.status === 'draft' && <Button size="sm" onClick={() => runBroadcastAction(item, 'send')}>Send</Button>}
-                        {item.status !== 'draft' && <Button size="sm" variant="outline" onClick={() => runBroadcastAction(item, 'resend')}>Resend</Button>}
+                        {(item.status === 'partial' || item.status === 'failed') && <Button size="sm" variant="outline" onClick={() => runBroadcastAction(item, 'resend')}>Retry failed deliveries</Button>}
                         <Button size="sm" variant="outline" onClick={() => runBroadcastAction(item, 'duplicate')}>Duplicate</Button>
                         {!showArchivedBroadcasts && <Button size="sm" variant="outline" onClick={() => runBroadcastAction(item, 'archive')}>Archive</Button>}
+                        {showArchivedBroadcasts && <Button size="sm" variant="outline" onClick={() => runBroadcastAction(item, 'restore')}>Restore</Button>}
                         <Button size="sm" variant="destructive" onClick={() => runBroadcastAction(item, 'delete')}>Delete permanently</Button>
                       </div>
                     </div>
