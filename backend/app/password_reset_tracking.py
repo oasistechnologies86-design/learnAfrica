@@ -19,6 +19,7 @@ def _ensure_columns(db):
     ensure_column(db, 'password_reset_requests', 'email_sent_at', 'TIMESTAMP')
     ensure_column(db, 'password_reset_requests', 'link_generated_at', 'TIMESTAMP')
     ensure_column(db, 'password_reset_requests', 'last_action_at', 'TIMESTAMP')
+    ensure_column(db, 'password_reset_requests', 'fallback_at', 'TIMESTAMP')
 
 
 def _utc_now_sql():
@@ -122,13 +123,13 @@ def register_password_reset_tracking(app):
             if method not in ('manual_mode', 'automatic_email', 'manual_fallback'):
                 status = row.get('status')
                 method = (
-                    'manual_fallback' if status == 'manual_fallback' or row.get('delivery_error') else
+                    'manual_fallback' if status == 'manual_fallback' or row.get('delivery_error') or row.get('fallback_at') else
                     'automatic_email' if status in ('email_sent', 'link_sent') else
                     'manual_mode' if status in ('pending', 'link_generated') else
                     'legacy_unknown'
                 )
             row['effective_handling_method'] = method
-            for field in ('created_at', 'email_sent_at', 'link_generated_at', 'last_action_at', 'resolved_at'):
+            for field in ('created_at', 'email_sent_at', 'link_generated_at', 'last_action_at', 'fallback_at', 'resolved_at'):
                 row[field + '_iso'] = _as_iso_utc(row.get(field))
             enriched.append(row)
         payload['requests'] = enriched
