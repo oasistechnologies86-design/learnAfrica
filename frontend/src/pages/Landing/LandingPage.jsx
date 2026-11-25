@@ -370,7 +370,7 @@ function heroFor(user, isAuthenticated) {
   if (!isAuthenticated) {
     return {
       badge: 'Built in Ghana, for learners across Africa',
-      title: <>Learn skills that open doors, <span className="text-emerald-300">right here in Africa</span></>,
+      title: <>Learn skills that open doors, <span className="text-primary">right here in Africa</span></>,
       text: 'Practical courses from people who understand your world. Learn on your phone at your own pace, earn a certificate anyone can verify, and grow with a community that cheers you on.',
       primary: { to: '/signup', label: 'Get Started Free' },
       secondary: [
@@ -511,7 +511,7 @@ export function LandingPage() {
       <section className={cn('relative overflow-hidden border-b', !isAuthenticated ? 'min-h-[620px] sm:min-h-[680px] flex items-center bg-slate-950' : 'border-border bg-gradient-to-b from-muted/40 via-background to-background')}>
         {!isAuthenticated && (
           <>
-            <img src="/hero-community.jpg" alt="" aria-hidden="true" fetchPriority="high" className="absolute inset-0 h-full w-full object-cover object-center" />
+            <img src="/student2.jpg" alt="" aria-hidden="true" fetchPriority="high" className="absolute inset-0 h-full w-full object-cover object-center" />
             <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/80 to-slate-950/35" />
             <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-transparent to-slate-950/20" />
           </>
@@ -528,7 +528,7 @@ export function LandingPage() {
             {/* ── Text column ── */}
             <div className={cn(!isAuthenticated ? 'max-w-3xl' : 'max-w-2xl')}>
               <div className={cn('inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium', !isAuthenticated ? 'border-white/25 bg-black/25 text-white/90 backdrop-blur-md' : 'border-border bg-background/70 text-muted-foreground')}>
-                <Zap className={cn('h-4 w-4', !isAuthenticated ? 'text-emerald-300' : 'text-primary')} /> {hero.badge}
+                {!isAuthenticated ? <img src="/logo.png" alt="" className="h-5 w-5 shrink-0 object-contain" /> : <Zap className="h-4 w-4 text-primary" />} {hero.badge}
               </div>
               <h1 className={cn('mt-6 text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl', !isAuthenticated && 'max-w-3xl text-white')}>
                 {hero.title}
@@ -564,10 +564,8 @@ export function LandingPage() {
             {isAuthenticated && <div className="relative mx-auto w-full max-w-lg lg:max-w-none">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-border/60 aspect-[4/3]">
                   <img
-                    src={isAuthenticated ? '/hero-community.jpg' : '/tech-skills.jpg'}
-                    alt={isAuthenticated
-                      ? 'The LearnAfrica community learning together'
-                      : 'A LearnAfrica student building real technical skills'}
+                    src="/student2.jpg"
+                    alt="A female LearnAfrica student holding a laptop"
                     loading="lazy"
                     className="h-full w-full object-cover"
                   />
