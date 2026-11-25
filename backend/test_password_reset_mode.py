@@ -320,6 +320,24 @@ check('reconnect clears the provider error row',
       not (row and row['last_error']), str(dict(row) if row else None))
 
 # ── FIX 4: successful password change completes only its own request ───────
+def seed_completion_request(email, handling_method, status):
+    # Seed an isolated request so IP/email throttling in the forgot-password
+    # endpoint cannot make these completion-path tests flaky.
+    with app.app_context():
+        db = get_db()
+        db.execute("DELETE FROM password_reset_tokens WHERE user_id=(SELECT id FROM users WHERE LOWER(email)=LOWER(?))", (email,))
+        db.execute("DELETE FROM password_reset_requests WHERE LOWER(email)=LOWER(?)", (email,))
+        user = db.execute("SELECT id FROM users WHERE LOWER(email)=LOWER(?)", (email,)).fetchone()
+        if not user:
+            raise AssertionError(f"Missing seeded test account: {email}")
+        db.execute(
+            "INSERT INTO password_reset_requests (id,email,user_id,reason,status) VALUES (?,?,?,?,?)",
+            (str(__import__('uuid').uuid4()), email, user['id'], 'Forgot Password', status)
+        )
+        db.commit()
+    # The first admin-list call / link generation runs the additive tracking migration.
+
+
 def complete_request_for(email, password):
     # Read the test-created request directly so this regression isolates the
     # reset endpoint instead of depending on admin-list presentation/filtering.
@@ -357,12 +375,11 @@ def complete_request_for(email, password):
 # Automatic Email request.
 set_email_enabled(True)
 set_mode('email')
+seed_completion_request('stu@example.com', 'automatic_email', 'email_sent')
 with app.app_context():
     db = get_db()
-    db.execute("DELETE FROM password_reset_tokens")
-    db.execute("DELETE FROM password_reset_requests WHERE LOWER(email)='stu@example.com'")
+    db.execute("UPDATE password_reset_requests SET handling_method='automatic_email', email_sent_at=CURRENT_TIMESTAMP WHERE LOWER(email)='stu@example.com'")
     db.commit()
-auto_request = c.post('/api/auth/forgot-password', json={'email': 'stu@example.com'}).get_json() or {}
 auto_item, auto_done, auto_token = complete_request_for('stu@example.com', 'AutoPass123!')
 check('Automatic Email request completes after password is changed',
       auto_done is not None and auto_done.status_code == 200, str(auto_done.status_code if auto_done else None))
@@ -378,12 +395,11 @@ check('admin list exposes Completed Date as an ISO timestamp',
 
 # Manual Mode request.
 set_mode('manual')
+seed_completion_request('fix1c@example.com', 'manual_mode', 'pending')
 with app.app_context():
     db = get_db()
-    db.execute("DELETE FROM password_reset_tokens")
-    db.execute("DELETE FROM password_reset_requests WHERE LOWER(email)='fix1c@example.com'")
+    db.execute("UPDATE password_reset_requests SET handling_method='manual_mode' WHERE LOWER(email)='fix1c@example.com'")
     db.commit()
-c.post('/api/auth/forgot-password', json={'email': 'fix1c@example.com'})
 manual_item, manual_done, manual_token = complete_request_for('fix1c@example.com', 'ManualPass123!')
 check('Manual Mode request completes after password is changed',
       manual_done is not None and manual_done.status_code == 200, str(manual_done.status_code if manual_done else None))
@@ -398,15 +414,11 @@ check('Manual Mode completion preserves manual_mode classification',
 # Generate a fresh link and complete it; the original fallback origin must survive.
 set_mode('email')
 set_email_enabled(True)
-_saved_send_email_for_fallback = email_service.send_email
-email_service.send_email = lambda *args, **kwargs: (False, 'simulated delivery failure')
+seed_completion_request('fix1a@example.com', 'manual_fallback', 'manual_fallback')
 with app.app_context():
     db = get_db()
-    db.execute("DELETE FROM password_reset_tokens")
-    db.execute("DELETE FROM password_reset_requests WHERE LOWER(email)='fix1a@example.com'")
+    db.execute("UPDATE password_reset_requests SET handling_method='manual_fallback', fallback_at=CURRENT_TIMESTAMP WHERE LOWER(email)='fix1a@example.com'")
     db.commit()
-c.post('/api/auth/forgot-password', json={'email': 'fix1a@example.com'})
-email_service.send_email = _saved_send_email_for_fallback
 fallback_item_done, fallback_done, fallback_consumed_token = complete_request_for('fix1a@example.com', 'FallbackPass123!')
 check('Manual Fallback request completes after password is changed',
       fallback_done is not None and fallback_done.status_code == 200, str(fallback_done.status_code if fallback_done else None))
