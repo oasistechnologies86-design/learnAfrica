@@ -4894,6 +4894,7 @@ def create_app() -> Flask:
         status_filter = request.args.get('status', 'pending')
         rows = db.execute('''SELECT ia.*,u.name,u.email,u.avatar,
                                     u.deleted_at AS account_deleted_at,
+                                    u.is_active AS account_is_active,
                                     u.deleted_by AS account_deleted_by,
                                     u.role AS account_role
                              FROM instructor_applications ia
