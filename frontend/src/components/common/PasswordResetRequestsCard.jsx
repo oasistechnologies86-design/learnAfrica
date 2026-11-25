@@ -92,6 +92,7 @@ export default function PasswordResetRequestsCard({ onChanged }) {
   const [statusFilter, setStatusFilter] = useState('all');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [page, setPage] = useState(1);
   const [busy, setBusy] = useState('');
   const [links, setLinks] = useState({});
   const [copied, setCopied] = useState('');
@@ -139,11 +140,18 @@ export default function PasswordResetRequestsCard({ onChanged }) {
     });
   }, [requests, activeTab, statusFilter, search, fromDate, toDate]);
 
+  const PAGE_SIZE = 10;
+  const pageCount = Math.max(1, Math.ceil(visibleRequests.length / PAGE_SIZE));
+  const pageRows = visibleRequests.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  useEffect(() => { setPage(1); }, [activeTab, statusFilter, search, fromDate, toDate]);
+
   const clearFilters = () => {
     setSearch('');
     setStatusFilter('all');
     setFromDate('');
     setToDate('');
+    setPage(1);
   };
 
   const generate = async rid => {
@@ -264,7 +272,7 @@ export default function PasswordResetRequestsCard({ onChanged }) {
           <p className="text-sm text-muted-foreground py-6 text-center">No requests match this tab and its filters.</p>
         ) : (
           <div className="space-y-3">
-            {visibleRequests.map(row => {
+            {pageRows.map(row => {
               const created = row.created_at_iso || row.created_at;
               const sent = row.email_sent_at_iso || row.email_sent_at;
               const generated = row.link_generated_at_iso || row.link_generated_at;
@@ -335,6 +343,17 @@ export default function PasswordResetRequestsCard({ onChanged }) {
                 </div>
               );
             })}
+            {pageCount > 1 && (
+              <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
+                <p className="text-xs text-muted-foreground">Page {page} of {pageCount}</p>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" disabled={page <= 1}
+                    onClick={() => setPage(value => Math.max(1, value - 1))}>Previous</Button>
+                  <Button size="sm" variant="outline" disabled={page >= pageCount}
+                    onClick={() => setPage(value => Math.min(pageCount, value + 1))}>Next</Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </CardContent>
