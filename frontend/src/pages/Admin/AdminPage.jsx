@@ -1081,8 +1081,8 @@ export default function AdminPage() {
                         )}
                         {app.admin_note && <p className="text-xs italic text-muted-foreground border-l-2 border-border pl-2">{app.admin_note}</p>}
                       </div>
-                      {app.account_deleted_at ? (
-                        <div className="shrink-0 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"><p className="font-semibold">Account deleted</p><p className="text-xs">Deleted {new Date(app.account_deleted_at).toLocaleString()}</p><p className="mt-1 text-xs">Approval is disabled. This application remains for history.</p></div>
+                      {app.account_deleted_at || app.account_is_active === 0 ? (
+                        <div className="shrink-0 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"><p className="font-semibold">{app.account_deleted_at ? 'Account deleted' : 'Account inactive'}</p><p className="text-xs">{app.account_deleted_at ? `Deleted ${new Date(app.account_deleted_at).toLocaleString()}` : 'Deletion date/reason was not recorded on this older account.'}</p><p className="mt-1 text-xs">Approval is disabled. This application remains for history.</p></div>
                       ) : appFilter === 'pending' ? (
                         <div className="flex gap-2 shrink-0">
                           <Button size="sm" disabled={actionLoading === app.user_id + 'approve'} onClick={() => reviewApp(app.user_id, 'approve')}
