@@ -172,7 +172,7 @@ check('email mode response confirms a link is on its way', 'on its way' in (body
 with app.app_context():
     row = get_db().execute("SELECT status FROM password_reset_requests "
                            "WHERE LOWER(email)='stu@example.com'").fetchone()
-check('email-mode request is marked link_sent', row and row['status'] == 'link_sent', str(dict(row) if row else None))
+check('email-mode request is marked email_sent', row and row['status'] == 'email_sent', str(dict(row) if row else None))
 
 
 # ── Email OFF forces manual even if the stored choice is 'email' ─────────────
@@ -209,12 +209,16 @@ with app.app_context():
     get_db().execute("DELETE FROM password_reset_requests")
     get_db().commit()
 r = c.post('/api/auth/forgot-password', json={'email': 'fix1a@example.com'}).get_json() or {}
-check('email mode + failed send does NOT show the admin prompt',
-      'administrator' not in (r.get('message') or '').lower(), str(r.get('message')))
-check('email mode + failed send still says a link is on its way',
-      'on its way' in (r.get('message') or ''), str(r.get('message')))
-check('the failed send is still reported to the admin as not sent',
-      r.get('email_sent') is False, str(r))
+check('email mode + failed send switches to manual review',
+      r.get('mode') == 'manual' and r.get('delivery_status') == 'manual_fallback', str(r))
+check('email mode + failed send tells the user automatic delivery failed',
+      'could not be completed' in (r.get('message') or '').lower(), str(r.get('message')))
+check('the failed send is never reported as sent', r.get('email_sent') is False, str(r))
+with app.app_context():
+    row = get_db().execute("SELECT status, delivery_error FROM password_reset_requests WHERE LOWER(email)='fix1a@example.com'").fetchone()
+check('failed delivery is tagged manual_fallback with its provider error',
+      row and row['status'] == 'manual_fallback' and 'SendPulse send failed' in (row['delivery_error'] or ''),
+      str(dict(row) if row else None))
 r2 = c.post('/api/auth/forgot-password', json={'email': 'fix1b@example.com'}).get_json() or {}
 check('email mode + unknown address is explicitly rejected',
       r2.get('code') == 'account_not_found' and "couldn't find an account" in (r2.get('error') or '').lower(), str(r2))
