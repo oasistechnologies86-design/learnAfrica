@@ -4858,7 +4858,7 @@ def create_app() -> Flask:
         counts['password_reset_requests'] = _count(
             "SELECT COUNT(*) AS c FROM password_reset_requests pr "
             "INNER JOIN users u ON LOWER(u.email)=LOWER(pr.email) "
-            "WHERE pr.status='pending'")
+            "WHERE pr.status IN ('pending','manual_fallback')")
         counts['applications'] = _count(
             "SELECT COUNT(*) AS c FROM instructor_applications WHERE status='pending'")
         return jsonify({'counts': counts})
