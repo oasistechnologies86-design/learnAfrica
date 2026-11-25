@@ -152,9 +152,11 @@ check('manual mode does not email the user', body.get('email_sent') is False, st
 check('manual response tells the user an admin will send it within 24 hours',
       'within 24 hours' in (body.get('message') or ''), str(body.get('message')))
 with app.app_context():
-    row = get_db().execute("SELECT status FROM password_reset_requests "
+    row = get_db().execute("SELECT status, handling_method, last_action_at FROM password_reset_requests "
                            "WHERE LOWER(email)='stu@example.com'").fetchone()
 check('manual request is recorded as pending', row and row['status'] == 'pending', str(dict(row) if row else None))
+check('admin-configured Manual Mode is recorded separately', row and row['handling_method'] == 'manual_mode', str(dict(row) if row else None))
+check('manual request receives a last-action timestamp', row and bool(row['last_action_at']), str(dict(row) if row else None))
 
 
 # ── Email mode: the link is emailed straight away ────────────────────────────
@@ -170,9 +172,11 @@ body = r.get_json() or {}
 check('email mode sends the reset link', body.get('email_sent') is True, str(body))
 check('email mode response confirms a link is on its way', 'on its way' in (body.get('message') or ''), str(body.get('message')))
 with app.app_context():
-    row = get_db().execute("SELECT status FROM password_reset_requests "
+    row = get_db().execute("SELECT status, handling_method, email_sent_at FROM password_reset_requests "
                            "WHERE LOWER(email)='stu@example.com'").fetchone()
 check('email-mode request is marked email_sent', row and row['status'] == 'email_sent', str(dict(row) if row else None))
+check('automatic delivery records its handling method', row and row['handling_method'] == 'automatic_email', str(dict(row) if row else None))
+check('automatic delivery records the actual send timestamp', row and bool(row['email_sent_at']), str(dict(row) if row else None))
 
 
 # ── Email OFF forces manual even if the stored choice is 'email' ─────────────
@@ -215,15 +219,18 @@ check('email mode + failed send tells the user automatic delivery failed',
       'could not be completed' in (r.get('message') or '').lower(), str(r.get('message')))
 check('the failed send is never reported as sent', r.get('email_sent') is False, str(r))
 with app.app_context():
-    row = get_db().execute("SELECT status, delivery_error FROM password_reset_requests WHERE LOWER(email)='fix1a@example.com'").fetchone()
+    row = get_db().execute("SELECT status, delivery_error, handling_method FROM password_reset_requests WHERE LOWER(email)='fix1a@example.com'").fetchone()
 check('failed delivery is tagged manual_fallback with its provider error',
-      row and row['status'] == 'manual_fallback' and 'SendPulse send failed' in (row['delivery_error'] or ''),
+      row and row['status'] == 'manual_fallback' and row['handling_method'] == 'manual_fallback' and 'SendPulse send failed' in (row['delivery_error'] or ''),
       str(dict(row) if row else None))
 admin_rows = (c.get('/api/admin/password-reset-requests', headers=ADMIN).get_json() or {}).get('requests', [])
 fallback_item = next((item for item in admin_rows if item.get('email') == 'fix1a@example.com'), None)
 check('admin request list exposes Manual Fallback and the delivery reason',
       fallback_item and fallback_item.get('status') == 'manual_fallback' and 'SendPulse send failed' in (fallback_item.get('delivery_error') or ''),
       str(fallback_item))
+check('admin request list includes the student name and ISO request date',
+      fallback_item and fallback_item.get('student_name') == 'Reset Email Student'
+      and fallback_item.get('created_at_iso'), str(fallback_item))
 check('failed automatic email leaves no undisclosed active reset token',
       fallback_item is not None and fallback_item.get('has_active_link') is False, str(fallback_item))
 counts = (c.get('/api/admin/tab-counts', headers=ADMIN).get_json() or {}).get('counts', {})
@@ -248,8 +255,10 @@ check('admin can email the valid generated link after fallback',
       sent_result is not None and sent_result.status_code == 200, str(sent_result.status_code if sent_result else None))
 with app.app_context():
     row = get_db().execute("SELECT status, delivery_error FROM password_reset_requests WHERE LOWER(email)='fix1a@example.com'").fetchone()
-check('successful admin email clears fallback and records Email Sent',
+check('successful admin email clears delivery error and records Email Sent',
       row and row['status'] == 'email_sent' and not row['delivery_error'], str(dict(row) if row else None))
+check('successful admin follow-up retains its original Manual Fallback classification',
+      row and row['handling_method'] == 'manual_fallback', str(dict(row) if row else None))
 r2 = c.post('/api/auth/forgot-password', json={'email': 'fix1b@example.com'}).get_json() or {}
 check('email mode + unknown address is explicitly rejected',
       r2.get('code') == 'account_not_found' and "couldn't find an account" in (r2.get('error') or '').lower(), str(r2))
