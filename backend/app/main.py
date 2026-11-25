@@ -1940,6 +1940,8 @@ def create_app() -> Flask:
         reason = str(body.get('reason') or '').strip()
         if not course_id or not recipient_id or not reason:
             return jsonify({'error': 'Choose a course, choose a recipient and provide a reason.'}), 400
+        if len(reason) < 8 or len(reason) > 2000:
+            return jsonify({'error': 'The transfer reason must be between 8 and 2,000 characters.'}), 400
         if recipient_id == uid:
             return jsonify({'error': 'A course cannot be transferred to the current owner.'}), 400
         course = db.execute(
@@ -2072,6 +2074,15 @@ def create_app() -> Flask:
                 return jsonify({'error': 'Course ownership changed before approval. Refresh and review the request.'}), 409
             if not _valid_transfer_recipient(recipient):
                 return jsonify({'error': 'The recipient account is no longer active and approved.'}), 409
+            if earnings_action == 'reassign_unpaid':
+                outstanding = db.execute(
+                    "SELECT COALESCE(SUM(amount),0) AS total FROM payout_requests WHERE instructor_id=? AND status='requested'",
+                    (row['from_instructor_id'],)
+                ).fetchone()
+                if outstanding and float(outstanding['total'] or 0) > 0:
+                    return jsonify({
+                        'error': 'The original instructor has an outstanding payout request. Resolve it before reassigning unpaid course earnings; you may still keep those earnings with the original instructor.'
+                    }), 409
             try:
                 original_id = course['original_instructor_id'] if 'original_instructor_id' in course.keys() else None
                 if not original_id:
