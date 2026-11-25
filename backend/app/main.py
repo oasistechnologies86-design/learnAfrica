@@ -12223,8 +12223,9 @@ def create_app() -> Flask:
             if newly_created and rid:
                 _notify_admins_reset_request(db, email, reason, rid)
 
-        # The user-facing success message follows the MODE, not the delivery
-        # outcome. Unknown accounts have already been rejected above.
+        # Report the confirmed delivery outcome. If automatic delivery failed,
+        # the response switches the UI to its manual-review state. Unknown
+        # accounts have already been rejected above.
         if reset_mode == 'email' and auto_sent:
             msg = ('Your password reset email has been sent. Check your inbox and spam folder.')
             response_mode = 'email'
