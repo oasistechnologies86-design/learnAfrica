@@ -85,7 +85,7 @@ def register_password_reset_tracking(app):
             # An admin may email a link for a request originally created in
             # Manual Mode. Keep that origin classification; otherwise record
             # the automatic-email path.
-            method = row['handling_method'] if row['handling_method'] == 'manual_mode' else 'automatic_email'
+            method = row['handling_method'] if row['handling_method'] in ('manual_mode', 'manual_fallback') else 'automatic_email'
         elif row['status'] == 'email_sent' and row['handling_method']:
             method = row['handling_method']
         elif payload.get('mode') == 'manual':
@@ -96,6 +96,11 @@ def register_password_reset_tracking(app):
             'UPDATE password_reset_requests SET handling_method=?, last_action_at={now} WHERE id=?'.format(now=_utc_now_sql()),
             (method, row['id']),
         )
+        if delivery == 'manual_fallback' or row['status'] == 'manual_fallback':
+            db.execute(
+                'UPDATE password_reset_requests SET fallback_at=COALESCE(fallback_at, {now}) WHERE id=?'.format(now=_utc_now_sql()),
+                (row['id'],),
+            )
         if delivery == 'email_sent':
             db.execute(
                 'UPDATE password_reset_requests SET email_sent_at={now} WHERE id=?'.format(now=_utc_now_sql()),
