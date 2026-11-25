@@ -12400,6 +12400,10 @@ def create_app() -> Flask:
             return jsonify({'error': 'This request is already resolved.'}), 409
         if req['status'] == 'email_sent':
             return jsonify({'error': 'This reset link has already been emailed. Generate a fresh link before sending another email.'}), 409
+        account = db.execute('SELECT id FROM users WHERE LOWER(email)=?',
+                             ((req['email'] or '').strip().lower(),)).fetchone()
+        if not account:
+            return jsonify({'error': 'No account exists for this password-reset request.'}), 404
         # Only email a currently valid, unused token that belongs to this exact
         # request and account. Never trust an arbitrary URL supplied by a client.
         token_match = re.search(r'(?:[?&])token=([^&#]+)', link)
@@ -12407,7 +12411,7 @@ def create_app() -> Flask:
         token_row = db.execute(
             'SELECT id, expires_at FROM password_reset_tokens WHERE token_hash=? AND request_id=? '
             'AND user_id=? AND used=0 LIMIT 1',
-            (_hash_reset_token(raw_token), rid, req['user_id'])
+            (_hash_reset_token(raw_token), rid, account['id'])
         ).fetchone() if raw_token else None
         if not token_row or _dt_expired(token_row['expires_at']):
             return jsonify({'error': 'This reset link is invalid, expired, already used, or belongs to another request. Generate a fresh link.'}), 400
