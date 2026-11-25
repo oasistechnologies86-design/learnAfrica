@@ -256,9 +256,6 @@ export default function AdminPage() {
   };
 
   const changeRole = async (uid, role) => {
-    const target = [...students, ...instructors].find(item => item.id === uid);
-    const label = target?.name || target?.email || 'this user';
-    if (!(await window.LearnAfricaDialog.confirm(`Change ${label}'s account role to ${role}? This changes their access and permissions.`))) return;
     setActionLoading(uid + 'role');
     try {
       await API(`/api/admin/users/${uid}/role`, { method: 'PUT', body: JSON.stringify({ role }) });
