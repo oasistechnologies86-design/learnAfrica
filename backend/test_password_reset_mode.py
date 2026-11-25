@@ -17,6 +17,7 @@ os.environ.setdefault('SECRET_KEY', 'test-secret-not-for-production')
 from app import create_app  # noqa: E402
 from app.main import socketio  # noqa: E402,F401
 from app.database import init_db, get_db  # noqa: E402
+from app.password_reset_tracking import _as_iso_utc  # noqa: E402
 from app import email_service  # noqa: E402
 from werkzeug.security import generate_password_hash  # noqa: E402
 
@@ -30,6 +31,15 @@ app.config['DATABASE'] = _tmp.name
 app.config['USE_POSTGRES'] = False
 
 failures = []
+
+# Timestamp serialization regressions: Flask's legacy HTTP-date format and
+# database timestamp strings must remain readable for old and new requests.
+check('RFC 2822 timestamp converts to ISO UTC',
+      _as_iso_utc('Wed, 25 Nov 2026 14:20:00 GMT') == '2026-11-25T14:20:00Z',
+      str(_as_iso_utc('Wed, 25 Nov 2026 14:20:00 GMT')))
+check('SQL timestamp converts to ISO UTC',
+      _as_iso_utc('2026-11-25 14:20:00') == '2026-11-25T14:20:00Z',
+      str(_as_iso_utc('2026-11-25 14:20:00')))
 
 
 def check(name, cond, extra=''):
