@@ -254,11 +254,13 @@ finally:
 check('admin can email the valid generated link after fallback',
       sent_result is not None and sent_result.status_code == 200, str(sent_result.status_code if sent_result else None))
 with app.app_context():
-    row = get_db().execute("SELECT status, delivery_error FROM password_reset_requests WHERE LOWER(email)='fix1a@example.com'").fetchone()
+    row = get_db().execute("SELECT status, delivery_error, handling_method, fallback_at FROM password_reset_requests WHERE LOWER(email)='fix1a@example.com'").fetchone()
 check('successful admin email clears delivery error and records Email Sent',
       row and row['status'] == 'email_sent' and not row['delivery_error'], str(dict(row) if row else None))
 check('successful admin follow-up retains its original Manual Fallback classification',
       row and row['handling_method'] == 'manual_fallback', str(dict(row) if row else None))
+check('successful admin follow-up preserves the original fallback event timestamp',
+      row and bool(row['fallback_at']), str(dict(row) if row else None))
 r2 = c.post('/api/auth/forgot-password', json={'email': 'fix1b@example.com'}).get_json() or {}
 check('email mode + unknown address is explicitly rejected',
       r2.get('code') == 'account_not_found' and "couldn't find an account" in (r2.get('error') or '').lower(), str(r2))
