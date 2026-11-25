@@ -80,6 +80,9 @@ body = r.get_json() or {}
 check('instructor registration defaults to free', body.get('is_free') is True and body.get('fee') == 0, body)
 
 # ── Item 4: Ghana details required on instructor signup ──────────────────────
+r = signup_instructor('shortbio@example.com', {'bio': 'I teach technology.'})
+check('instructor signup rejects a bio below 50 words', r.status_code == 400 and '50 words' in (r.get_json() or {}).get('error', ''), r.get_json())
+
 r = signup_instructor('nocard@example.com', {'ghana_card_number': '', 'ghana_post_gps': 'GA-123-4567'})
 check('instructor signup rejected without Ghana Card', r.status_code == 400, r.status_code)
 r = signup_instructor('badcard@example.com', {'ghana_card_number': '1234'})
