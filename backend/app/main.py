@@ -2054,6 +2054,7 @@ def create_app() -> Flask:
     def admin_decide_course_transfer(request_id):
         _ensure_new_tables()
         db = get_db()
+        ensure_transactions_table(db)
         body = request.get_json() or {}
         decision = str(body.get('decision') or '').lower()
         earnings_action = str(body.get('unpaid_earnings_action') or 'keep_original').lower()
