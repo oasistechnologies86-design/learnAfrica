@@ -459,6 +459,7 @@ export function InstructorDashboard() {
   const { user } = useAuth();
   const isAdminViewer = ['admin', 'superadmin'].includes(user?.role);
   const [stats, setStats]   = useState(null);
+  const [activeInstructorTab, setActiveInstructorTab] = useState('Overview');
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [paymentConfigured, setPaymentConfigured] = useState(true); // assume true until proven otherwise
@@ -610,6 +611,18 @@ export function InstructorDashboard() {
         <p className="text-muted-foreground mt-1 text-sm">Here's how your courses are performing.</p>
       </div>
 
+      <div role="tablist" aria-label="Instructor dashboard sections" className="flex gap-2 border-b border-border">
+        {['Overview', 'My Students'].map(section => (
+          <button key={section} type="button" role="tab" aria-selected={activeInstructorTab === section}
+            onClick={() => setActiveInstructorTab(section)}
+            className={cn('px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors',
+              activeInstructorTab === section ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground')}>
+            {section}
+          </button>
+        ))}
+      </div>
+
+      {activeInstructorTab === 'Overview' && <>
       {/* Stats grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatsCard title="Total Courses"   value={stats?.total_courses  || 0} icon={BookOpen} />
@@ -837,6 +850,9 @@ export function InstructorDashboard() {
         </Card>
       )}
 
+      </>}
+
+      {activeInstructorTab === 'My Students' && <>
       {/* Full student directory, restricted by the backend to this instructor's courses */}
       <Card id="my-students" className="border-border/50 shadow-sm overflow-hidden">
         <CardHeader className="border-b border-border pb-3">
@@ -957,8 +973,12 @@ export function InstructorDashboard() {
         </CardContent>
       </Card>
 
-      {/* ── Instructor Guide ── */}
-      <InstructorGuide />
+      </>}
+
+      {activeInstructorTab === 'Overview' && <>
+        {/* ── Instructor Guide ── */}
+        <InstructorGuide />
+      </>}
     </div>
   );
 }
