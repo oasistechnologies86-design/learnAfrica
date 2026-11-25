@@ -279,7 +279,7 @@ export default function PasswordResetRequestsCard({ onChanged }) {
               const created = row.created_at_iso || row.created_at;
               const sent = row.email_sent_at_iso || row.email_sent_at;
               const generated = row.link_generated_at_iso || row.link_generated_at;
-              const lastAction = row.last_action_at_iso || row.last_action_at;
+              const lastAction = row.last_action_at_iso || row.last_action_at || row.resolved_at_iso || row.resolved_at;
               const due = dueBy(created);
               const isOpen = !['completed', 'dismissed'].includes(row.status);
               return (
