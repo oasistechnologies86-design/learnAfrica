@@ -6157,9 +6157,19 @@ def create_app() -> Flask:
     @admin_required
     def admin_clear_all_deleted_accounts():
         db = get_db()
-        count_row = db.execute("SELECT COUNT(*) AS c FROM users WHERE deleted_at IS NOT NULL AND deletion_cleared_at IS NULL").fetchone()
+        q = (request.args.get('q') or '').strip().lower()
+        role = (request.args.get('role') or '').strip().lower()
+        where = "deleted_at IS NOT NULL AND deletion_cleared_at IS NULL"
+        params = []
+        if q:
+            where += " AND (LOWER(COALESCE(name,'')) LIKE ? OR LOWER(COALESCE(email,'')) LIKE ?)"
+            params.extend([f'%{q}%', f'%{q}%'])
+        if role in ('student','instructor','admin','superadmin'):
+            where += " AND LOWER(COALESCE(role,''))=?"
+            params.append(role)
+        count_row = db.execute("SELECT COUNT(*) AS c FROM users WHERE " + where,tuple(params)).fetchone()
         count = int((count_row['c'] if count_row else 0) or 0)
-        db.execute("UPDATE users SET deletion_cleared_at=CURRENT_TIMESTAMP,deletion_cleared_by=? WHERE deleted_at IS NOT NULL AND deletion_cleared_at IS NULL",(g.current_user['user_id'],))
+        db.execute("UPDATE users SET deletion_cleared_at=CURRENT_TIMESTAMP,deletion_cleared_by=? WHERE " + where,tuple([g.current_user['user_id']] + params))
         db.execute("INSERT INTO account_deletion_events (id,user_id,event_type,actor_user_id) VALUES (?,?,?,?)",(str(uuid.uuid4()),'all','cleared_all_from_admin_list',g.current_user['user_id']))
         db.commit()
         audit('deleted_accounts_cleared_all','user','all',None,{'count':count})
