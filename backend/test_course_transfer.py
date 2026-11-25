@@ -63,6 +63,9 @@ with app.app_context():
            (id,receipt_id,type,course_id,course_title,instructor_id,amount,status,payout_status,provider)
            VALUES ('tx-transfer-1','receipt-transfer-1','purchase','course-transfer-1',
                    'Transferred Course','old1',100,'success','pending','test')""")
+    db.execute(
+        """INSERT INTO payout_requests (id,instructor_id,amount,status)
+           VALUES ('payout-transfer-1','old1',25,'requested')""")
     db.commit()
 
 client = app.test_client()
@@ -108,6 +111,13 @@ check('selected instructor receives the transfer request',
 response = client.post(f'/api/instructor/course-transfers/{request_id}/respond',
                        json={'decision': 'accept'}, headers=auth(new_token))
 check('recipient can accept the transfer', response.status_code == 200, response.status_code)
+
+blocked_reassignment = client.post(
+    f'/api/admin/course-transfers/{request_id}/decision',
+    json={'decision': 'approve', 'unpaid_earnings_action': 'reassign_unpaid'},
+    headers=auth(admin_token))
+check('unpaid earnings reassignment is blocked while an old payout request is outstanding',
+      blocked_reassignment.status_code == 409, blocked_reassignment.status_code)
 
 response = client.post(f'/api/admin/course-transfers/{request_id}/decision',
                        json={'decision': 'approve', 'unpaid_earnings_action': 'keep_original'},
