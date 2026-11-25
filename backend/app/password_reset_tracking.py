@@ -72,18 +72,23 @@ def register_password_reset_tracking(app):
         db = get_db()
         _ensure_columns(db)
         row = db.execute(
-            'SELECT id FROM password_reset_requests WHERE LOWER(email)=? ORDER BY created_at DESC LIMIT 1',
+            'SELECT id, status, handling_method FROM password_reset_requests WHERE LOWER(email)=? ORDER BY created_at DESC LIMIT 1',
             (email,),
         ).fetchone()
         if not row:
             return result
         delivery = payload.get('delivery_status')
-        if delivery == 'manual_fallback':
+        if delivery == 'manual_fallback' or row['status'] == 'manual_fallback':
             method = 'manual_fallback'
+        elif delivery == 'email_sent':
+            # An admin may email a link for a request originally created in
+            # Manual Mode. Keep that origin classification; otherwise record
+            # the automatic-email path.
+            method = row['handling_method'] if row['handling_method'] == 'manual_mode' else 'automatic_email'
+        elif row['status'] == 'email_sent' and row['handling_method']:
+            method = row['handling_method']
         elif payload.get('mode') == 'manual':
             method = 'manual_mode'
-        elif delivery == 'email_sent':
-            method = 'automatic_email'
         else:
             return result
         db.execute(
