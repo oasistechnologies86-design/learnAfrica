@@ -40,12 +40,17 @@ function parseResetTimestamp(value) {
     return Number.isFinite(date.getTime()) ? date : null;
   }
   if (typeof value !== 'string') return null;
-  let normalized = value.trim();
-  if (!normalized) return null;
-  normalized = normalized.replace(' ', 'T');
+  const raw = value.trim();
+  if (!raw) return null;
+
+  // Accept ISO strings and RFC 1123/HTTP-date strings before normalizing DB values.
+  const direct = new Date(raw);
+  if (Number.isFinite(direct.getTime())) return direct;
+
+  let normalized = raw.replace(' ', 'T');
   if (!/(?:Z|[+-]\d{2}:?\d{2})$/i.test(normalized)) normalized += 'Z';
-  const date = new Date(normalized);
-  return Number.isFinite(date.getTime()) ? date : null;
+  const parsed = new Date(normalized);
+  return Number.isFinite(parsed.getTime()) ? parsed : null;
 }
 
 function fmt(value) {
@@ -278,6 +283,7 @@ export default function PasswordResetRequestsCard({ onChanged }) {
             {pageRows.map(row => {
               const created = row.created_at_iso || row.created_at;
               const sent = row.email_sent_at_iso || row.email_sent_at;
+              const legacySentDate = !sent && ['email_sent', 'link_sent'].includes(row.status) ? created : null;
               const generated = row.link_generated_at_iso || row.link_generated_at;
               const lastAction = row.last_action_at_iso || row.last_action_at || row.resolved_at_iso || row.resolved_at;
               const due = dueBy(created);
@@ -289,7 +295,7 @@ export default function PasswordResetRequestsCard({ onChanged }) {
                       <p className="font-medium text-sm truncate">{row.student_name || row.email}</p>
                       <p className="text-xs text-muted-foreground break-all">{row.email}</p>
                       <p className="text-xs text-muted-foreground mt-1">{row.reason || 'Forgot Password'} · Requested {fmt(created)}</p>
-                      {sent && <p className="text-xs text-success mt-0.5">Email sent {fmt(sent)}</p>}
+                      {sent ? <p className="text-xs text-success mt-0.5">Email sent {fmt(sent)}</p> : legacySentDate && <p className="text-xs text-success mt-0.5">Email sent · exact send time unavailable; request received {fmt(legacySentDate)}</p>}
                       {generated && <p className="text-xs text-muted-foreground mt-0.5">Link generated {fmt(generated)}</p>}
                       {lastAction && <p className="text-xs text-muted-foreground mt-0.5">Last admin/system action {fmt(lastAction)}</p>}
                       {isOpen && due && (
