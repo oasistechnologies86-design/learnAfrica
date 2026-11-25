@@ -21,6 +21,11 @@ export default function InstructorLayout() {
   const location = useLocation();
   const [payoutState, setPayoutState] = useState('checking');
 
+
+  // Admin and superadmin always bypass the pending/rejected gate (they manage instructors)
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+  const status = user?.instructor_status;
+
   // Pending applicants also need a truthful payout status. Registration saves
   // the payout destination before the review screen, so read the persisted
   // record instead of unconditionally asking every applicant to set it up.
@@ -37,10 +42,6 @@ export default function InstructorLayout() {
     }).catch(() => { if (active) setPayoutState('error'); });
     return () => { active = false; };
   }, [isAdmin, status, user?.id]);
-
-  // Admin and superadmin always bypass the pending/rejected gate (they manage instructors)
-  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
-  const status = user?.instructor_status;
 
   // A pending instructor who still owes the registration fee is sent to
   // checkout instead of the dead-end "Application Pending" screen, so the paid
