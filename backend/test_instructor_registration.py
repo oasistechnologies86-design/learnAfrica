@@ -63,6 +63,7 @@ AH = {'Authorization': f'Bearer {adm_tok}'}
 def signup_instructor(email, extra=None):
     body = {'name': 'Applicant', 'email': email, 'password': 'Pass12345!',
             'role': 'instructor',
+            'bio': 'Experienced instructor sharing practical knowledge through clear lessons and supportive guidance for learners at every stage. I focus on useful skills, thoughtful explanations, real projects, and helping students build confidence while solving meaningful problems in their chosen fields.',
             'ghana_card_number': 'GHA-123456789-0',
             'ghana_post_gps': 'GA-123-4567', 'phone': '+233244123456',
             'payment_method': 'momo', 'payment_country': 'GH',
