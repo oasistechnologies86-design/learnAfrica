@@ -32,6 +32,13 @@ app.config['USE_POSTGRES'] = False
 
 failures = []
 
+
+def check(name, cond, extra=''):
+    print(('PASS' if cond else 'FAIL') + f' - {name}' + (f' [{extra}]' if extra else ''))
+    if not cond:
+        failures.append(name)
+
+
 # Timestamp serialization regressions: Flask's legacy HTTP-date format and
 # database timestamp strings must remain readable for old and new requests.
 check('RFC 2822 timestamp converts to ISO UTC',
@@ -40,12 +47,6 @@ check('RFC 2822 timestamp converts to ISO UTC',
 check('SQL timestamp converts to ISO UTC',
       _as_iso_utc('2026-11-25 14:20:00') == '2026-11-25T14:20:00Z',
       str(_as_iso_utc('2026-11-25 14:20:00')))
-
-
-def check(name, cond, extra=''):
-    print(('PASS' if cond else 'FAIL') + f' - {name}' + (f' [{extra}]' if extra else ''))
-    if not cond:
-        failures.append(name)
 
 
 with app.app_context():
@@ -317,6 +318,117 @@ with app.app_context():
     row = db.execute("SELECT last_error FROM email_usage WHERE provider='gmail2'").fetchone()
 check('reconnect clears the provider error row',
       not (row and row['last_error']), str(dict(row) if row else None))
+
+# ── FIX 4: successful password change completes only its own request ───────
+def complete_request_for(email, password):
+    rows = (c.get('/api/admin/password-reset-requests', headers=ADMIN).get_json() or {}).get('requests', [])
+    item = next((entry for entry in rows if entry.get('email') == email), None)
+    if not item:
+        return None, None
+    generated = c.post(f"/api/admin/password-reset-requests/{item['id']}/generate-link",
+                       headers=ADMIN)
+    link = (generated.get_json() or {}).get('link', '')
+    import re as _re
+    token_match = _re.search(r'[?&]token=([^&]+)', link)
+    if not token_match:
+        return item, None
+    result = c.post('/api/auth/reset-password', json={
+        'token': token_match.group(1), 'password': password,
+        'confirm_password': password,
+    })
+    return item, result
+
+
+# Automatic Email request.
+set_email_enabled(True)
+set_mode('email')
+with app.app_context():
+    db = get_db()
+    db.execute("DELETE FROM password_reset_tokens")
+    db.execute("DELETE FROM password_reset_requests WHERE LOWER(email)='stu@example.com'")
+    db.commit()
+auto_request = c.post('/api/auth/forgot-password', json={'email': 'stu@example.com'}).get_json() or {}
+auto_item, auto_done = complete_request_for('stu@example.com', 'AutoPass123!')
+check('Automatic Email request completes after password is changed',
+      auto_done is not None and auto_done.status_code == 200, str(auto_done.status_code if auto_done else None))
+with app.app_context():
+    auto_row = get_db().execute("SELECT status, handling_method, completed_at, last_action_at FROM password_reset_requests WHERE LOWER(email)='stu@example.com'").fetchone()
+check('Automatic Email completion records timestamp and preserves method',
+      auto_row and auto_row['status'] == 'completed' and auto_row['handling_method'] == 'automatic_email'
+      and bool(auto_row['completed_at']) and bool(auto_row['last_action_at']), str(dict(auto_row) if auto_row else None))
+auto_admin = next((x for x in (c.get('/api/admin/password-reset-requests', headers=ADMIN).get_json() or {}).get('requests', []) if x.get('email') == 'stu@example.com'), None)
+check('admin list exposes Completed Date as an ISO timestamp',
+      auto_admin and auto_admin.get('completed_at_iso'), str(auto_admin))
+
+
+# Manual Mode request.
+set_mode('manual')
+with app.app_context():
+    db = get_db()
+    db.execute("DELETE FROM password_reset_tokens")
+    db.execute("DELETE FROM password_reset_requests WHERE LOWER(email)='fix1c@example.com'")
+    db.commit()
+c.post('/api/auth/forgot-password', json={'email': 'fix1c@example.com'})
+manual_item, manual_done = complete_request_for('fix1c@example.com', 'ManualPass123!')
+check('Manual Mode request completes after password is changed',
+      manual_done is not None and manual_done.status_code == 200, str(manual_done.status_code if manual_done else None))
+with app.app_context():
+    manual_row = get_db().execute("SELECT status, handling_method, completed_at FROM password_reset_requests WHERE LOWER(email)='fix1c@example.com'").fetchone()
+check('Manual Mode completion preserves manual_mode classification',
+      manual_row and manual_row['status'] == 'completed' and manual_row['handling_method'] == 'manual_mode'
+      and bool(manual_row['completed_at']), str(dict(manual_row) if manual_row else None))
+
+
+# Manual Fallback request from the earlier provider-failure scenario.
+# Generate a fresh link and complete it; the original fallback origin must survive.
+set_mode('email')
+set_email_enabled(True)
+_saved_send_email_for_fallback = email_service.send_email
+email_service.send_email = lambda *args, **kwargs: (False, 'simulated delivery failure')
+with app.app_context():
+    db = get_db()
+    db.execute("DELETE FROM password_reset_tokens")
+    db.execute("DELETE FROM password_reset_requests WHERE LOWER(email)='fix1a@example.com'")
+    db.commit()
+c.post('/api/auth/forgot-password', json={'email': 'fix1a@example.com'})
+email_service.send_email = _saved_send_email_for_fallback
+fallback_item_done, fallback_done = complete_request_for('fix1a@example.com', 'FallbackPass123!')
+check('Manual Fallback request completes after password is changed',
+      fallback_done is not None and fallback_done.status_code == 200, str(fallback_done.status_code if fallback_done else None))
+with app.app_context():
+    fallback_row = get_db().execute("SELECT status, handling_method, fallback_at, completed_at FROM password_reset_requests WHERE LOWER(email)='fix1a@example.com'").fetchone()
+check('Manual Fallback completion preserves fallback classification and dates',
+      fallback_row and fallback_row['status'] == 'completed' and fallback_row['handling_method'] == 'manual_fallback'
+      and bool(fallback_row['fallback_at']) and bool(fallback_row['completed_at']),
+      str(dict(fallback_row) if fallback_row else None))
+
+
+# A consumed token cannot be reused, and a failed attempt cannot create completion.
+import re as _re
+reuse_link = (c.post(f"/api/admin/password-reset-requests/{fallback_item_done['id']}/generate-link",
+                     headers=ADMIN).get_json() or {}).get('link', '') if fallback_item_done else ''
+reuse_token = _re.search(r'[?&]token=([^&]+)', reuse_link)
+if reuse_token:
+    first = c.post('/api/auth/reset-password', json={
+        'token': reuse_token.group(1), 'password': 'OneTimePass123!',
+        'confirm_password': 'OneTimePass123!',
+    })
+    second = c.post('/api/auth/reset-password', json={
+        'token': reuse_token.group(1), 'password': 'SecondPass123!',
+        'confirm_password': 'SecondPass123!',
+    })
+else:
+    first, second = None, None
+check('a reset token succeeds only once',
+      first is not None and first.status_code == 200 and second is not None and second.status_code == 400,
+      f"first={first.status_code if first else None}, second={second.status_code if second else None}")
+bad_attempt = c.post('/api/auth/reset-password', json={
+    'token': 'not-a-real-token', 'password': 'InvalidPass123!',
+    'confirm_password': 'InvalidPass123!',
+})
+check('invalid reset token is rejected without a completion',
+      bad_attempt.status_code == 400, str(bad_attempt.status_code))
+
 
 print()
 if failures:
