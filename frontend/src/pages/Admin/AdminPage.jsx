@@ -226,8 +226,10 @@ export default function AdminPage() {
     const query = search.trim().toLowerCase();
     const matchesSearch = !query || [inst.name, inst.email, inst.location]
       .some(value => String(value || '').toLowerCase().includes(query));
+    const isAccountActive = inst.is_active === true || inst.is_active === 1 ||
+      inst.is_active === '1' || String(inst.is_active).toLowerCase() === 'true';
     const matchesAccount = instructorAccountFilter === 'all' ||
-      (instructorAccountFilter === 'active' ? !!inst.is_active : !inst.is_active);
+      (instructorAccountFilter === 'active' ? isAccountActive : !isAccountActive);
     const reviewStatus = String(inst.instructor_status || '').toLowerCase();
     const matchesReview = instructorReviewFilter === 'all' || reviewStatus === instructorReviewFilter;
     const courseCount = Number(inst.course_count || 0);
@@ -254,6 +256,9 @@ export default function AdminPage() {
   };
 
   const changeRole = async (uid, role) => {
+    const target = [...students, ...instructors].find(item => item.id === uid);
+    const label = target?.name || target?.email || 'this user';
+    if (!(await window.LearnAfricaDialog.confirm(`Change ${label}'s account role to ${role}? This changes their access and permissions.`))) return;
     setActionLoading(uid + 'role');
     try {
       await API(`/api/admin/users/${uid}/role`, { method: 'PUT', body: JSON.stringify({ role }) });
@@ -371,6 +376,7 @@ export default function AdminPage() {
 
   const saveIdentityEdit = async () => {
     if (!selectedUser || !identityForm) return;
+    if (!(await window.LearnAfricaDialog.confirm(`Save the identity and address corrections for ${selectedUser.name || selectedUser.email || 'this instructor'}? The change will be recorded in the Admin audit log.`))) return;
     setSavingIdentity(true);
     try {
       await API(`/api/admin/instructor-applications/${selectedUser.id}/identity`, {
@@ -397,10 +403,15 @@ export default function AdminPage() {
 
   const saveFinancialRecord = async (event) => {
     event.preventDefault();
+    const amount = Number(financialForm.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      showStatus('error', 'Enter an amount greater than zero.');
+      return;
+    }
+    const recordLabel = financialForm.record_type === 'withdrawal' ? 'owner withdrawal' : 'business expense';
+    if (!(await window.LearnAfricaDialog.confirm(`Record a ${recordLabel} of GH₵ ${amount.toFixed(2)}?${financialForm.description ? `\n\nDescription: ${financialForm.description}` : ''}${financialForm.reference ? `\nReference: ${financialForm.reference}` : ''}`))) return;
     setSavingFinancialRecord(true);
     try {
-      const amount = Number(financialForm.amount);
-      if (!Number.isFinite(amount) || amount <= 0) throw new Error('Enter an amount greater than zero.');
       await API('/api/admin/financial-records', {
         method: 'POST',
         body: JSON.stringify({ ...financialForm, amount }),
@@ -417,6 +428,9 @@ export default function AdminPage() {
   };
 
   const saveSplit = async () => {
+    const instructorShare = Number(splitForm.instructor_share);
+    const platformShare = 100 - instructorShare;
+    if (!(await window.LearnAfricaDialog.confirm(`Apply this platform-wide revenue split to future eligible transactions?\n\nInstructor: ${instructorShare}%\nLearnAfrica: ${platformShare.toFixed(2)}%`))) return;
     setSavingSplit(true);
     try {
       const res = await API('/api/admin/revenue-split', {
@@ -433,13 +447,20 @@ export default function AdminPage() {
     setSavingSplit(false);
   };
   const saveInstructorSplit = async (instructorId, reset = false) => {
+    const raw = instructorSplitEdits[instructorId];
+    const value = reset ? null : Number(String(raw ?? '').trim());
+    if (!reset && (String(raw ?? '').trim() === '' || !Number.isFinite(value) || value < 0 || value > 100)) {
+      showStatus('error', 'Enter an instructor share between 0 and 100.');
+      return;
+    }
+    const instructor = earnings?.instructors?.find(item => item.id === instructorId);
+    const label = instructor?.name || instructor?.email || 'this instructor';
+    const prompt = reset
+      ? `Remove ${label}'s custom revenue split and return them to the platform default?`
+      : `Change ${label}'s future revenue split?\n\nInstructor: ${value}%\nLearnAfrica: ${(100 - value).toFixed(2)}%`;
+    if (!(await window.LearnAfricaDialog.confirm(prompt))) return;
     setSavingInstructorSplit(instructorId);
     try {
-      const raw = instructorSplitEdits[instructorId];
-      const value = reset ? null : Number(String(raw ?? '').trim());
-      if (!reset && (String(raw ?? '').trim() === '' || !Number.isFinite(value) || value < 0 || value > 100)) {
-        throw new Error('Enter an instructor share between 0 and 100.');
-      }
       const res = await API('/api/admin/instructors/' + instructorId + '/revenue-split', {
         method: 'PUT',
         body: JSON.stringify({ instructor_share: value }),
@@ -2847,6 +2868,11 @@ function AdminSettingsTab() {
   }, []);
 
   const saveInstructorRegistration = async () => {
+    const fee = regMode === 'paid' ? Number(regFee) || 0 : 0;
+    const description = regMode === 'paid'
+      ? `Charge GH₵ ${fee.toFixed(2)} for new instructor registrations`
+      : 'Make instructor registration free';
+    if (!(await window.LearnAfricaDialog.confirm(`${description}? This affects new registrations.`))) return;
     setSavingReg(true); setRegMsg(null);
     try {
       const d = await API('/api/admin/instructor-registration', {
@@ -2865,6 +2891,9 @@ function AdminSettingsTab() {
 
 
   const savePayoutSettings = async () => {
+    if (!(await window.LearnAfricaDialog.confirm(
+      `Save these platform payout and display settings?\n\nInstructor share: ${instructorPct}%\nLearnAfrica share: ${adminPct}%\nRequire payout before courses: ${requirePayoutCourses ? 'Yes' : 'No'}\nRequire payout before instructor approval: ${requirePayoutApproval ? 'Yes' : 'No'}`
+    ))) return;
     setSavingPayout(true); setPayoutMsg(null);
     try {
       await API('/api/admin/platform-settings', {
