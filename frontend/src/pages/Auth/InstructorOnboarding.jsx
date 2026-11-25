@@ -33,6 +33,9 @@ export default function InstructorOnboarding() {
   const [errors,    setErrors]   = useState({});
   const [isLoading, setLoading]  = useState(false);
   const [done,      setDone]     = useState(false);
+  const BIO_MIN_WORDS = 50;
+  const bioWordCount = formData.bio.trim() ? formData.bio.trim().split(/\\s+/).filter(Boolean).length : 0;
+  const bioIsValid = bioWordCount >= BIO_MIN_WORDS;
 
   if (!locationState && !user) { navigate('/signup'); return null; }
 
@@ -49,8 +52,8 @@ export default function InstructorOnboarding() {
 
   const validate = () => {
     const e = {};
-    if (!formData.bio || formData.bio.length < 50)
-      e.bio = 'Please provide a bio of at least 50 characters.';
+    if (!bioIsValid)
+      e.bio = `Your professional bio needs at least ${BIO_MIN_WORDS} words. You currently have ${bioWordCount}.`;
     if (!formData.title)
       e.title = 'Your field / specialisation is required.';
     if (viaGoogle && !String(formData.phone || '').trim())
@@ -188,12 +191,19 @@ export default function InstructorOnboarding() {
           </Label>
           <div className="relative">
             <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <textarea id="bio" required minLength={50} value={formData.bio}
-              onChange={e => set('bio', e.target.value)}
-              placeholder="Tell students about your experience, expertise, and teaching style… (min 50 characters)"
-              className="flex min-h-[140px] w-full rounded-md border border-input bg-background pl-10 pr-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 resize-none" />
+            <textarea id="bio" required value={formData.bio}
+              aria-invalid={!!errors.bio || (formData.bio.length > 0 && !bioIsValid)}
+              aria-describedby="bio-guidance bio-counter bio-error"
+              onChange={e => { set('bio', e.target.value); if (errors.bio) setErrors(p => ({ ...p, bio: '' })); }}
+              placeholder="Tell students about your experience, expertise, and teaching style…"
+              className={`flex min-h-[140px] w-full rounded-md border bg-background pl-10 pr-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 resize-none ${errors.bio || (formData.bio.length > 0 && !bioIsValid) ? 'border-destructive focus-visible:ring-destructive' : 'border-input'}`} />
           </div>
-          {errors.bio && <p className="text-xs text-destructive font-medium">{errors.bio}</p>}
+          <div className="flex items-center justify-between gap-3 text-xs">
+            <p id="bio-guidance" className="text-muted-foreground">Write at least {BIO_MIN_WORDS} words about your experience, expertise and teaching approach.</p>
+            <span id="bio-counter" className={`shrink-0 font-semibold tabular-nums ${formData.bio.length > 0 && !bioIsValid ? 'text-destructive' : 'text-muted-foreground'}`}>{bioWordCount}/{BIO_MIN_WORDS} words</span>
+          </div>
+          {errors.bio && <p id="bio-error" role="alert" className="text-xs text-destructive font-medium">{errors.bio}</p>}
+          {!errors.bio && formData.bio.length > 0 && !bioIsValid && <p className="text-xs text-destructive">Add {BIO_MIN_WORDS - bioWordCount} more word(s) to meet the requirement.</p>}
         </div>
 
         {/* Field / Specialisation — the key field the user asked about */}
