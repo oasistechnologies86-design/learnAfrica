@@ -15,10 +15,19 @@ import { Badge } from '@/components/common/Badge';
 import { API } from '@/lib/adminApi';
 
 const STATUS_STYLES = {
-  pending:   'bg-amber-500/10 text-amber-600 border-amber-500/20',
+  pending: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
+  manual_fallback: 'bg-orange-500/10 text-orange-700 border-orange-500/25',
+  link_generated: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
   link_sent: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
+  email_sent: 'bg-success/10 text-success border-success/20',
   completed: 'bg-success/10 text-success border-success/20',
   dismissed: 'bg-muted text-muted-foreground border-border',
+};
+
+const STATUS_LABELS = {
+  pending: 'Pending', manual_fallback: 'Manual Fallback',
+  link_generated: 'Link Generated', link_sent: 'Link Generated',
+  email_sent: 'Email Sent', completed: 'Completed', dismissed: 'Dismissed',
 };
 
 function parseResetTimestamp(ts) {
@@ -76,11 +85,12 @@ export default function PasswordResetRequestsCard({ onChanged }) {
 
   useEffect(() => { load(); }, [load]);
 
-  // Only offer the "Email link" action while outgoing email is switched on.
+  // Manual reset mode can still use the configured sender after an admin
+  // generates a link. Check the master email switch, not the reset policy.
   useEffect(() => {
     API('/api/auth/password-reset-mode')
-      .then(d => setEmailOn(d.email_enabled !== false && d.mode === 'email'))
-      .catch(() => {});
+      .then(d => setEmailOn(d.email_enabled === true))
+      .catch(() => setEmailOn(false));
   }, []);
 
   const generate = async (rid) => {
@@ -111,6 +121,7 @@ export default function PasswordResetRequestsCard({ onChanged }) {
         method: 'POST', body: JSON.stringify({ link }),
       });
       setMsg({ type: 'success', text: d.message });
+      load();
     } catch (e) { setMsg({ type: 'error', text: e.message }); }
     finally { setBusy(''); }
   };
@@ -143,7 +154,9 @@ export default function PasswordResetRequestsCard({ onChanged }) {
               className="h-9 rounded-lg border border-border bg-background px-2 text-xs">
               <option value="all">All</option>
               <option value="pending">Pending</option>
-              <option value="link_sent">Link sent</option>
+              <option value="manual_fallback">Manual Fallback</option>
+              <option value="link_generated">Link Generated</option>
+              <option value="email_sent">Email Sent</option>
               <option value="completed">Completed</option>
               <option value="dismissed">Dismissed</option>
             </BrandedSelect>
@@ -173,7 +186,7 @@ export default function PasswordResetRequestsCard({ onChanged }) {
                     <p className="text-xs text-muted-foreground">
                       {r.reason || 'Forgot Password'} · {fmt(r.created_at)}
                     </p>
-                    {(r.status === 'pending' || r.status === 'link_sent') && dueBy(r.created_at) && (
+                    {(r.status === 'pending' || r.status === 'manual_fallback' || r.status === 'link_generated' || r.status === 'link_sent') && dueBy(r.created_at) && (
                       <p className={`text-xs mt-0.5 ${dueBy(r.created_at) < new Date() ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
                         {dueBy(r.created_at) < new Date()
                           ? `Overdue — was due ${fmt(dueBy(r.created_at).toISOString())}`
@@ -181,16 +194,28 @@ export default function PasswordResetRequestsCard({ onChanged }) {
                       </p>
                     )}
                   </div>
-                  <Badge className={STATUS_STYLES[r.status] || STATUS_STYLES.dismissed}>
-                    {r.status.replace('_', ' ')}
-                  </Badge>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <Badge className={STATUS_STYLES[r.status] || STATUS_STYLES.dismissed}>
+                      {STATUS_LABELS[r.status] || r.status.replace(/_/g, ' ')}
+                    </Badge>
+                    {r.status === 'manual_fallback' && r.has_active_link && (
+                      <Badge className={STATUS_STYLES.link_generated}>Link Generated</Badge>
+                    )}
+                  </div>
                 </div>
 
+                {r.delivery_error && (
+                  <p className="mt-2 rounded-lg border border-destructive/20 bg-destructive/5 px-2.5 py-2 text-xs text-destructive break-words">
+                    <strong>Automatic delivery error:</strong> {r.delivery_error}
+                  </p>
+                )}
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Button size="sm" onClick={() => generate(r.id)} disabled={busy === r.id} className="gap-1.5">
+                  {r.status !== 'completed' && r.status !== 'dismissed' && (
+                    <Button size="sm" onClick={() => generate(r.id)} disabled={busy === r.id} className="gap-1.5">
                     {busy === r.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Link2 className="h-3.5 w-3.5" />}
                     Generate Password Reset Link
-                  </Button>
+                    </Button>
+                  )}
                   {links[r.id] && (
                     <>
                       <Button size="sm" variant="outline" onClick={() => copy(r.id, links[r.id])} className="gap-1.5">
