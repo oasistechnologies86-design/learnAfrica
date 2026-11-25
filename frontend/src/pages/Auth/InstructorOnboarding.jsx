@@ -34,7 +34,7 @@ export default function InstructorOnboarding() {
   const [isLoading, setLoading]  = useState(false);
   const [done,      setDone]     = useState(false);
   const BIO_MIN_WORDS = 50;
-  const bioWordCount = formData.bio.trim() ? formData.bio.trim().split(/\\s+/).filter(Boolean).length : 0;
+  const bioWordCount = formData.bio.trim() ? formData.bio.trim().split(/\s+/).filter(Boolean).length : 0;
   const bioIsValid = bioWordCount >= BIO_MIN_WORDS;
 
   if (!locationState && !user) { navigate('/signup'); return null; }
