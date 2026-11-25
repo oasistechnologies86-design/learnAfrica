@@ -170,7 +170,7 @@ _calls.clear()
 r = c.post('/api/auth/forgot-password', json={'email': 'stu@example.com'})
 body = r.get_json() or {}
 check('email mode sends the reset link', body.get('email_sent') is True, str(body))
-check('email mode response confirms a link is on its way', 'on its way' in (body.get('message') or ''), str(body.get('message')))
+check('email mode response confirms a link is on its way', 'check your inbox' in (body.get('message') or '').lower(), str(body.get('message')))
 with app.app_context():
     row = get_db().execute("SELECT status, handling_method, email_sent_at FROM password_reset_requests "
                            "WHERE LOWER(email)='stu@example.com'").fetchone()
@@ -219,9 +219,9 @@ check('email mode + failed send tells the user automatic delivery failed',
       'could not be completed' in (r.get('message') or '').lower(), str(r.get('message')))
 check('the failed send is never reported as sent', r.get('email_sent') is False, str(r))
 with app.app_context():
-    row = get_db().execute("SELECT status, delivery_error, handling_method FROM password_reset_requests WHERE LOWER(email)='fix1a@example.com'").fetchone()
+    row = get_db().execute("SELECT status, delivery_error, handling_method, fallback_at FROM password_reset_requests WHERE LOWER(email)='fix1a@example.com'").fetchone()
 check('failed delivery is tagged manual_fallback with its provider error',
-      row and row['status'] == 'manual_fallback' and row['handling_method'] == 'manual_fallback' and 'SendPulse send failed' in (row['delivery_error'] or ''),
+      row and row['status'] == 'manual_fallback' and row['handling_method'] == 'manual_fallback' and bool(row['fallback_at']) and 'SendPulse send failed' in (row['delivery_error'] or ''),
       str(dict(row) if row else None))
 admin_rows = (c.get('/api/admin/password-reset-requests', headers=ADMIN).get_json() or {}).get('requests', [])
 fallback_item = next((item for item in admin_rows if item.get('email') == 'fix1a@example.com'), None)
@@ -266,7 +266,7 @@ email_service.send_via_sendpulse = _saved_sp
 
 # Manual mode still uses the admin wording.
 set_mode('manual')
-r3 = c.post('/api/auth/forgot-password', json={'email': 'fix1c@example.com'}).get_json() or {}
+r3 = c.post('/api/auth/forgot-password', json={'email': 'stu@example.com'}).get_json() or {}
 check('manual mode still tells the user an admin will send the link',
       'administrator' in (r3.get('message') or '').lower(), str(r3.get('message')))
 set_mode('email')
