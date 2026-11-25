@@ -149,8 +149,6 @@ export default function PasswordResetRequestsCard({ onChanged }) {
   const pageCount = Math.max(1, Math.ceil(visibleRequests.length / PAGE_SIZE));
   const pageRows = visibleRequests.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  useEffect(() => { setPage(1); }, [activeTab, statusFilter, search, fromDate, toDate]);
-
   const clearFilters = () => {
     setSearch('');
     setStatusFilter('all');
@@ -223,7 +221,7 @@ export default function PasswordResetRequestsCard({ onChanged }) {
         <div className="flex gap-2 overflow-x-auto pt-3 pb-1" role="tablist" aria-label="Password reset request categories">
           {TABS.map(tab => (
             <button key={tab.id} type="button" role="tab" aria-selected={activeTab === tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => { setActiveTab(tab.id); setPage(1); }}
               className={`shrink-0 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${activeTab === tab.id
                 ? 'border-primary bg-primary/10 text-primary'
                 : 'border-border bg-background text-muted-foreground hover:bg-muted'}`}>
@@ -236,11 +234,11 @@ export default function PasswordResetRequestsCard({ onChanged }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2 mb-4">
           <label className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input value={search} onChange={event => setSearch(event.target.value)}
+            <input value={search} onChange={event => { setSearch(event.target.value); setPage(1); }}
               placeholder="Search student or email"
               className="h-10 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-sm" />
           </label>
-          <BrandedSelect value={statusFilter} onChange={event => setStatusFilter(event.target.value)}
+          <BrandedSelect value={statusFilter} onChange={event => { setStatusFilter(event.target.value); setPage(1); }}
             className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
             <option value="all">All statuses</option>
             <option value="pending">Pending</option>
@@ -254,12 +252,12 @@ export default function PasswordResetRequestsCard({ onChanged }) {
           <label className="flex items-center gap-2 rounded-lg border border-border bg-background px-3">
             <CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" />
             <input aria-label="From date" type="date" value={fromDate} max={toDate || undefined}
-              onChange={event => setFromDate(event.target.value)} className="h-10 min-w-0 w-full bg-transparent text-sm" />
+              onChange={event => { setFromDate(event.target.value); setPage(1); }} className="h-10 min-w-0 w-full bg-transparent text-sm" />
           </label>
           <label className="flex items-center gap-2 rounded-lg border border-border bg-background px-3">
             <CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" />
             <input aria-label="To date" type="date" value={toDate} min={fromDate || undefined}
-              onChange={event => setToDate(event.target.value)} className="h-10 min-w-0 w-full bg-transparent text-sm" />
+              onChange={event => { setToDate(event.target.value); setPage(1); }} className="h-10 min-w-0 w-full bg-transparent text-sm" />
           </label>
         </div>
         <div className="mb-3 flex items-center justify-between gap-3">
