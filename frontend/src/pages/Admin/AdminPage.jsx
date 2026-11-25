@@ -1330,7 +1330,23 @@ export default function AdminPage() {
                     </div>
                   </div>
                   {(earnings.instructors||[]).length > 0 ? (
-                    <div className="overflow-x-auto">
+                    <>
+                      <div className="mb-3 rounded-xl border border-border bg-muted/10 p-3 space-y-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_220px_auto] gap-2">
+                          <div className="relative min-w-0">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input aria-label="Search earnings instructors by name or email" placeholder="Search instructor name or email…" value={earningsInstructorSearch} onChange={e => setEarningsInstructorSearch(e.target.value)} className="pl-9" />
+                          </div>
+                          <select aria-label="Filter earnings instructors by course activity" value={earningsInstructorCourseFilter} onChange={e => setEarningsInstructorCourseFilter(e.target.value)} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
+                            <option value="all">All course activity</option>
+                            <option value="has_courses">Has courses</option>
+                            <option value="no_courses">No courses</option>
+                          </select>
+                          <Button size="sm" variant="outline" disabled={!earningsInstructorSearch && earningsInstructorCourseFilter === 'all'} onClick={() => { setEarningsInstructorSearch(''); setEarningsInstructorCourseFilter('all'); }}>Clear</Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{filteredEarningsInstructors.length} of {(earnings.instructors || []).length} instructors shown</p>
+                      </div>
+                      <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead className="bg-muted/20 border-b border-border">
                           <tr>
@@ -1346,7 +1362,7 @@ export default function AdminPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {earnings.instructors.map((inst, i) => (
+                          {filteredEarningsInstructors.map((inst, i) => (
                             <tr key={inst.id||i} className="border-b border-border/40 hover:bg-muted/20">
                               <td className="p-3">
                                 <p className="font-medium">{inst.name}</p>
@@ -1442,60 +1458,16 @@ export default function AdminPage() {
                               </td>
                             </tr>
                           ))}
+                        {filteredEarningsInstructors.length === 0 && (
+                          <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">No instructors match this search and filter.</td></tr>
+                        )}
                         </tbody>
                       </table>
                     </div>
+                    </>
                   ) : (
                     <div className="p-8 text-center text-muted-foreground text-sm">No paid course sales yet.</div>
                   )}
-                </Card>
-              )}
-              {earnings && (
-                <Card className="overflow-hidden">
-                  <div className="p-5 border-b border-border bg-muted/20 space-y-3">
-                    <div>
-                      <h2 className="font-bold text-base flex items-center gap-2"><Search className="h-4 w-4 text-primary" /> Search Instructors</h2>
-                      <p className="text-xs text-muted-foreground mt-1">Find an instructor in the earnings records without changing the separate Instructors tab search.</p>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_220px_auto] gap-2">
-                      <div className="relative min-w-0">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input aria-label="Search earnings instructors by name or email" placeholder="Search instructor name or email…" value={earningsInstructorSearch} onChange={e => setEarningsInstructorSearch(e.target.value)} className="pl-9" />
-                      </div>
-                      <select aria-label="Filter earnings instructors by course activity" value={earningsInstructorCourseFilter} onChange={e => setEarningsInstructorCourseFilter(e.target.value)} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
-                        <option value="all">All course activity</option>
-                        <option value="has_courses">Has courses</option>
-                        <option value="no_courses">No courses</option>
-                      </select>
-                      <Button size="sm" variant="outline" disabled={!earningsInstructorSearch && earningsInstructorCourseFilter === 'all'} onClick={() => { setEarningsInstructorSearch(''); setEarningsInstructorCourseFilter('all'); }}>Clear</Button>
-                    </div>
-                    <p className="text-xs text-muted-foreground">{filteredEarningsInstructors.length} of {(earnings.instructors || []).length} instructors</p>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-muted/20 border-b border-border">
-                        <tr>
-                          <th className="p-3 text-left font-medium text-muted-foreground">Instructor</th>
-                          <th className="p-3 text-center font-medium text-muted-foreground">Courses</th>
-                          <th className="p-3 text-right font-medium text-muted-foreground">Gross</th>
-                          <th className="p-3 text-right font-medium text-muted-foreground">Paystack fees</th>
-                          <th className="p-3 text-right font-medium text-muted-foreground">Instructor earnings</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredEarningsInstructors.map((inst, index) => (
-                          <tr key={inst.id || index} className="border-b border-border/40 hover:bg-muted/20">
-                            <td className="p-3"><p className="font-medium">{inst.name || 'Unnamed instructor'}</p><p className="text-xs text-muted-foreground break-all">{inst.email}</p></td>
-                            <td className="p-3 text-center tabular-nums">{inst.course_count ?? 0}</td>
-                            <td className="p-3 text-right tabular-nums">{formatPrice(inst.gross_revenue || 0)}</td>
-                            <td className="p-3 text-right tabular-nums">{formatPrice(inst.paystack_fees || 0)}</td>
-                            <td className="p-3 text-right font-semibold tabular-nums">{formatPrice(inst.instructor_earnings || 0)}</td>
-                          </tr>
-                        ))}
-                        {filteredEarningsInstructors.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">No instructors match this search and filter.</td></tr>}
-                      </tbody>
-                    </table>
-                  </div>
                 </Card>
               )}
               {!earnings && <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary/50" /></div>}
