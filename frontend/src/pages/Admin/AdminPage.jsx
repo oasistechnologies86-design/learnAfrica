@@ -22,6 +22,7 @@ import { ScaleToFit } from '@/components/common/ScaleToFit';
 import { CertificateDocument, CERT_DESIGN_WIDTH, CERT_DESIGN_HEIGHT } from '@/pages/Certificate/CertificatePage';
 import { mergeFooterConfig, SOCIAL_NAMES, AUDIENCES } from '@/lib/footerConfig';
 import StudentsListModal from '@/components/admin/StudentsListModal';
+import CourseTransfersPage from '@/pages/Instructor/CourseTransfersPage';
 import {
   Users, BookOpen, TrendingUp, Shield, CheckCircle2, XCircle, Loader2, Bell,
   Clock, AlertTriangle, UserCheck, UserX, BarChart2, Send, Eye, Trash2,
@@ -107,7 +108,7 @@ const ROLE_BADGE = ({ role }) => (
   </span>
 );
 
-const TABS = ['Overview', 'Students', 'Leaderboard', 'Instructors', 'Courses', 'Applications', 'Deleted Accounts', 'Broadcast', 'Blog', 'Earnings', 'Payouts', 'Receipts', 'Coupons', 'Credentials', 'Certificate Signature', 'Settings', 'Forgot Password Requests', 'Footer', 'Guide', 'Audit Log'];
+const TABS = ['Overview', 'Students', 'Leaderboard', 'Instructors', 'Courses', 'Course Transfers', 'Applications', 'Deleted Accounts', 'Broadcast', 'Blog', 'Earnings', 'Payouts', 'Receipts', 'Coupons', 'Credentials', 'Certificate Signature', 'Settings', 'Forgot Password Requests', 'Footer', 'Guide', 'Audit Log'];
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -1545,6 +1546,8 @@ export default function AdminPage() {
               {!earnings && <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary/50" /></div>}
             </div>
           )}
+
+          {tab === 'Course Transfers' && <CourseTransfersPage />}
 
           {tab === 'Blog' && <AdminBlogTab />}
 
