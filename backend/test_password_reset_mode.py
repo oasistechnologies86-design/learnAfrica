@@ -331,12 +331,13 @@ def complete_request_for(email, password):
     import re as _re
     token_match = _re.search(r'[?&]token=([^&]+)', link)
     if not token_match:
-        return item, None
+        return item, None, None
+    token_value = token_match.group(1)
     result = c.post('/api/auth/reset-password', json={
-        'token': token_match.group(1), 'password': password,
+        'token': token_value, 'password': password,
         'confirm_password': password,
     })
-    return item, result
+    return item, result, token_value
 
 
 # Automatic Email request.
@@ -348,7 +349,7 @@ with app.app_context():
     db.execute("DELETE FROM password_reset_requests WHERE LOWER(email)='stu@example.com'")
     db.commit()
 auto_request = c.post('/api/auth/forgot-password', json={'email': 'stu@example.com'}).get_json() or {}
-auto_item, auto_done = complete_request_for('stu@example.com', 'AutoPass123!')
+auto_item, auto_done, auto_token = complete_request_for('stu@example.com', 'AutoPass123!')
 check('Automatic Email request completes after password is changed',
       auto_done is not None and auto_done.status_code == 200, str(auto_done.status_code if auto_done else None))
 with app.app_context():
@@ -369,7 +370,7 @@ with app.app_context():
     db.execute("DELETE FROM password_reset_requests WHERE LOWER(email)='fix1c@example.com'")
     db.commit()
 c.post('/api/auth/forgot-password', json={'email': 'fix1c@example.com'})
-manual_item, manual_done = complete_request_for('fix1c@example.com', 'ManualPass123!')
+manual_item, manual_done, manual_token = complete_request_for('fix1c@example.com', 'ManualPass123!')
 check('Manual Mode request completes after password is changed',
       manual_done is not None and manual_done.status_code == 200, str(manual_done.status_code if manual_done else None))
 with app.app_context():
@@ -392,7 +393,7 @@ with app.app_context():
     db.commit()
 c.post('/api/auth/forgot-password', json={'email': 'fix1a@example.com'})
 email_service.send_email = _saved_send_email_for_fallback
-fallback_item_done, fallback_done = complete_request_for('fix1a@example.com', 'FallbackPass123!')
+fallback_item_done, fallback_done, fallback_consumed_token = complete_request_for('fix1a@example.com', 'FallbackPass123!')
 check('Manual Fallback request completes after password is changed',
       fallback_done is not None and fallback_done.status_code == 200, str(fallback_done.status_code if fallback_done else None))
 with app.app_context():
@@ -403,25 +404,18 @@ check('Manual Fallback completion preserves fallback classification and dates',
       str(dict(fallback_row) if fallback_row else None))
 
 
-# A consumed token cannot be reused, and a failed attempt cannot create completion.
-import re as _re
-reuse_link = (c.post(f"/api/admin/password-reset-requests/{fallback_item_done['id']}/generate-link",
-                     headers=ADMIN).get_json() or {}).get('link', '') if fallback_item_done else ''
-reuse_token = _re.search(r'[?&]token=([^&]+)', reuse_link)
-if reuse_token:
-    first = c.post('/api/auth/reset-password', json={
-        'token': reuse_token.group(1), 'password': 'OneTimePass123!',
-        'confirm_password': 'OneTimePass123!',
-    })
+# A consumed token cannot be reused.
+if fallback_consumed_token:
     second = c.post('/api/auth/reset-password', json={
-        'token': reuse_token.group(1), 'password': 'SecondPass123!',
+        'token': fallback_consumed_token, 'password': 'SecondPass123!',
         'confirm_password': 'SecondPass123!',
     })
 else:
-    first, second = None, None
+    second = None
 check('a reset token succeeds only once',
-      first is not None and first.status_code == 200 and second is not None and second.status_code == 400,
-      f"first={first.status_code if first else None}, second={second.status_code if second else None}")
+      fallback_done is not None and fallback_done.status_code == 200
+      and second is not None and second.status_code == 400,
+      f"first={fallback_done.status_code if fallback_done else None}, second={second.status_code if second else None}")
 bad_attempt = c.post('/api/auth/reset-password', json={
     'token': 'not-a-real-token', 'password': 'InvalidPass123!',
     'confirm_password': 'InvalidPass123!',
