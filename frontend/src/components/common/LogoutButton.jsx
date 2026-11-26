@@ -6,14 +6,8 @@ import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 
 /**
- * LogoutButton — one red Logout control used everywhere, with a themed
- * confirmation dialog. Logging out is destructive (loses session), so we always
- * ask first rather than dropping the user out on a stray tap.
- *
- * variant 'solid'  — filled red button (used in the mobile profile drawer)
- * variant 'menu'   — red row inside a dropdown/menu
- * variant 'icon'   — compact square icon button (used beside the mobile
- *                    hamburger so logout is always one tap away)
+ * One consistent logout control, with a confirmation surface that shares the
+ * public landing/authentication hero image and green LearnAfrica treatment.
  */
 export default function LogoutButton({
   variant = 'menu',
@@ -29,19 +23,17 @@ export default function LogoutButton({
 
   const doLogout = useCallback(async () => {
     setBusy(true);
-    // Clear the session and auth state FIRST. The API call is best-effort and
-    // `logout()` also awaits a course reload, so awaiting it before clearing
-    // could leave the user still signed in if that reload failed.
+    // Clear local credentials immediately; server logout remains best-effort.
     sessionStorage.removeItem('auth_token');
     setConfirming(false);
-    if (onLoggedOut) onLoggedOut();
+    onLoggedOut?.();
     try { await logout(); } catch {}
+    // The public landing route already renders the same learner-photo hero.
     navigate('/', { replace: true });
     setBusy(false);
   }, [logout, navigate, onLoggedOut]);
 
-  const base =
-    'flex items-center gap-3 transition-all text-red-500 font-semibold';
+  const base = 'flex items-center gap-3 font-semibold transition-all text-red-500';
   const styles = variant === 'solid'
     ? 'w-full h-11 justify-center rounded-xl bg-red-500/5 border border-red-500/10 text-3xs font-black uppercase tracking-widest hover:bg-red-500 hover:text-white'
     : variant === 'icon'
@@ -64,28 +56,34 @@ export default function LogoutButton({
       {confirming && createPortal(
         <div
           data-logout-confirm
-          className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+          className="fixed inset-0 z-[10000] flex items-center justify-center overflow-y-auto p-4 animate-in fade-in duration-200"
+          style={{ backgroundImage: "linear-gradient(90deg, rgba(2,6,23,.94), rgba(2,6,23,.72)), url('/hero-graduation-female.jpg')", backgroundSize: 'cover', backgroundPosition: 'center' }}
           onClick={() => !busy && setConfirming(false)}
         >
           <div
-            className="relative w-full max-w-sm rounded-2xl bg-background border border-border shadow-2xl p-6 animate-in zoom-in-95 duration-200"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="logout-dialog-title"
+            className="relative my-auto w-full max-w-sm overflow-hidden rounded-3xl border border-white/25 bg-white/95 p-6 text-slate-900 shadow-[0_30px_100px_-25px_rgba(0,0,0,.8)] backdrop-blur-2xl dark:bg-slate-950/95 dark:text-slate-100 sm:p-7 animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex flex-col items-center text-center">
-              <div className="h-14 w-14 rounded-full bg-red-500/10 flex items-center justify-center mb-4">
+            <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-emerald-400/20 blur-3xl" />
+            <div className="relative flex flex-col items-center text-center">
+              <img src="/logo.png" alt="LearnAfrica" className="mb-5 h-10 w-10 object-contain" />
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-red-500/15 bg-red-500/10">
                 <LogOut className="h-7 w-7 text-red-500" />
               </div>
-              <h2 className="text-xl font-bold mb-2">Log out?</h2>
-              <p className="text-sm text-muted-foreground mb-6">
-                You'll be signed out of LearnAfrica on this device. You can sign
-                back in any time.
+              <p className="mb-1 text-[11px] font-bold uppercase tracking-[.2em] text-emerald-700 dark:text-emerald-400">LearnAfrica account</p>
+              <h2 id="logout-dialog-title" className="mb-2 text-xl font-bold">Log out?</h2>
+              <p className="mb-6 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                You'll be signed out of LearnAfrica on this device. You can sign back in any time.
               </p>
-              <div className="flex flex-col w-full gap-3">
+              <div className="flex w-full flex-col gap-3">
                 <button
                   type="button"
                   disabled={busy}
                   onClick={doLogout}
-                  className="w-full h-11 inline-flex items-center justify-center rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600 disabled:opacity-60 transition-colors"
+                  className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-primary px-4 font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:-translate-y-px hover:brightness-110 disabled:pointer-events-none disabled:opacity-60"
                 >
                   {busy ? 'Logging out…' : 'Yes, log out'}
                 </button>
@@ -93,9 +91,9 @@ export default function LogoutButton({
                   type="button"
                   disabled={busy}
                   onClick={() => setConfirming(false)}
-                  className="w-full h-11 inline-flex items-center justify-center rounded-lg border border-border bg-background text-foreground font-semibold hover:bg-muted disabled:opacity-60 transition-colors"
+                  className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-slate-300 bg-white/80 font-semibold text-slate-800 transition-colors hover:bg-slate-100 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
                 >
-                  Cancel
+                  Stay signed in
                 </button>
               </div>
             </div>
