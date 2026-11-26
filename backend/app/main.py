@@ -5151,8 +5151,10 @@ def create_app() -> Flask:
             if uid == g.current_user['user_id']:
                 return jsonify({'error': 'Cannot suspend yourself'}), 400
             db = get_db()
-            u = db.execute('SELECT is_active, role FROM users WHERE id=?',(uid,)).fetchone()
+            u = db.execute('SELECT is_active, role, deleted_at FROM users WHERE id=?',(uid,)).fetchone()
             if not u: return jsonify({'error': 'User not found'}), 404
+            if u['deleted_at']:
+                return jsonify({'error': 'This account has been deleted and cannot be reactivated. Review it in Deleted Accounts.'}), 409
             # Only a superadmin may suspend another superadmin.
             if u['role'] == 'superadmin' and g.current_user['role'] != 'superadmin':
                 return jsonify({'error': 'Only a superadmin can suspend a superadmin'}), 403
@@ -6554,7 +6556,7 @@ def create_app() -> Flask:
                            (SELECT COUNT(*) FROM courses WHERE instructor_id=u.id) as course_count,
                            (SELECT COUNT(DISTINCT ue.user_id) FROM user_enrollments ue
                             JOIN courses c ON c.id=ue.course_id WHERE c.instructor_id=u.id) as total_students
-                    FROM users u WHERE u.role='instructor'
+                    FROM users u WHERE u.role='instructor' AND u.deleted_at IS NULL
                     ORDER BY u.created_at DESC
                 """).fetchall()
             except Exception as ex:
@@ -6564,7 +6566,7 @@ def create_app() -> Flask:
                 except Exception: pass
                 rows = db.execute(
                     "SELECT id, name, email, avatar, is_active, created_at"
-                    " FROM users WHERE role='instructor' ORDER BY created_at DESC"
+                    " FROM users WHERE role='instructor' AND deleted_at IS NULL ORDER BY created_at DESC"
                 ).fetchall()
             result = []
             for r in rows:

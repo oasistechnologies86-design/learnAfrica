@@ -34,11 +34,13 @@ with app.app_context():
         ('stu1', 'Student One', 'student@example.com', 'student', 'none'),
         ('ins1', 'Instructor Applicant', 'instructor@example.com', 'instructor', 'pending'),
         ('stu2', 'Student Two', 'student2@example.com', 'student', 'none'),
+        ('ins3', 'Suspended Instructor', 'suspended@example.com', 'instructor', 'approved'),
     ]:
         db.execute(
             "INSERT INTO users (id,name,email,password_hash,role,instructor_status,is_active,token_version) "
             "VALUES (?,?,?,?,?,?,1,0)",
             (uid, name, email, generate_password_hash('Pass12345!'), role, status))
+    db.execute("UPDATE users SET is_active=0 WHERE id='ins3'")
     db.execute(
         "INSERT INTO instructor_applications (id,user_id,status,bio,applied_at) "
         "VALUES ('app1','ins1','pending','Experienced teacher','2026-11-20')")
@@ -84,6 +86,15 @@ check('self-deletion event is recorded', bool(event and event['event_type'] == '
 # cannot be approved even if an admin calls the endpoint directly.
 response = client.delete('/api/users/account', json={'email': 'instructor@example.com'}, headers=auth(instructor_token))
 check('instructor applicant can self-delete', response.status_code == 200, response.status_code)
+# The active instructor-management endpoint must hide deleted accounts while
+# preserving genuinely suspended accounts for possible later reactivation.
+instructor_list = client.get('/api/admin/instructors', headers=auth(admin_token))
+instructor_rows = (instructor_list.get_json() or {}).get('instructors', [])
+listed_ids = {item.get('id') for item in instructor_rows}
+check('self-deleted instructor is excluded from instructor management', 'ins1' not in listed_ids)
+check('genuinely suspended instructor remains in instructor management', 'ins3' in listed_ids)
+reactivate_deleted = client.put('/api/admin/users/ins1/suspend', headers=auth(admin_token))
+check('deleted instructor cannot be reactivated through admin endpoint', reactivate_deleted.status_code == 409, reactivate_deleted.status_code)
 response = client.get('/api/admin/instructor-applications?status=pending', headers=auth(admin_token))
 apps = (response.get_json() or {}).get('applications', [])
 app_row = next((item for item in apps if item.get('user_id') == 'ins1'), None)

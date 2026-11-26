@@ -253,6 +253,8 @@ export default function AdminPage() {
   });
 
   const filteredInstructors = instructors.filter(inst => {
+    // Defensive UI guard: deleted accounts belong only in the Deleted Accounts area.
+    if (inst.deleted_at) return false;
     const query = search.trim().toLowerCase();
     const matchesSearch = !query || [inst.name, inst.email, inst.location]
       .some(value => String(value || '').toLowerCase().includes(query));
