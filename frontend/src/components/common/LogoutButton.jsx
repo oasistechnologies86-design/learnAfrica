@@ -69,7 +69,6 @@ export default function LogoutButton({
           >
             <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-emerald-400/20 blur-3xl" />
             <div className="relative flex flex-col items-center text-center">
-              <img src="/logo.png" alt="LearnAfrica" className="mb-5 h-10 w-10 object-contain" />
               <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-red-500/15 bg-red-500/10">
                 <LogOut className="h-7 w-7 text-red-500" />
               </div>
