@@ -353,13 +353,13 @@ function BadgeCard({ badge, userName }) {
     <>
       <article className={cn(
         'relative flex min-w-0 aspect-[3/4] flex-col items-center rounded-[2rem] border-2 bg-card px-3 py-5 shadow-sm transition-shadow hover:shadow-md sm:px-5 sm:py-7',
-        earned ? (gold ? 'border-amber-200' : 'border-emerald-200') : 'border-dashed border-slate-300 bg-slate-100/70 opacity-75'
+        earned ? (gold ? 'border-amber-200 dark:border-[#8D7950]' : 'border-emerald-200 dark:border-[#527C69]') : 'border-dashed border-slate-300 bg-slate-100/70 opacity-75 dark:border-slate-600 dark:bg-[#202A32] dark:opacity-100'
       )}>
         <div className="relative mb-4 flex h-20 w-20 shrink-0 items-center justify-center rounded-full sm:h-28 sm:w-28"
-          style={{ background: earned ? (gold ? '#F2B943' : 'var(--primary)') : '#DDE5DF' }}>
-          <Icon className={cn('h-10 w-10 sm:h-14 sm:w-14', earned ? (gold ? 'text-[#243326]' : 'text-white') : 'text-slate-500')} strokeWidth={1.9} />
+          style={{ background: earned ? (gold ? '#D4AD5A' : 'var(--dashboard-earned-green, var(--primary))') : 'var(--muted)' }}>
+          <Icon className={cn('h-10 w-10 sm:h-14 sm:w-14', earned ? (gold ? 'text-[#243326]' : 'text-white') : 'text-slate-500 dark:text-slate-300')} strokeWidth={1.9} />
           {earned && (
-            <span className={cn('absolute -bottom-1 -right-1 flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-card sm:h-12 sm:w-12', gold ? 'bg-amber-400 text-[#243326]' : 'bg-primary text-primary-foreground')}>
+            <span className={cn('absolute -bottom-1 -right-1 flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-card sm:h-12 sm:w-12', gold ? 'bg-[#D4AD5A] text-[#243326]' : 'bg-primary text-primary-foreground')}>
               <Check className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={3} />
             </span>
           )}
@@ -374,18 +374,18 @@ function BadgeCard({ badge, userName }) {
             onClick={() => setShowPreview(true)}
             className={cn(
               'mt-auto flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl px-2 py-3 text-sm font-bold transition-transform active:scale-[0.98] sm:min-h-[5.5rem] sm:text-xl',
-              gold ? 'bg-amber-50 text-amber-800 hover:bg-amber-100' : 'bg-primary/10 text-primary hover:bg-primary/15'
+              gold ? 'bg-amber-50 text-amber-800 hover:bg-amber-100 dark:bg-[#3B3527] dark:text-[#F0D99D] dark:hover:bg-[#49402D]' : 'bg-primary/10 text-primary hover:bg-primary/15 dark:bg-[#263A30] dark:text-[#C4E4C7] dark:hover:bg-[#304B3B]'
             )}
           >
             <Eye className="h-5 w-5 sm:h-7 sm:w-7" /> View Badge
           </button>
         ) : (
           <div className="mt-auto w-full space-y-3">
-            <div className="flex justify-between text-xs font-bold text-slate-700 sm:text-lg">
+            <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-200 sm:text-lg">
               <span>{badge.currentProgress} / {badge.goal}</span>
               <span>{pct}%</span>
             </div>
-            <div className="h-3 w-full overflow-hidden rounded-full bg-slate-300 sm:h-4">
+            <div className="h-3 w-full overflow-hidden rounded-full bg-slate-300 dark:bg-slate-600 sm:h-4">
               <div className={cn('h-full rounded-full transition-all', badge.currentProgress > 0 ? (gold ? 'bg-amber-400' : 'bg-primary') : 'bg-transparent')} style={{ width: `${pct}%` }} />
             </div>
           </div>
@@ -680,15 +680,15 @@ export default function StudentDashboard() {
       <section className="space-y-5">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-2xl font-extrabold tracking-tight sm:text-4xl">My Certificates</h2>
-          <span className="shrink-0 rounded-full bg-primary/10 px-4 py-2 text-sm font-bold text-primary sm:px-6 sm:py-3 sm:text-2xl">
+          <span className="shrink-0 rounded-full bg-primary/10 px-4 py-2 text-sm font-bold text-primary sm:px-6 sm:py-3 sm:text-2xl dark:bg-[#263A30] dark:text-[#C4E4C7]">
             {earnedCertificates.length} earned
           </span>
         </div>
         {earnedCertificates.length > 0 ? (
           <div className="space-y-3">
             {earnedCertificates.map(course => (
-              <article key={course.id} className="flex min-w-0 items-center gap-3 rounded-[1.75rem] border border-amber-100 bg-card p-3 shadow-sm sm:gap-6 sm:p-6">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border-2 border-amber-300 bg-amber-50 text-amber-600 sm:h-[7.25rem] sm:w-[7.25rem]">
+              <article key={course.id} className="flex min-w-0 items-center gap-3 rounded-[1.75rem] border border-amber-100 bg-card p-3 shadow-sm sm:gap-6 sm:p-6 dark:border-[#665B43] dark:bg-[#202A32]">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border-2 border-amber-300 bg-amber-50 text-amber-600 sm:h-[7.25rem] sm:w-[7.25rem] dark:border-[#9B8452] dark:bg-[#34372F] dark:text-[#E0BD72]">
                   <Award className="h-9 w-9 sm:h-14 sm:w-14" strokeWidth={1.8} />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -719,12 +719,12 @@ export default function StudentDashboard() {
       <section id="badges-section" className="space-y-4 scroll-mt-20">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-2xl font-extrabold tracking-tight sm:text-4xl">My Badges</h2>
-          <span className="shrink-0 rounded-full bg-amber-50 px-4 py-2 text-sm font-bold text-amber-800 sm:px-6 sm:py-3 sm:text-2xl">
+          <span className="shrink-0 rounded-full bg-amber-50 px-4 py-2 text-sm font-bold text-amber-800 sm:px-6 sm:py-3 sm:text-2xl dark:bg-[#3B3527] dark:text-[#F0D99D]">
             {earnedCount} / {badgeConfig.length} earned
           </span>
         </div>
         <div className="mb-4 h-3 w-full overflow-hidden rounded-full bg-slate-200 sm:h-4">
-          <div className="h-full rounded-full bg-amber-500 transition-all" style={{ width: `${(earnedCount / badgeConfig.length) * 100}%` }} />
+          <div className="h-full rounded-full bg-[#B99749] transition-all" style={{ width: `${(earnedCount / badgeConfig.length) * 100}%` }} />
         </div>
         <div className="grid grid-cols-2 gap-3 sm:gap-5">
           {liveBadges.map(badge => (
