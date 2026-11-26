@@ -4952,6 +4952,7 @@ def create_app() -> Flask:
         total_courses  = db.execute("SELECT COUNT(*) as c FROM courses").fetchone()['c']
         total_enrollments = db.execute("SELECT COUNT(*) as c FROM user_enrollments").fetchone()['c']
         pending_instructors = db.execute("SELECT COUNT(*) as c FROM instructor_applications ia INNER JOIN users u ON u.id=ia.user_id WHERE ia.status='pending' AND u.is_active=1 AND u.deleted_at IS NULL AND u.role='instructor'").fetchone()['c']
+        deleted_accounts_count = db.execute("SELECT COUNT(*) as c FROM users WHERE deleted_at IS NOT NULL AND deletion_cleared_at IS NULL").fetchone()['c']
         recent_users = db.execute('''SELECT id,name,email,role,instructor_status,created_at FROM users
                                      WHERE is_active=1 AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 10''').fetchall()
         recent_courses = db.execute('''SELECT c.id,c.title,c.category,c.enrollments,c.created_at,u.name as instructor_name
@@ -4985,6 +4986,7 @@ def create_app() -> Flask:
             'total_courses': total_courses,
             'total_enrollments': total_enrollments,
             'pending_instructors': pending_instructors,
+            'deleted_accounts_count': deleted_accounts_count,
             'recent_users': safe_list(recent_users),
             'recent_courses': safe_list(recent_courses),
             'gross_revenue': round(gross, 2),
