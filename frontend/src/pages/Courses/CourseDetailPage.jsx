@@ -16,6 +16,30 @@ import { formatPrice } from '@/lib/money';
 import { courseThumbnail } from '@/lib/courseThumbnail';
 import LiveSessionsSection from '@/components/common/LiveSessionsSection';
 
+// ── Expandable course/instructor copy ──────────────────────────────────────
+function ExpandableText({ text, className = '', previewLines = 3, threshold = 150 }) {
+  const [expanded, setExpanded] = useState(false);
+  const canExpand = String(text || '').trim().length > threshold;
+
+  return (
+    <div>
+      <p className={cn(className, !expanded && canExpand && 'line-clamp-' + previewLines)}>
+        {text}
+      </p>
+      {canExpand && (
+        <button
+          type="button"
+          onClick={() => setExpanded(value => !value)}
+          aria-expanded={expanded}
+          className="mt-2 text-sm font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-sm"
+        >
+          {expanded ? 'Read less' : 'Read more'}
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ── Section Accordion ──────────────────────────────────────────────────────
 function SectionAccordion({ section, course, sectionIndex, allLessons, contentLocked = false }) {
   const [open, setOpen] = useState(sectionIndex === 0);
@@ -300,7 +324,7 @@ export function CourseDetailPage() {
               </div>
 
               <h1 className="text-3xl lg:text-4xl font-bold leading-tight">{course.title}</h1>
-              <p className="text-lg text-muted-foreground">{course.description}</p>
+              <ExpandableText text={course.description} className="text-lg text-muted-foreground" previewLines={3} threshold={130} />
 
               <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-sm">
                 <div className="flex items-center gap-2">
@@ -353,7 +377,7 @@ export function CourseDetailPage() {
               {course.instructor_bio && (
                 <div className="mt-6 p-4 bg-primary/5 rounded-lg border border-primary/20">
                   <p className="text-xs font-bold text-primary uppercase mb-2">About the Instructor</p>
-                  <p className="text-sm text-foreground leading-relaxed">{course.instructor_bio}</p>
+                  <ExpandableText text={course.instructor_bio} className="text-sm text-foreground leading-relaxed" previewLines={4} threshold={160} />
                 </div>
               )}
 
@@ -630,9 +654,12 @@ export function CourseDetailPage() {
                 </div>
               </div>
               <div className="mt-6 pt-6 border-t border-border">
-                <p className="text-sm md:text-base text-muted-foreground leading-relaxed text-center md:text-left">
-                  {course.instructor_bio || 'No biography available.'}
-                </p>
+                <ExpandableText
+                  text={course.instructor_bio || 'No biography available.'}
+                  className="text-sm md:text-base text-muted-foreground leading-relaxed text-center md:text-left"
+                  previewLines={3}
+                  threshold={160}
+                />
               </div>
             </Card>
 
