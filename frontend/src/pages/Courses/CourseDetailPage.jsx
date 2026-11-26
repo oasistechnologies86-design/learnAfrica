@@ -20,10 +20,11 @@ import LiveSessionsSection from '@/components/common/LiveSessionsSection';
 function ExpandableText({ text, className = '', previewLines = 3, threshold = 150 }) {
   const [expanded, setExpanded] = useState(false);
   const canExpand = String(text || '').trim().length > threshold;
+  const clampClass = previewLines === 4 ? 'line-clamp-4' : 'line-clamp-3';
 
   return (
     <div>
-      <p className={cn(className, !expanded && canExpand && 'line-clamp-' + previewLines)}>
+      <p className={cn(className, !expanded && canExpand && clampClass)}>
         {text}
       </p>
       {canExpand && (
