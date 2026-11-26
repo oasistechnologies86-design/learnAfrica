@@ -4946,14 +4946,15 @@ def create_app() -> Flask:
     @admin_required
     def admin_stats():
         db = get_db()
-        total_users    = db.execute("SELECT COUNT(*) as c FROM users WHERE is_active=1").fetchone()['c']
-        total_students = db.execute("SELECT COUNT(*) as c FROM users WHERE role='student' AND is_active=1").fetchone()['c']
-        total_instructors = db.execute("SELECT COUNT(*) as c FROM users WHERE role='instructor' AND is_active=1").fetchone()['c']
+        total_users    = db.execute("SELECT COUNT(*) as c FROM users WHERE is_active=1 AND deleted_at IS NULL").fetchone()['c']
+        total_students = db.execute("SELECT COUNT(*) as c FROM users WHERE role='student' AND is_active=1 AND deleted_at IS NULL").fetchone()['c']
+        total_instructors = db.execute("SELECT COUNT(*) as c FROM users WHERE role='instructor' AND is_active=1 AND deleted_at IS NULL").fetchone()['c']
         total_courses  = db.execute("SELECT COUNT(*) as c FROM courses").fetchone()['c']
         total_enrollments = db.execute("SELECT COUNT(*) as c FROM user_enrollments").fetchone()['c']
-        pending_instructors = db.execute("SELECT COUNT(*) as c FROM instructor_applications WHERE status='pending'").fetchone()['c']
+        pending_instructors = db.execute("SELECT COUNT(*) as c FROM instructor_applications ia INNER JOIN users u ON u.id=ia.user_id WHERE ia.status='pending' AND u.is_active=1 AND u.deleted_at IS NULL AND u.role='instructor'").fetchone()['c']
+        deleted_accounts_count = db.execute("SELECT COUNT(*) as c FROM users WHERE deleted_at IS NOT NULL AND deletion_cleared_at IS NULL").fetchone()['c']
         recent_users = db.execute('''SELECT id,name,email,role,instructor_status,created_at FROM users
-                                     WHERE is_active=1 ORDER BY created_at DESC LIMIT 10''').fetchall()
+                                     WHERE is_active=1 AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 10''').fetchall()
         recent_courses = db.execute('''SELECT c.id,c.title,c.category,c.enrollments,c.created_at,u.name as instructor_name
                                        FROM courses c JOIN users u ON u.id=c.instructor_id
                                        ORDER BY c.created_at DESC LIMIT 10''').fetchall()
@@ -4985,6 +4986,7 @@ def create_app() -> Flask:
             'total_courses': total_courses,
             'total_enrollments': total_enrollments,
             'pending_instructors': pending_instructors,
+            'deleted_accounts_count': deleted_accounts_count,
             'recent_users': safe_list(recent_users),
             'recent_courses': safe_list(recent_courses),
             'gross_revenue': round(gross, 2),
@@ -5002,7 +5004,7 @@ def create_app() -> Flask:
     def admin_users():
         db = get_db()
         role_filter = request.args.get('role')
-        q = 'SELECT * FROM users WHERE is_active=1'
+        q = 'SELECT * FROM users WHERE is_active=1 AND deleted_at IS NULL'
         params = []
         if role_filter:
             q += ' AND role=?'; params.append(role_filter)
@@ -5192,7 +5194,9 @@ def create_app() -> Flask:
             "INNER JOIN users u ON LOWER(u.email)=LOWER(pr.email) "
             "WHERE pr.status IN ('pending','manual_fallback')")
         counts['applications'] = _count(
-            "SELECT COUNT(*) AS c FROM instructor_applications WHERE status='pending'")
+            "SELECT COUNT(*) AS c FROM instructor_applications ia "
+            "INNER JOIN users u ON u.id=ia.user_id "
+            "WHERE ia.status='pending' AND u.is_active=1 AND u.deleted_at IS NULL AND u.role='instructor'")
         return jsonify({'counts': counts})
 
     @app.route('/api/admin/instructor-applications', methods=['GET'])
@@ -5207,7 +5211,8 @@ def create_app() -> Flask:
                                     u.role AS account_role
                              FROM instructor_applications ia
                              LEFT JOIN users u ON u.id=ia.user_id
-                             WHERE ia.status=? ORDER BY ia.submitted_at DESC''', (status_filter,)).fetchall()
+                             WHERE ia.status=? AND u.is_active=1 AND u.deleted_at IS NULL AND u.role='instructor'
+                             ORDER BY ia.submitted_at DESC''', (status_filter,)).fetchall()
         return jsonify({'applications': safe_list(rows)})
     
     @app.route('/api/admin/instructor-applications/<uid>/review', methods=['PUT'])

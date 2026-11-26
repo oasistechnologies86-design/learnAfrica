@@ -87,7 +87,17 @@ check('instructor applicant can self-delete', response.status_code == 200, respo
 response = client.get('/api/admin/instructor-applications?status=pending', headers=auth(admin_token))
 apps = (response.get_json() or {}).get('applications', [])
 app_row = next((item for item in apps if item.get('user_id') == 'ins1'), None)
-check('deleted instructor application remains visible', bool(app_row and app_row.get('account_deleted_at')))
+check('deleted instructor application is excluded from active review queue', app_row is None)
+# Deleted applicants must also be excluded from badge and dashboard totals.
+tab_counts = client.get('/api/admin/tab-counts', headers=auth(admin_token))
+check('deleted applicant is excluded from pending application badge',
+      (tab_counts.get_json() or {}).get('counts', {}).get('applications') == 0)
+stats = client.get('/api/admin/stats', headers=auth(admin_token))
+stats_data = stats.get_json() or {}
+check('dashboard active user totals exclude deleted accounts',
+      stats.status_code == 200 and stats_data.get('total_users') == 2
+      and stats_data.get('total_students') == 1
+      and stats_data.get('total_instructors') == 0)
 response = client.put('/api/admin/instructor-applications/ins1/review',
                       json={'action': 'approve'}, headers=auth(admin_token))
 check('admin cannot approve a deleted applicant', response.status_code == 409, response.status_code)

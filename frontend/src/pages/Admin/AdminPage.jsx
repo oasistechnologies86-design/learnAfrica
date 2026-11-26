@@ -704,6 +704,7 @@ export default function AdminPage() {
                 <StatCard title="Total Courses"  value={stats.total_courses}  icon={BookOpen}   color="primary" />
                 <StatCard title="Enrollments"    value={stats.total_enrollments} icon={BarChart2} color="success" sub="all time" />
                 <StatCard title="Pending Apps"   value={stats.pending_instructors} icon={Clock}  color={stats.pending_instructors > 0 ? 'warning' : 'primary'} />
+                <StatCard title="Deleted Accounts" value={stats.deleted_accounts_count || 0} icon={Trash2} color="danger" sub="excluded from active users" />
               </div>
 
               <div className="grid lg:grid-cols-2 gap-6">
@@ -1014,6 +1015,8 @@ export default function AdminPage() {
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                   Applicants are advised that review may take up to 5 working days. The LearnAfrica team may
                   contact them using the phone number or email they submitted, either before or after a decision.
+                  Only active, non-deleted instructor accounts appear here. Deleted applications remain available
+                  in the Deleted Accounts section for administrative history.
                 </p>
               </div>
               <div className="flex gap-2">
