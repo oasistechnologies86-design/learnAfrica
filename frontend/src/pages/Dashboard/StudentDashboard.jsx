@@ -352,71 +352,54 @@ function BadgePreviewModal({ badge, userName, onClose }) {
 
 function BadgeCard({ badge, userName }) {
   const [showPreview, setShowPreview] = useState(false);
-  const Icon     = iconMap[badge.iconName] || Award;
-  const cl       = colorMap[badge.color] || colorMap.emerald;
-  const pct      = Math.min(Math.round((badge.currentProgress / badge.goal) * 100), 100);
-  const earned   = badge.earned;
+  const Icon = iconMap[badge.iconName] || Award;
+  const pct = Math.min(Math.round((badge.currentProgress / badge.goal) * 100), 100);
+  const earned = badge.earned;
+  const gold = badge.color === 'gold';
 
   return (
     <>
-    <div className={cn(
-      'relative flex aspect-[4/5] min-w-0 flex-col items-center justify-center p-2.5 rounded-xl border transition-all duration-300 group',
-      earned
-        ? `${cl.bg} ${cl.border} shadow-sm hover:shadow-md`
-        : 'bg-muted/20 border-border/40 opacity-60 grayscale'
-    )}>
-      {/* Icon */}
-      <div className={cn(
-        'flex h-9 w-9 items-center justify-center rounded-full mb-1.5 transition-transform duration-300 group-hover:scale-105',
-        earned ? `${cl.bg} ${cl.border} border-2` : 'bg-muted border-border border-2'
+      <article className={cn(
+        'relative flex min-w-0 aspect-[3/4] flex-col items-center rounded-[2rem] border-2 bg-card px-3 py-5 shadow-sm transition-shadow hover:shadow-md sm:px-5 sm:py-7',
+        earned ? (gold ? 'border-amber-300' : 'border-emerald-200') : 'border-dashed border-slate-300 bg-slate-100/70 opacity-75'
       )}>
-        <Icon className={cn('h-4 w-4', earned ? cl.text : 'text-muted-foreground')} strokeWidth={1.8} />
-      </div>
+        <div className="relative mb-4 flex h-20 w-20 shrink-0 items-center justify-center rounded-full sm:h-28 sm:w-28"
+          style={{ background: earned ? (gold ? '#EFA510' : '#087D3D') : '#DDE5DF' }}>
+          <Icon className={cn('h-10 w-10 sm:h-14 sm:w-14', earned ? (gold ? 'text-[#10251A]' : 'text-white') : 'text-slate-500')} strokeWidth={1.9} />
+          {earned && (
+            <span className={cn('absolute -bottom-1 -right-1 flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-card sm:h-12 sm:w-12', gold ? 'bg-amber-500 text-[#10251A]' : 'bg-emerald-700 text-white')}>
+              <Check className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={3} />
+            </span>
+          )}
+        </div>
 
-      {/* Text */}
-      <h4 className="text-[11px] font-semibold text-center leading-tight mb-1">{badge.title}</h4>
-      <p className="text-[9px] text-muted-foreground text-center leading-snug mb-1.5 min-h-[1.75rem]">{badge.description}</p>
+        <h4 className="text-center text-base font-bold leading-tight sm:text-2xl">{badge.title}</h4>
+        <p className="mt-2 min-h-[2.5rem] text-center text-xs leading-snug text-muted-foreground sm:min-h-[3.5rem] sm:text-lg">{badge.description}</p>
 
-      {/* Progress / Earned state */}
-      {earned ? (
-        <div className="w-full space-y-1">
-          <div className={cn('w-full h-1 rounded-full overflow-hidden', cl.bg)}>
-            <div className={cn('h-full rounded-full', cl.solid)} style={{ width: '100%' }} />
-          </div>
+        {earned ? (
           <button
+            type="button"
             onClick={() => setShowPreview(true)}
             className={cn(
-              'w-full flex items-center justify-center gap-1 py-1 rounded-lg text-[10px] font-semibold transition-all',
-              cl.bg, cl.text, cl.border, 'border',
-              'hover:opacity-80 active:scale-95'
-            )}>
-            <Eye className="h-2.5 w-2.5" />View Badge
+              'mt-auto flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl px-2 py-3 text-sm font-bold transition-transform active:scale-[0.98] sm:min-h-[5.5rem] sm:text-xl',
+              gold ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
+            )}
+          >
+            <Eye className="h-5 w-5 sm:h-7 sm:w-7" /> View Badge
           </button>
-        </div>
-      ) : (
-        <div className="w-full space-y-1">
-          <div className="flex justify-between text-3xs font-bold uppercase tracking-wide text-muted-foreground">
-            <span>Progress</span>
-            <span>{badge.currentProgress} / {badge.goal}</span>
+        ) : (
+          <div className="mt-auto w-full space-y-3">
+            <div className="flex justify-between text-xs font-bold text-slate-700 sm:text-lg">
+              <span>{badge.currentProgress} / {badge.goal}</span>
+              <span>{pct}%</span>
+            </div>
+            <div className="h-3 w-full overflow-hidden rounded-full bg-slate-300 sm:h-4">
+              <div className={cn('h-full rounded-full transition-all', badge.currentProgress > 0 ? (gold ? 'bg-amber-500' : 'bg-emerald-700') : 'bg-transparent')} style={{ width: `${pct}%` }} />
+            </div>
           </div>
-          <div className="w-full h-1 rounded-full bg-border overflow-hidden">
-            <div
-              className={cn(
-                'h-full rounded-full transition-all duration-1000 ease-out',
-                badge.currentProgress > 0 ? cl.solid : 'bg-transparent'
-              )}
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-          <p className={cn('text-3xs font-bold text-center', badge.currentProgress > 0 ? cl.text : 'text-muted-foreground')}>
-            {pct}% complete
-          </p>
-        </div>
-      )}
-    </div>
-    {showPreview && (
-      <BadgePreviewModal badge={badge} userName={userName} onClose={() => setShowPreview(false)} />
-    )}
+        )}
+      </article>
+      {showPreview && <BadgePreviewModal badge={badge} userName={userName} onClose={() => setShowPreview(false)} />}
     </>
   );
 }
@@ -535,6 +518,7 @@ export default function StudentDashboard() {
   }).sort((a, b) => b.earned - a.earned), [userBadges, stats, user]);
 
   const earnedCount = liveBadges.filter(b => b.earned).length;
+  const earnedCertificates = useMemo(() => completedCourses.filter(course => course.has_certificate && certEligibility[course.id] === true), [completedCourses, certEligibility]);
 
   if (isLoading) return (
     <div className="p-4 sm:p-6 space-y-6">
@@ -703,59 +687,43 @@ export default function StudentDashboard() {
       </section>
 
       {/* ── Certificates ── */}
-      {completedCourses.length > 0 && (
-        <section className="space-y-3">
-          <button
-            type="button"
-            onClick={() => setCertificatesExpanded(value => !value)}
-            aria-expanded={certificatesExpanded}
-            aria-controls="student-certificates-content"
-            className="flex w-full items-center justify-between gap-3 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-          >
-            <span className="flex min-w-0 items-center gap-2 text-lg sm:text-xl font-bold">
-              <Award className="h-5 w-5 shrink-0 text-primary" /> My Certificates
-            </span>
-            <span className="flex shrink-0 items-center gap-2">
-              <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">{completedCourses.length} earned</span>
-              <ChevronDown className={cn("h-5 w-5 text-muted-foreground transition-transform duration-200", certificatesExpanded && "rotate-180")} />
-            </span>
-          </button>
-          <div
-            id="student-certificates-content"
-            aria-hidden={!certificatesExpanded}
-            className={cn("grid transition-[grid-template-rows,opacity] duration-300 ease-in-out", certificatesExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")}
-          >
-            <div className="min-h-0 overflow-hidden">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 pt-1">
-                {completedCourses.map(course => (
-                  <div key={course.id} className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                    <div className="h-1.5 bg-gradient-to-r from-primary via-accent to-primary" />
-                    <div className="p-4 flex items-start gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-success/10 flex items-center justify-center shrink-0">
-                        <CheckCircle2 className="h-5 w-5 text-success" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-sm line-clamp-2 leading-snug">{course.title}</p>
-                        <p className="text-2xs text-muted-foreground mt-0.5">{course.category}</p>
-                        {course.has_certificate && certEligibility[course.id] === true && (
-                          <Link to={`/certificate/${course.id}`} className="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-primary hover:underline">
-                            <ExternalLink className="h-3 w-3" /> View Certificate
-                          </Link>
-                        )}
-                        {course.has_certificate && certEligibility[course.id] === false && (
-                          <p className="mt-2 text-2xs text-muted-foreground">
-                            Pass the final exam to unlock your certificate
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+      <section className="space-y-5">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-2xl font-extrabold tracking-tight sm:text-4xl">My Certificates</h2>
+          <span className="shrink-0 rounded-full bg-emerald-100 px-4 py-2 text-sm font-bold text-emerald-800 sm:px-6 sm:py-3 sm:text-2xl">
+            {earnedCertificates.length} earned
+          </span>
+        </div>
+        {earnedCertificates.length > 0 ? (
+          <div className="space-y-3">
+            {earnedCertificates.map(course => (
+              <article key={course.id} className="flex min-w-0 items-center gap-3 rounded-[1.75rem] border border-amber-200 bg-card p-3 shadow-sm sm:gap-6 sm:p-6">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border-[3px] border-amber-500 bg-amber-50 text-amber-700 sm:h-[7.25rem] sm:w-[7.25rem]">
+                  <Award className="h-9 w-9 sm:h-14 sm:w-14" strokeWidth={1.8} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="line-clamp-2 text-base font-extrabold leading-tight sm:text-2xl">{course.title}</h3>
+                  <p className="mt-1 text-sm font-semibold text-muted-foreground sm:text-xl">{course.category || 'Course completion'}</p>
+                </div>
+                <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+                  <Link to={`/certificate/${encodeURIComponent(course.id)}`} aria-label={`View certificate for ${course.title}`} title="View certificate" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-700 text-white transition-colors hover:bg-emerald-800 sm:h-[5.5rem] sm:w-[5.5rem]">
+                    <Eye className="h-6 w-6 sm:h-9 sm:w-9" />
+                  </Link>
+                  <Link to={`/certificate/${encodeURIComponent(course.id)}?download=1`} aria-label={`Download certificate for ${course.title}`} title="Download certificate PDF" className="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-emerald-700 text-emerald-800 transition-colors hover:bg-emerald-50 sm:h-[5.5rem] sm:w-[5.5rem]">
+                    <Download className="h-6 w-6 sm:h-9 sm:w-9" />
+                  </Link>
+                </div>
+              </article>
+            ))}
           </div>
-        </section>
-      )}
+        ) : (
+          <div className="rounded-3xl border border-dashed border-border bg-card/60 px-5 py-8 text-center">
+            <Award className="mx-auto h-10 w-10 text-muted-foreground/50" />
+            <p className="mt-2 font-semibold">No certificates earned yet</p>
+            <p className="mt-1 text-sm text-muted-foreground">Certificates appear here after you pass the final examination for a certificate-enabled course.</p>
+          </div>
+        )}
+      </section>
 
       {/* ── Badges ── */}
       <section id="badges-section" className="space-y-3 scroll-mt-20">
@@ -782,7 +750,8 @@ export default function StudentDashboard() {
           className={cn("grid transition-[grid-template-rows,opacity] duration-300 ease-in-out", badgesExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")}
         >
           <div className="min-h-0 overflow-hidden">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 pt-1">
+            <div className="mb-4 h-3 w-full overflow-hidden rounded-full bg-slate-200 sm:h-4"><div className="h-full rounded-full bg-amber-500 transition-all" style={{ width: `${(earnedCount / badgeConfig.length) * 100}%` }} /></div>
+            <div className="grid grid-cols-2 gap-3 sm:gap-5 pt-1">
               {liveBadges.map(badge => (
                 <BadgeCard key={badge.id} badge={badge} userName={user?.name} />
               ))}
