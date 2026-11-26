@@ -6,7 +6,7 @@ import { ScaleToFit } from '../../components/common/ScaleToFit';
 import { CertificateSeal } from '../../components/certificate/CertificateSeal';
 import { Share2, Download, ArrowLeft, Linkedin, Twitter, Facebook, Loader2, Pencil, Check, X, AlertCircle, Copy, Mail, Printer } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { API_BASE, publicFetch } from '@/lib/api';
 import { verifyUrl, siteHost } from '@/lib/siteUrl';
 import { drawCapturedDocument, downloadPdf, printPdf } from '@/lib/pdf';
@@ -234,6 +234,7 @@ export default function CertificatePage() {
   const [printing, setPrinting] = useState(false);
   const [error, setError] = useState(null);
   const [supportEmail, setSupportEmail] = useState('support@learnafrica.com');
+  const [autoDownloadHandled, setAutoDownloadHandled] = useState(false);
 
   const buildPdf = async () => {
     const el = document.getElementById('certificate-content');
@@ -241,7 +242,7 @@ export default function CertificatePage() {
     return drawCapturedDocument({ element: el, orientation: 'landscape', marginMm: 6, scale: 3 });
   };
 
-  const handleDownload = async () => {
+  const handleDownload = useCallback(async () => {
     setDownloading(true);
     try {
       const doc = await buildPdf();
@@ -253,7 +254,14 @@ export default function CertificatePage() {
     } finally {
       setDownloading(false);
     }
-  };
+  }, [courseData, showToast]);
+
+  useEffect(() => {
+    if (!isLoading && courseData && window.location.search.includes('download=1') && !autoDownloadHandled) {
+      setAutoDownloadHandled(true);
+      handleDownload();
+    }
+  }, [isLoading, courseData, autoDownloadHandled, handleDownload]);
 
   const handlePrint = async () => {
     setPrinting(true);
