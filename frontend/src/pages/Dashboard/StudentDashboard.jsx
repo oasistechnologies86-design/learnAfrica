@@ -32,14 +32,6 @@ const badgeConfig = [
   { id:'5', key:'PATHFINDER',         title:'Pathfinder',         description:'Complete your profile.',        iconName:'Compass',  requirementType:'profile_completed', goal:1,  color:'gold',    gradient:['#0B3D2E','#12503C'] },
 ];
 
-const colorMap = {
-  orange: { text:'text-orange-500', bg:'bg-orange-500/10', border:'border-orange-500/30', solid:'bg-orange-500' },
-  yellow: { text:'text-yellow-500', bg:'bg-yellow-500/10', border:'border-yellow-500/30', solid:'bg-yellow-500' },
-  purple: { text:'text-purple-500', bg:'bg-purple-500/10', border:'border-purple-500/30', solid:'bg-purple-500' },
-  red:    { text:'text-red-500',    bg:'bg-red-500/10',    border:'border-red-500/30',    solid:'bg-red-500'    },
-  emerald:{ text:'text-emerald-500',bg:'bg-emerald-500/10',border:'border-emerald-500/30',solid:'bg-emerald-500'},
-  gold:   { text:'text-amber-600',  bg:'bg-amber-500/10',  border:'border-amber-500/30',  solid:'bg-amber-500'  },
-};
 const iconMap = { Target, Trophy, BookOpen, Flame, Compass, Award };
 
 // ── PDF Badge Generator ────────────────────────────────────────────────────
@@ -467,7 +459,6 @@ export default function StudentDashboard() {
   const userBadges = user?.badges || [];
   const [viewAllActive, setViewAllActive] = useState(false);
   const [quickAccessOpen, setQuickAccessOpen] = useState(false);
-  const [badgesExpanded, setBadgesExpanded] = useState(true);
 
   useEffect(() => {
     if (!quickAccessOpen) return undefined;
