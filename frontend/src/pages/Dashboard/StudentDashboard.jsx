@@ -365,15 +365,15 @@ function BadgeCard({ badge, userName }) {
           )}
         </div>
 
-        <h4 className="text-center text-base font-bold leading-tight text-foreground sm:text-2xl">{badge.title}</h4>
-        <p className="mt-2 min-h-[2.5rem] text-center text-xs leading-snug text-muted-foreground sm:min-h-[3.5rem] sm:text-lg">{badge.description}</p>
+        <h4 className="text-center text-sm font-bold leading-snug text-foreground sm:text-[15px]">{badge.title}</h4>
+        <p className="mt-1.5 min-h-[2.5rem] text-center text-xs leading-snug text-muted-foreground">{badge.description}</p>
 
         {earned ? (
           <button
             type="button"
             onClick={() => setShowPreview(true)}
             className={cn(
-              'mt-auto flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl px-2 py-3 text-sm font-bold transition-transform active:scale-[0.98] sm:min-h-[5.5rem] sm:text-xl',
+              'mt-auto flex min-h-10 w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold transition-transform active:scale-[0.98] sm:min-h-10 sm:text-xs',
               gold ? 'bg-amber-50 text-amber-800 hover:bg-amber-100 dark:bg-[#3B3527] dark:text-[#F0D99D] dark:hover:bg-[#49402D]' : 'bg-primary/10 text-primary hover:bg-primary/15 dark:bg-[#263A30] dark:text-[#C4E4C7] dark:hover:bg-[#304B3B]'
             )}
           >
@@ -381,7 +381,7 @@ function BadgeCard({ badge, userName }) {
           </button>
         ) : (
           <div className="mt-auto w-full space-y-3">
-            <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-200 sm:text-lg">
+            <div className="flex justify-between text-xs font-semibold text-foreground">
               <span>{badge.currentProgress} / {badge.goal}</span>
               <span>{pct}%</span>
             </div>
@@ -681,11 +681,11 @@ export default function StudentDashboard() {
       {/* ── Certificates ── */}
       <section className="space-y-5">
         <div className="flex items-center justify-between gap-3">
-          <button type="button" onClick={() => setCertificatesExpanded(value => !value)} aria-expanded={certificatesExpanded} aria-controls="student-certificates-content" className="flex min-w-0 items-center gap-2 rounded-lg text-left text-2xl font-extrabold tracking-tight text-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-4xl">
+          <button type="button" onClick={() => setCertificatesExpanded(value => !value)} aria-expanded={certificatesExpanded} aria-controls="student-certificates-content" className="flex min-w-0 items-center gap-2 rounded-lg text-left text-lg font-bold text-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-xl">
             My Certificates
             {certificatesExpanded ? <ChevronUp className="h-5 w-5 shrink-0 sm:h-6 sm:w-6" /> : <ChevronDown className="h-5 w-5 shrink-0 sm:h-6 sm:w-6" />}
           </button>
-          <span className="shrink-0 rounded-full bg-primary/10 px-4 py-2 text-sm font-bold text-primary sm:px-6 sm:py-3 sm:text-2xl dark:bg-[#263A30] dark:text-[#C4E4C7]">
+          <span className="shrink-0 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary sm:px-4 sm:py-2 sm:text-sm dark:bg-[#263A30] dark:text-[#C4E4C7]">
             {earnedCertificates.length} earned
           </span>
         </div>
@@ -698,8 +698,8 @@ export default function StudentDashboard() {
                   <Award className="h-9 w-9 sm:h-14 sm:w-14" strokeWidth={1.8} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="line-clamp-2 text-base font-extrabold leading-tight text-foreground sm:text-2xl">{course.title}</h3>
-                  <p className="mt-1 text-sm font-semibold text-muted-foreground sm:text-xl">{course.category || 'Course completion'}</p>
+                  <h3 className="mb-1.5 line-clamp-2 text-sm font-bold leading-snug text-foreground sm:text-[15px]">{course.title}</h3>
+                  <p className="text-xs text-muted-foreground">{course.category || 'Course completion'}</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2 sm:gap-3">
                   <Link to={`/certificate/${encodeURIComponent(course.id)}?download=1`} aria-label={`Download certificate for ${course.title}`} title="Download certificate PDF" className="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-primary text-primary transition-colors hover:bg-primary/10 sm:h-[5.5rem] sm:w-[5.5rem]">
@@ -722,11 +722,11 @@ export default function StudentDashboard() {
       {/* ── Badges ── */}
       <section id="badges-section" className="space-y-4 scroll-mt-20">
         <div className="flex items-center justify-between gap-3">
-          <button type="button" onClick={() => setBadgesExpanded(value => !value)} aria-expanded={badgesExpanded} aria-controls="student-badges-content" className="flex min-w-0 items-center gap-2 rounded-lg text-left text-2xl font-extrabold tracking-tight transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-4xl">
+          <button type="button" onClick={() => setBadgesExpanded(value => !value)} aria-expanded={badgesExpanded} aria-controls="student-badges-content" className="flex min-w-0 items-center gap-2 rounded-lg text-left text-lg font-bold text-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-xl">
             My Badges
             {badgesExpanded ? <ChevronUp className="h-5 w-5 shrink-0 sm:h-6 sm:w-6" /> : <ChevronDown className="h-5 w-5 shrink-0 sm:h-6 sm:w-6" />}
           </button>
-          <span className="shrink-0 rounded-full bg-amber-50 px-4 py-2 text-sm font-bold text-amber-800 sm:px-6 sm:py-3 sm:text-2xl dark:bg-[#3B3527] dark:text-[#F0D99D]">
+          <span className="shrink-0 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800 sm:px-4 sm:py-2 sm:text-sm dark:bg-[#3B3527] dark:text-[#F0D99D]">
             {earnedCount} / {badgeConfig.length} earned
           </span>
         </div>
