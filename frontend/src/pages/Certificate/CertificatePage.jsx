@@ -234,11 +234,21 @@ export default function CertificatePage() {
   const [printing, setPrinting] = useState(false);
   const [error, setError] = useState(null);
   const [supportEmail, setSupportEmail] = useState('support@learnafrica.com');
-  const [autoDownloadHandled, setAutoDownloadHandled] = useState(false);
 
   const buildPdf = async () => {
+    // Wait for the actual certificate DOM, fonts and QR/image assets before
+    // rasterising it. This avoids capturing an empty/partially-rendered page.
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    if (document.fonts?.ready) await document.fonts.ready;
     const el = document.getElementById('certificate-content');
-    if (!el) throw new Error('Certificate preview is not on screen.');
+    if (!el || !el.isConnected) throw new Error('Certificate preview is not ready. Please try again.');
+    await Promise.all(Array.from(el.querySelectorAll('img')).map(img => {
+      if (img.complete) return Promise.resolve();
+      return new Promise(resolve => {
+        img.addEventListener('load', resolve, { once: true });
+        img.addEventListener('error', resolve, { once: true });
+      });
+    }));
     return drawCapturedDocument({ element: el, orientation: 'landscape', marginMm: 6, scale: 3 });
   };
 
@@ -250,18 +260,15 @@ export default function CertificatePage() {
       downloadPdf(doc, `learnafrica-certificate-${safeCourse}.pdf`);
       showToast({ type: 'success', message: 'Certificate downloaded as a landscape PDF.' });
     } catch (e) {
-      showToast({ type: 'error', message: 'Could not create the PDF. Please try again.' });
+      showToast({ type: 'error', message: e?.message || 'Could not create the PDF. Please try again.' });
     } finally {
       setDownloading(false);
     }
   }, [courseData, showToast]);
 
-  useEffect(() => {
-    if (!isLoading && courseData && window.location.search.includes('download=1') && !autoDownloadHandled) {
-      setAutoDownloadHandled(true);
-      handleDownload();
-    }
-  }, [isLoading, courseData, autoDownloadHandled, handleDownload]);
+  // A dashboard download link first opens the fully rendered certificate.
+  // The learner then starts the PDF from this page with a direct tap; this is
+  // reliable on mobile browsers that block downloads started after navigation.
 
   const handlePrint = async () => {
     setPrinting(true);
@@ -383,6 +390,12 @@ export default function CertificatePage() {
               </Button>
             </div>
           </div>
+
+          {new URLSearchParams(window.location.search).get('download') === '1' && (
+            <div role="status" className="mb-4 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-foreground">
+              Your certificate is ready. Tap <strong>Download PDF</strong> to save the completed certificate to your device.
+            </div>
+          )}
 
           <div className="shadow-2xl rounded-2xl overflow-hidden">
             <ScaleToFit designWidth={CERT_DESIGN_WIDTH} designHeight={CERT_DESIGN_HEIGHT}>
