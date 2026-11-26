@@ -353,13 +353,13 @@ function BadgeCard({ badge, userName }) {
     <>
       <article className={cn(
         'relative flex min-w-0 aspect-[3/4] flex-col items-center rounded-[2rem] border-2 bg-card px-3 py-5 shadow-sm transition-shadow hover:shadow-md sm:px-5 sm:py-7',
-        earned ? (gold ? 'border-amber-300' : 'border-emerald-200') : 'border-dashed border-slate-300 bg-slate-100/70 opacity-75'
+        earned ? (gold ? 'border-amber-200' : 'border-emerald-200') : 'border-dashed border-slate-300 bg-slate-100/70 opacity-75'
       )}>
         <div className="relative mb-4 flex h-20 w-20 shrink-0 items-center justify-center rounded-full sm:h-28 sm:w-28"
-          style={{ background: earned ? (gold ? '#EFA510' : '#087D3D') : '#DDE5DF' }}>
-          <Icon className={cn('h-10 w-10 sm:h-14 sm:w-14', earned ? (gold ? 'text-[#10251A]' : 'text-white') : 'text-slate-500')} strokeWidth={1.9} />
+          style={{ background: earned ? (gold ? '#F2B943' : '#15965B') : '#DDE5DF' }}>
+          <Icon className={cn('h-10 w-10 sm:h-14 sm:w-14', earned ? (gold ? 'text-[#243326]' : 'text-white') : 'text-slate-500')} strokeWidth={1.9} />
           {earned && (
-            <span className={cn('absolute -bottom-1 -right-1 flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-card sm:h-12 sm:w-12', gold ? 'bg-amber-500 text-[#10251A]' : 'bg-emerald-700 text-white')}>
+            <span className={cn('absolute -bottom-1 -right-1 flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-card sm:h-12 sm:w-12', gold ? 'bg-amber-400 text-[#243326]' : 'bg-emerald-600 text-white')}>
               <Check className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={3} />
             </span>
           )}
@@ -374,7 +374,7 @@ function BadgeCard({ badge, userName }) {
             onClick={() => setShowPreview(true)}
             className={cn(
               'mt-auto flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl px-2 py-3 text-sm font-bold transition-transform active:scale-[0.98] sm:min-h-[5.5rem] sm:text-xl',
-              gold ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
+              gold ? 'bg-amber-50 text-amber-800 hover:bg-amber-100' : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
             )}
           >
             <Eye className="h-5 w-5 sm:h-7 sm:w-7" /> View Badge
@@ -386,7 +386,7 @@ function BadgeCard({ badge, userName }) {
               <span>{pct}%</span>
             </div>
             <div className="h-3 w-full overflow-hidden rounded-full bg-slate-300 sm:h-4">
-              <div className={cn('h-full rounded-full transition-all', badge.currentProgress > 0 ? (gold ? 'bg-amber-500' : 'bg-emerald-700') : 'bg-transparent')} style={{ width: `${pct}%` }} />
+              <div className={cn('h-full rounded-full transition-all', badge.currentProgress > 0 ? (gold ? 'bg-amber-400' : 'bg-emerald-500') : 'bg-transparent')} style={{ width: `${pct}%` }} />
             </div>
           </div>
         )}
@@ -687,8 +687,8 @@ export default function StudentDashboard() {
         {earnedCertificates.length > 0 ? (
           <div className="space-y-3">
             {earnedCertificates.map(course => (
-              <article key={course.id} className="flex min-w-0 items-center gap-3 rounded-[1.75rem] border border-amber-200 bg-card p-3 shadow-sm sm:gap-6 sm:p-6">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border-[3px] border-amber-500 bg-amber-50 text-amber-700 sm:h-[7.25rem] sm:w-[7.25rem]">
+              <article key={course.id} className="flex min-w-0 items-center gap-3 rounded-[1.75rem] border border-amber-100 bg-card p-3 shadow-sm sm:gap-6 sm:p-6">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border-2 border-amber-300 bg-amber-50 text-amber-600 sm:h-[7.25rem] sm:w-[7.25rem]">
                   <Award className="h-9 w-9 sm:h-14 sm:w-14" strokeWidth={1.8} />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -696,10 +696,10 @@ export default function StudentDashboard() {
                   <p className="mt-1 text-sm font-semibold text-muted-foreground sm:text-xl">{course.category || 'Course completion'}</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-                  <Link to={`/certificate/${encodeURIComponent(course.id)}`} aria-label={`View certificate for ${course.title}`} title="View certificate" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-700 text-white transition-colors hover:bg-emerald-800 sm:h-[5.5rem] sm:w-[5.5rem]">
+                  <Link to={`/certificate/${encodeURIComponent(course.id)}`} aria-label={`View certificate for ${course.title}`} title="View certificate" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-600 text-white transition-colors hover:bg-emerald-700 sm:h-[5.5rem] sm:w-[5.5rem]">
                     <Eye className="h-6 w-6 sm:h-9 sm:w-9" />
                   </Link>
-                  <Link to={`/certificate/${encodeURIComponent(course.id)}?download=1`} aria-label={`Download certificate for ${course.title}`} title="Download certificate PDF" className="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-emerald-700 text-emerald-800 transition-colors hover:bg-emerald-50 sm:h-[5.5rem] sm:w-[5.5rem]">
+                  <Link to={`/certificate/${encodeURIComponent(course.id)}?download=1`} aria-label={`Download certificate for ${course.title}`} title="Download certificate PDF" className="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-emerald-500 text-emerald-700 transition-colors hover:bg-emerald-50 sm:h-[5.5rem] sm:w-[5.5rem]">
                     <Download className="h-6 w-6 sm:h-9 sm:w-9" />
                   </Link>
                 </div>
@@ -719,7 +719,7 @@ export default function StudentDashboard() {
       <section id="badges-section" className="space-y-4 scroll-mt-20">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-2xl font-extrabold tracking-tight sm:text-4xl">My Badges</h2>
-          <span className="shrink-0 rounded-full bg-amber-100 px-4 py-2 text-sm font-bold text-amber-800 sm:px-6 sm:py-3 sm:text-2xl">
+          <span className="shrink-0 rounded-full bg-amber-50 px-4 py-2 text-sm font-bold text-amber-800 sm:px-6 sm:py-3 sm:text-2xl">
             {earnedCount} / {badgeConfig.length} earned
           </span>
         </div>
