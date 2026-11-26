@@ -5211,8 +5211,8 @@ def create_app() -> Flask:
                                     u.role AS account_role
                              FROM instructor_applications ia
                              LEFT JOIN users u ON u.id=ia.user_id
-                             WHERE ia.status=? AND u.is_active=1 AND u.deleted_at IS NULL AND u.role='instructor' "
-                             "ORDER BY ia.submitted_at DESC''', (status_filter,)).fetchall()
+                             WHERE ia.status=? AND u.is_active=1 AND u.deleted_at IS NULL AND u.role='instructor'
+                             ORDER BY ia.submitted_at DESC''', (status_filter,)).fetchall()
         return jsonify({'applications': safe_list(rows)})
     
     @app.route('/api/admin/instructor-applications/<uid>/review', methods=['PUT'])
