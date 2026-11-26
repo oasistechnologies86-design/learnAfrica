@@ -356,10 +356,10 @@ function BadgeCard({ badge, userName }) {
         earned ? (gold ? 'border-amber-200' : 'border-emerald-200') : 'border-dashed border-slate-300 bg-slate-100/70 opacity-75'
       )}>
         <div className="relative mb-4 flex h-20 w-20 shrink-0 items-center justify-center rounded-full sm:h-28 sm:w-28"
-          style={{ background: earned ? (gold ? '#F2B943' : '#15965B') : '#DDE5DF' }}>
+          style={{ background: earned ? (gold ? '#F2B943' : 'var(--primary)') : '#DDE5DF' }}>
           <Icon className={cn('h-10 w-10 sm:h-14 sm:w-14', earned ? (gold ? 'text-[#243326]' : 'text-white') : 'text-slate-500')} strokeWidth={1.9} />
           {earned && (
-            <span className={cn('absolute -bottom-1 -right-1 flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-card sm:h-12 sm:w-12', gold ? 'bg-amber-400 text-[#243326]' : 'bg-emerald-600 text-white')}>
+            <span className={cn('absolute -bottom-1 -right-1 flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-card sm:h-12 sm:w-12', gold ? 'bg-amber-400 text-[#243326]' : 'bg-primary text-primary-foreground')}>
               <Check className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={3} />
             </span>
           )}
@@ -374,7 +374,7 @@ function BadgeCard({ badge, userName }) {
             onClick={() => setShowPreview(true)}
             className={cn(
               'mt-auto flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl px-2 py-3 text-sm font-bold transition-transform active:scale-[0.98] sm:min-h-[5.5rem] sm:text-xl',
-              gold ? 'bg-amber-50 text-amber-800 hover:bg-amber-100' : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
+              gold ? 'bg-amber-50 text-amber-800 hover:bg-amber-100' : 'bg-primary/10 text-primary hover:bg-primary/15'
             )}
           >
             <Eye className="h-5 w-5 sm:h-7 sm:w-7" /> View Badge
@@ -386,7 +386,7 @@ function BadgeCard({ badge, userName }) {
               <span>{pct}%</span>
             </div>
             <div className="h-3 w-full overflow-hidden rounded-full bg-slate-300 sm:h-4">
-              <div className={cn('h-full rounded-full transition-all', badge.currentProgress > 0 ? (gold ? 'bg-amber-400' : 'bg-emerald-500') : 'bg-transparent')} style={{ width: `${pct}%` }} />
+              <div className={cn('h-full rounded-full transition-all', badge.currentProgress > 0 ? (gold ? 'bg-amber-400' : 'bg-primary') : 'bg-transparent')} style={{ width: `${pct}%` }} />
             </div>
           </div>
         )}
@@ -680,7 +680,7 @@ export default function StudentDashboard() {
       <section className="space-y-5">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-2xl font-extrabold tracking-tight sm:text-4xl">My Certificates</h2>
-          <span className="shrink-0 rounded-full bg-emerald-100 px-4 py-2 text-sm font-bold text-emerald-800 sm:px-6 sm:py-3 sm:text-2xl">
+          <span className="shrink-0 rounded-full bg-primary/10 px-4 py-2 text-sm font-bold text-primary sm:px-6 sm:py-3 sm:text-2xl">
             {earnedCertificates.length} earned
           </span>
         </div>
@@ -696,10 +696,10 @@ export default function StudentDashboard() {
                   <p className="mt-1 text-sm font-semibold text-muted-foreground sm:text-xl">{course.category || 'Course completion'}</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-                  <Link to={`/certificate/${encodeURIComponent(course.id)}`} aria-label={`View certificate for ${course.title}`} title="View certificate" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-600 text-white transition-colors hover:bg-emerald-700 sm:h-[5.5rem] sm:w-[5.5rem]">
+                  <Link to={`/certificate/${encodeURIComponent(course.id)}`} aria-label={`View certificate for ${course.title}`} title="View certificate" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground transition-colors hover:bg-primary/90 sm:h-[5.5rem] sm:w-[5.5rem]">
                     <Eye className="h-6 w-6 sm:h-9 sm:w-9" />
                   </Link>
-                  <Link to={`/certificate/${encodeURIComponent(course.id)}?download=1`} aria-label={`Download certificate for ${course.title}`} title="Download certificate PDF" className="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-emerald-500 text-emerald-700 transition-colors hover:bg-emerald-50 sm:h-[5.5rem] sm:w-[5.5rem]">
+                  <Link to={`/certificate/${encodeURIComponent(course.id)}?download=1`} aria-label={`Download certificate for ${course.title}`} title="Download certificate PDF" className="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-primary text-primary transition-colors hover:bg-primary/10 sm:h-[5.5rem] sm:w-[5.5rem]">
                     <Download className="h-6 w-6 sm:h-9 sm:w-9" />
                   </Link>
                 </div>
