@@ -365,7 +365,7 @@ function BadgeCard({ badge, userName }) {
           )}
         </div>
 
-        <h4 className="text-center text-base font-bold leading-tight sm:text-2xl">{badge.title}</h4>
+        <h4 className="text-center text-base font-bold leading-tight text-foreground sm:text-2xl">{badge.title}</h4>
         <p className="mt-2 min-h-[2.5rem] text-center text-xs leading-snug text-muted-foreground sm:min-h-[3.5rem] sm:text-lg">{badge.description}</p>
 
         {earned ? (
@@ -681,7 +681,7 @@ export default function StudentDashboard() {
       {/* ── Certificates ── */}
       <section className="space-y-5">
         <div className="flex items-center justify-between gap-3">
-          <button type="button" onClick={() => setCertificatesExpanded(value => !value)} aria-expanded={certificatesExpanded} aria-controls="student-certificates-content" className="flex min-w-0 items-center gap-2 rounded-lg text-left text-2xl font-extrabold tracking-tight transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-4xl">
+          <button type="button" onClick={() => setCertificatesExpanded(value => !value)} aria-expanded={certificatesExpanded} aria-controls="student-certificates-content" className="flex min-w-0 items-center gap-2 rounded-lg text-left text-2xl font-extrabold tracking-tight text-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-4xl">
             My Certificates
             {certificatesExpanded ? <ChevronUp className="h-5 w-5 shrink-0 sm:h-6 sm:w-6" /> : <ChevronDown className="h-5 w-5 shrink-0 sm:h-6 sm:w-6" />}
           </button>
@@ -698,7 +698,7 @@ export default function StudentDashboard() {
                   <Award className="h-9 w-9 sm:h-14 sm:w-14" strokeWidth={1.8} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="line-clamp-2 text-base font-extrabold leading-tight sm:text-2xl">{course.title}</h3>
+                  <h3 className="line-clamp-2 text-base font-extrabold leading-tight text-foreground sm:text-2xl">{course.title}</h3>
                   <p className="mt-1 text-sm font-semibold text-muted-foreground sm:text-xl">{course.category || 'Course completion'}</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2 sm:gap-3">
