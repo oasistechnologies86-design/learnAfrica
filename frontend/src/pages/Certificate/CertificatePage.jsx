@@ -234,6 +234,7 @@ export default function CertificatePage() {
   const [printing, setPrinting] = useState(false);
   const [error, setError] = useState(null);
   const [supportEmail, setSupportEmail] = useState('support@learnafrica.com');
+  const [autoDownloadHandled, setAutoDownloadHandled] = useState(false);
 
   const buildPdf = async () => {
     const el = document.getElementById('certificate-content');
@@ -254,6 +255,13 @@ export default function CertificatePage() {
       setDownloading(false);
     }
   };
+
+  useEffect(() => {
+    if (!isLoading && courseData && window.location.search.includes('download=1') && !autoDownloadHandled) {
+      setAutoDownloadHandled(true);
+      handleDownload();
+    }
+  }, [isLoading, courseData, autoDownloadHandled]);
 
   const handlePrint = async () => {
     setPrinting(true);
