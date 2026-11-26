@@ -860,6 +860,39 @@ def create_app() -> Flask:
                 used INTEGER DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )""")
+            stmts.append("""CREATE TABLE IF NOT EXISTS course_transfer_requests (
+                id TEXT PRIMARY KEY,
+                course_id TEXT NOT NULL,
+                course_title TEXT,
+                from_instructor_id TEXT NOT NULL,
+                from_instructor_name TEXT,
+                to_instructor_id TEXT NOT NULL,
+                to_instructor_name TEXT,
+                reason TEXT,
+                recipient_status TEXT NOT NULL DEFAULT 'pending',
+                admin_status TEXT NOT NULL DEFAULT 'pending',
+                admin_note TEXT,
+                unpaid_earnings_action TEXT NOT NULL DEFAULT 'keep_original',
+                requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                recipient_responded_at TIMESTAMP,
+                decided_at TIMESTAMP,
+                decided_by TEXT,
+                completed_at TIMESTAMP
+            )""")
+            stmts.append("""CREATE TABLE IF NOT EXISTS course_transfer_history (
+                id TEXT PRIMARY KEY,
+                course_id TEXT NOT NULL,
+                course_title TEXT,
+                from_instructor_id TEXT NOT NULL,
+                from_instructor_name TEXT,
+                to_instructor_id TEXT NOT NULL,
+                to_instructor_name TEXT,
+                transfer_request_id TEXT,
+                reason TEXT,
+                unpaid_earnings_action TEXT DEFAULT 'keep_original',
+                actor_user_id TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )""")
             # Also ensure the new columns on transactions exist (idempotent)
             extra_cols = [
                 "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS coupon_code TEXT",
@@ -869,6 +902,7 @@ def create_app() -> Flask:
                 "ALTER TABLE courses ADD COLUMN IF NOT EXISTS course_code TEXT",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified INTEGER DEFAULT 1",
             ]
+            ensure_column(db, 'courses', 'original_instructor_id', 'TEXT')
             for s in stmts:
                 try:
                     db.execute(s); db.commit()
@@ -1815,6 +1849,18 @@ def create_app() -> Flask:
             return jsonify({'error': 'Email does not match'}), 400
         if u['deleted_at']:
             return jsonify({'message': 'Account is already deleted'}), 200
+        if u['role'] in ('instructor', 'admin', 'superadmin'):
+            owned = db.execute(
+                "SELECT id,title FROM courses WHERE instructor_id=? ORDER BY created_at",
+                (uid,)
+            ).fetchall()
+            if owned:
+                return jsonify({
+                    'error': 'Transfer or reassign every course you own before deleting this instructor account.',
+                    'code': 'COURSES_MUST_BE_TRANSFERRED',
+                    'courses': [{'id': row['id'], 'title': row['title']} for row in owned],
+                    'count': len(owned)
+                }), 409
         db.execute("UPDATE users SET is_active=0,deleted_at=CURRENT_TIMESTAMP,deleted_by=?,deletion_reason='self_service',token_version=COALESCE(token_version,0)+1,updated_at=CURRENT_TIMESTAMP WHERE id=?",
                    (uid, uid))
         db.execute("INSERT INTO account_deletion_events (id,user_id,user_name,user_email,user_role,instructor_status,event_type,actor_user_id) VALUES (?,?,?,?,?,?,?,?)",
@@ -1831,6 +1877,268 @@ def create_app() -> Flask:
         audit('account_self_deleted', 'user', uid, u['email'], {'role':u['role'],'instructor_status':u['instructor_status']})
         return jsonify({'message': 'Account deleted. Your account access has been disabled.'})
     
+    # ── COURSE OWNERSHIP TRANSFERS ────────────────────────────────────────────────
+    def _transfer_recipient(db, recipient_id):
+        return db.execute(
+            """SELECT id,name,role,instructor_status,is_active,avatar
+               FROM users WHERE id=?""", (recipient_id,)
+        ).fetchone()
+
+    def _valid_transfer_recipient(row):
+        if not row or not bool(row['is_active'] if row['is_active'] is not None else 1):
+            return False
+        role = str(row['role'] or '').lower()
+        return role in ('admin', 'superadmin') or (
+            role == 'instructor' and str(row['instructor_status'] or '').lower() == 'approved'
+        )
+
+    @app.route('/api/instructor/course-transfers', methods=['GET'])
+    @token_required
+    def instructor_course_transfers():
+        _ensure_new_tables()
+        db = get_db()
+        uid = g.current_user['user_id']
+        role = g.current_user.get('role')
+        if role not in ('instructor', 'admin', 'superadmin'):
+            return jsonify({'error': 'Only instructors and admins can manage course transfers.'}), 403
+        courses = db.execute(
+            "SELECT id,title,is_published,is_visible FROM courses WHERE instructor_id=? ORDER BY title",
+            (uid,)
+        ).fetchall()
+        recipients = db.execute(
+            """SELECT id,name,email,role,instructor_status,avatar FROM users
+               WHERE id<>? AND is_active=1 AND
+               (role IN ('admin','superadmin') OR (role='instructor' AND instructor_status='approved'))
+               ORDER BY CASE WHEN role IN ('admin','superadmin') THEN 0 ELSE 1 END, name""",
+            (uid,)
+        ).fetchall()
+        incoming = db.execute(
+            """SELECT r.*,c.title AS current_course_title FROM course_transfer_requests r
+               LEFT JOIN courses c ON c.id=r.course_id
+               WHERE r.to_instructor_id=? AND r.recipient_status='pending'
+               AND r.admin_status='pending' ORDER BY r.requested_at DESC""", (uid,)
+        ).fetchall()
+        outgoing = db.execute(
+            """SELECT r.*,c.title AS current_course_title FROM course_transfer_requests r
+               LEFT JOIN courses c ON c.id=r.course_id
+               WHERE r.from_instructor_id=? ORDER BY r.requested_at DESC LIMIT 100""", (uid,)
+        ).fetchall()
+        return jsonify({'courses': safe_list(courses), 'recipients': safe_list(recipients),
+                        'incoming': safe_list(incoming), 'outgoing': safe_list(outgoing)})
+
+    @app.route('/api/instructor/course-transfers', methods=['POST'])
+    @token_required
+    def request_course_transfer():
+        _ensure_new_tables()
+        db = get_db()
+        uid = g.current_user['user_id']
+        if g.current_user.get('role') not in ('instructor', 'admin', 'superadmin'):
+            return jsonify({'error': 'Only instructors and admins can request a course transfer.'}), 403
+        body = request.get_json() or {}
+        course_id = str(body.get('course_id') or '').strip()
+        recipient_id = str(body.get('recipient_id') or '').strip()
+        reason = str(body.get('reason') or '').strip()
+        if not course_id or not recipient_id or not reason:
+            return jsonify({'error': 'Choose a course, choose a recipient and provide a reason.'}), 400
+        if len(reason) < 8 or len(reason) > 2000:
+            return jsonify({'error': 'The transfer reason must be between 8 and 2,000 characters.'}), 400
+        if recipient_id == uid:
+            return jsonify({'error': 'A course cannot be transferred to the current owner.'}), 400
+        course = db.execute(
+            "SELECT id,title,instructor_id,instructor_name FROM courses WHERE id=? AND instructor_id=?",
+            (course_id, uid)
+        ).fetchone()
+        if not course:
+            return jsonify({'error': 'This course is not owned by your account.'}), 404
+        recipient = _transfer_recipient(db, recipient_id)
+        if not _valid_transfer_recipient(recipient):
+            return jsonify({'error': 'The selected recipient must be an active, approved instructor or an active Admin account.'}), 400
+        duplicate = db.execute(
+            """SELECT id FROM course_transfer_requests WHERE course_id=?
+               AND admin_status='pending' AND recipient_status IN ('pending','accepted')""",
+            (course_id,)
+        ).fetchone()
+        if duplicate:
+            return jsonify({'error': 'This course already has a pending transfer request.'}), 409
+        request_id = str(uuid.uuid4())
+        db.execute(
+            """INSERT INTO course_transfer_requests
+               (id,course_id,course_title,from_instructor_id,from_instructor_name,
+                to_instructor_id,to_instructor_name,reason)
+               VALUES (?,?,?,?,?,?,?,?)""",
+            (request_id, course_id, course['title'], uid, g.current_user.get('name'),
+             recipient_id, recipient['name'], reason)
+        )
+        try:
+            create_notification(db, recipient_id, 'system', 'Course transfer request',
+                f"{g.current_user.get('name') or 'An instructor'} wants to transfer “{course['title']}” to you.",
+                f"course_transfer_{request_id}", app.config.get('USE_POSTGRES'))
+        except Exception as notify_error:
+            app.logger.warning(f'course transfer notification failed: {notify_error}')
+        db.commit()
+        return jsonify({'message': 'Transfer request sent to the selected instructor for acceptance, then Admin review.', 'request_id': request_id}), 201
+
+    @app.route('/api/instructor/course-transfers/<request_id>/respond', methods=['POST'])
+    @token_required
+    def respond_course_transfer(request_id):
+        _ensure_new_tables()
+        db = get_db()
+        uid = g.current_user['user_id']
+        body = request.get_json() or {}
+        decision = str(body.get('decision') or '').lower()
+        if decision not in ('accept', 'decline'):
+            return jsonify({'error': 'Decision must be accept or decline.'}), 400
+        row = db.execute(
+            "SELECT * FROM course_transfer_requests WHERE id=? AND to_instructor_id=?",
+            (request_id, uid)
+        ).fetchone()
+        if not row or row['admin_status'] != 'pending' or row['recipient_status'] != 'pending':
+            return jsonify({'error': 'This transfer request is no longer awaiting your response.'}), 404
+        if decision == 'accept':
+            recipient = _transfer_recipient(db, uid)
+            if not _valid_transfer_recipient(recipient):
+                return jsonify({'error': 'Your account must remain active and approved to accept a course.'}), 403
+        new_status = 'accepted' if decision == 'accept' else 'declined'
+        db.execute(
+            """UPDATE course_transfer_requests SET recipient_status=?,
+               admin_status=CASE WHEN ?='declined' THEN 'declined' ELSE admin_status END,
+               recipient_responded_at=CURRENT_TIMESTAMP WHERE id=?""",
+            (new_status, new_status, request_id)
+        )
+        try:
+            create_notification(db, row['from_instructor_id'], 'system',
+                'Course transfer response',
+                f"{row['to_instructor_name'] or 'The selected recipient'} {new_status} the transfer of “{row['course_title']}”.",
+                f"course_transfer_response_{request_id}", app.config.get('USE_POSTGRES'))
+        except Exception as notify_error:
+            app.logger.warning(f'course transfer response notification failed: {notify_error}')
+        db.commit()
+        return jsonify({'message': 'Response recorded. ' + ('The request is now awaiting Admin approval.' if decision == 'accept' else 'The transfer request was declined.')})
+
+    @app.route('/api/instructor/course-transfers/<request_id>/cancel', methods=['POST'])
+    @token_required
+    def cancel_course_transfer(request_id):
+        _ensure_new_tables()
+        db = get_db()
+        row = db.execute(
+            "SELECT * FROM course_transfer_requests WHERE id=? AND from_instructor_id=?",
+            (request_id, g.current_user['user_id'])
+        ).fetchone()
+        if not row or row['admin_status'] != 'pending' or row['recipient_status'] != 'pending':
+            return jsonify({'error': 'Only a request still awaiting recipient response can be cancelled.'}), 409
+        db.execute("UPDATE course_transfer_requests SET admin_status='cancelled',decided_at=CURRENT_TIMESTAMP WHERE id=?", (request_id,))
+        db.commit()
+        return jsonify({'message': 'Transfer request cancelled.'})
+
+    @app.route('/api/admin/course-transfers', methods=['GET'])
+    @admin_required
+    def admin_course_transfers():
+        _ensure_new_tables()
+        db = get_db()
+        status = (request.args.get('status') or 'pending').lower()
+        sql = """SELECT r.*,c.instructor_id AS current_owner_id
+                 FROM course_transfer_requests r LEFT JOIN courses c ON c.id=r.course_id"""
+        params = []
+        if status == 'pending':
+            sql += " WHERE r.admin_status='pending'"
+        elif status == 'all':
+            pass
+        elif status in ('approved','rejected','cancelled'):
+            sql += " WHERE r.admin_status=?"; params.append(status)
+        sql += " ORDER BY r.requested_at DESC LIMIT 300"
+        rows = db.execute(sql, tuple(params)).fetchall()
+        return jsonify({'requests': safe_list(rows)})
+
+    @app.route('/api/admin/course-transfers/<request_id>/decision', methods=['POST'])
+    @admin_required
+    def admin_decide_course_transfer(request_id):
+        _ensure_new_tables()
+        db = get_db()
+        ensure_transactions_table(db)
+        body = request.get_json() or {}
+        decision = str(body.get('decision') or '').lower()
+        earnings_action = str(body.get('unpaid_earnings_action') or 'keep_original').lower()
+        note = str(body.get('note') or '').strip()
+        if decision not in ('approve','reject'):
+            return jsonify({'error': 'Decision must be approve or reject.'}), 400
+        if earnings_action not in ('keep_original','reassign_unpaid'):
+            return jsonify({'error': 'Invalid unpaid earnings decision.'}), 400
+        row = db.execute("SELECT * FROM course_transfer_requests WHERE id=?", (request_id,)).fetchone()
+        if not row or row['admin_status'] != 'pending':
+            return jsonify({'error': 'This request is no longer awaiting Admin review.'}), 409
+        if decision == 'approve' and row['recipient_status'] != 'accepted':
+            return jsonify({'error': 'The selected recipient must accept before Admin can approve the transfer.'}), 409
+        course = db.execute("SELECT * FROM courses WHERE id=?", (row['course_id'],)).fetchone()
+        recipient = _transfer_recipient(db, row['to_instructor_id'])
+        if decision == 'approve':
+            if not course or course['instructor_id'] != row['from_instructor_id']:
+                return jsonify({'error': 'Course ownership changed before approval. Refresh and review the request.'}), 409
+            if not _valid_transfer_recipient(recipient):
+                return jsonify({'error': 'The recipient account is no longer active and approved.'}), 409
+            if earnings_action == 'reassign_unpaid':
+                outstanding = db.execute(
+                    "SELECT COALESCE(SUM(amount),0) AS total FROM payout_requests WHERE instructor_id=? AND status='requested'",
+                    (row['from_instructor_id'],)
+                ).fetchone()
+                if outstanding and float(outstanding['total'] or 0) > 0:
+                    return jsonify({
+                        'error': 'The original instructor has an outstanding payout request. Resolve it before reassigning unpaid course earnings; you may still keep those earnings with the original instructor.'
+                    }), 409
+            try:
+                original_id = course['original_instructor_id'] if 'original_instructor_id' in course.keys() else None
+                if not original_id:
+                    original_id = row['from_instructor_id']
+                db.execute("UPDATE courses SET instructor_id=?,instructor_name=?,instructor_avatar=?,original_instructor_id=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                    (recipient['id'], recipient['name'], recipient['avatar'], original_id, row['course_id']))
+                db.execute("UPDATE live_sessions SET instructor_id=? WHERE course_id=?", (recipient['id'], row['course_id']))
+                db.execute("UPDATE coupons SET created_by=? WHERE course_id=? AND created_by=?", (recipient['id'], row['course_id'], row['from_instructor_id']))
+                if earnings_action == 'reassign_unpaid':
+                    db.execute("""UPDATE transactions SET instructor_id=?
+                                  WHERE course_id=? AND instructor_id=?
+                                  AND LOWER(COALESCE(status,'')) IN ('paid','success','completed')
+                                  AND LOWER(COALESCE(payout_status,'pending')) NOT IN ('paid','sent','completed')""",
+                               (recipient['id'], row['course_id'], row['from_instructor_id']))
+                db.execute(
+                    """INSERT INTO course_transfer_history
+                       (id,course_id,course_title,from_instructor_id,from_instructor_name,
+                        to_instructor_id,to_instructor_name,transfer_request_id,reason,
+                        unpaid_earnings_action,actor_user_id)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+                    (str(uuid.uuid4()), row['course_id'], row['course_title'],
+                     row['from_instructor_id'], row['from_instructor_name'],
+                     row['to_instructor_id'], row['to_instructor_name'], request_id,
+                     row['reason'], earnings_action, g.current_user['user_id'])
+                )
+            except Exception as transfer_error:
+                db.rollback()
+                app.logger.exception('Course ownership transfer failed')
+                return jsonify({'error': 'Transfer could not be completed. No ownership changes were saved.'}), 500
+        db.execute(
+            """UPDATE course_transfer_requests SET admin_status=?,admin_note=?,
+               unpaid_earnings_action=?,decided_at=CURRENT_TIMESTAMP,decided_by=?,
+               completed_at=CASE WHEN ?='approved' THEN CURRENT_TIMESTAMP ELSE completed_at END
+               WHERE id=?""",
+            ('approved' if decision == 'approve' else 'rejected', note, earnings_action,
+             g.current_user['user_id'], 'approved' if decision == 'approve' else 'rejected', request_id)
+        )
+        try:
+            target_id = row['to_instructor_id'] if decision == 'approve' else row['from_instructor_id']
+            create_notification(db, target_id, 'system', 'Course transfer decision',
+                f"Admin {decision}d the transfer request for “{row['course_title']}”.",
+                f"course_transfer_admin_{request_id}", app.config.get('USE_POSTGRES'))
+        except Exception as notify_error:
+            app.logger.warning(f'course transfer admin notification failed: {notify_error}')
+        db.commit()
+        return jsonify({'message': 'Course ownership transferred successfully.' if decision == 'approve' else 'Transfer request rejected.'})
+
+    @app.route('/api/admin/course-transfers/<course_id>/history', methods=['GET'])
+    @admin_required
+    def admin_course_transfer_history(course_id):
+        _ensure_new_tables()
+        db = get_db()
+        rows = db.execute("SELECT * FROM course_transfer_history WHERE course_id=? ORDER BY created_at DESC", (course_id,)).fetchall()
+        return jsonify({'history': safe_list(rows)})
+
     # ── INSTRUCTOR APPLICATION ────────────────────────────────────────────────────
     @app.route('/api/instructor/apply', methods=['POST'])
     @token_required
@@ -6107,6 +6415,15 @@ def create_app() -> Flask:
             return jsonify({'error': 'You cannot delete your own account'}), 403
         if target['deleted_at']:
             return jsonify({'message': 'Account is already in Deleted Accounts'}), 200
+        if target['role'] in ('instructor', 'admin', 'superadmin'):
+            owned = db.execute("SELECT id,title FROM courses WHERE instructor_id=? ORDER BY created_at", (uid,)).fetchall()
+            if owned:
+                return jsonify({
+                    'error': 'This instructor still owns courses. Transfer or reassign every course before deleting the account.',
+                    'code': 'COURSES_MUST_BE_TRANSFERRED',
+                    'courses': [{'id': row['id'], 'title': row['title']} for row in owned],
+                    'count': len(owned)
+                }), 409
         db.execute("UPDATE users SET is_active=0,deleted_at=CURRENT_TIMESTAMP,deleted_by=?,deletion_reason='admin_action',token_version=COALESCE(token_version,0)+1,updated_at=CURRENT_TIMESTAMP WHERE id=?",
                    (g.current_user['user_id'],uid))
         db.execute("INSERT INTO account_deletion_events (id,user_id,user_name,user_email,user_role,instructor_status,event_type,actor_user_id) VALUES (?,?,?,?,?,?,?,?)",

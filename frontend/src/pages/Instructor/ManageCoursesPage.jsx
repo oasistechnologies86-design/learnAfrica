@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Edit2, Trash2, Users, Star, Eye, EyeOff, Loader2, BookOpen, BarChart2, AlertTriangle } from 'lucide-react';
+import { Plus, Edit2, Trash2, Users, Star, Eye, EyeOff, Loader2, BookOpen, BarChart2, AlertTriangle, ArrowLeftRight } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/common/Card';
 import { cn } from '@/lib/utils';
@@ -68,9 +68,12 @@ export default function ManageCoursesPage() {
           <h1 className="text-xl sm:text-2xl font-bold break-words">My Courses</h1>
           <p className="text-muted-foreground text-sm mt-1">{courses.length} course{courses.length !== 1 ? 's' : ''} created</p>
         </div>
+        <div className="flex flex-wrap gap-2">
+        <Link to="/instructor/course-transfers" className="inline-flex shrink-0"><Button variant="outline" className="gap-2"><ArrowLeftRight className="h-4 w-4" />Transfer courses</Button></Link>
         <Link to="/instructor/courses/create" className="inline-flex shrink-0">
           <Button className="gap-2"><Plus className="h-4 w-4" />New Course</Button>
         </Link>
+        </div>
       </div>
 
       {status && (

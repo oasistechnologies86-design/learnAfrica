@@ -54,6 +54,7 @@ const InstructorDashboard      = lazyWithRetry(() => import('./pages/Instructor/
 const CreateCoursePage         = lazyWithRetry(() => import('./pages/Instructor/CreateCoursePage').then(m => ({ default: m.CreateCoursePage })));
 const AnalyticsPage            = lazyWithRetry(() => import('./pages/Instructor/AnalyticsPage').then(m => ({ default: m.AnalyticsPage })));
 const ManageCoursesPage        = lazyWithRetry(() => import('./pages/Instructor/ManageCoursesPage'));
+const CourseTransfersPage     = lazyWithRetry(() => import('./pages/Instructor/CourseTransfersPage'));
 const RegistrationPaymentPage  = lazyWithRetry(() => import('./pages/Instructor/RegistrationPaymentPage'));
 const EditCoursePage           = lazyWithRetry(() => import('./pages/Instructor/EditCoursePage').then(m => ({ default: m.EditCoursePage })));
 const InstructorCouponsPage    = lazyWithRetry(() => import('./pages/Instructor/InstructorCouponsPage'));
@@ -259,6 +260,7 @@ function AppRoutes() {
         </ProtectedRoute>}>
         <Route index element={<InstructorDashboard />} />
         <Route path="courses"        element={<ManageCoursesPage />} />
+        <Route path="course-transfers" element={<CourseTransfersPage />} />
         <Route path="courses/create"     element={<CreateCoursePage />} />
         <Route path="courses/edit/:courseId" element={<EditCoursePage />} />
         <Route path="coupons"        element={<InstructorCouponsPage />} />

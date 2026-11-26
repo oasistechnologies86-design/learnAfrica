@@ -1,10 +1,11 @@
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '../../lib/utils';
-import { LayoutDashboard, Plus, BarChart2, BookMarked, Settings, X, ChevronLeft, Ticket } from 'lucide-react';
+import { LayoutDashboard, Plus, BarChart2, BookMarked, Settings, X, ChevronLeft, Ticket, ArrowLeftRight } from 'lucide-react';
 
 const sidebarLinks = [
   { href: '/instructor',               label: 'Overview',     Icon: LayoutDashboard },
   { href: '/instructor/courses',       label: 'My Courses',   Icon: BookMarked },
+  { href: '/instructor/course-transfers', label: 'Course Transfers', Icon: ArrowLeftRight },
   { href: '/instructor/courses/create',label: 'Create Course',Icon: Plus },
   { href: '/instructor/coupons',       label: 'Coupons',      Icon: Ticket },
   { href: '/instructor/analytics',     label: 'Analytics',    Icon: BarChart2 },
