@@ -9,7 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/common/Toast';
 import { ScaleToFit } from '@/components/common/ScaleToFit';
 import {
-  Award, Download, ExternalLink, Trophy, BookOpen, Target, Receipt, Settings, User,
+  Award, Download, Trophy, BookOpen, Target, Receipt, Settings, User,
   Flame, Compass, CheckCircle2, Star, Zap, Loader2,
   ArrowRight, ArrowLeft, ChevronDown, ChevronUp,
   Eye, EyeOff, Pencil, Check, X, Printer, Headphones, Video, Music2
@@ -467,7 +467,6 @@ export default function StudentDashboard() {
   const userBadges = user?.badges || [];
   const [viewAllActive, setViewAllActive] = useState(false);
   const [quickAccessOpen, setQuickAccessOpen] = useState(false);
-  const [certificatesExpanded, setCertificatesExpanded] = useState(true);
   const [badgesExpanded, setBadgesExpanded] = useState(true);
 
   useEffect(() => {
@@ -726,37 +725,20 @@ export default function StudentDashboard() {
       </section>
 
       {/* ── Badges ── */}
-      <section id="badges-section" className="space-y-3 scroll-mt-20">
-        <button
-          type="button"
-          onClick={() => setBadgesExpanded(value => !value)}
-          aria-expanded={badgesExpanded}
-          aria-controls="student-badges-content"
-          className="flex w-full items-center justify-between gap-3 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-        >
-          <span className="flex min-w-0 items-center gap-2 text-lg sm:text-xl font-bold">
-            <Trophy className="h-5 w-5 shrink-0 text-warning" /> My Badges
+      <section id="badges-section" className="space-y-4 scroll-mt-20">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-2xl font-extrabold tracking-tight sm:text-4xl">My Badges</h2>
+          <span className="shrink-0 rounded-full bg-amber-100 px-4 py-2 text-sm font-bold text-amber-800 sm:px-6 sm:py-3 sm:text-2xl">
+            {earnedCount} / {badgeConfig.length} earned
           </span>
-          <span className="flex shrink-0 items-center gap-2">
-            <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-              {earnedCount} / {badgeConfig.length} earned
-            </span>
-            <ChevronDown className={cn("h-5 w-5 text-muted-foreground transition-transform duration-200", badgesExpanded && "rotate-180")} />
-          </span>
-        </button>
-        <div
-          id="student-badges-content"
-          aria-hidden={!badgesExpanded}
-          className={cn("grid transition-[grid-template-rows,opacity] duration-300 ease-in-out", badgesExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")}
-        >
-          <div className="min-h-0 overflow-hidden">
-            <div className="mb-4 h-3 w-full overflow-hidden rounded-full bg-slate-200 sm:h-4"><div className="h-full rounded-full bg-amber-500 transition-all" style={{ width: `${(earnedCount / badgeConfig.length) * 100}%` }} /></div>
-            <div className="grid grid-cols-2 gap-3 sm:gap-5 pt-1">
-              {liveBadges.map(badge => (
-                <BadgeCard key={badge.id} badge={badge} userName={user?.name} />
-              ))}
-            </div>
-          </div>
+        </div>
+        <div className="mb-4 h-3 w-full overflow-hidden rounded-full bg-slate-200 sm:h-4">
+          <div className="h-full rounded-full bg-amber-500 transition-all" style={{ width: `${(earnedCount / badgeConfig.length) * 100}%` }} />
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:gap-5">
+          {liveBadges.map(badge => (
+            <BadgeCard key={badge.id} badge={badge} userName={user?.name} />
+          ))}
         </div>
       </section>
 
