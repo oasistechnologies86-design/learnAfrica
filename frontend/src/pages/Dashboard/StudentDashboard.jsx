@@ -459,6 +459,8 @@ export default function StudentDashboard() {
   const userBadges = user?.badges || [];
   const [viewAllActive, setViewAllActive] = useState(false);
   const [quickAccessOpen, setQuickAccessOpen] = useState(false);
+  const [certificatesExpanded, setCertificatesExpanded] = useState(true);
+  const [badgesExpanded, setBadgesExpanded] = useState(true);
 
   useEffect(() => {
     if (!quickAccessOpen) return undefined;
@@ -679,11 +681,15 @@ export default function StudentDashboard() {
       {/* ── Certificates ── */}
       <section className="space-y-5">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-2xl font-extrabold tracking-tight sm:text-4xl">My Certificates</h2>
+          <button type="button" onClick={() => setCertificatesExpanded(value => !value)} aria-expanded={certificatesExpanded} aria-controls="student-certificates-content" className="flex min-w-0 items-center gap-2 rounded-lg text-left text-2xl font-extrabold tracking-tight transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-4xl">
+            My Certificates
+            {certificatesExpanded ? <ChevronUp className="h-5 w-5 shrink-0 sm:h-6 sm:w-6" /> : <ChevronDown className="h-5 w-5 shrink-0 sm:h-6 sm:w-6" />}
+          </button>
           <span className="shrink-0 rounded-full bg-primary/10 px-4 py-2 text-sm font-bold text-primary sm:px-6 sm:py-3 sm:text-2xl dark:bg-[#263A30] dark:text-[#C4E4C7]">
             {earnedCertificates.length} earned
           </span>
         </div>
+        <div id="student-certificates-content" hidden={!certificatesExpanded} className="space-y-3">
         {earnedCertificates.length > 0 ? (
           <div className="space-y-3">
             {earnedCertificates.map(course => (
@@ -696,9 +702,6 @@ export default function StudentDashboard() {
                   <p className="mt-1 text-sm font-semibold text-muted-foreground sm:text-xl">{course.category || 'Course completion'}</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-                  <Link to={`/certificate/${encodeURIComponent(course.id)}`} aria-label={`View certificate for ${course.title}`} title="View certificate" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground transition-colors hover:bg-primary/90 sm:h-[5.5rem] sm:w-[5.5rem]">
-                    <Eye className="h-6 w-6 sm:h-9 sm:w-9" />
-                  </Link>
                   <Link to={`/certificate/${encodeURIComponent(course.id)}?download=1`} aria-label={`Download certificate for ${course.title}`} title="Download certificate PDF" className="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-primary text-primary transition-colors hover:bg-primary/10 sm:h-[5.5rem] sm:w-[5.5rem]">
                     <Download className="h-6 w-6 sm:h-9 sm:w-9" />
                   </Link>
@@ -713,16 +716,21 @@ export default function StudentDashboard() {
             <p className="mt-1 text-sm text-muted-foreground">Certificates appear here after you pass the final examination for a certificate-enabled course.</p>
           </div>
         )}
+        </div>
       </section>
 
       {/* ── Badges ── */}
       <section id="badges-section" className="space-y-4 scroll-mt-20">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-2xl font-extrabold tracking-tight sm:text-4xl">My Badges</h2>
+          <button type="button" onClick={() => setBadgesExpanded(value => !value)} aria-expanded={badgesExpanded} aria-controls="student-badges-content" className="flex min-w-0 items-center gap-2 rounded-lg text-left text-2xl font-extrabold tracking-tight transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-4xl">
+            My Badges
+            {badgesExpanded ? <ChevronUp className="h-5 w-5 shrink-0 sm:h-6 sm:w-6" /> : <ChevronDown className="h-5 w-5 shrink-0 sm:h-6 sm:w-6" />}
+          </button>
           <span className="shrink-0 rounded-full bg-amber-50 px-4 py-2 text-sm font-bold text-amber-800 sm:px-6 sm:py-3 sm:text-2xl dark:bg-[#3B3527] dark:text-[#F0D99D]">
             {earnedCount} / {badgeConfig.length} earned
           </span>
         </div>
+        <div id="student-badges-content" hidden={!badgesExpanded}>
         <div className="mb-4 h-3 w-full overflow-hidden rounded-full bg-slate-200 sm:h-4">
           <div className="h-full rounded-full bg-[#B99749] transition-all" style={{ width: `${(earnedCount / badgeConfig.length) * 100}%` }} />
         </div>
@@ -730,6 +738,7 @@ export default function StudentDashboard() {
           {liveBadges.map(badge => (
             <BadgeCard key={badge.id} badge={badge} userName={user?.name} />
           ))}
+        </div>
         </div>
       </section>
 
