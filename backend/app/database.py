@@ -931,6 +931,9 @@ MIGRATIONS = [
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_email TEXT",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS re_registered_to_user_id TEXT",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS re_registered_at TIMESTAMP",
+    "CREATE INDEX IF NOT EXISTS idx_users_deleted_email ON users(deleted_email)",
+    "CREATE INDEX IF NOT EXISTS idx_users_re_registered_to_user_id ON users(re_registered_to_user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_users_deleted_at ON users(deleted_at)",
     # Password-reset delivery diagnostics are additive for existing installations.
     "ALTER TABLE password_reset_requests ADD COLUMN IF NOT EXISTS delivery_error TEXT",
     "ALTER TABLE password_reset_requests ADD COLUMN IF NOT EXISTS handling_method TEXT",
