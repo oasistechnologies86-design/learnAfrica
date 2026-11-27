@@ -1916,6 +1916,25 @@ def create_app() -> Flask:
         db.commit()
         return jsonify({'message': 'Password changed successfully'})
     
+    def _invalidate_deleted_account_flows(db, user_id, email):
+        """Revoke credentials and queued recovery work tied to this exact account."""
+        db.execute(
+            'UPDATE password_reset_tokens SET used=1 WHERE user_id=? AND used=0',
+            (user_id,)
+        )
+        db.execute(
+            "UPDATE password_reset_requests SET status='dismissed', "
+            "resolved_at=CURRENT_TIMESTAMP,last_action_at=CURRENT_TIMESTAMP "
+            "WHERE (user_id=? OR LOWER(email)=LOWER(?)) "
+            "AND status NOT IN ('completed','dismissed')",
+            (user_id, email)
+        )
+        db.execute(
+            'UPDATE email_verification_codes SET used=1 '
+            'WHERE LOWER(email)=LOWER(?) AND used=0',
+            (email,)
+        )
+
     @app.route('/api/users/account', methods=['DELETE'])
     @token_required
     def delete_account():
@@ -1939,6 +1958,7 @@ def create_app() -> Flask:
                     'courses': [{'id': row['id'], 'title': row['title']} for row in owned],
                     'count': len(owned)
                 }), 409
+        _invalidate_deleted_account_flows(db, uid, u['email'])
         db.execute(
             "UPDATE users SET is_active=0,deleted_email=email,"
             "email='deleted+' || id || '@deleted.learnafrica.invalid',"
@@ -6517,6 +6537,7 @@ def create_app() -> Flask:
                     'courses': [{'id': row['id'], 'title': row['title']} for row in owned],
                     'count': len(owned)
                 }), 409
+        _invalidate_deleted_account_flows(db, uid, target['email'])
         db.execute(
             "UPDATE users SET is_active=0,deleted_email=email,"
             "email='deleted+' || id || '@deleted.learnafrica.invalid',"
@@ -12708,7 +12729,10 @@ def create_app() -> Flask:
         db = get_db()
         _ensure_password_reset_request_columns(db)
         try:
-            u = db.execute('SELECT id FROM users WHERE LOWER(email)=?', (email,)).fetchone()
+            u = db.execute(
+                'SELECT id FROM users WHERE LOWER(email)=? AND deleted_at IS NULL',
+                (email,)
+            ).fetchone()
         except Exception as e:
             app.logger.error(f'forgot_password account lookup failed: {e}')
             return jsonify({'error': 'We could not verify that account right now. Please try again later.',
@@ -12724,10 +12748,10 @@ def create_app() -> Flask:
         uid = u['id']
         try:
             existing = db.execute(
-                "SELECT id FROM password_reset_requests WHERE LOWER(email)=? "
+                "SELECT id FROM password_reset_requests WHERE LOWER(email)=? AND user_id=? "
                 "AND status IN ('pending','link_generated','link_sent','email_sent','manual_fallback') "
                 "ORDER BY created_at DESC LIMIT 1",
-                (email,)).fetchone()
+                (email, uid)).fetchone()
         except Exception:
             existing = None
 
@@ -12860,8 +12884,13 @@ def create_app() -> Flask:
         if not row or int(row['used'] or 0) or _dt_expired(row['expires_at']):
             return jsonify({'valid': False,
                             'error': 'This reset link is invalid or has expired.'}), 400
-        u = db.execute('SELECT email FROM users WHERE id=?', (row['user_id'],)).fetchone()
-        return jsonify({'valid': True, 'email': (u['email'] if u else None)})
+        u = db.execute(
+            'SELECT email FROM users WHERE id=? AND deleted_at IS NULL',
+            (row['user_id'],)
+        ).fetchone()
+        if not u:
+            return jsonify({'valid': False, 'error': 'This reset link is invalid or has expired.'}), 400
+        return jsonify({'valid': True, 'email': u['email']})
 
     @app.route('/api/auth/reset-password', methods=['POST'])
     def reset_password_with_token():
@@ -12888,8 +12917,10 @@ def create_app() -> Flask:
                          (_hash_reset_token(raw),)).fetchone()
         if not row or int(row['used'] or 0) or _dt_expired(row['expires_at']):
             return jsonify({'error': 'This reset link is invalid or has expired.'}), 400
-        u = db.execute('SELECT id, token_version FROM users WHERE id=?',
-                       (row['user_id'],)).fetchone()
+        u = db.execute(
+            'SELECT id, token_version FROM users WHERE id=? AND deleted_at IS NULL',
+            (row['user_id'],)
+        ).fetchone()
         if not u:
             return jsonify({'error': 'Account not found'}), 404
         try:
@@ -12958,7 +12989,8 @@ def create_app() -> Flask:
             # account. Historical orphaned requests remain in the database but
             # are not actionable and must not appear in the admin queue.
             base_sql = ('SELECT pr.* FROM password_reset_requests pr '
-                        'INNER JOIN users u ON LOWER(u.email)=LOWER(pr.email)')
+                        'INNER JOIN users u ON u.id=pr.user_id '
+                        'AND LOWER(u.email)=LOWER(pr.email) AND u.deleted_at IS NULL')
             if status and status != 'all':
                 rows = db.execute(base_sql + ' WHERE pr.status=? '
                                   'ORDER BY pr.created_at DESC', (status,)).fetchall()
@@ -12995,9 +13027,12 @@ def create_app() -> Flask:
         if req['status'] in ('completed', 'dismissed'):
             return jsonify({'error': 'This request is already resolved and cannot generate another link.'}), 409
         email = (req['email'] or '').strip().lower()
-        u = db.execute('SELECT id, email FROM users WHERE LOWER(email)=?', (email,)).fetchone()
+        u = db.execute(
+            'SELECT id,email FROM users WHERE LOWER(email)=? AND id=? AND deleted_at IS NULL',
+            (email, req['user_id'])
+        ).fetchone()
         if not u:
-            return jsonify({'error': 'No account exists for this email address.'}), 404
+            return jsonify({'error': 'No active account exists for this reset request.'}), 404
         raw, expires = _create_reset_token(db, u['id'], request_id=rid,
                                            created_by=g.current_user.get('user_id'))
         if req['status'] != 'manual_fallback':
