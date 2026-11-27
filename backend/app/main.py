@@ -1164,7 +1164,6 @@ def create_app() -> Flask:
                     'VALUES(?,?,?,?,?,CURRENT_TIMESTAMP)',
                     (str(uuid.uuid4()), uid, _accepted_role, _doc_type, _policy_version)
                 )
-            db.commit()
 
             # Save the required instructor payout destination as part of
             # account creation, including accounts awaiting email verification.
