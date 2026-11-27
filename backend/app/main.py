@@ -1047,8 +1047,22 @@ def create_app() -> Flask:
                 'document_type TEXT NOT NULL, document_version TEXT NOT NULL, '
                 'accepted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'
             )
-            if db.execute('SELECT id FROM users WHERE LOWER(TRIM(email))=?',(email,)).fetchone():
+            existing_account = db.execute(
+                'SELECT id FROM users WHERE LOWER(TRIM(email))=? AND deleted_at IS NULL',
+                (email,)
+            ).fetchone()
+            if existing_account:
                 return jsonify({'error': 'Email already registered'}), 409
+
+            # Link the new registration to the most recent deleted account with
+            # this address. The original user row and all related records stay
+            # intact; only the lineage metadata is updated after new-user insert.
+            prior_deleted = db.execute(
+                'SELECT id FROM users WHERE LOWER(TRIM(COALESCE(deleted_email,\'\')))=? '
+                'AND deleted_at IS NOT NULL AND re_registered_to_user_id IS NULL '
+                'ORDER BY deleted_at DESC LIMIT 1',
+                (email,)
+            ).fetchone()
 
             uid = str(uuid.uuid4())
             is_instructor = d.get('role') == 'instructor' or d.get('isInstructor')
@@ -1148,9 +1162,32 @@ def create_app() -> Flask:
                 try:
                     if hasattr(db, '_conn'): db._conn.rollback()
                 except Exception: pass
-                # Minimal fallback - just core columns
+                # A concurrent signup may have claimed this email after the
+                # pre-check. Never bypass that uniqueness conflict with fallback.
+                existing_account = db.execute(
+                    'SELECT id FROM users WHERE LOWER(TRIM(email))=? AND deleted_at IS NULL',
+                    (email,)
+                ).fetchone()
+                if existing_account:
+                    return jsonify({'error': 'Email already registered'}), 409
+                # Minimal fallback - just core columns for legacy schema compatibility.
                 db.execute('INSERT INTO users (id,name,email,password_hash,role) VALUES(?,?,?,?,?)',
                            (uid, d['name'], email, generate_password_hash(d['password']), role))
+
+            if prior_deleted:
+                old_id = prior_deleted['id']
+                db.execute(
+                    'UPDATE users SET re_registered_to_user_id=?, re_registered_at=CURRENT_TIMESTAMP '
+                    'WHERE id=? AND deleted_at IS NOT NULL AND re_registered_to_user_id IS NULL',
+                    (uid, old_id)
+                )
+                db.execute(
+                    'INSERT INTO account_deletion_events '
+                    '(id,user_id,user_name,user_email,user_role,event_type,actor_user_id) '
+                    'SELECT ?,id,name,deleted_email,role,?,?,? FROM users WHERE id=?',
+                    (str(uuid.uuid4()), 're_registered', uid, old_id)
+                )
+                audit('account_re_registered', 'user', old_id, email, {'new_user_id': uid})
 
             # Record the exact policy versions accepted at signup. The instructor
             # application also retains its legacy agreement timestamp and version.
@@ -1556,7 +1593,10 @@ def create_app() -> Flask:
         # can be reported as suspended instead of being mislabelled as a wrong
         # password. Wrong password is still a generic 401; only a correct
         # password on a suspended account reaches the 403 below.
-        u = db.execute('SELECT * FROM users WHERE LOWER(email)=?', (email,)).fetchone()
+        u = db.execute(
+            'SELECT * FROM users WHERE LOWER(email)=? AND deleted_at IS NULL',
+            (email,)
+        ).fetchone()
         if not u:
             return jsonify({
                 'error': 'No account found with that email address. Please check the spelling or create an account.',
@@ -1658,7 +1698,10 @@ def create_app() -> Flask:
             return jsonify({'error': 'Google did not return an email address'}), 400
 
         db = get_db()
-        u = db.execute('SELECT * FROM users WHERE LOWER(TRIM(email))=?', (email,)).fetchone()
+        u = db.execute(
+            'SELECT * FROM users WHERE LOWER(TRIM(email))=? AND deleted_at IS NULL',
+            (email,)
+        ).fetchone()
         if not u:
             # Google is sign-in only. New accounts must use the normal email
             # registration flow so the correct role, agreements and profile
@@ -1884,8 +1927,13 @@ def create_app() -> Flask:
                     'courses': [{'id': row['id'], 'title': row['title']} for row in owned],
                     'count': len(owned)
                 }), 409
-        db.execute("UPDATE users SET is_active=0,deleted_at=CURRENT_TIMESTAMP,deleted_by=?,deletion_reason='self_service',token_version=COALESCE(token_version,0)+1,updated_at=CURRENT_TIMESTAMP WHERE id=?",
-                   (uid, uid))
+        db.execute(
+            "UPDATE users SET is_active=0,deleted_email=email,"
+            "email='deleted+' || id || '@deleted.learnafrica.invalid',"
+            "deleted_at=CURRENT_TIMESTAMP,deleted_by=?,deletion_reason='self_service',"
+            "token_version=COALESCE(token_version,0)+1,updated_at=CURRENT_TIMESTAMP WHERE id=?",
+            (uid, uid)
+        )
         db.execute("INSERT INTO account_deletion_events (id,user_id,user_name,user_email,user_role,instructor_status,event_type,actor_user_id) VALUES (?,?,?,?,?,?,?,?)",
                    (str(uuid.uuid4()),uid,u['name'],u['email'],u['role'],u['instructor_status'],'self_deleted',uid))
         admins = db.execute("SELECT id FROM users WHERE role IN ('admin','superadmin') AND is_active=1").fetchall()
@@ -4975,7 +5023,10 @@ def create_app() -> Flask:
         total_courses  = db.execute("SELECT COUNT(*) as c FROM courses").fetchone()['c']
         total_enrollments = db.execute("SELECT COUNT(*) as c FROM user_enrollments").fetchone()['c']
         pending_instructors = db.execute("SELECT COUNT(*) as c FROM instructor_applications ia INNER JOIN users u ON u.id=ia.user_id WHERE ia.status='pending' AND u.is_active=1 AND u.deleted_at IS NULL AND u.role='instructor'").fetchone()['c']
-        deleted_accounts_count = db.execute("SELECT COUNT(*) as c FROM users WHERE deleted_at IS NOT NULL AND deletion_cleared_at IS NULL").fetchone()['c']
+        deleted_accounts_count = db.execute(
+            "SELECT COUNT(*) as c FROM users WHERE deleted_at IS NOT NULL "
+            "AND re_registered_to_user_id IS NULL"
+        ).fetchone()['c']
         recent_users = db.execute('''SELECT id,name,email,role,instructor_status,created_at FROM users
                                      WHERE is_active=1 AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 10''').fetchall()
         recent_courses = db.execute('''SELECT c.id,c.title,c.category,c.enrollments,c.created_at,u.name as instructor_name
@@ -6454,8 +6505,13 @@ def create_app() -> Flask:
                     'courses': [{'id': row['id'], 'title': row['title']} for row in owned],
                     'count': len(owned)
                 }), 409
-        db.execute("UPDATE users SET is_active=0,deleted_at=CURRENT_TIMESTAMP,deleted_by=?,deletion_reason='admin_action',token_version=COALESCE(token_version,0)+1,updated_at=CURRENT_TIMESTAMP WHERE id=?",
-                   (g.current_user['user_id'],uid))
+        db.execute(
+            "UPDATE users SET is_active=0,deleted_email=email,"
+            "email='deleted+' || id || '@deleted.learnafrica.invalid',"
+            "deleted_at=CURRENT_TIMESTAMP,deleted_by=?,deletion_reason='admin_action',"
+            "token_version=COALESCE(token_version,0)+1,updated_at=CURRENT_TIMESTAMP WHERE id=?",
+            (g.current_user['user_id'], uid)
+        )
         db.execute("INSERT INTO account_deletion_events (id,user_id,user_name,user_email,user_role,instructor_status,event_type,actor_user_id) VALUES (?,?,?,?,?,?,?,?)",
                    (str(uuid.uuid4()),uid,target['name'],target['email'],target['role'],target['instructor_status'],'admin_deleted',g.current_user['user_id']))
         db.commit()
@@ -6468,60 +6524,71 @@ def create_app() -> Flask:
         db = get_db()
         q = (request.args.get('q') or '').strip().lower()
         role = (request.args.get('role') or '').strip().lower()
-        sql = """SELECT id,name,email,role,instructor_status,created_at,deleted_at,deleted_by,deletion_reason
-                 FROM users WHERE deleted_at IS NOT NULL AND deletion_cleared_at IS NULL"""
+        sql = """SELECT id,name,COALESCE(deleted_email,email) AS email,role,
+                        instructor_status,created_at,deleted_at,deleted_by,deletion_reason,
+                        re_registered_at
+                 FROM users
+                 WHERE deleted_at IS NOT NULL AND re_registered_to_user_id IS NULL"""
         params = []
         if q:
-            sql += " AND (LOWER(COALESCE(name,'')) LIKE ? OR LOWER(COALESCE(email,'')) LIKE ?)"
-            params.extend([f'%{q}%',f'%{q}%'])
+            sql += " AND (LOWER(COALESCE(name,'')) LIKE ? OR LOWER(COALESCE(deleted_email,email,'')) LIKE ? OR LOWER(COALESCE(id,'')) LIKE ?)"
+            params.extend([f'%{q}%', f'%{q}%', f'%{q}%'])
         if role in ('student','instructor','admin','superadmin'):
             sql += " AND LOWER(COALESCE(role,''))=?"
             params.append(role)
         sql += " ORDER BY deleted_at DESC"
-        rows = db.execute(sql,tuple(params)).fetchall()
-        return jsonify({'accounts':safe_list(rows),'count':len(rows)})
+        rows = db.execute(sql, tuple(params)).fetchall()
+        return jsonify({'accounts': safe_list(rows), 'count': len(rows)})
+
+    @app.route('/api/admin/re-registered-accounts', methods=['GET'])
+    @admin_required
+    def admin_reregistered_accounts():
+        db = get_db()
+        q = (request.args.get('q') or '').strip().lower()
+        role = (request.args.get('role') or '').strip().lower()
+        sql = """SELECT old.id,old.name,COALESCE(old.deleted_email,old.email) AS email,
+                        old.role,old.instructor_status,old.created_at,old.deleted_at,
+                        old.deleted_by,old.deletion_reason,old.re_registered_at,
+                        old.re_registered_to_user_id AS new_account_id,
+                        new_user.name AS new_account_name,
+                        new_user.email AS new_account_email,
+                        new_user.created_at AS new_account_created_at
+                 FROM users old
+                 LEFT JOIN users new_user ON new_user.id=old.re_registered_to_user_id
+                 WHERE old.deleted_at IS NOT NULL AND old.re_registered_to_user_id IS NOT NULL"""
+        params = []
+        if q:
+            sql += " AND (LOWER(COALESCE(old.name,'')) LIKE ? OR LOWER(COALESCE(old.deleted_email,old.email,'')) LIKE ? OR LOWER(COALESCE(old.id,'')) LIKE ? OR LOWER(COALESCE(old.re_registered_to_user_id,'')) LIKE ?)"
+            params.extend([f'%{q}%', f'%{q}%', f'%{q}%', f'%{q}%'])
+        if role in ('student','instructor','admin','superadmin'):
+            sql += " AND LOWER(COALESCE(old.role,''))=?"
+            params.append(role)
+        sql += " ORDER BY old.re_registered_at DESC,old.deleted_at DESC"
+        rows = db.execute(sql, tuple(params)).fetchall()
+        return jsonify({'accounts': safe_list(rows), 'count': len(rows)})
 
     @app.route('/api/admin/deleted-accounts/<uid>/history', methods=['GET'])
     @admin_required
     def admin_deleted_account_history(uid):
         db = get_db()
-        rows = db.execute("SELECT id,user_id,user_name,user_email,user_role,instructor_status,event_type,actor_user_id,created_at FROM account_deletion_events WHERE user_id=? ORDER BY created_at DESC",(uid,)).fetchall()
-        return jsonify({'events':safe_list(rows)})
+        rows = db.execute(
+            "SELECT id,user_id,user_name,user_email,user_role,instructor_status,event_type,actor_user_id,created_at "
+            "FROM account_deletion_events WHERE user_id=? ORDER BY created_at DESC",
+            (uid,)
+        ).fetchall()
+        return jsonify({'events': safe_list(rows)})
 
+    # Legacy clear endpoints remain as read-safe compatibility responses. They
+    # no longer hide or mutate historical records.
     @app.route('/api/admin/deleted-accounts/<uid>/clear', methods=['POST'])
     @admin_required
     def admin_clear_deleted_account(uid):
-        db = get_db()
-        row = db.execute("SELECT id FROM users WHERE id=? AND deleted_at IS NOT NULL AND deletion_cleared_at IS NULL",(uid,)).fetchone()
-        if not row:
-            return jsonify({'error':'Deleted account not found'}),404
-        db.execute("UPDATE users SET deletion_cleared_at=CURRENT_TIMESTAMP,deletion_cleared_by=? WHERE id=?",(g.current_user['user_id'],uid))
-        db.execute("INSERT INTO account_deletion_events (id,user_id,event_type,actor_user_id) VALUES (?,?,?,?)",(str(uuid.uuid4()),uid,'cleared_from_admin_list',g.current_user['user_id']))
-        db.commit()
-        audit('deleted_account_cleared','user',uid,None,{'scope':'single'})
-        return jsonify({'message':'Account cleared from the Deleted Accounts list. Protected records were retained.'})
+        return jsonify({'error': 'Deleted account history is permanent and cannot be cleared.'}), 410
 
     @app.route('/api/admin/deleted-accounts/clear-all', methods=['POST'])
     @admin_required
     def admin_clear_all_deleted_accounts():
-        db = get_db()
-        q = (request.args.get('q') or '').strip().lower()
-        role = (request.args.get('role') or '').strip().lower()
-        where = "deleted_at IS NOT NULL AND deletion_cleared_at IS NULL"
-        params = []
-        if q:
-            where += " AND (LOWER(COALESCE(name,'')) LIKE ? OR LOWER(COALESCE(email,'')) LIKE ?)"
-            params.extend([f'%{q}%', f'%{q}%'])
-        if role in ('student','instructor','admin','superadmin'):
-            where += " AND LOWER(COALESCE(role,''))=?"
-            params.append(role)
-        count_row = db.execute("SELECT COUNT(*) AS c FROM users WHERE " + where,tuple(params)).fetchone()
-        count = int((count_row['c'] if count_row else 0) or 0)
-        db.execute("UPDATE users SET deletion_cleared_at=CURRENT_TIMESTAMP,deletion_cleared_by=? WHERE " + where,tuple([g.current_user['user_id']] + params))
-        db.execute("INSERT INTO account_deletion_events (id,user_id,event_type,actor_user_id) VALUES (?,?,?,?)",(str(uuid.uuid4()),'all','cleared_all_from_admin_list',g.current_user['user_id']))
-        db.commit()
-        audit('deleted_accounts_cleared_all','user','all',None,{'count':count})
-        return jsonify({'message':f'{count} deleted account(s) cleared from the list. Protected records were retained.','count':count})
+        return jsonify({'error': 'Deleted account history is permanent and cannot be cleared.'}), 410
 
     @app.route('/api/admin/users/<uid>', methods=['PUT'])
     @admin_required
