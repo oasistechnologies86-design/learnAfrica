@@ -3,6 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import { API_BASE } from '@/lib/api';
 import { Button } from '@/components/common/Button';
 import { Card, CardContent } from '@/components/common/Card';
+import { BrandedSelect } from '@/components/common/BrandedSelect';
 import { ArrowRightLeft, RefreshCw, Loader2, CheckCircle2, XCircle, History } from 'lucide-react';
 
 const api = async (path, options = {}) => {
@@ -104,14 +105,14 @@ export default function CourseTransfersPage() {
           {!data.courses.length ? <p className="rounded-lg bg-muted/40 p-3 text-sm text-muted-foreground">There are no courses owned by this account to transfer.</p> : (
             <form onSubmit={submit} className="grid gap-3 sm:grid-cols-2">
               <label className="space-y-1 text-sm"><span className="font-medium">Course</span>
-                <select required value={courseId} onChange={e => setCourseId(e.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3">
+                <BrandedSelect required value={courseId} onChange={e => setCourseId(e.target.value)} placeholder="Choose a course" className="h-10 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   <option value="">Choose a course</option>{data.courses.map(course => <option key={course.id} value={course.id}>{course.title}</option>)}
-                </select>
+                </BrandedSelect>
               </label>
               <label className="space-y-1 text-sm"><span className="font-medium">New owner</span>
-                <select required value={recipientId} onChange={e => setRecipientId(e.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3">
+                <BrandedSelect required value={recipientId} onChange={e => setRecipientId(e.target.value)} placeholder="Choose an approved instructor or Admin" className="h-10 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   <option value="">Choose an approved instructor or Admin</option>{data.recipients.map(person => <option key={person.id} value={person.id}>{person.name} · {person.role === 'instructor' ? 'Instructor' : 'Admin'}</option>)}
-                </select>
+                </BrandedSelect>
               </label>
               <label className="space-y-1 text-sm sm:col-span-2"><span className="font-medium">Reason for transfer</span>
                 <textarea required minLength={8} value={reason} onChange={e => setReason(e.target.value)} rows={3} className="w-full rounded-md border border-input bg-background p-3" placeholder="Explain why this course should be transferred." />
@@ -140,7 +141,7 @@ export default function CourseTransfersPage() {
         {!adminRequests.length ? <p className="rounded-lg border border-dashed p-5 text-sm text-muted-foreground">No transfer requests found.</p> : adminRequests.map(item => <Card key={item.id}><CardContent className="space-y-3 p-4">
           <div className="flex flex-wrap items-start justify-between gap-2"><div><p className="font-semibold">{item.course_title}</p><p className="text-sm text-muted-foreground">{item.from_instructor_name} <span className="px-1">→</span> {item.to_instructor_name}</p><p className="mt-1 text-sm">{item.reason}</p><p className="mt-1 text-xs text-muted-foreground">Requested {when(item.requested_at)} · Recipient: {item.recipient_status}</p></div><span className={`rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${statusClass(item.admin_status)}`}>{item.admin_status}</span></div>
           {item.admin_status === 'pending' && item.recipient_status === 'accepted' && <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-            <label className="space-y-1 text-xs"><span className="font-semibold">Unpaid course earnings</span><select value={earningsAction} onChange={e => setEarningsAction(e.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-2 text-sm"><option value="keep_original">Keep with original instructor (recommended)</option><option value="reassign_unpaid">Reassign unpaid course earnings to new owner</option></select></label>
+            <label className="space-y-1 text-xs"><span className="font-semibold">Unpaid course earnings</span><BrandedSelect value={earningsAction} onChange={e => setEarningsAction(e.target.value)} className="h-10 rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><option value="keep_original">Keep with original instructor (recommended)</option><option value="reassign_unpaid">Reassign unpaid course earnings to new owner</option></BrandedSelect></label>
             <label className="space-y-1 text-xs"><span className="font-semibold">Admin note (optional)</span><input value={note} onChange={e => setNote(e.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" placeholder="Reason or audit note" /></label>
             <div className="flex gap-2"><Button size="sm" disabled={!!busy} onClick={() => run(item.id, `/api/admin/course-transfers/${item.id}/decision`, { decision: 'approve', unpaid_earnings_action: earningsAction, note })}>Approve transfer</Button><Button size="sm" variant="destructive" disabled={!!busy} onClick={() => run(item.id, `/api/admin/course-transfers/${item.id}/decision`, { decision: 'reject', note })}>Reject</Button></div>
           </div>}
