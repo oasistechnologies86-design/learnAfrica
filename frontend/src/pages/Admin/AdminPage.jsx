@@ -246,7 +246,6 @@ export default function AdminPage() {
   }, []);
   useEffect(() => { loadTabCounts(); }, [loadTabCounts, tab]);
   useEffect(() => { if (tab === 'Applications') load('Applications'); }, [appFilter]);
-  useEffect(() => { setDeletedPage(1); }, [deletedSearch, deletedRole, deletedView, deletedReason, deletedDateFrom, deletedDateTo, deletedSort]);
   useEffect(() => { if (tab === 'Deleted Accounts') load('Deleted Accounts'); }, [deletedSearch, deletedRole, deletedView, deletedReason, deletedDateFrom, deletedDateTo, deletedSort, deletedPage, tab, load]);
   useEffect(() => { if (tab === 'Guide') load('Guide'); }, [tab === 'Guide']);
 
@@ -1574,16 +1573,16 @@ export default function AdminPage() {
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button size="sm" variant={deletedView === 'deleted' ? 'default' : 'outline'} onClick={() => setDeletedView('deleted')}>Deleted Accounts</Button>
-                <Button size="sm" variant={deletedView === 'reregistered' ? 'default' : 'outline'} onClick={() => setDeletedView('reregistered')}>Re-registered History</Button>
+                <Button size="sm" variant={deletedView === 'deleted' ? 'default' : 'outline'} onClick={() => { setDeletedPage(1); setDeletedView('deleted'); }}>Deleted Accounts</Button>
+                <Button size="sm" variant={deletedView === 'reregistered' ? 'default' : 'outline'} onClick={() => { setDeletedPage(1); setDeletedView('reregistered'); }}>Re-registered History</Button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
-                <div className="relative sm:col-span-2 xl:col-span-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"/><Input className="pl-9" placeholder="Search name, email or account ID…" value={deletedSearch} onChange={e => setDeletedSearch(e.target.value)} /></div>
-                <select aria-label="Filter by role" className="h-10 rounded-md border border-border bg-background px-3 text-sm" value={deletedRole} onChange={e => setDeletedRole(e.target.value)}><option value="all">All roles</option><option value="student">Students</option><option value="instructor">Instructors</option><option value="admin">Admins</option></select>
-                <select aria-label="Filter by deletion reason" className="h-10 rounded-md border border-border bg-background px-3 text-sm" value={deletedReason} onChange={e => setDeletedReason(e.target.value)}><option value="all">All deletion reasons</option><option value="self_service">User requested deletion</option><option value="admin_action">Admin initiated deletion</option></select>
-                <Input aria-label="Deleted from date" type="date" value={deletedDateFrom} onChange={e => setDeletedDateFrom(e.target.value)} />
-                <Input aria-label="Deleted to date" type="date" value={deletedDateTo} onChange={e => setDeletedDateTo(e.target.value)} />
-                <select aria-label="Sort account history" className="h-10 rounded-md border border-border bg-background px-3 text-sm" value={deletedSort} onChange={e => setDeletedSort(e.target.value)}><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select>
+                <div className="relative sm:col-span-2 xl:col-span-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"/><Input className="pl-9" placeholder="Search name, email or account ID…" value={deletedSearch} onChange={e => { setDeletedPage(1); setDeletedSearch(e.target.value); }} /></div>
+                <select aria-label="Filter by role" className="h-10 rounded-md border border-border bg-background px-3 text-sm" value={deletedRole} onChange={e => { setDeletedPage(1); setDeletedRole(e.target.value); }}><option value="all">All roles</option><option value="student">Students</option><option value="instructor">Instructors</option><option value="admin">Admins</option></select>
+                <select aria-label="Filter by deletion reason" className="h-10 rounded-md border border-border bg-background px-3 text-sm" value={deletedReason} onChange={e => { setDeletedPage(1); setDeletedReason(e.target.value); }}><option value="all">All deletion reasons</option><option value="self_service">User requested deletion</option><option value="admin_action">Admin initiated deletion</option></select>
+                <Input aria-label="Deleted from date" type="date" value={deletedDateFrom} onChange={e => { setDeletedPage(1); setDeletedDateFrom(e.target.value); }} />
+                <Input aria-label="Deleted to date" type="date" value={deletedDateTo} onChange={e => { setDeletedPage(1); setDeletedDateTo(e.target.value); }} />
+                <select aria-label="Sort account history" className="h-10 rounded-md border border-border bg-background px-3 text-sm" value={deletedSort} onChange={e => { setDeletedPage(1); setDeletedSort(e.target.value); }}><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select>
                 <Button size="sm" variant="outline" onClick={() => load('Deleted Accounts')}><RefreshCw className="h-4 w-4 mr-1"/>Refresh</Button>
               </div>
               <p className="text-xs text-muted-foreground">{deletedPagination.count} record(s) · Page {deletedPagination.page} of {deletedPagination.total_pages}</p>
