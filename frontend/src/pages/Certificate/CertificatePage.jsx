@@ -57,26 +57,26 @@ export function CertificateDocument({ data, displayName, id = 'certificate-conte
       <div aria-hidden="true" data-cert-corner className="absolute bottom-4 left-4 z-0 h-7 w-7 border-b-[3px] border-l-[3px] border-primary/60 pointer-events-none" />
       <div aria-hidden="true" data-cert-corner className="absolute bottom-4 right-4 z-0 h-7 w-7 border-b-[3px] border-r-[3px] border-primary/60 pointer-events-none" />
 
-      <div data-cert-main className="absolute inset-x-0 top-0 bottom-[112px] z-10 flex flex-col items-center px-12 pt-7 pb-2 text-center">
+      <div data-cert-main className="absolute inset-x-0 top-0 bottom-[112px] z-10 flex flex-col items-center px-12 pt-5 pb-2 text-center">
         <p className="mb-2 text-xs font-bold uppercase tracking-[0.3em] text-primary">LearnAfrica</p>
         <h1 className="font-serif text-4xl font-bold uppercase tracking-[0.1em] text-slate-900">
           Certificate of Completion
         </h1>
-        <div className="mt-4 h-px w-48 bg-gradient-to-r from-transparent via-slate-400 to-transparent" />
-        <p className="mt-2 text-base italic text-slate-600">
+        <div className="mt-3 h-px w-48 bg-gradient-to-r from-transparent via-slate-400 to-transparent" />
+        <p className="mt-1 text-base italic text-slate-600">
           Awarded in recognition of outstanding course completion
         </p>
 
-        <p className="mt-5 text-base text-slate-700">This certifies that</p>
-        <h2 className="my-3 inline-block border-b-4 border-slate-900 px-14 pb-1 font-serif text-4xl font-bold leading-tight text-slate-900">
+        <p className="mt-3 text-base text-slate-700">This certifies that</p>
+        <h2 className="my-2 inline-block border-b-4 border-slate-900 px-14 pb-1 font-serif text-4xl font-bold leading-tight text-slate-900">
           {displayName}
         </h2>
         <p className="text-base text-slate-700">has successfully completed all course requirements for</p>
-        <h3 className="mt-2 max-w-3xl font-serif text-3xl font-bold leading-tight text-primary">
+        <h3 className="mt-1 max-w-3xl font-serif text-3xl font-bold leading-tight text-primary">
           {data.courseName}
         </h3>
 
-        <div className="mt-2 flex w-full items-end justify-between gap-8 px-6">
+        <div className="mt-1 flex w-full items-end justify-between gap-8 px-6">
           {/* Signatory = the authorised platform admin, never the course
               instructor. Standard certificate layout, matching the Date column
               to its right: the signature (image or handwritten text) sits ON
