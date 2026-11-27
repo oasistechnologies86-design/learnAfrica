@@ -6538,12 +6538,21 @@ def create_app() -> Flask:
         where = []
         params = []
         if q:
-            where.append(
-                f"(LOWER(COALESCE({prefix}name,'')) LIKE ? "
+            search_fields = (
+                f"LOWER(COALESCE({prefix}name,'')) LIKE ? "
                 f"OR LOWER(COALESCE({prefix}deleted_email,{prefix}email,'')) LIKE ? "
-                f"OR LOWER(COALESCE({prefix}id,'')) LIKE ?)"
+                f"OR LOWER(COALESCE({prefix}id,'')) LIKE ?"
             )
-            params.extend([f'%{q}%', f'%{q}%', f'%{q}%'])
+            if alias == 'old':
+                search_fields += (
+                    " OR LOWER(COALESCE(new_user.name,'')) LIKE ?"
+                    " OR LOWER(COALESCE(new_user.deleted_email,new_user.email,'')) LIKE ?"
+                    " OR LOWER(COALESCE(new_user.id,'')) LIKE ?"
+                )
+                params.extend([f'%{q}%'] * 6)
+            else:
+                params.extend([f'%{q}%'] * 3)
+            where.append('(' + search_fields + ')')
         if role in ('student','instructor','admin','superadmin'):
             where.append(f"LOWER(COALESCE({prefix}role,''))=?")
             params.append(role)
