@@ -57,7 +57,7 @@ export function CertificateDocument({ data, displayName, id = 'certificate-conte
       <div aria-hidden="true" data-cert-corner className="absolute bottom-4 left-4 z-0 h-7 w-7 border-b-[3px] border-l-[3px] border-primary/60 pointer-events-none" />
       <div aria-hidden="true" data-cert-corner className="absolute bottom-4 right-4 z-0 h-7 w-7 border-b-[3px] border-r-[3px] border-primary/60 pointer-events-none" />
 
-      <div data-cert-main className="absolute inset-x-0 top-0 bottom-[104px] z-10 flex flex-col items-center px-16 pt-7 pb-3 text-center">
+      <div data-cert-main className="absolute inset-x-0 top-0 bottom-[116px] z-10 flex flex-col items-center px-16 pt-7 pb-3 text-center">
         <p className="mb-2 text-xs font-bold uppercase tracking-[0.3em] text-primary">LearnAfrica</p>
         <h1 className="font-serif text-4xl font-bold uppercase tracking-[0.1em] text-slate-900">
           Certificate of Completion
@@ -122,7 +122,7 @@ export function CertificateDocument({ data, displayName, id = 'certificate-conte
       {/* Footer is a direct child of the fixed certificate canvas, not the
           auto-height content stack. This anchors it reliably in preview, PDF
           capture and print, independent of the height of the content above. */}
-      <div data-cert-footer className="absolute bottom-2 left-16 right-16 z-20 flex min-h-[88px] items-end justify-between gap-6 border-t border-slate-200 bg-white px-3 pt-1 text-left">
+      <div data-cert-footer className="absolute bottom-[18px] left-16 right-16 z-20 flex min-h-[94px] items-end justify-between gap-6 border-t border-slate-200 bg-white px-3 pt-2 text-left">
         <div className="min-w-0 max-w-[68%] font-mono text-3xs uppercase tracking-[0.2em] text-slate-600">
           <p className="font-bold text-slate-500">Certificate ID</p>
           <p className="mt-0.5 text-2xs font-semibold text-slate-900">{data.certificateId}</p>
@@ -135,10 +135,10 @@ export function CertificateDocument({ data, displayName, id = 'certificate-conte
               target="_blank"
               rel="noopener noreferrer"
               title="Open the verification page"
-              className="inline-flex flex-col items-center group"
+              className="inline-flex flex-col items-center gap-1 rounded-lg bg-white p-2 group"
             >
-              <QRCodeSVG value={verifyUrl(data.certificateId)} size={80} level="Q" marginSize={2} bgColor="#ffffff" fgColor="#0f4d34" />
-              <p className="mt-1 whitespace-nowrap text-[7px] font-bold uppercase tracking-[0.12em] text-slate-400 group-hover:text-primary">Scan or click to verify</p>
+              <QRCodeSVG value={verifyUrl(data.certificateId)} size={88} level="Q" marginSize={2} bgColor="#ffffff" fgColor="#0f4d34" />
+              <p className="whitespace-nowrap text-[9px] font-bold uppercase tracking-[0.1em] text-slate-600 group-hover:text-primary">Scan or click to verify</p>
             </a>
           )}
         </div>
