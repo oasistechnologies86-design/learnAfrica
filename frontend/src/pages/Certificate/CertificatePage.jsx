@@ -68,7 +68,7 @@ export function CertificateDocument({ data, displayName, id = 'certificate-conte
         </p>
 
         <p className="mt-5 text-base text-slate-700">This certifies that</p>
-        <h2 className={`my-3 block w-full max-w-full border-b-4 border-slate-900 px-6 pb-2 font-serif font-bold leading-tight text-slate-900 whitespace-normal break-words [overflow-wrap:anywhere] ${displayName.length > 34 ? 'text-2xl' : displayName.length > 23 ? 'text-3xl' : 'text-4xl'}`}>
+        <h2 className={`my-3 inline-block max-w-full border-b-4 border-slate-900 px-6 pb-2 font-serif font-bold leading-tight text-slate-900 whitespace-normal break-words [overflow-wrap:anywhere] ${displayName.length > 34 ? 'text-2xl' : displayName.length > 23 ? 'text-3xl' : 'text-4xl'}`}>
           {displayName}
         </h2>
         <p className="text-base text-slate-700">has successfully completed all course requirements for</p>
