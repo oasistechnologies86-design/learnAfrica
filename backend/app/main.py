@@ -6518,54 +6518,100 @@ def create_app() -> Flask:
         audit('delete_user_soft', 'user', uid, target['email'], {'role':target['role']})
         return jsonify({'message': 'Account moved to Deleted Accounts. Related learning and financial records were retained.'})
     
+    def _admin_deleted_account_filters(alias=''):
+        """Build parameterized filters shared by both permanent history views."""
+        prefix = (alias + '.') if alias else ''
+        q = (request.args.get('q') or '').strip().lower()[:120]
+        role = (request.args.get('role') or '').strip().lower()
+        reason = (request.args.get('reason') or '').strip().lower()
+        date_from = (request.args.get('date_from') or '').strip()
+        date_to = (request.args.get('date_to') or '').strip()
+        sort = (request.args.get('sort') or 'newest').strip().lower()
+        where = []
+        params = []
+        if q:
+            where.append(
+                f"(LOWER(COALESCE({prefix}name,'')) LIKE ? "
+                f"OR LOWER(COALESCE({prefix}deleted_email,{prefix}email,'')) LIKE ? "
+                f"OR LOWER(COALESCE({prefix}id,'')) LIKE ?)"
+            )
+            params.extend([f'%{q}%', f'%{q}%', f'%{q}%'])
+        if role in ('student','instructor','admin','superadmin'):
+            where.append(f"LOWER(COALESCE({prefix}role,''))=?")
+            params.append(role)
+        if reason in ('self_service', 'admin_action'):
+            where.append(f"{prefix}deletion_reason=?")
+            params.append(reason)
+        if date_from:
+            where.append(f"DATE({prefix}deleted_at)>=?")
+            params.append(date_from)
+        if date_to:
+            where.append(f"DATE({prefix}deleted_at)<=?")
+            params.append(date_to)
+        order = 'ASC' if sort == 'oldest' else 'DESC'
+        return (' AND '.join(where) if where else '1=1'), params, order
+
+    def _admin_deleted_account_page():
+        try:
+            page = max(1, int(request.args.get('page', 1)))
+        except (TypeError, ValueError):
+            page = 1
+        try:
+            per_page = min(50, max(1, int(request.args.get('per_page', 10))))
+        except (TypeError, ValueError):
+            per_page = 10
+        return page, per_page, (page - 1) * per_page
+
     @app.route('/api/admin/deleted-accounts', methods=['GET'])
     @admin_required
     def admin_deleted_accounts():
         db = get_db()
-        q = (request.args.get('q') or '').strip().lower()
-        role = (request.args.get('role') or '').strip().lower()
-        sql = """SELECT id,name,COALESCE(deleted_email,email) AS email,role,
-                        instructor_status,created_at,deleted_at,deleted_by,deletion_reason,
-                        re_registered_at
-                 FROM users
-                 WHERE deleted_at IS NOT NULL AND re_registered_to_user_id IS NULL"""
-        params = []
-        if q:
-            sql += " AND (LOWER(COALESCE(name,'')) LIKE ? OR LOWER(COALESCE(deleted_email,email,'')) LIKE ? OR LOWER(COALESCE(id,'')) LIKE ?)"
-            params.extend([f'%{q}%', f'%{q}%', f'%{q}%'])
-        if role in ('student','instructor','admin','superadmin'):
-            sql += " AND LOWER(COALESCE(role,''))=?"
-            params.append(role)
-        sql += " ORDER BY deleted_at DESC"
-        rows = db.execute(sql, tuple(params)).fetchall()
-        return jsonify({'accounts': safe_list(rows), 'count': len(rows)})
+        where, params, order = _admin_deleted_account_filters()
+        page, per_page, offset = _admin_deleted_account_page()
+        base = "deleted_at IS NOT NULL AND re_registered_to_user_id IS NULL AND " + where
+        total_row = db.execute("SELECT COUNT(*) AS total FROM users WHERE " + base, params).fetchone()
+        total = int((total_row['total'] if total_row else 0) or 0)
+        rows = db.execute(
+            """SELECT id,name,COALESCE(deleted_email,email) AS email,role,
+                      instructor_status,created_at,deleted_at,deleted_by,deletion_reason,
+                      re_registered_at
+               FROM users WHERE """ + base +
+            f" ORDER BY deleted_at {order} LIMIT ? OFFSET ?",
+            params + [per_page, offset]
+        ).fetchall()
+        return jsonify({
+            'accounts': safe_list(rows), 'count': total, 'page': page,
+            'per_page': per_page, 'total_pages': max(1, (total + per_page - 1) // per_page)
+        })
 
     @app.route('/api/admin/re-registered-accounts', methods=['GET'])
     @admin_required
     def admin_reregistered_accounts():
         db = get_db()
-        q = (request.args.get('q') or '').strip().lower()
-        role = (request.args.get('role') or '').strip().lower()
-        sql = """SELECT old.id,old.name,COALESCE(old.deleted_email,old.email) AS email,
-                        old.role,old.instructor_status,old.created_at,old.deleted_at,
-                        old.deleted_by,old.deletion_reason,old.re_registered_at,
-                        old.re_registered_to_user_id AS new_account_id,
-                        new_user.name AS new_account_name,
-                        new_user.email AS new_account_email,
-                        new_user.created_at AS new_account_created_at
-                 FROM users old
-                 LEFT JOIN users new_user ON new_user.id=old.re_registered_to_user_id
-                 WHERE old.deleted_at IS NOT NULL AND old.re_registered_to_user_id IS NOT NULL"""
-        params = []
-        if q:
-            sql += " AND (LOWER(COALESCE(old.name,'')) LIKE ? OR LOWER(COALESCE(old.deleted_email,old.email,'')) LIKE ? OR LOWER(COALESCE(old.id,'')) LIKE ? OR LOWER(COALESCE(old.re_registered_to_user_id,'')) LIKE ?)"
-            params.extend([f'%{q}%', f'%{q}%', f'%{q}%', f'%{q}%'])
-        if role in ('student','instructor','admin','superadmin'):
-            sql += " AND LOWER(COALESCE(old.role,''))=?"
-            params.append(role)
-        sql += " ORDER BY old.re_registered_at DESC,old.deleted_at DESC"
-        rows = db.execute(sql, tuple(params)).fetchall()
-        return jsonify({'accounts': safe_list(rows), 'count': len(rows)})
+        where, params, order = _admin_deleted_account_filters('old')
+        page, per_page, offset = _admin_deleted_account_page()
+        base = "old.deleted_at IS NOT NULL AND old.re_registered_to_user_id IS NOT NULL AND " + where
+        from_sql = (
+            " FROM users old LEFT JOIN users new_user "
+            "ON new_user.id=old.re_registered_to_user_id WHERE " + base
+        )
+        total_row = db.execute("SELECT COUNT(*) AS total" + from_sql, params).fetchone()
+        total = int((total_row['total'] if total_row else 0) or 0)
+        rows = db.execute(
+            """SELECT old.id,old.name,COALESCE(old.deleted_email,old.email) AS email,
+                      old.role,old.instructor_status,old.created_at,old.deleted_at,
+                      old.deleted_by,old.deletion_reason,old.re_registered_at,
+                      old.re_registered_to_user_id AS new_account_id,
+                      new_user.name AS new_account_name,
+                      COALESCE(new_user.deleted_email,new_user.email) AS new_account_email,
+                      new_user.created_at AS new_account_created_at""" + from_sql +
+            f" ORDER BY old.deleted_at {order} LIMIT ? OFFSET ?",
+            params + [per_page, offset]
+        ).fetchall()
+        return jsonify({
+            'accounts': safe_list(rows), 'count': total, 'page': page,
+            'per_page': per_page, 'total_pages': max(1, (total + per_page - 1) // per_page)
+        })
 
     @app.route('/api/admin/deleted-accounts/<uid>/history', methods=['GET'])
     @admin_required
