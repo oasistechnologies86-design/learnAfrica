@@ -6663,9 +6663,11 @@ def create_app() -> Flask:
     def admin_update_user(uid):
         db = get_db()
         d = request.get_json() or {}
-        target = db.execute('SELECT role, email FROM users WHERE id=?', (uid,)).fetchone()
+        target = db.execute('SELECT role, email, deleted_at FROM users WHERE id=?', (uid,)).fetchone()
         if not target:
             return jsonify({'error': 'User not found'}), 404
+        if target['deleted_at']:
+            return jsonify({'error': 'Deleted account records are read-only. Historical identity and linked records are preserved.'}), 409
         # A plain admin must not be able to edit a superadmin's account. Without
         # this, an admin could change the superadmin's email and then reset the
         # password via "forgot password" — a full takeover.
