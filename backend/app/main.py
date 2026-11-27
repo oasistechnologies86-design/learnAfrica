@@ -6583,10 +6583,12 @@ def create_app() -> Flask:
         total_row = db.execute("SELECT COUNT(*) AS total FROM users WHERE " + base, params).fetchone()
         total = int((total_row['total'] if total_row else 0) or 0)
         rows = db.execute(
-            """SELECT id,name,COALESCE(deleted_email,email) AS email,role,
-                      instructor_status,created_at,deleted_at,deleted_by,deletion_reason,
-                      re_registered_at
-               FROM users WHERE """ + base +
+            """SELECT u.id,u.name,COALESCE(u.deleted_email,u.email) AS email,u.role,
+                      u.instructor_status,u.created_at,u.deleted_at,u.deleted_by,
+                      COALESCE(deleted_actor.name,u.deleted_by) AS deleted_by_name,
+                      u.deletion_reason,u.re_registered_at
+               FROM users u LEFT JOIN users deleted_actor ON deleted_actor.id=u.deleted_by
+               WHERE """ + base.replace('deleted_at', 'u.deleted_at').replace('re_registered_to_user_id', 'u.re_registered_to_user_id').replace('deletion_reason', 'u.deletion_reason') +
             f" ORDER BY deleted_at {order}, id ASC LIMIT ? OFFSET ?",
             params + [per_page, offset]
         ).fetchall()
@@ -6607,14 +6609,16 @@ def create_app() -> Flask:
         base = "old.deleted_at IS NOT NULL AND old.re_registered_to_user_id IS NOT NULL AND " + where
         from_sql = (
             " FROM users old LEFT JOIN users new_user "
-            "ON new_user.id=old.re_registered_to_user_id WHERE " + base
+            "ON new_user.id=old.re_registered_to_user_id "
+            "LEFT JOIN users deleted_actor ON deleted_actor.id=old.deleted_by WHERE " + base
         )
         total_row = db.execute("SELECT COUNT(*) AS total" + from_sql, params).fetchone()
         total = int((total_row['total'] if total_row else 0) or 0)
         rows = db.execute(
             """SELECT old.id,old.name,COALESCE(old.deleted_email,old.email) AS email,
                       old.role,old.instructor_status,old.created_at,old.deleted_at,
-                      old.deleted_by,old.deletion_reason,old.re_registered_at,
+                      old.deleted_by,COALESCE(deleted_actor.name,old.deleted_by) AS deleted_by_name,
+                      old.deletion_reason,old.re_registered_at,
                       old.re_registered_to_user_id AS new_account_id,
                       new_user.name AS new_account_name,
                       COALESCE(new_user.deleted_email,new_user.email) AS new_account_email,
