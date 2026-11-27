@@ -6526,6 +6526,14 @@ def create_app() -> Flask:
         reason = (request.args.get('reason') or '').strip().lower()
         date_from = (request.args.get('date_from') or '').strip()
         date_to = (request.args.get('date_to') or '').strip()
+        for date_value in (date_from, date_to):
+            if date_value:
+                try:
+                    datetime.strptime(date_value, '%Y-%m-%d')
+                except ValueError:
+                    raise ValueError('Date filters must use YYYY-MM-DD format.')
+        if date_from and date_to and date_from > date_to:
+            raise ValueError('The start date cannot be later than the end date.')
         sort = (request.args.get('sort') or 'newest').strip().lower()
         where = []
         params = []
@@ -6566,7 +6574,10 @@ def create_app() -> Flask:
     @admin_required
     def admin_deleted_accounts():
         db = get_db()
-        where, params, order = _admin_deleted_account_filters()
+        try:
+            where, params, order = _admin_deleted_account_filters()
+        except ValueError as error:
+            return jsonify({'error': str(error)}), 400
         page, per_page, offset = _admin_deleted_account_page()
         base = "deleted_at IS NOT NULL AND re_registered_to_user_id IS NULL AND " + where
         total_row = db.execute("SELECT COUNT(*) AS total FROM users WHERE " + base, params).fetchone()
@@ -6576,7 +6587,7 @@ def create_app() -> Flask:
                       instructor_status,created_at,deleted_at,deleted_by,deletion_reason,
                       re_registered_at
                FROM users WHERE """ + base +
-            f" ORDER BY deleted_at {order} LIMIT ? OFFSET ?",
+            f" ORDER BY deleted_at {order}, id ASC LIMIT ? OFFSET ?",
             params + [per_page, offset]
         ).fetchall()
         return jsonify({
@@ -6588,7 +6599,10 @@ def create_app() -> Flask:
     @admin_required
     def admin_reregistered_accounts():
         db = get_db()
-        where, params, order = _admin_deleted_account_filters('old')
+        try:
+            where, params, order = _admin_deleted_account_filters('old')
+        except ValueError as error:
+            return jsonify({'error': str(error)}), 400
         page, per_page, offset = _admin_deleted_account_page()
         base = "old.deleted_at IS NOT NULL AND old.re_registered_to_user_id IS NOT NULL AND " + where
         from_sql = (
@@ -6605,7 +6619,7 @@ def create_app() -> Flask:
                       new_user.name AS new_account_name,
                       COALESCE(new_user.deleted_email,new_user.email) AS new_account_email,
                       new_user.created_at AS new_account_created_at""" + from_sql +
-            f" ORDER BY old.deleted_at {order} LIMIT ? OFFSET ?",
+            f" ORDER BY old.deleted_at {order}, old.id ASC LIMIT ? OFFSET ?",
             params + [per_page, offset]
         ).fetchall()
         return jsonify({
