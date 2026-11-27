@@ -156,8 +156,8 @@ try {
         clippedBy: Math.round(el.scrollHeight - el.clientHeight),
         overflow: getComputedStyle(el).overflow,
         hasVerifyText: name === 'badge'
-          ? /Credential ID:\\s*LA-BADGE-/.test(el.textContent) && /Scan to verify/.test(el.textContent)
-          : /Verify at/.test(el.textContent) && /ID:?\\s*LA-/.test(el.textContent),
+          ? /Credential ID:\s*LA-BADGE-/.test(el.textContent) && /Scan to verify/.test(el.textContent)
+          : /Verify at/.test(el.textContent) && /ID:?\s*LA-/.test(el.textContent),
         // Signatory checks (certificate only): the authorised signatory must be
         // present and the course instructor must NOT appear anywhere.
         hasSignatory: name === 'certificate'
