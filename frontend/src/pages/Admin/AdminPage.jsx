@@ -125,6 +125,13 @@ export default function AdminPage() {
   const [deletedAccounts, setDeletedAccounts] = useState([]);
   const [deletedSearch, setDeletedSearch] = useState('');
   const [deletedRole, setDeletedRole] = useState('all');
+  const [deletedView, setDeletedView] = useState('deleted');
+  const [deletedReason, setDeletedReason] = useState('all');
+  const [deletedDateFrom, setDeletedDateFrom] = useState('');
+  const [deletedDateTo, setDeletedDateTo] = useState('');
+  const [deletedSort, setDeletedSort] = useState('newest');
+  const [deletedPage, setDeletedPage] = useState(1);
+  const [deletedPagination, setDeletedPagination] = useState({ page: 1, per_page: 10, count: 0, total_pages: 1 });
   const [deletedHistory, setDeletedHistory] = useState({});
   const [users, setUsers] = useState([]);
   const [students, setStudents] = useState([]);
@@ -192,7 +199,7 @@ export default function AdminPage() {
       else if (section === 'Instructors') { const d = await API('/api/admin/instructors'); setInstructors(d.instructors); }
       else if (section === 'Courses')     { const d = await API('/api/admin/courses'); setCourses(d.courses); }
       else if (section === 'Applications'){ const d = await API(`/api/admin/instructor-applications?status=${appFilter}`); setApplications(d.applications); }
-      else if (section === 'Deleted Accounts'){ const params = new URLSearchParams(); if (deletedSearch.trim()) params.set('q', deletedSearch.trim()); if (deletedRole !== 'all') params.set('role', deletedRole); const d = await API(`/api/admin/deleted-accounts?${params.toString()}`); setDeletedAccounts(d.accounts || []); }
+      else if (section === 'Deleted Accounts'){ const params = new URLSearchParams(); if (deletedSearch.trim()) params.set('q', deletedSearch.trim()); if (deletedRole !== 'all') params.set('role', deletedRole); if (deletedReason !== 'all') params.set('reason', deletedReason); if (deletedDateFrom) params.set('date_from', deletedDateFrom); if (deletedDateTo) params.set('date_to', deletedDateTo); params.set('sort', deletedSort); params.set('page', String(deletedPage)); params.set('per_page', '10'); const endpoint = deletedView === 'reregistered' ? '/api/admin/re-registered-accounts' : '/api/admin/deleted-accounts'; const d = await API(`${endpoint}?${params.toString()}`); setDeletedAccounts(d.accounts || []); setDeletedPagination({ page: d.page || 1, per_page: d.per_page || 10, count: d.count || 0, total_pages: d.total_pages || 1 }); }
       else if (section === 'Earnings') {
         const [earnData, splitData] = await Promise.all([
           API('/api/admin/earnings'),
@@ -227,7 +234,7 @@ export default function AdminPage() {
       }
     } catch (e) { showStatus('error', e.message); }
     setLoading(false);
-  }, [appFilter, showArchivedBroadcasts, deletedSearch, deletedRole]);
+  }, [appFilter, showArchivedBroadcasts, deletedSearch, deletedRole, deletedView, deletedReason, deletedDateFrom, deletedDateTo, deletedSort, deletedPage]);
 
   useEffect(() => { load(tab); }, [tab]);
   useEffect(() => { if (tab === 'Broadcast') load('Broadcast'); }, [showArchivedBroadcasts]);
@@ -239,7 +246,7 @@ export default function AdminPage() {
   }, []);
   useEffect(() => { loadTabCounts(); }, [loadTabCounts, tab]);
   useEffect(() => { if (tab === 'Applications') load('Applications'); }, [appFilter]);
-  useEffect(() => { if (tab === 'Deleted Accounts') load('Deleted Accounts'); }, [deletedSearch, deletedRole, tab, load]);
+  useEffect(() => { if (tab === 'Deleted Accounts') load('Deleted Accounts'); }, [deletedSearch, deletedRole, deletedView, deletedReason, deletedDateFrom, deletedDateTo, deletedSort, deletedPage, tab, load]);
   useEffect(() => { if (tab === 'Guide') load('Guide'); }, [tab === 'Guide']);
 
   const filteredEarningsInstructors = (earnings?.instructors || []).filter(inst => {
@@ -314,7 +321,7 @@ export default function AdminPage() {
 
   const deleteUser = async (uid, role) => {
     if (role === 'superadmin') { showStatus('error', 'Cannot delete the super admin account.'); return; }
-    if (!(await window.LearnAfricaDialog.confirm('Move this account to Deleted Accounts? Account access will be disabled. Application, learning, payment, receipt, payout and audit history will be retained. You can clear the list entry later.'))) return;
+    if (!(await window.LearnAfricaDialog.confirm('Move this account to Deleted Accounts? Account access will be disabled. The original email, application, learning, payment, receipt, payout and audit history will be retained. The email can be used for a new registration later.'))) return;
     setActionLoading(uid + 'delete');
     try {
       await API(`/api/admin/users/${uid}`, { method: 'DELETE' });
@@ -325,10 +332,6 @@ export default function AdminPage() {
   };
 
   const loadDeletedHistory = async (uid) => { try { const d = await API(`/api/admin/deleted-accounts/${uid}/history`); setDeletedHistory(prev => ({ ...prev, [uid]: d.events || [] })); } catch (e) { showStatus('error', e.message); } };
-
-  const clearDeletedAccount = async (uid) => { if (!(await window.LearnAfricaDialog.confirm('Clear this account from the Deleted Accounts list? Its application, learning, receipt, payout and audit records will be retained.'))) return; try { await API(`/api/admin/deleted-accounts/${uid}/clear`, { method: 'POST' }); showStatus('success', 'Account cleared from the list; protected records retained.'); await load('Deleted Accounts'); } catch (e) { showStatus('error', e.message); } };
-
-  const clearAllDeletedAccounts = async () => { if (!deletedAccounts.length) return; if (!(await window.LearnAfricaDialog.confirm(`Clear all ${deletedAccounts.length} account(s) currently matching these filters? Protected records will be retained.`))) return; try { const params = new URLSearchParams(); if (deletedSearch.trim()) params.set('q', deletedSearch.trim()); if (deletedRole !== 'all') params.set('role', deletedRole); const d = await API(`/api/admin/deleted-accounts/clear-all?${params.toString()}`, { method: 'POST' }); showStatus('success', d.message); await load('Deleted Accounts'); } catch (e) { showStatus('error', e.message); } };
 
   const setCourseStatus = async (cid, status) => {
     const course = courses.find(item => item.id === cid);
@@ -1561,21 +1564,68 @@ export default function AdminPage() {
 
           {tab === 'Deleted Accounts' && (
             <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-                <div><h2 className="text-lg font-bold">Deleted accounts</h2><p className="text-sm text-muted-foreground">Review account deletion history. Clearing only hides an entry here; protected learning and financial records remain.</p></div>
-                <Button size="sm" variant="destructive" disabled={!deletedAccounts.length} onClick={clearAllDeletedAccounts}>Clear all ({deletedAccounts.length})</Button>
+              <div>
+                <h2 className="text-lg font-bold">{deletedView === 'reregistered' ? 'Re-registered history' : 'Deleted accounts'}</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {deletedView === 'reregistered'
+                    ? 'Previous deleted accounts that later registered again. Both account histories remain separate and linked for reference.'
+                    : 'A permanent administrative history of deleted accounts. Records are retained and cannot be cleared from this section.'}
+                </p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"/><Input className="pl-9" placeholder="Search name or email…" value={deletedSearch} onChange={e => setDeletedSearch(e.target.value)} /></div>
-                <select className="h-10 rounded-md border border-border bg-background px-3 text-sm" value={deletedRole} onChange={e => setDeletedRole(e.target.value)}><option value="all">All roles</option><option value="student">Students</option><option value="instructor">Instructors</option><option value="admin">Admins</option></select>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant={deletedView === 'deleted' ? 'default' : 'outline'} onClick={() => { setDeletedPage(1); setDeletedView('deleted'); }}>Deleted Accounts</Button>
+                <Button size="sm" variant={deletedView === 'reregistered' ? 'default' : 'outline'} onClick={() => { setDeletedPage(1); setDeletedView('reregistered'); }}>Re-registered History</Button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
+                <div className="relative sm:col-span-2 xl:col-span-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"/><Input className="pl-9" placeholder="Search name, email or account ID…" value={deletedSearch} onChange={e => { setDeletedPage(1); setDeletedSearch(e.target.value); }} /></div>
+                <select aria-label="Filter by role" className="h-10 rounded-md border border-border bg-background px-3 text-sm" value={deletedRole} onChange={e => { setDeletedPage(1); setDeletedRole(e.target.value); }}><option value="all">All roles</option><option value="student">Students</option><option value="instructor">Instructors</option><option value="admin">Admins</option></select>
+                <select aria-label="Filter by deletion reason" className="h-10 rounded-md border border-border bg-background px-3 text-sm" value={deletedReason} onChange={e => { setDeletedPage(1); setDeletedReason(e.target.value); }}><option value="all">All deletion reasons</option><option value="self_service">User requested deletion</option><option value="admin_action">Admin initiated deletion</option></select>
+                <label className="flex flex-col gap-1 text-xs text-muted-foreground">Deleted from<Input aria-label="Deleted from date" type="date" value={deletedDateFrom} onChange={e => { setDeletedPage(1); setDeletedDateFrom(e.target.value); }} /></label>
+                <label className="flex flex-col gap-1 text-xs text-muted-foreground">Deleted to<Input aria-label="Deleted to date" type="date" value={deletedDateTo} onChange={e => { setDeletedPage(1); setDeletedDateTo(e.target.value); }} /></label>
+                <select aria-label="Sort account history" className="h-10 rounded-md border border-border bg-background px-3 text-sm" value={deletedSort} onChange={e => { setDeletedPage(1); setDeletedSort(e.target.value); }}><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select>
+                <Button size="sm" variant="outline" onClick={() => { setDeletedSearch(''); setDeletedRole('all'); setDeletedReason('all'); setDeletedDateFrom(''); setDeletedDateTo(''); setDeletedSort('newest'); setDeletedPage(1); }}><RefreshCw className="h-4 w-4 mr-1"/>Reset filters</Button>
                 <Button size="sm" variant="outline" onClick={() => load('Deleted Accounts')}><RefreshCw className="h-4 w-4 mr-1"/>Refresh</Button>
               </div>
-              {!deletedAccounts.length ? <div className="rounded-xl border border-border p-10 text-center text-sm text-muted-foreground">No deleted accounts to display.</div> : deletedAccounts.map(account => (
-                <Card key={account.id} className="p-4 sm:p-5"><div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3"><div className="min-w-0"><p className="font-semibold">{account.name || 'Name unavailable'}</p><p className="text-sm text-muted-foreground break-all">{account.email}</p><div className="mt-2 flex flex-wrap gap-2 text-xs"><span className="rounded-full bg-muted px-2 py-1 capitalize">{account.role}</span><span className="rounded-full bg-destructive/10 text-destructive px-2 py-1">Deleted {account.deleted_at ? new Date(account.deleted_at).toLocaleString() : 'date unavailable'}</span>{account.instructor_status && <span className="rounded-full bg-muted px-2 py-1">Instructor status: {account.instructor_status}</span>}</div><p className="mt-2 text-xs text-muted-foreground">Reason: {account.deletion_reason === 'self_service' ? 'User requested deletion' : 'Admin initiated deletion'}</p>
-                  <button className="mt-3 text-xs font-semibold text-primary hover:underline" onClick={() => deletedHistory[account.id] ? setDeletedHistory(prev => ({...prev,[account.id]:null})) : loadDeletedHistory(account.id)}>{deletedHistory[account.id] ? 'Hide history' : 'View deletion history'}</button>
-                  {deletedHistory[account.id] && <div className="mt-2 rounded-lg bg-muted/40 p-3 space-y-1">{deletedHistory[account.id].map(event => <p key={event.id} className="text-xs text-muted-foreground">{String(event.event_type || '').replaceAll('_',' ')} · {event.created_at ? new Date(event.created_at).toLocaleString() : 'Date unavailable'}</p>)}</div>}
-                </div><Button size="sm" variant="outline" className="text-destructive border-destructive/30" onClick={() => clearDeletedAccount(account.id)}><Trash2 className="h-4 w-4 mr-1"/>Clear from list</Button></div></Card>
+              <p className="text-xs text-muted-foreground">{deletedPagination.count} record(s) · Page {deletedPagination.page} of {deletedPagination.total_pages}</p>
+              {!deletedAccounts.length ? <div className="rounded-xl border border-border p-10 text-center text-sm text-muted-foreground">{deletedView === 'reregistered' ? 'No re-registered accounts to display.' : 'No deleted accounts to display.'}</div> : deletedAccounts.map(account => (
+                <Card key={account.id} className="p-4 sm:p-5">
+                  <div className="min-w-0 space-y-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="font-semibold">{account.name || 'Name unavailable'}</p>
+                      <span className={cn('rounded-full px-2 py-1 text-xs font-semibold', deletedView === 'reregistered' ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive')}>
+                        {deletedView === 'reregistered' ? 'Re-registered' : 'Deleted'}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground break-all">{account.email || 'Email unavailable'}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                      <p>Previous account ID: <span className="font-medium text-foreground break-all">{account.id}</span></p>
+                      <p>Role: <span className="font-medium text-foreground capitalize">{account.role}</span></p>
+                      <p>Originally registered: <span className="font-medium text-foreground">{account.created_at ? new Date(account.created_at).toLocaleString() : 'Date unavailable'}</span></p>
+                      <p>Deleted: <span className="font-medium text-foreground">{account.deleted_at ? new Date(account.deleted_at).toLocaleString() : 'Date unavailable'}</span></p>
+                      <p>Deleted by: <span className="font-medium text-foreground break-all">{account.deleted_by_name || account.deleted_by || 'Not recorded'}</span></p>
+                      <p>Reason: <span className="font-medium text-foreground">{account.deletion_reason === 'self_service' ? 'User requested deletion' : 'Admin initiated deletion'}</span></p>
+                      {account.instructor_status && <p>Instructor status: <span className="font-medium text-foreground">{account.instructor_status}</span></p>}
+                    </div>
+                    {deletedView === 'reregistered' && (
+                      <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-1">
+                        <p className="text-xs font-semibold text-primary">New account</p>
+                        <p className="text-sm font-medium">{account.new_account_name || 'Name unavailable'}</p>
+                        <p className="text-xs text-muted-foreground break-all">{account.new_account_email || account.email}</p>
+                        <p className="text-xs text-muted-foreground break-all">New account ID: {account.new_account_id}</p>
+                        <p className="text-xs text-muted-foreground">Registered again: {account.re_registered_at ? new Date(account.re_registered_at).toLocaleString() : 'Date unavailable'}</p>
+                        <p className="text-xs text-muted-foreground">New account created: {account.new_account_created_at ? new Date(account.new_account_created_at).toLocaleString() : 'Date unavailable'}</p>
+                      </div>
+                    )}
+                    <button className="pt-1 text-xs font-semibold text-primary hover:underline" onClick={() => deletedHistory[account.id] ? setDeletedHistory(prev => ({...prev,[account.id]:null})) : loadDeletedHistory(account.id)}>{deletedHistory[account.id] ? 'Hide history' : 'View account history'}</button>
+                    {deletedHistory[account.id] && <div className="rounded-lg bg-muted/40 p-3 space-y-1">{deletedHistory[account.id].map(event => <p key={event.id} className="text-xs text-muted-foreground">{String(event.event_type || '').replaceAll('_',' ')} · {event.created_at ? new Date(event.created_at).toLocaleString() : 'Date unavailable'}</p>)}</div>}
+                  </div>
+                </Card>
               ))}
+              <div className="flex items-center justify-between gap-3 pt-2">
+                <Button size="sm" variant="outline" disabled={deletedPagination.page <= 1} onClick={() => setDeletedPage(page => Math.max(1, page - 1))}>Previous</Button>
+                <span className="text-xs text-muted-foreground">Showing page {deletedPagination.page} of {deletedPagination.total_pages}</span>
+                <Button size="sm" variant="outline" disabled={deletedPagination.page >= deletedPagination.total_pages} onClick={() => setDeletedPage(page => Math.min(deletedPagination.total_pages, page + 1))}>Next</Button>
+              </div>
             </div>
           )}
 

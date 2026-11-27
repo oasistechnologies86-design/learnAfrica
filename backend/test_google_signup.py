@@ -61,7 +61,7 @@ def google(payload):
 def register(email, name='Test Learner'):
     return c.post('/api/auth/signup', json={
         'name': name, 'email': email, 'password': 'StrongPass123!',
-        'role': 'student', 'phone': '+233244123456',
+        'role': 'student', 'phone': '+233244123456', 'accept_terms': True,
     })
 
 

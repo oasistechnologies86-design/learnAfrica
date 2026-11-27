@@ -302,7 +302,7 @@ check('international momo is rejected (bank transfer only)', r.status_code == 40
 
 # ── Students are unaffected by the instructor gate ───────────────────────────
 r = c.post('/api/auth/signup', json={'name': 'Student', 'email': 'stu@example.com',
-                                     'password': 'Pass12345!', 'role': 'student', 'phone': '+233244123456'})
+                                     'password': 'Pass12345!', 'role': 'student', 'phone': '+233244123456', 'accept_terms': True})
 check('student signup unaffected', r.status_code in (200, 201), r.get_json())
 st_tok = login('stu@example.com')
 SH = {'Authorization': f'Bearer {st_tok}'}
