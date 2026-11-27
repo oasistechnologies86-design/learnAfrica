@@ -926,6 +926,11 @@ MIGRATIONS = [
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS deletion_reason TEXT",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS deletion_cleared_at TIMESTAMP",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS deletion_cleared_by TEXT",
+    # Keep the original email on a deleted account while freeing the UNIQUE
+    # users.email value for a later, independent registration.
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_email TEXT",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS re_registered_to_user_id TEXT",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS re_registered_at TIMESTAMP",
     # Password-reset delivery diagnostics are additive for existing installations.
     "ALTER TABLE password_reset_requests ADD COLUMN IF NOT EXISTS delivery_error TEXT",
     "ALTER TABLE password_reset_requests ADD COLUMN IF NOT EXISTS handling_method TEXT",
@@ -1105,6 +1110,21 @@ def init_db(app):
                 conn.rollback()
                 print(f'⚠ Migration skipped ({type(e).__name__}): {m[:80]} — {str(e)[:120]}')
 
+        # One-time, non-destructive compatibility migration for accounts deleted
+        # before email reuse was supported. Preserve the original address in
+        # deleted_email and replace only the UNIQUE login column with a reserved
+        # tombstone. Related records remain linked by the unchanged user id.
+        try:
+            cur.execute(
+                "UPDATE users SET deleted_email=email, "
+                "email='deleted+' || id || '@deleted.learnafrica.invalid' "
+                "WHERE deleted_at IS NOT NULL AND deleted_email IS NULL"
+            )
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            print(f'⚠ Deleted-account email migration skipped: {type(e).__name__}: {str(e)[:120]}')
+
         # Seed default config
         for kv in [('instructor_share', '50'), ('admin_share', '50')]:
             try:
@@ -1156,6 +1176,17 @@ def init_db(app):
                 c.execute(m_clean)
             except Exception:
                 pass
+
+        # One-time, non-destructive compatibility migration for older soft-deleted
+        # accounts. SQLite supports the same concatenation used by Postgres.
+        try:
+            c.execute(
+                "UPDATE users SET deleted_email=email, "
+                "email='deleted+' || id || '@deleted.learnafrica.invalid' "
+                "WHERE deleted_at IS NOT NULL AND deleted_email IS NULL"
+            )
+        except Exception as e:
+            print(f'⚠ Deleted-account email migration skipped: {type(e).__name__}: {str(e)[:120]}')
 
         c.execute("INSERT OR IGNORE INTO platform_config (key,value) VALUES ('instructor_share','50')")
         c.execute("INSERT OR IGNORE INTO platform_config (key,value) VALUES ('admin_share','50')")
