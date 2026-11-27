@@ -1580,9 +1580,10 @@ export default function AdminPage() {
                 <div className="relative sm:col-span-2 xl:col-span-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"/><Input className="pl-9" placeholder="Search name, email or account ID…" value={deletedSearch} onChange={e => { setDeletedPage(1); setDeletedSearch(e.target.value); }} /></div>
                 <select aria-label="Filter by role" className="h-10 rounded-md border border-border bg-background px-3 text-sm" value={deletedRole} onChange={e => { setDeletedPage(1); setDeletedRole(e.target.value); }}><option value="all">All roles</option><option value="student">Students</option><option value="instructor">Instructors</option><option value="admin">Admins</option></select>
                 <select aria-label="Filter by deletion reason" className="h-10 rounded-md border border-border bg-background px-3 text-sm" value={deletedReason} onChange={e => { setDeletedPage(1); setDeletedReason(e.target.value); }}><option value="all">All deletion reasons</option><option value="self_service">User requested deletion</option><option value="admin_action">Admin initiated deletion</option></select>
-                <Input aria-label="Deleted from date" type="date" value={deletedDateFrom} onChange={e => { setDeletedPage(1); setDeletedDateFrom(e.target.value); }} />
-                <Input aria-label="Deleted to date" type="date" value={deletedDateTo} onChange={e => { setDeletedPage(1); setDeletedDateTo(e.target.value); }} />
+                <label className="flex flex-col gap-1 text-xs text-muted-foreground">Deleted from<Input aria-label="Deleted from date" type="date" value={deletedDateFrom} onChange={e => { setDeletedPage(1); setDeletedDateFrom(e.target.value); }} /></label>
+                <label className="flex flex-col gap-1 text-xs text-muted-foreground">Deleted to<Input aria-label="Deleted to date" type="date" value={deletedDateTo} onChange={e => { setDeletedPage(1); setDeletedDateTo(e.target.value); }} /></label>
                 <select aria-label="Sort account history" className="h-10 rounded-md border border-border bg-background px-3 text-sm" value={deletedSort} onChange={e => { setDeletedPage(1); setDeletedSort(e.target.value); }}><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select>
+                <Button size="sm" variant="outline" onClick={() => { setDeletedSearch(''); setDeletedRole('all'); setDeletedReason('all'); setDeletedDateFrom(''); setDeletedDateTo(''); setDeletedSort('newest'); setDeletedPage(1); }}><RefreshCw className="h-4 w-4 mr-1"/>Reset filters</Button>
                 <Button size="sm" variant="outline" onClick={() => load('Deleted Accounts')}><RefreshCw className="h-4 w-4 mr-1"/>Refresh</Button>
               </div>
               <p className="text-xs text-muted-foreground">{deletedPagination.count} record(s) · Page {deletedPagination.page} of {deletedPagination.total_pages}</p>
@@ -1601,7 +1602,7 @@ export default function AdminPage() {
                       <p>Role: <span className="font-medium text-foreground capitalize">{account.role}</span></p>
                       <p>Originally registered: <span className="font-medium text-foreground">{account.created_at ? new Date(account.created_at).toLocaleString() : 'Date unavailable'}</span></p>
                       <p>Deleted: <span className="font-medium text-foreground">{account.deleted_at ? new Date(account.deleted_at).toLocaleString() : 'Date unavailable'}</span></p>
-                      <p>Deleted by: <span className="font-medium text-foreground break-all">{account.deleted_by || 'Not recorded'}</span></p>
+                      <p>Deleted by: <span className="font-medium text-foreground break-all">{account.deleted_by_name || account.deleted_by || 'Not recorded'}</span></p>
                       <p>Reason: <span className="font-medium text-foreground">{account.deletion_reason === 'self_service' ? 'User requested deletion' : 'Admin initiated deletion'}</span></p>
                       {account.instructor_status && <p>Instructor status: <span className="font-medium text-foreground">{account.instructor_status}</span></p>}
                     </div>
