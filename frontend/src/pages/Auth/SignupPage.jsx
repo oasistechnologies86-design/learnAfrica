@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Eye, EyeOff, Mail, Lock, User, GraduationCap, X, Check, BookOpen, ArrowRight, IdCard, ShieldCheck, Loader2, CreditCard } from 'lucide-react'
 import { AuthCard } from '@/components/auth/AuthCard'
@@ -695,16 +696,16 @@ export function SignupPage() {
       </p>
 
       {/* Terms, Privacy and Cookie policy dialog */}
-      {modal && (
+      {modal && createPortal((
         <div
-          className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/65 p-2 backdrop-blur-sm sm:p-4"
+          className="fixed inset-0 z-[10000] flex h-[100dvh] w-screen items-center justify-center overflow-y-auto bg-slate-950/65 p-2 backdrop-blur-sm sm:p-4"
           onClick={() => setModal(null)}
         >
           <section
             role="dialog"
             aria-modal="true"
             aria-labelledby="signup-policy-title"
-            className="flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-2xl"
+            className="flex max-h-[calc(100dvh-1rem)] min-w-0 w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-2xl sm:max-h-[calc(100dvh-2rem)]"
             onClick={e => e.stopPropagation()}
           >
             <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-6">
@@ -719,7 +720,7 @@ export function SignupPage() {
               </button>
             </header>
 
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 text-[13px] leading-6 text-muted-foreground sm:px-6 sm:py-5 sm:text-sm">
+            <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain break-words px-4 py-4 text-[13px] leading-6 text-muted-foreground [overflow-wrap:anywhere] sm:px-6 sm:py-5 sm:text-sm">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-primary/15 bg-primary/[0.05] px-3 py-2">
                 <span className="text-[11px] font-semibold text-primary">Effective 27 November 2026 · Version 2026-11</span>
                 <span className="text-[10px] text-muted-foreground">Please read before accepting</span>
@@ -796,7 +797,7 @@ export function SignupPage() {
             </footer>
           </section>
         </div>
-      )}
+      ), document.body)}
     </div>
   )
 
