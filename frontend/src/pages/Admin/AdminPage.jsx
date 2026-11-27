@@ -126,6 +126,12 @@ export default function AdminPage() {
   const [deletedSearch, setDeletedSearch] = useState('');
   const [deletedRole, setDeletedRole] = useState('all');
   const [deletedView, setDeletedView] = useState('deleted');
+  const [deletedReason, setDeletedReason] = useState('all');
+  const [deletedDateFrom, setDeletedDateFrom] = useState('');
+  const [deletedDateTo, setDeletedDateTo] = useState('');
+  const [deletedSort, setDeletedSort] = useState('newest');
+  const [deletedPage, setDeletedPage] = useState(1);
+  const [deletedPagination, setDeletedPagination] = useState({ page: 1, per_page: 10, count: 0, total_pages: 1 });
   const [deletedHistory, setDeletedHistory] = useState({});
   const [users, setUsers] = useState([]);
   const [students, setStudents] = useState([]);
@@ -193,7 +199,7 @@ export default function AdminPage() {
       else if (section === 'Instructors') { const d = await API('/api/admin/instructors'); setInstructors(d.instructors); }
       else if (section === 'Courses')     { const d = await API('/api/admin/courses'); setCourses(d.courses); }
       else if (section === 'Applications'){ const d = await API(`/api/admin/instructor-applications?status=${appFilter}`); setApplications(d.applications); }
-      else if (section === 'Deleted Accounts'){ const params = new URLSearchParams(); if (deletedSearch.trim()) params.set('q', deletedSearch.trim()); if (deletedRole !== 'all') params.set('role', deletedRole); const endpoint = deletedView === 'reregistered' ? '/api/admin/re-registered-accounts' : '/api/admin/deleted-accounts'; const d = await API(`${endpoint}?${params.toString()}`); setDeletedAccounts(d.accounts || []); }
+      else if (section === 'Deleted Accounts'){ const params = new URLSearchParams(); if (deletedSearch.trim()) params.set('q', deletedSearch.trim()); if (deletedRole !== 'all') params.set('role', deletedRole); if (deletedReason !== 'all') params.set('reason', deletedReason); if (deletedDateFrom) params.set('date_from', deletedDateFrom); if (deletedDateTo) params.set('date_to', deletedDateTo); params.set('sort', deletedSort); params.set('page', String(deletedPage)); params.set('per_page', '10'); const endpoint = deletedView === 'reregistered' ? '/api/admin/re-registered-accounts' : '/api/admin/deleted-accounts'; const d = await API(`${endpoint}?${params.toString()}`); setDeletedAccounts(d.accounts || []); setDeletedPagination({ page: d.page || 1, per_page: d.per_page || 10, count: d.count || 0, total_pages: d.total_pages || 1 }); }
       else if (section === 'Earnings') {
         const [earnData, splitData] = await Promise.all([
           API('/api/admin/earnings'),
@@ -228,7 +234,7 @@ export default function AdminPage() {
       }
     } catch (e) { showStatus('error', e.message); }
     setLoading(false);
-  }, [appFilter, showArchivedBroadcasts, deletedSearch, deletedRole, deletedView]);
+  }, [appFilter, showArchivedBroadcasts, deletedSearch, deletedRole, deletedView, deletedReason, deletedDateFrom, deletedDateTo, deletedSort, deletedPage]);
 
   useEffect(() => { load(tab); }, [tab]);
   useEffect(() => { if (tab === 'Broadcast') load('Broadcast'); }, [showArchivedBroadcasts]);
@@ -240,7 +246,8 @@ export default function AdminPage() {
   }, []);
   useEffect(() => { loadTabCounts(); }, [loadTabCounts, tab]);
   useEffect(() => { if (tab === 'Applications') load('Applications'); }, [appFilter]);
-  useEffect(() => { if (tab === 'Deleted Accounts') load('Deleted Accounts'); }, [deletedSearch, deletedRole, deletedView, tab, load]);
+  useEffect(() => { setDeletedPage(1); }, [deletedSearch, deletedRole, deletedView, deletedReason, deletedDateFrom, deletedDateTo, deletedSort]);
+  useEffect(() => { if (tab === 'Deleted Accounts') load('Deleted Accounts'); }, [deletedSearch, deletedRole, deletedView, deletedReason, deletedDateFrom, deletedDateTo, deletedSort, deletedPage, tab, load]);
   useEffect(() => { if (tab === 'Guide') load('Guide'); }, [tab === 'Guide']);
 
   const filteredEarningsInstructors = (earnings?.instructors || []).filter(inst => {
@@ -1570,11 +1577,16 @@ export default function AdminPage() {
                 <Button size="sm" variant={deletedView === 'deleted' ? 'default' : 'outline'} onClick={() => setDeletedView('deleted')}>Deleted Accounts</Button>
                 <Button size="sm" variant={deletedView === 'reregistered' ? 'default' : 'outline'} onClick={() => setDeletedView('reregistered')}>Re-registered History</Button>
               </div>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"/><Input className="pl-9" placeholder="Search name, email or account ID…" value={deletedSearch} onChange={e => setDeletedSearch(e.target.value)} /></div>
-                <select className="h-10 rounded-md border border-border bg-background px-3 text-sm" value={deletedRole} onChange={e => setDeletedRole(e.target.value)}><option value="all">All roles</option><option value="student">Students</option><option value="instructor">Instructors</option><option value="admin">Admins</option></select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
+                <div className="relative sm:col-span-2 xl:col-span-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"/><Input className="pl-9" placeholder="Search name, email or account ID…" value={deletedSearch} onChange={e => setDeletedSearch(e.target.value)} /></div>
+                <select aria-label="Filter by role" className="h-10 rounded-md border border-border bg-background px-3 text-sm" value={deletedRole} onChange={e => setDeletedRole(e.target.value)}><option value="all">All roles</option><option value="student">Students</option><option value="instructor">Instructors</option><option value="admin">Admins</option></select>
+                <select aria-label="Filter by deletion reason" className="h-10 rounded-md border border-border bg-background px-3 text-sm" value={deletedReason} onChange={e => setDeletedReason(e.target.value)}><option value="all">All deletion reasons</option><option value="self_service">User requested deletion</option><option value="admin_action">Admin initiated deletion</option></select>
+                <Input aria-label="Deleted from date" type="date" value={deletedDateFrom} onChange={e => setDeletedDateFrom(e.target.value)} />
+                <Input aria-label="Deleted to date" type="date" value={deletedDateTo} onChange={e => setDeletedDateTo(e.target.value)} />
+                <select aria-label="Sort account history" className="h-10 rounded-md border border-border bg-background px-3 text-sm" value={deletedSort} onChange={e => setDeletedSort(e.target.value)}><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select>
                 <Button size="sm" variant="outline" onClick={() => load('Deleted Accounts')}><RefreshCw className="h-4 w-4 mr-1"/>Refresh</Button>
               </div>
+              <p className="text-xs text-muted-foreground">{deletedPagination.count} record(s) · Page {deletedPagination.page} of {deletedPagination.total_pages}</p>
               {!deletedAccounts.length ? <div className="rounded-xl border border-border p-10 text-center text-sm text-muted-foreground">{deletedView === 'reregistered' ? 'No re-registered accounts to display.' : 'No deleted accounts to display.'}</div> : deletedAccounts.map(account => (
                 <Card key={account.id} className="p-4 sm:p-5">
                   <div className="min-w-0 space-y-2">
@@ -1608,6 +1620,11 @@ export default function AdminPage() {
                   </div>
                 </Card>
               ))}
+              <div className="flex items-center justify-between gap-3 pt-2">
+                <Button size="sm" variant="outline" disabled={deletedPagination.page <= 1} onClick={() => setDeletedPage(page => Math.max(1, page - 1))}>Previous</Button>
+                <span className="text-xs text-muted-foreground">Showing page {deletedPagination.page} of {deletedPagination.total_pages}</span>
+                <Button size="sm" variant="outline" disabled={deletedPagination.page >= deletedPagination.total_pages} onClick={() => setDeletedPage(page => Math.min(deletedPagination.total_pages, page + 1))}>Next</Button>
+              </div>
             </div>
           )}
 
