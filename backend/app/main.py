@@ -1384,8 +1384,10 @@ def create_app() -> Flask:
             app.logger.error(f'signup error: {traceback.format_exc()}')
             try:
                 db = getattr(g, '_db', None)
-                if db and hasattr(db, '_conn'): db._conn.rollback()
-            except Exception: pass
+                if db:
+                    db.rollback()
+            except Exception:
+                pass
             return jsonify({'error': 'Failed to create account', 'detail': _err_detail(e)}), 500
     
     def _user_role(db, user_id):
