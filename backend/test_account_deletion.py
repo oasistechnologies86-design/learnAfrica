@@ -1,4 +1,5 @@
 """Regression coverage for account deletion retention and admin controls."""
+import hashlib
 import os
 import sys
 import tempfile
@@ -88,6 +89,26 @@ instructor_token = token('instructor@example.com')
 student2_token = token('student2@example.com')
 check('test accounts can authenticate', bool(admin_token and student_token and instructor_token))
 
+# Create outstanding recovery credentials and a queued request to prove deletion
+# invalidates them before the email can belong to a later account.
+legacy_reset_raw = 'old-student-reset-token'
+with app.app_context():
+    db = get_db()
+    db.execute(
+        "INSERT INTO password_reset_requests (id,email,user_id,reason,status) "
+        "VALUES ('reset-stu1','student@example.com','stu1','Forgot Password','pending')"
+    )
+    db.execute(
+        "INSERT INTO password_reset_tokens (id,request_id,user_id,token_hash,expires_at,used) "
+        "VALUES ('reset-token-stu1','reset-stu1','stu1',?,?,0)",
+        (hashlib.sha256(legacy_reset_raw.encode()).hexdigest(), '2027-01-01 00:00:00')
+    )
+    db.execute(
+        "INSERT INTO email_verification_codes (id,email,code_hash,expires_at,used) "
+        "VALUES ('verify-stu1','student@example.com','test-hash','2027-01-01 00:00:00',0)"
+    )
+    db.commit()
+
 # Student-requested deletion: row and financial history remain; session is revoked.
 response = client.delete('/api/users/account', json={'email': 'student@example.com'}, headers=auth(student_token))
 check('self-service deletion succeeds', response.status_code == 200, response.status_code)
@@ -103,6 +124,16 @@ check('self-deletion event is recorded', bool(event and event['event_type'] == '
 deleted_login = client.post('/api/auth/login', json={'email': 'student@example.com', 'password': 'Pass12345!'})
 check('deleted account cannot authenticate using its archived email',
       deleted_login.status_code == 404 and (deleted_login.get_json() or {}).get('account_not_found') is True)
+with app.app_context():
+    db = get_db()
+    old_reset = db.execute("SELECT used FROM password_reset_tokens WHERE id='reset-token-stu1'").fetchone()
+    old_request = db.execute("SELECT status FROM password_reset_requests WHERE id='reset-stu1'").fetchone()
+    old_code = db.execute("SELECT used FROM email_verification_codes WHERE id='verify-stu1'").fetchone()
+check('deletion revokes outstanding password-reset tokens', bool(old_reset and old_reset['used']))
+check('deletion dismisses queued password-reset requests', bool(old_request and old_request['status'] == 'dismissed'))
+check('deletion invalidates outstanding email-verification codes', bool(old_code and old_code['used']))
+old_reset_validation = client.get('/api/auth/reset-password/validate?token=' + legacy_reset_raw)
+check('old password-reset links cannot validate after deletion', old_reset_validation.status_code == 400)
 
 # Deleted instructor applicant remains in the pending application list and
 # cannot be approved even if an admin calls the endpoint directly.
@@ -249,6 +280,24 @@ check('historical transaction stays with the original account',
       bool(original_tx and original_tx['user_id'] == 'stu1'
            and original_user and original_user['re_registered_to_user_id'] == new_old_id
            and not new_user_tx))
+
+# A new reset request after re-registration must belong to the new account,
+# never reuse the previous account's dismissed request.
+forgot = client.post('/api/auth/forgot-password', json={'email': 'student@example.com'})
+with app.app_context():
+    db = get_db()
+    newest_reset_request = db.execute(
+        "SELECT id,user_id,status FROM password_reset_requests "
+        "WHERE LOWER(email)=LOWER('student@example.com') ORDER BY created_at DESC LIMIT 1"
+    ).fetchone()
+    reset_queue = client.get('/api/admin/password-reset-requests?status=all', headers=auth(admin_token))
+    visible_reset_ids = {item.get('id') for item in (reset_queue.get_json() or {}).get('requests', [])}
+check('new password-reset request is attached to the new account',
+      forgot.status_code == 200 and newest_reset_request
+      and newest_reset_request['user_id'] == new_old_id
+      and newest_reset_request['id'] != 'reset-stu1')
+check('old deleted-account reset request is not exposed in admin queue',
+      'reset-stu1' not in visible_reset_ids)
 
 print()
 if failures:
