@@ -155,7 +155,9 @@ try {
         boxH: Math.round(r.height),
         clippedBy: Math.round(el.scrollHeight - el.clientHeight),
         overflow: getComputedStyle(el).overflow,
-        hasVerifyText: /Verify at/.test(el.textContent) && /ID:?\s*LA-/.test(el.textContent),
+        hasVerifyText: name === 'badge'
+          ? /Credential ID:\\s*LA-BADGE-/.test(el.textContent) && /Scan to verify/.test(el.textContent)
+          : /Verify at/.test(el.textContent) && /ID:?\\s*LA-/.test(el.textContent),
         // Signatory checks (certificate only): the authorised signatory must be
         // present and the course instructor must NOT appear anywhere.
         hasSignatory: name === 'certificate'
@@ -232,7 +234,14 @@ try {
           mainFits: !!main && main.scrollHeight <= main.clientHeight + 1,
           mainScroll: main?.scrollHeight ?? null,
           mainClient: main?.clientHeight ?? null,
-          mainBeforeFooter: (() => {\n            if (!mainRect || !footerRect) return false;\n            const contentNodes = [el.querySelector('h2'), el.querySelector('h3'), seal].filter(Boolean);\n            return contentNodes.length >= 2 && contentNodes.every((node) => {\n              const cr = node.getBoundingClientRect();\n              return cr.bottom <= footerRect.top + 0.5 && cr.top >= mainRect.top - 0.5;\n            });\n          })(),
+          mainBeforeFooter: (() => {
+            if (!mainRect || !footerRect) return false;
+            const contentNodes = [el.querySelector('h2'), el.querySelector('h3'), seal].filter(Boolean);
+            return contentNodes.length >= 2 && contentNodes.every((node) => {
+              const cr = node.getBoundingClientRect();
+              return cr.bottom <= footerRect.top + 0.5 && cr.top >= mainRect.top - 0.5;
+            });
+          })(),
           sealVisible: !!sealRect && sealRect.width >= 110 && sealRect.height >= 110 && !!mainRect && sealRect.top >= mainRect.top - 0.5 && sealRect.bottom <= mainRect.bottom + 0.5,
           sealBottom: sealRect ? Math.round(sealRect.bottom - r.top) : null,
           footerTop: footerRect ? Math.round(footerRect.top - r.top) : null,
