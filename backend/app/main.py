@@ -56,7 +56,7 @@ socketio = None
 
 # Version of the instructor terms + verification acknowledgement. Bump this
 # whenever the wording changes so stored acceptances remain auditable.
-INSTRUCTOR_AGREEMENT_VERSION = '2026-01'
+INSTRUCTOR_AGREEMENT_VERSION = '2026-11'
 
 
 def public_site_url():
@@ -1037,6 +1037,16 @@ def create_app() -> Flask:
                 return jsonify({'error': phone_err}), 400
 
             db = get_db()
+            if not d.get('accept_terms'):
+                return jsonify({'error': 'You must accept the applicable Terms of Service and Privacy Policy.'}), 400
+            # Store a versioned acceptance record for each policy. The table is
+            # created additively so existing accounts and historical records remain untouched.
+            db.execute(
+                'CREATE TABLE IF NOT EXISTS legal_acceptances ('
+                'id TEXT PRIMARY KEY, user_id TEXT NOT NULL, role TEXT NOT NULL, '
+                'document_type TEXT NOT NULL, document_version TEXT NOT NULL, '
+                'accepted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'
+            )
             if db.execute('SELECT id FROM users WHERE LOWER(TRIM(email))=?',(email,)).fetchone():
                 return jsonify({'error': 'Email already registered'}), 409
 
@@ -1141,6 +1151,19 @@ def create_app() -> Flask:
                 # Minimal fallback - just core columns
                 db.execute('INSERT INTO users (id,name,email,password_hash,role) VALUES(?,?,?,?,?)',
                            (uid, d['name'], email, generate_password_hash(d['password']), role))
+
+            # Record the exact policy versions accepted at signup. The instructor
+            # application also retains its legacy agreement timestamp and version.
+            _accepted_role = 'instructor' if is_instructor else 'student'
+            _terms_type = 'instructor_terms' if is_instructor else 'student_terms'
+            _policy_version = str(d.get('agreement_version') or '2026-11')
+            for _doc_type in (_terms_type, 'privacy_policy'):
+                db.execute(
+                    'INSERT INTO legal_acceptances '
+                    '(id,user_id,role,document_type,document_version,accepted_at) '
+                    'VALUES(?,?,?,?,?,CURRENT_TIMESTAMP)',
+                    (str(uuid.uuid4()), uid, _accepted_role, _doc_type, _policy_version)
+                )
 
             # Save the required instructor payout destination as part of
             # account creation, including accounts awaiting email verification.
