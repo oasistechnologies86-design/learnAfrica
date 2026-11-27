@@ -6593,7 +6593,7 @@ def create_app() -> Flask:
                       u.deletion_reason,u.re_registered_at
                FROM users u LEFT JOIN users deleted_actor ON deleted_actor.id=u.deleted_by
                WHERE """ + base +
-            f" ORDER BY deleted_at {order}, id ASC LIMIT ? OFFSET ?",
+            f" ORDER BY u.deleted_at {order}, u.id ASC LIMIT ? OFFSET ?",
             params + [per_page, offset]
         ).fetchall()
         return jsonify({
