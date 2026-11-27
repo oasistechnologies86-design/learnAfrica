@@ -57,7 +57,7 @@ export function CertificateDocument({ data, displayName, id = 'certificate-conte
       <div aria-hidden="true" className="absolute bottom-4 left-4 z-0 h-7 w-7 border-b-[3px] border-l-[3px] border-primary/60 pointer-events-none" />
       <div aria-hidden="true" className="absolute bottom-4 right-4 z-0 h-7 w-7 border-b-[3px] border-r-[3px] border-primary/60 pointer-events-none" />
 
-      <div className="relative z-10 flex flex-col items-center px-12 py-8 text-center">
+      <div data-cert-main className="absolute inset-x-0 top-0 bottom-[112px] z-10 flex flex-col items-center px-12 pt-7 pb-2 text-center">
         <p className="mb-2 text-xs font-bold uppercase tracking-[0.3em] text-primary">LearnAfrica</p>
         <h1 className="font-serif text-4xl font-bold uppercase tracking-[0.1em] text-slate-900">
           Certificate of Completion
@@ -108,7 +108,7 @@ export function CertificateDocument({ data, displayName, id = 'certificate-conte
             </p>
           </div>
           <div className="flex shrink-0 flex-col items-center">
-            <CertificateSeal size={154} />
+            <div data-cert-seal className="flex shrink-0 items-center justify-center"><CertificateSeal size={176} /></div>
           </div>
           <div className="flex flex-1 flex-col items-center">
             <p className="w-56 border-b border-slate-900 pb-1 text-xl font-semibold text-slate-900">
@@ -118,10 +118,12 @@ export function CertificateDocument({ data, displayName, id = 'certificate-conte
           </div>
         </div>
 
-      {/* Dedicated verification footer. It sits inside a reserved bottom safe
-          area, with its content inset from the decorative corner ornaments. */}
-      <div className="absolute bottom-2 left-16 right-16 z-20 flex items-center justify-between gap-6 border-t border-slate-200 bg-white pt-2 text-left">
-        <div className="min-w-0 max-w-[70%] font-mono text-3xs uppercase tracking-[0.2em] text-slate-600">
+      </div>
+      {/* Footer is a direct child of the fixed certificate canvas, not the
+          auto-height content stack. This anchors it reliably in preview, PDF
+          capture and print, independent of the height of the content above. */}
+      <div data-cert-footer className="absolute bottom-3 left-14 right-14 z-20 flex min-h-[100px] items-end justify-between gap-6 border-t border-slate-200 bg-white px-3 pt-2 text-left">
+        <div className="min-w-0 max-w-[68%] font-mono text-3xs uppercase tracking-[0.2em] text-slate-600">
           <p className="font-bold text-slate-500">Certificate ID</p>
           <p className="mt-0.5 text-2xs font-semibold text-slate-900">{data.certificateId}</p>
           <p className="mt-1 break-all normal-case tracking-normal text-slate-500">Verify at {siteHost()}/verify-credential</p>
@@ -135,12 +137,11 @@ export function CertificateDocument({ data, displayName, id = 'certificate-conte
               title="Open the verification page"
               className="inline-flex flex-col items-center group"
             >
-              <QRCodeSVG value={verifyUrl(data.certificateId)} size={84} level="Q" marginSize={2} bgColor="#ffffff" fgColor="#0f4d34" />
-              <p className="mt-1 whitespace-nowrap text-3xs font-bold uppercase tracking-[0.16em] text-slate-400 group-hover:text-primary">Scan or click to verify</p>
+              <QRCodeSVG value={verifyUrl(data.certificateId)} size={80} level="Q" marginSize={2} bgColor="#ffffff" fgColor="#0f4d34" />
+              <p className="mt-1 whitespace-nowrap text-[7px] font-bold uppercase tracking-[0.12em] text-slate-400 group-hover:text-primary">Scan or click to verify</p>
             </a>
           )}
         </div>
-      </div>
       </div>
     </div>
   );
