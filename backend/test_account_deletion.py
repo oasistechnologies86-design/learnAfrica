@@ -288,14 +288,16 @@ with app.app_context():
     db = get_db()
     newest_reset_request = db.execute(
         "SELECT id,user_id,status FROM password_reset_requests "
-        "WHERE LOWER(email)=LOWER('student@example.com') ORDER BY created_at DESC LIMIT 1"
+        "WHERE user_id=? AND LOWER(email)=LOWER('student@example.com') "
+        "ORDER BY created_at DESC LIMIT 1",
+        (new_old_id,)
     ).fetchone()
     reset_queue = client.get('/api/admin/password-reset-requests?status=all', headers=auth(admin_token))
     visible_reset_ids = {item.get('id') for item in (reset_queue.get_json() or {}).get('requests', [])}
 check('new password-reset request is attached to the new account',
       forgot.status_code == 200 and newest_reset_request
       and newest_reset_request['user_id'] == new_old_id
-      and newest_reset_request['id'] != 'reset-stu1')
+      and newest_reset_request['id'] != 'reset-stu1', forgot.status_code)
 check('old deleted-account reset request is not exposed in admin queue',
       'reset-stu1' not in visible_reset_ids)
 
