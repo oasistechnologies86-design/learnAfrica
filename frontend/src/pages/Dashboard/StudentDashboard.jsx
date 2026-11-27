@@ -105,7 +105,7 @@ export function BadgeDocument({ badge, displayName, badgeId, issuedDate, id = 'b
           {badgeId && <p className="mt-1 font-mono text-[8px] text-emerald-50/70">Credential ID: {badgeId}</p>}
         </div>
         {badgeId && (
-          <div className="flex shrink-0 flex-col items-center gap-1 rounded-lg bg-white p-1.5">
+          <div data-badge-verification className="flex shrink-0 flex-col items-center gap-1 rounded-lg bg-white p-1.5">
             <a href={verifyUrl(badgeId)} target="_blank" rel="noopener noreferrer" title="Open the verification page">
               <QRCodeSVG value={verifyUrl(badgeId)} size={64} level="Q" marginSize={2} bgColor="#ffffff" fgColor="#0B3D2E" />
             </a>
