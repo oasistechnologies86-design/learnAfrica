@@ -125,7 +125,7 @@ export default function MyCertificatesPage() {
                 <div className="flex w-full shrink-0 sm:w-auto sm:pl-2">
                   <Link
                     to={`/certificate/${encodeURIComponent(certificate.courseId)}`}
-                    className="w-full sm:w-auto"
+                    className="block w-full sm:w-auto"
                   >
                     <Button className="h-11 w-full gap-2 rounded-xl px-4 text-xs font-semibold sm:w-auto">
                       <BookOpen className="h-4 w-4" />
