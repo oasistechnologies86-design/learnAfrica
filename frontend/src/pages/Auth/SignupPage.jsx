@@ -63,7 +63,7 @@ export function SignupPage() {
   const [countryConfig, setCountryConfig] = useState(null)
   const [requirements, setRequirements] = useState(null)
   const [regInfo, setRegInfo] = useState(null)
-  const [modal, setModal] = useState(null) // 'terms' | 'privacy' | null
+  const [modal, setModal] = useState(null) // 'terms' | 'privacy' | 'cookies' | null
   const { signup } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -666,7 +666,9 @@ export function SignupPage() {
             <span className="mr-1 text-destructive">*</span>I agree to the{' '}
             <button type="button" onClick={() => setModal('terms')} className="font-medium text-primary hover:underline">Terms</button>
             {' '}and{' '}
-            <button type="button" onClick={() => setModal('privacy')} className="font-medium text-primary hover:underline">Privacy Policy</button>
+            <button type="button" onClick={() => setModal('privacy')} className="font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm">Privacy Policy</button>
+            {' '}and{' '}
+            <button type="button" onClick={() => setModal('cookies')} className="font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm">Cookie Policy</button>
           </label>
         </div>
         {errors.terms && <p className="text-sm text-destructive">{errors.terms}</p>}
@@ -697,7 +699,7 @@ export function SignupPage() {
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={() => setModal(null)}>
           <div className="flex max-h-[80vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-border p-5">
-              <h2 className="text-lg font-bold">{modal === 'terms' ? (isInstructorFlow ? 'Instructor Terms of Service' : 'Student Terms of Service') : 'Privacy Policy'}</h2>
+              <h2 className="text-lg font-bold">{modal === 'terms' ? (isInstructorFlow ? 'Instructor Terms of Service' : 'Student Terms of Service') : modal === 'privacy' ? 'Privacy Policy' : 'Cookie Policy'}</h2>
               <button onClick={() => setModal(null)} aria-label="Close" className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground">
                 <X className="h-5 w-5" />
               </button>
@@ -727,7 +729,7 @@ export function SignupPage() {
                     <p><strong className="text-foreground">8. Availability, support and law.</strong> We work to keep LearnAfrica available but cannot promise uninterrupted service. Features may change and material Terms updates will be communicated where reasonably practicable. Contact official support with complaints or questions. These Terms are intended to operate subject to Ghanaian law and mandatory rights that apply to you.</p>
                   </>
                 )
-              ) : (
+              ) : modal === 'privacy' ? (
                 <>
                   <p><strong className="text-foreground">1. Information collected.</strong> We may handle your name, email, phone number, account role, profile details, image, course enrolments, progress, quiz and examination results, certificates, badges, messages and support requests. Instructor applicants may also provide professional details, location, government-issued identity information, verification outcomes and payout details.</p>
                   <p><strong className="text-foreground">2. Purposes.</strong> We use information to create and secure accounts, provide courses and assessments, calculate progress, issue and verify achievements, support instructors, process payments and payouts, prevent fraud, improve reliability, respond to requests and meet legal obligations.</p>
@@ -736,6 +738,14 @@ export function SignupPage() {
                   <p><strong className="text-foreground">5. Security and retention.</strong> We use administrative and technical safeguards, including access controls and password hashing. No online service can guarantee complete security. Information is retained as reasonably needed to provide the service, maintain learning and payment records, verify certificates, resolve disputes, prevent fraud and meet legal obligations. We then take reasonable steps to delete it or remove identifying details, subject to lawful retention and backups.</p>
                   <p><strong className="text-foreground">6. Your choices.</strong> Subject to applicable law, you may request access, correction, information about use, or deletion where appropriate. You may withdraw consent where processing relies on consent. Some records may need to be retained for legal, security, accounting or dispute purposes. Contact official LearnAfrica support for privacy requests or raise concerns with the relevant data-protection authority.</p>
                   <p><strong className="text-foreground">7. Children and updates.</strong> Where a person is not legally able to consent independently, parent or guardian involvement may be required. We may update this Policy as services or legal obligations change and will publish the updated version and effective date. This Policy is intended to operate in line with applicable Ghanaian data-protection law.</p>
+                </>
+              ) : (
+                <>
+                  <p><strong className="text-foreground">1. Essential technologies.</strong> LearnAfrica may use cookies and similar browser storage technologies to keep you signed in, manage sessions, protect accounts, prevent misuse and remember interface preferences.</p>
+                  <p><strong className="text-foreground">2. How they work.</strong> Authentication and session technologies help recognise an active sign-in and protect requests. Preference technologies may remember settings such as display choices. These technologies are used to support the operation and security of the service.</p>
+                  <p><strong className="text-foreground">3. Managing cookies.</strong> You can delete or block cookies through your browser settings. Blocking essential cookies or browser storage may prevent sign-in or cause some features to stop working. Clearing browser data may sign you out and reset saved preferences.</p>
+                  <p><strong className="text-foreground">4. Optional technologies.</strong> If LearnAfrica introduces optional analytics or advertising cookies that require consent, the relevant notice and consent controls should be provided before those technologies are used.</p>
+                  <p><strong className="text-foreground">5. Updates.</strong> This Cookie Policy may change when the technologies used by LearnAfrica change. The version and effective date above identify the current notice.</p>
                 </>
               )}
             </div>
