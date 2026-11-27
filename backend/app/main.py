@@ -1184,7 +1184,7 @@ def create_app() -> Flask:
                 db.execute(
                     'INSERT INTO account_deletion_events '
                     '(id,user_id,user_name,user_email,user_role,event_type,actor_user_id) '
-                    'SELECT ?,id,name,deleted_email,role,?,?,? FROM users WHERE id=?',
+                    'SELECT ?,id,name,deleted_email,role,?,? FROM users WHERE id=?',
                     (str(uuid.uuid4()), 're_registered', uid, old_id)
                 )
                 audit('account_re_registered', 'user', old_id, email, {'new_user_id': uid})
