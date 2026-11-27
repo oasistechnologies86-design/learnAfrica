@@ -52,10 +52,10 @@ export function CertificateDocument({ data, displayName, id = 'certificate-conte
           scales to that single page instead of overflowing onto a second one. */}
       <style dangerouslySetInnerHTML={{ __html: `@media print { @page { size: A4 landscape; margin: 8mm; } html, body { margin: 0 !important; padding: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }` }} />
       <div className="absolute inset-4 border border-slate-200 pointer-events-none" />
-      <div className="absolute left-5 top-5 h-10 w-10 border-l-4 border-t-4 border-primary/60" />
-      <div className="absolute right-5 top-5 h-10 w-10 border-r-4 border-t-4 border-primary/60" />
-      <div className="absolute bottom-5 left-5 h-10 w-10 border-b-4 border-l-4 border-primary/60" />
-      <div className="absolute bottom-5 right-5 h-10 w-10 border-b-4 border-r-4 border-primary/60" />
+      <div aria-hidden="true" className="absolute left-4 top-4 z-0 h-7 w-7 border-l-[3px] border-t-[3px] border-primary/60 pointer-events-none" />
+      <div aria-hidden="true" className="absolute right-4 top-4 z-0 h-7 w-7 border-r-[3px] border-t-[3px] border-primary/60 pointer-events-none" />
+      <div aria-hidden="true" className="absolute bottom-4 left-4 z-0 h-7 w-7 border-b-[3px] border-l-[3px] border-primary/60 pointer-events-none" />
+      <div aria-hidden="true" className="absolute bottom-4 right-4 z-0 h-7 w-7 border-b-[3px] border-r-[3px] border-primary/60 pointer-events-none" />
 
       <div className="relative z-10 flex flex-col items-center px-12 py-8 text-center">
         <p className="mb-2 text-xs font-bold uppercase tracking-[0.3em] text-primary">LearnAfrica</p>
@@ -76,7 +76,7 @@ export function CertificateDocument({ data, displayName, id = 'certificate-conte
           {data.courseName}
         </h3>
 
-        <div className="mt-4 flex w-full items-end justify-between gap-8 px-6">
+        <div className="mt-2 flex w-full items-end justify-between gap-8 px-6">
           {/* Signatory = the authorised platform admin, never the course
               instructor. Standard certificate layout, matching the Date column
               to its right: the signature (image or handwritten text) sits ON
@@ -108,7 +108,7 @@ export function CertificateDocument({ data, displayName, id = 'certificate-conte
             </p>
           </div>
           <div className="flex shrink-0 flex-col items-center">
-            <CertificateSeal size={132} />
+            <CertificateSeal size={154} />
           </div>
           <div className="flex flex-1 flex-col items-center">
             <p className="w-56 border-b border-slate-900 pb-1 text-xl font-semibold text-slate-900">
@@ -118,30 +118,29 @@ export function CertificateDocument({ data, displayName, id = 'certificate-conte
           </div>
         </div>
 
-        {/* Verification block — same pattern as the badge: a scannable QR, the
-            certificate's verification code, and the public URL, grouped so they
-            never overlap the name, course, date or seal. */}
-        <div className="mt-4 flex w-full items-center justify-between gap-6 border-t border-slate-200 pt-3 text-left">
-          <div className="font-mono text-3xs uppercase tracking-[0.2em] text-slate-600">
-            <p className="font-bold text-slate-500">Certificate ID</p>
-            <p className="mt-0.5 text-2xs font-semibold text-slate-900">{data.certificateId}</p>
-            <p className="mt-1 normal-case tracking-normal text-slate-500">Verify at {siteHost()}/verify-credential</p>
-          </div>
-          <div className="flex shrink-0 flex-col items-center">
-            {data.certificateId && (
-              <a
-                href={verifyUrl(data.certificateId)}
-                target="_blank"
-                rel="noopener noreferrer"
-                title="Open the verification page"
-                className="inline-flex flex-col items-center group"
-              >
-                <QRCodeSVG value={verifyUrl(data.certificateId)} size={84} level="Q" marginSize={2} bgColor="#ffffff" fgColor="#0f4d34" />
-                <p className="mt-1 text-3xs font-bold uppercase tracking-[0.2em] text-slate-400 group-hover:text-primary">Scan or click to verify</p>
-              </a>
-            )}
-          </div>
+      {/* Dedicated verification footer. It sits inside a reserved bottom safe
+          area, with its content inset from the decorative corner ornaments. */}
+      <div className="absolute bottom-2 left-16 right-16 z-20 flex items-center justify-between gap-6 border-t border-slate-200 bg-white pt-2 text-left">
+        <div className="min-w-0 max-w-[70%] font-mono text-3xs uppercase tracking-[0.2em] text-slate-600">
+          <p className="font-bold text-slate-500">Certificate ID</p>
+          <p className="mt-0.5 text-2xs font-semibold text-slate-900">{data.certificateId}</p>
+          <p className="mt-1 break-all normal-case tracking-normal text-slate-500">Verify at {siteHost()}/verify-credential</p>
         </div>
+        <div className="flex shrink-0 flex-col items-center">
+          {data.certificateId && (
+            <a
+              href={verifyUrl(data.certificateId)}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Open the verification page"
+              className="inline-flex flex-col items-center group"
+            >
+              <QRCodeSVG value={verifyUrl(data.certificateId)} size={84} level="Q" marginSize={2} bgColor="#ffffff" fgColor="#0f4d34" />
+              <p className="mt-1 whitespace-nowrap text-3xs font-bold uppercase tracking-[0.16em] text-slate-400 group-hover:text-primary">Scan or click to verify</p>
+            </a>
+          )}
+        </div>
+      </div>
       </div>
     </div>
   );
