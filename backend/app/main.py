@@ -6575,12 +6575,16 @@ def create_app() -> Flask:
     def admin_deleted_accounts():
         db = get_db()
         try:
-            where, params, order = _admin_deleted_account_filters()
+            where, params, order = _admin_deleted_account_filters('u')
         except ValueError as error:
             return jsonify({'error': str(error)}), 400
         page, per_page, offset = _admin_deleted_account_page()
-        base = "deleted_at IS NOT NULL AND re_registered_to_user_id IS NULL AND " + where
-        total_row = db.execute("SELECT COUNT(*) AS total FROM users WHERE " + base, params).fetchone()
+        base = "u.deleted_at IS NOT NULL AND u.re_registered_to_user_id IS NULL AND " + where
+        total_row = db.execute(
+            "SELECT COUNT(*) AS total FROM users u "
+            "LEFT JOIN users deleted_actor ON deleted_actor.id=u.deleted_by WHERE " + base,
+            params
+        ).fetchone()
         total = int((total_row['total'] if total_row else 0) or 0)
         rows = db.execute(
             """SELECT u.id,u.name,COALESCE(u.deleted_email,u.email) AS email,u.role,
@@ -6588,7 +6592,7 @@ def create_app() -> Flask:
                       COALESCE(deleted_actor.name,u.deleted_by) AS deleted_by_name,
                       u.deletion_reason,u.re_registered_at
                FROM users u LEFT JOIN users deleted_actor ON deleted_actor.id=u.deleted_by
-               WHERE """ + base.replace('deleted_at', 'u.deleted_at').replace('re_registered_to_user_id', 'u.re_registered_to_user_id').replace('deletion_reason', 'u.deletion_reason') +
+               WHERE """ + base +
             f" ORDER BY deleted_at {order}, id ASC LIMIT ? OFFSET ?",
             params + [per_page, offset]
         ).fetchall()
