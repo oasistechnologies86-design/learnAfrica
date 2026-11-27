@@ -67,15 +67,21 @@ export default function Navbar() {
   // Nav links per role
   const navLinks = isAdmin ? [
     { href: '/',            label: 'Home',        icon: Home },
+    { href: '/blog',        label: 'Blog',        icon: FileText },
+    { href: '/instructors', label: 'Instructors', icon: GraduationCap },
     { href: '/admin',       label: 'Admin Panel', icon: Shield },
     { href: '/instructor',  label: 'Instructor',  icon: GraduationCap },
   ] : isInstructor ? [
     { href: '/',                        label: 'Home',        icon: Home },
+    { href: '/blog',                    label: 'Blog',        icon: FileText },
+    { href: '/instructors',             label: 'Instructors', icon: GraduationCap },
     { href: '/instructor',              label: 'Dashboard',   icon: LayoutDashboard },
     { href: '/instructor/courses',      label: 'My Courses',  icon: BookMarked },
     { href: '/instructor/analytics',    label: 'Analytics',   icon: BarChart2 },
   ] : isPendingInstructor ? [
     { href: '/',            label: 'Home',        icon: Home },
+    { href: '/blog',        label: 'Blog',        icon: FileText },
+    { href: '/instructors', label: 'Instructors', icon: GraduationCap },
     { href: '/instructor',  label: 'Dashboard',   icon: LayoutDashboard },
   ] : isStudent ? [
     { href: '/',            label: 'Home',        icon: Home },
