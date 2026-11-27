@@ -110,6 +110,7 @@ check('first instructor registration with an unused email succeeds', r.status_co
 r = c.post('/api/auth/signup', json={
     'name': 'Student Attempt', 'email': 'SHARED.ROLE@EXAMPLE.COM',
     'password': 'Pass12345!', 'role': 'student', 'phone': '+233244123456',
+    'accept_terms': True,
 })
 check('same email cannot be registered again as a student with different casing',
       r.status_code == 409, r.status_code)
@@ -117,6 +118,7 @@ check('same email cannot be registered again as a student with different casing'
 r = c.post('/api/auth/signup', json={
     'name': 'Student First', 'email': 'student.first@example.com',
     'password': 'Pass12345!', 'role': 'student', 'phone': '+233244123456',
+    'accept_terms': True,
 })
 check('student registration with an unused email succeeds', r.status_code in (200, 201), r.status_code)
 r = signup_instructor('STUDENT.FIRST@EXAMPLE.COM')
@@ -255,10 +257,10 @@ check('instructor detail view exposes the application record',
 
 # ── Student registration is always free (unaffected by paid instructor mode) ─
 r = c.post('/api/auth/signup', json={'name': 'Student', 'email': 'stu_free@example.com',
-                                     'password': 'Pass12345!', 'role': 'student', 'phone': '+233244123456'})
+                                     'password': 'Pass12345!', 'role': 'student', 'phone': '+233244123456', 'accept_terms': True})
 check('student signup unaffected by paid instructor registration', r.status_code in (200, 201), r.status_code)
 r = c.post('/api/auth/signup', json={'name': 'S2', 'email': 'stu_free2@example.com',
-                                     'password': 'Pass12345!', 'role': 'student', 'phone': '+233244123456'})
+                                     'password': 'Pass12345!', 'role': 'student', 'phone': '+233244123456', 'accept_terms': True})
 check('instructor signup needs no Ghana details or payment', r.status_code in (200, 201), r.status_code)
 
 # ── The fee cannot be overridden by the client ───────────────────────────────
