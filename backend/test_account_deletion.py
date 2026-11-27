@@ -81,6 +81,9 @@ check('self-deleted user is retained but inactive', bool(row and row['deleted_at
 check('self-deletion revokes existing token', client.get('/api/users/settings', headers=auth(student_token)).status_code in (401, 403))
 check('financial transaction remains after deletion', bool(tx))
 check('self-deletion event is recorded', bool(event and event['event_type'] == 'self_deleted'))
+deleted_login = client.post('/api/auth/login', json={'email': 'student@example.com', 'password': 'Pass12345!'})
+check('deleted account cannot authenticate using its archived email',
+      deleted_login.status_code == 404 and (deleted_login.get_json() or {}).get('account_not_found') is True)
 
 # Deleted instructor applicant remains in the pending application list and
 # cannot be approved even if an admin calls the endpoint directly.
@@ -113,26 +116,91 @@ response = client.put('/api/admin/instructor-applications/ins1/review',
                       json={'action': 'approve'}, headers=auth(admin_token))
 check('admin cannot approve a deleted applicant', response.status_code == 409, response.status_code)
 
-# Admin deletion is also soft-delete; list, search, role filtering, and history
-# are admin-only. Clear-all only clears entries matching its current filters.
+# Admin deletion is also soft-delete; history is permanent and email can be reused.
 admin_delete = client.delete('/api/admin/users/stu2', headers=auth(admin_token))
 check('admin deletion is a soft-delete', admin_delete.status_code == 200, admin_delete.status_code)
 listed = client.get('/api/admin/deleted-accounts?q=student2&role=student', headers=auth(admin_token))
 accounts = (listed.get_json() or {}).get('accounts', [])
 check('admin can search and filter deleted accounts', listed.status_code == 200 and len(accounts) == 1)
+check('deleted account email is preserved in history', bool(accounts and accounts[0].get('email') == 'student2@example.com'))
 check('non-admin cannot view deleted accounts', client.get('/api/admin/deleted-accounts', headers=auth(student2_token)).status_code == 403)
 history = client.get('/api/admin/deleted-accounts/stu2/history', headers=auth(admin_token))
 check('deletion history is available', history.status_code == 200 and bool((history.get_json() or {}).get('events')))
-# The filtered bulk clear must not clear the separately deleted instructor.
+
+# Legacy clear routes must never hide or mutate permanent history.
 cleared = client.post('/api/admin/deleted-accounts/clear-all?q=student2&role=student', headers=auth(admin_token))
-check('filtered clear-all succeeds', cleared.status_code == 200, cleared.status_code)
+check('legacy clear-all endpoint is disabled', cleared.status_code == 410, cleared.status_code)
+legacy_single = client.post('/api/admin/deleted-accounts/ins1/clear', headers=auth(admin_token))
+check('legacy single-clear endpoint is disabled', legacy_single.status_code == 410, legacy_single.status_code)
 with app.app_context():
     db = get_db()
-    stu2 = db.execute("SELECT deletion_cleared_at FROM users WHERE id='stu2'").fetchone()
+    stu2 = db.execute("SELECT deleted_email,email,deletion_cleared_at FROM users WHERE id='stu2'").fetchone()
     ins1 = db.execute("SELECT deletion_cleared_at FROM users WHERE id='ins1'").fetchone()
     retained_stu2 = db.execute("SELECT id FROM users WHERE id='stu2'").fetchone()
-check('bulk clear hides only matching account', bool(stu2 and stu2['deletion_cleared_at']) and ins1 and not ins1['deletion_cleared_at'])
-check('cleared account remains retained in database', bool(retained_stu2))
+check('admin deletion archives email and uses a unique tombstone', bool(
+    stu2 and stu2['deleted_email'] == 'student2@example.com'
+    and str(stu2['email']).endswith('@deleted.learnafrica.invalid')))
+check('clear requests do not alter retention metadata', bool(
+    stu2 and not stu2['deletion_cleared_at'] and ins1 and not ins1['deletion_cleared_at']))
+check('deleted account remains retained in database', bool(retained_stu2))
+
+# Re-register using the same email. A new user id is created and linked to the
+# previous deleted record, without moving any historical transactions.
+signup = client.post('/api/auth/signup', json={
+    'name': 'Student Two Rejoined',
+    'email': 'student2@example.com',
+    'password': 'NewPass12345!',
+    'phone': '+233241234567',
+    'accept_terms': True,
+    'agreement_version': '2026-11',
+})
+signup_data = signup.get_json() or {}
+new_id = (signup_data.get('user') or {}).get('id')
+check('same email can register again after deletion', signup.status_code == 201 and bool(new_id), signup.status_code)
+with app.app_context():
+    db = get_db()
+    old = db.execute(
+        "SELECT deleted_email,email,re_registered_to_user_id,re_registered_at FROM users WHERE id='stu2'"
+    ).fetchone()
+    new = db.execute("SELECT id,email,deleted_at FROM users WHERE id=?", (new_id,)).fetchone() if new_id else None
+check('re-registration creates a distinct account id', bool(new and new['id'] != 'stu2'))
+check('old and new accounts are linked without restoring the old account', bool(
+    old and old['re_registered_to_user_id'] == new_id and old['re_registered_at']
+    and new and not new['deleted_at'] and new['email'] == 'student2@example.com'))
+deleted_after = client.get('/api/admin/deleted-accounts?q=student2', headers=auth(admin_token))
+reregistered = client.get('/api/admin/re-registered-accounts?q=student2', headers=auth(admin_token))
+check('re-registered account leaves the current deleted list', not (deleted_after.get_json() or {}).get('accounts'))
+check('re-registered history shows both account identities',
+      reregistered.status_code == 200 and len((reregistered.get_json() or {}).get('accounts', [])) == 1
+      and (reregistered.get_json() or {}).get('accounts', [])[0].get('new_account_id') == new_id)
+check('re-registered history remains admin-only',
+      client.get('/api/admin/re-registered-accounts', headers=auth(student2_token)).status_code == 403)
+check('new account can log in with its new password',
+      client.post('/api/auth/login', json={'email': 'student2@example.com', 'password': 'NewPass12345!'}).status_code == 200)
+
+# Also prove self-deleted account email reuse leaves the old financial record
+# attached to its original user id, not the newly created account.
+signup_old = client.post('/api/auth/signup', json={
+    'name': 'Student One Rejoined',
+    'email': 'student@example.com',
+    'password': 'NewPass12345!',
+    'phone': '+233241234568',
+    'accept_terms': True,
+    'agreement_version': '2026-11',
+})
+signup_old_data = signup_old.get_json() or {}
+new_old_id = (signup_old_data.get('user') or {}).get('id')
+with app.app_context():
+    db = get_db()
+    original_tx = db.execute("SELECT user_id FROM transactions WHERE id='tx1'").fetchone()
+    original_user = db.execute("SELECT re_registered_to_user_id FROM users WHERE id='stu1'").fetchone()
+    new_user_tx = db.execute("SELECT id FROM transactions WHERE user_id=?", (new_old_id,)).fetchone() if new_old_id else None
+check('self-deleted account can also re-register with same email',
+      signup_old.status_code == 201 and bool(new_old_id) and new_old_id != 'stu1', signup_old.status_code)
+check('historical transaction stays with the original account',
+      bool(original_tx and original_tx['user_id'] == 'stu1'
+           and original_user and original_user['re_registered_to_user_id'] == new_old_id
+           and not new_user_tx))
 
 print()
 if failures:
