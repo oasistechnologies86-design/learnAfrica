@@ -33,7 +33,7 @@ import { shareText, linkedInShare, twitterShare, facebookShare, whatsappShare, e
  * design size below.
  */
 export const CERT_DESIGN_WIDTH = 900;
-export const CERT_DESIGN_HEIGHT = 636; // 1.414:1 landscape ratio
+export const CERT_DESIGN_HEIGHT = 636; // A4 landscape composition
 
 export function CertificateDocument({ data, displayName, id = 'certificate-content' }) {
   return (
@@ -68,15 +68,15 @@ export function CertificateDocument({ data, displayName, id = 'certificate-conte
         </p>
 
         <p className="mt-5 text-base text-slate-700">This certifies that</p>
-        <h2 className="my-3 inline-block border-b-4 border-slate-900 px-14 pb-1 font-serif text-4xl font-bold leading-tight text-slate-900">
+        <h2 className={`my-3 block w-full max-w-full border-b-4 border-slate-900 px-6 pb-2 font-serif font-bold leading-tight text-slate-900 whitespace-normal break-words [overflow-wrap:anywhere] ${displayName.length > 34 ? 'text-2xl' : displayName.length > 23 ? 'text-3xl' : 'text-4xl'}`}>
           {displayName}
         </h2>
         <p className="text-base text-slate-700">has successfully completed all course requirements for</p>
-        <h3 className="mt-2 max-w-3xl font-serif text-3xl font-bold leading-tight text-primary">
+        <h3 className={`mt-2 mx-auto w-full max-w-[760px] font-serif font-bold leading-tight text-primary whitespace-normal break-words [overflow-wrap:anywhere] ${String(data.courseName || '').length > 48 ? 'text-2xl' : 'text-3xl'}`}>
           {data.courseName}
         </h3>
 
-        <div className="mt-4 flex w-full items-end justify-between gap-8 px-6">
+        <div className="mt-3 flex w-full items-center justify-between gap-5 px-6">
           {/* Signatory = the authorised platform admin, never the course
               instructor. Standard certificate layout, matching the Date column
               to its right: the signature (image or handwritten text) sits ON
@@ -108,7 +108,7 @@ export function CertificateDocument({ data, displayName, id = 'certificate-conte
             </p>
           </div>
           <div className="flex shrink-0 flex-col items-center">
-            <CertificateSeal size={96} />
+            <CertificateSeal size={132} />
           </div>
           <div className="flex flex-1 flex-col items-center">
             <p className="w-56 border-b border-slate-900 pb-1 text-xl font-semibold text-slate-900">
@@ -121,7 +121,7 @@ export function CertificateDocument({ data, displayName, id = 'certificate-conte
         {/* Verification block — same pattern as the badge: a scannable QR, the
             certificate's verification code, and the public URL, grouped so they
             never overlap the name, course, date or seal. */}
-        <div className="mt-4 flex w-full items-center justify-between gap-6 border-t border-slate-200 pt-3 text-left">
+        <div className="mt-3 flex w-full items-center justify-between gap-4 border-t border-slate-200 pt-2 text-left">
           <div className="font-mono text-3xs uppercase tracking-[0.2em] text-slate-600">
             <p className="font-bold text-slate-500">Certificate ID</p>
             <p className="mt-0.5 text-2xs font-semibold text-slate-900">{data.certificateId}</p>
