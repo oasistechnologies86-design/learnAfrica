@@ -213,7 +213,7 @@ export function SignupPage() {
             digital_address: instructor.digital_address,
             accept_terms: true,
             accept_verification: true,
-            agreement_version: '2026-01',
+            agreement_version: '2026-11',
           }
         })
         return
@@ -226,6 +226,8 @@ export function SignupPage() {
         phone:    formData.phone,
         password: formData.password,
         role:     'student',
+        accept_terms: true,
+        agreement_version: '2026-11',
       })
       // If the backend requires email verification, redirect to /verify-email
       if (result && result.needs_verification) {
