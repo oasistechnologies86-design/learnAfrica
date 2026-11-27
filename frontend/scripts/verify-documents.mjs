@@ -142,6 +142,14 @@ try {
       // The block that carries the ID + verify URL (the last flex row).
       const block = [...el.querySelectorAll('div')].find((d) => /Verify at|Verify/.test(d.textContent) && d.querySelector('svg')) || null;
       const blockRect = block ? block.getBoundingClientRect() : null;
+      const main = el.querySelector('[data-cert-main]');
+      const seal = el.querySelector('[data-cert-seal]');
+      const footer = el.querySelector('[data-cert-footer]');
+      const mainRect = main ? main.getBoundingClientRect() : null;
+      const sealRect = seal ? seal.getBoundingClientRect() : null;
+      const footerRect = footer ? footer.getBoundingClientRect() : null;
+      const cornerRects = [...el.querySelectorAll('[data-cert-corner]')].map((node) => node.getBoundingClientRect());
+      const intersects = (a, b) => a && b && a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
       out[name] = {
         found: true,
         boxH: Math.round(r.height),
@@ -220,6 +228,27 @@ try {
           bottom: Math.round(blockRect.bottom - r.top),
           fullyInside: blockRect.bottom <= r.bottom + 0.5,
         } : null,
+        layout: name === 'certificate' ? {
+          mainFits: !!main && main.scrollHeight <= main.clientHeight + 1,
+          mainScroll: main?.scrollHeight ?? null,
+          mainClient: main?.clientHeight ?? null,
+          mainBeforeFooter: !!mainRect && !!footerRect && mainRect.bottom <= footerRect.top + 0.5,
+          sealVisible: !!sealRect && sealRect.width >= 160 && sealRect.height >= 190,
+          sealBottom: sealRect ? Math.round(sealRect.bottom - r.top) : null,
+          footerTop: footerRect ? Math.round(footerRect.top - r.top) : null,
+          sealBeforeFooter: !!sealRect && !!footerRect && sealRect.bottom <= footerRect.top + 0.5,
+          footerClearOfCorners: !!footerRect && cornerRects.length === 4 && cornerRects.every((corner) => !intersects(footerRect, corner)),
+          nameInsideMain: (() => {
+            const node = el.querySelector('h2');
+            const nr = node?.getBoundingClientRect();
+            return !!nr && !!mainRect && nr.top >= mainRect.top && nr.bottom <= mainRect.bottom;
+          })(),
+          courseInsideMain: (() => {
+            const node = el.querySelector('h3');
+            const cr = node?.getBoundingClientRect();
+            return !!cr && !!mainRect && cr.top >= mainRect.top && cr.bottom <= mainRect.bottom;
+          })(),
+        } : null,
         raster: raster[name],
       };
     }
@@ -249,6 +278,14 @@ try {
       check('certificate: display name is below the rule', o.complete && o.nameBelowRule === true, JSON.stringify(o));
       check('certificate: designation is below the name', o.complete && o.roleBelowName === true, JSON.stringify(o));
       check('certificate: name is below the signature', o.complete && o.nameBelowSignature === true, JSON.stringify(o));
+      const layout = d.layout || {};
+      check('certificate: main content fits its reserved area', layout.mainFits === true, JSON.stringify(layout));
+      check('certificate: main content ends before verification footer', layout.mainBeforeFooter === true, JSON.stringify(layout));
+      check('certificate: enlarged seal is fully visible', layout.sealVisible === true, JSON.stringify(layout));
+      check('certificate: seal does not collide with footer', layout.sealBeforeFooter === true, JSON.stringify(layout));
+      check('certificate: footer clears all four green corner ornaments', layout.footerClearOfCorners === true, JSON.stringify(layout));
+      check('certificate: learner name stays inside the main content area', layout.nameInsideMain === true, JSON.stringify(layout));
+      check('certificate: course title stays inside the main content area', layout.courseInsideMain === true, JSON.stringify(layout));
     }
     if (name === 'certificate-image') {
       const img = d.signatureImage || {};
