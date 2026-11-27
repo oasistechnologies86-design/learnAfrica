@@ -67,12 +67,16 @@ export const BADGE_DESIGN_WIDTH = 700;
 export const BADGE_DESIGN_HEIGHT = 495; // 1.414:1 landscape ratio
 
 export function BadgeDocument({ badge, displayName, badgeId, issuedDate, id = 'badge-content' }) {
-  const [c1, c2] = badge.gradient || ['#0B3D2E', '#10B981'];
+  const isGold = badge.color === 'gold';
+  const palette = isGold
+    ? { start: '#5B4215', end: '#B8892D', accent: '#FFF0B8', soft: '#FFF8E6', line: 'rgba(255,240,184,.42)', qr: '#4A3510' }
+    : { start: '#073D2E', end: '#087B50', accent: '#C7F5D9', soft: '#E9FFF2', line: 'rgba(199,245,217,.3)', qr: '#0B3D2E' };
+  const [c1, c2] = isGold ? [palette.start, palette.end] : (badge.gradient || [palette.start, '#10B981']);
   const issued = issuedDate || new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   return (
     <div
       id={id}
-      className="relative flex h-[495px] w-[700px] flex-col overflow-hidden rounded-2xl px-12 py-8 text-white print:rounded-none print:w-full print:h-auto print:aspect-[1.414/1]"
+      className="relative flex h-[495px] w-[700px] flex-col overflow-hidden rounded-2xl px-12 py-8 text-white print:rounded-none print:w-full print:h-auto print:aspect-[1.414/1]" data-badge-theme={isGold ? 'gold' : 'emerald'}
       style={{ background: `linear-gradient(135deg, ${c1} 0%, ${c2} 100%)` }}
     >
       <style dangerouslySetInnerHTML={{ __html: `@media print { @page { size: A4 landscape; margin: 8mm; } html, body { margin:0 !important; padding:0 !important; -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; } }` }} />
@@ -81,35 +85,35 @@ export function BadgeDocument({ badge, displayName, badgeId, issuedDate, id = 'b
       <div aria-hidden="true" className="pointer-events-none absolute -bottom-10 -left-10 h-44 w-44 rounded-full border border-white/10" />
 
       <header className="relative z-10 flex shrink-0 items-center justify-between border-b border-white/20 pb-3">
-        <p className="text-xs font-extrabold uppercase tracking-[0.28em] text-amber-200">LearnAfrica</p>
-        <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-emerald-50/75">Official achievement award</p>
+        <p className="text-xs font-extrabold uppercase tracking-[0.28em]" style={{ color: palette.accent }}>LearnAfrica</p>
+        <p className="text-[9px] font-semibold uppercase tracking-[0.2em]" style={{ color: palette.soft }}>Official achievement award</p>
       </header>
 
       <main className="relative z-10 flex min-h-0 flex-1 items-center justify-center gap-8 py-3">
-        <div className="flex shrink-0 items-center justify-center">
-          <CertificateSeal size={78} />
+        <div className="flex h-[142px] w-[126px] shrink-0 items-center justify-center rounded-[28px] border border-amber-200/80 bg-[#FFFDF5] p-2 shadow-[0_8px_24px_rgba(0,0,0,0.22)]">
+          <CertificateSeal size={94} />
         </div>
         <div className="min-w-0 flex-1 text-left">
-          <p className="mb-2 text-[9px] font-bold uppercase tracking-[0.24em] text-amber-200">Achievement unlocked</p>
+          <p className="mb-2 text-[9px] font-bold uppercase tracking-[0.24em]" style={{ color: palette.accent }}>Achievement unlocked</p>
           <h2 className="max-w-full break-words font-serif text-3xl font-bold leading-tight text-white">{badge.title}</h2>
-          <p className="mt-3 max-w-[350px] text-sm leading-relaxed text-emerald-50/90">{badge.description}</p>
-          <div className="mt-4 h-0.5 w-16 rounded-full bg-amber-300/80" />
+          <p className="mt-3 max-w-[350px] text-sm leading-relaxed" style={{ color: palette.soft }}>{badge.description}</p>
+          <div className="mt-4 h-0.5 w-16 rounded-full" style={{ backgroundColor: palette.accent }} />
         </div>
       </main>
 
       <footer className="relative z-10 flex shrink-0 items-end justify-between gap-6 border-t border-white/20 pt-3">
         <div className="min-w-0 flex-1">
-          <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-amber-200">Awarded to</p>
+          <p className="text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: palette.accent }}>Awarded to</p>
           <p className="mt-1 max-w-[390px] break-words text-xl font-bold leading-tight text-white">{displayName}</p>
-          <p className="mt-2 text-[9px] uppercase tracking-[0.16em] text-emerald-50/70">Issued by LearnAfrica · {issued}</p>
-          {badgeId && <p className="mt-1 font-mono text-[8px] text-emerald-50/70">Credential ID: {badgeId}</p>}
+          <p className="mt-2 text-[9px] uppercase tracking-[0.16em]" style={{ color: palette.soft }}>Issued by LearnAfrica · {issued}</p>
+          {badgeId && <p className="mt-1 font-mono text-[9px]" style={{ color: palette.soft }}>Credential ID: {badgeId}</p>}
         </div>
         {badgeId && (
-          <div data-badge-verification className="flex shrink-0 flex-col items-center gap-1 rounded-lg bg-white p-1.5">
+          <div data-badge-verification className="flex shrink-0 flex-col items-center gap-1.5 rounded-xl border border-white/70 bg-white p-2 shadow-sm">
             <a href={verifyUrl(badgeId)} target="_blank" rel="noopener noreferrer" title="Open the verification page">
-              <QRCodeSVG value={verifyUrl(badgeId)} size={64} level="Q" marginSize={2} bgColor="#ffffff" fgColor="#0B3D2E" />
+              <QRCodeSVG value={verifyUrl(badgeId)} size={76} level="Q" marginSize={2} bgColor="#ffffff" fgColor={palette.qr} />
             </a>
-            <span className="text-[7px] font-bold uppercase tracking-[0.12em] text-emerald-900">Scan to verify</span>
+            <span className="text-[9px] font-bold uppercase tracking-[0.1em] text-slate-700">Scan to verify</span>
           </div>
         )}
       </footer>
