@@ -1958,16 +1958,22 @@ def create_app() -> Flask:
                     'courses': [{'id': row['id'], 'title': row['title']} for row in owned],
                     'count': len(owned)
                 }), 409
-        _invalidate_deleted_account_flows(db, uid, u['email'])
-        db.execute(
-            "UPDATE users SET is_active=0,deleted_email=email,"
-            "email='deleted+' || id || '@deleted.learnafrica.invalid',"
-            "deleted_at=CURRENT_TIMESTAMP,deleted_by=?,deletion_reason='self_service',"
-            "token_version=COALESCE(token_version,0)+1,updated_at=CURRENT_TIMESTAMP WHERE id=?",
-            (uid, uid)
-        )
-        db.execute("INSERT INTO account_deletion_events (id,user_id,user_name,user_email,user_role,instructor_status,event_type,actor_user_id) VALUES (?,?,?,?,?,?,?,?)",
-                   (str(uuid.uuid4()),uid,u['name'],u['email'],u['role'],u['instructor_status'],'self_deleted',uid))
+        try:
+            _invalidate_deleted_account_flows(db, uid, u['email'])
+            db.execute(
+                "UPDATE users SET is_active=0,deleted_email=email,"
+                "email='deleted+' || id || '@deleted.learnafrica.invalid',"
+                "deleted_at=CURRENT_TIMESTAMP,deleted_by=?,deletion_reason='self_service',"
+                "token_version=COALESCE(token_version,0)+1,updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                (uid, uid)
+            )
+            db.execute("INSERT INTO account_deletion_events (id,user_id,user_email,user_name,user_role,instructor_status,event_type,actor_user_id) VALUES (?,?,?,?,?,?,?,?)",
+                       (str(uuid.uuid4()),uid,u['email'],u['name'],u['role'],u['instructor_status'],'self_deleted',uid))
+            db.commit()
+        except Exception as deletion_error:
+            db.rollback()
+            app.logger.error(f'self-service account deletion failed for {uid}: {deletion_error}')
+            return jsonify({'error': 'Account deletion could not be completed. No account changes were saved.'}), 500
         admins = db.execute("SELECT id FROM users WHERE role IN ('admin','superadmin') AND is_active=1").fetchall()
         for admin in admins:
             try:
@@ -6537,17 +6543,22 @@ def create_app() -> Flask:
                     'courses': [{'id': row['id'], 'title': row['title']} for row in owned],
                     'count': len(owned)
                 }), 409
-        _invalidate_deleted_account_flows(db, uid, target['email'])
-        db.execute(
-            "UPDATE users SET is_active=0,deleted_email=email,"
-            "email='deleted+' || id || '@deleted.learnafrica.invalid',"
-            "deleted_at=CURRENT_TIMESTAMP,deleted_by=?,deletion_reason='admin_action',"
-            "token_version=COALESCE(token_version,0)+1,updated_at=CURRENT_TIMESTAMP WHERE id=?",
-            (g.current_user['user_id'], uid)
-        )
-        db.execute("INSERT INTO account_deletion_events (id,user_id,user_name,user_email,user_role,instructor_status,event_type,actor_user_id) VALUES (?,?,?,?,?,?,?,?)",
-                   (str(uuid.uuid4()),uid,target['name'],target['email'],target['role'],target['instructor_status'],'admin_deleted',g.current_user['user_id']))
-        db.commit()
+        try:
+            _invalidate_deleted_account_flows(db, uid, target['email'])
+            db.execute(
+                "UPDATE users SET is_active=0,deleted_email=email,"
+                "email='deleted+' || id || '@deleted.learnafrica.invalid',"
+                "deleted_at=CURRENT_TIMESTAMP,deleted_by=?,deletion_reason='admin_action',"
+                "token_version=COALESCE(token_version,0)+1,updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                (g.current_user['user_id'], uid)
+            )
+            db.execute("INSERT INTO account_deletion_events (id,user_id,user_name,user_email,user_role,instructor_status,event_type,actor_user_id) VALUES (?,?,?,?,?,?,?,?)",
+                       (str(uuid.uuid4()),uid,target['name'],target['email'],target['role'],target['instructor_status'],'admin_deleted',g.current_user['user_id']))
+            db.commit()
+        except Exception as deletion_error:
+            db.rollback()
+            app.logger.error(f'admin account deletion failed for {uid}: {deletion_error}')
+            return jsonify({'error': 'Account deletion could not be completed. No account changes were saved.'}), 500
         audit('delete_user_soft', 'user', uid, target['email'], {'role':target['role']})
         return jsonify({'message': 'Account moved to Deleted Accounts. Related learning and financial records were retained.'})
     
