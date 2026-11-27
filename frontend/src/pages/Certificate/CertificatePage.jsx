@@ -52,10 +52,10 @@ export function CertificateDocument({ data, displayName, id = 'certificate-conte
           scales to that single page instead of overflowing onto a second one. */}
       <style dangerouslySetInnerHTML={{ __html: `@media print { @page { size: A4 landscape; margin: 8mm; } html, body { margin: 0 !important; padding: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }` }} />
       <div className="absolute inset-4 border border-slate-200 pointer-events-none" />
-      <div aria-hidden="true" className="absolute left-4 top-4 z-0 h-7 w-7 border-l-[3px] border-t-[3px] border-primary/60 pointer-events-none" />
-      <div aria-hidden="true" className="absolute right-4 top-4 z-0 h-7 w-7 border-r-[3px] border-t-[3px] border-primary/60 pointer-events-none" />
-      <div aria-hidden="true" className="absolute bottom-4 left-4 z-0 h-7 w-7 border-b-[3px] border-l-[3px] border-primary/60 pointer-events-none" />
-      <div aria-hidden="true" className="absolute bottom-4 right-4 z-0 h-7 w-7 border-b-[3px] border-r-[3px] border-primary/60 pointer-events-none" />
+      <div aria-hidden="true" data-cert-corner className="absolute left-4 top-4 z-0 h-7 w-7 border-l-[3px] border-t-[3px] border-primary/60 pointer-events-none" />
+      <div aria-hidden="true" data-cert-corner className="absolute right-4 top-4 z-0 h-7 w-7 border-r-[3px] border-t-[3px] border-primary/60 pointer-events-none" />
+      <div aria-hidden="true" data-cert-corner className="absolute bottom-4 left-4 z-0 h-7 w-7 border-b-[3px] border-l-[3px] border-primary/60 pointer-events-none" />
+      <div aria-hidden="true" data-cert-corner className="absolute bottom-4 right-4 z-0 h-7 w-7 border-b-[3px] border-r-[3px] border-primary/60 pointer-events-none" />
 
       <div data-cert-main className="absolute inset-x-0 top-0 bottom-[112px] z-10 flex flex-col items-center px-12 pt-7 pb-2 text-center">
         <p className="mb-2 text-xs font-bold uppercase tracking-[0.3em] text-primary">LearnAfrica</p>
