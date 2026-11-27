@@ -108,7 +108,7 @@ export function CertificateDocument({ data, displayName, id = 'certificate-conte
             </p>
           </div>
           <div className="flex shrink-0 flex-col items-center">
-            <CertificateSeal size={96} />
+            <CertificateSeal size={132} />
           </div>
           <div className="flex flex-1 flex-col items-center">
             <p className="w-56 border-b border-slate-900 pb-1 text-xl font-semibold text-slate-900">
