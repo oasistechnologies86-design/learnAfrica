@@ -703,6 +703,7 @@ export function SignupPage() {
               </button>
             </div>
             <div className="space-y-3 overflow-y-auto p-5 text-sm leading-relaxed text-muted-foreground">
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Effective 27 November 2026 · Version 2026-11</p>
               {modal === 'terms' ? (
                 isInstructorFlow ? (
                   <>
@@ -736,7 +737,7 @@ export function SignupPage() {
                   <p><strong className="text-foreground">6. Your choices.</strong> Subject to applicable law, you may request access, correction, information about use, or deletion where appropriate. You may withdraw consent where processing relies on consent. Some records may need to be retained for legal, security, accounting or dispute purposes. Contact official LearnAfrica support for privacy requests or raise concerns with the relevant data-protection authority.</p>
                   <p><strong className="text-foreground">7. Children and updates.</strong> Where a person is not legally able to consent independently, parent or guardian involvement may be required. We may update this Policy as services or legal obligations change and will publish the updated version and effective date. This Policy is intended to operate in line with applicable Ghanaian data-protection law.</p>
                 </>
-              )
+              )}
             </div>
             <div className="border-t border-border bg-muted/20 p-4">
               <button
