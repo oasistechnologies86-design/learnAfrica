@@ -58,11 +58,11 @@ export function CertificateSeal({ size = 118, className = '' }) {
         <circle cx="100" cy="105" r="76" fill="#fffefa" stroke="#0b244f" strokeWidth="1.5" />
         <circle cx="100" cy="105" r="59" fill="url(#la-navy)" stroke="url(#la-gold)" strokeWidth="3" />
         <circle cx="100" cy="105" r="54" fill="none" stroke="#d5a52c" strokeWidth=".8" strokeDasharray="1.2 3.4" />
-        <text fontFamily="Georgia,serif" fontSize="12.5" fontWeight="700" letterSpacing="2.1" fill="#071a42">
-          <textPath href="#la-top-arc" startOffset="50%" textAnchor="middle">LEARNAFRICA</textPath>
+        <text fontFamily="Georgia,serif" fontSize="15.5" fontWeight="700" letterSpacing="1.1" fill="#071a42">
+          <textPath href="#la-top-arc" startOffset="50%" textAnchor="middle" textLength="130" lengthAdjust="spacingAndGlyphs">LEARNAFRICA</textPath>
         </text>
-        <text fontFamily="Georgia,serif" fontSize="10.5" fontWeight="700" letterSpacing="2.4" fill="#08752b">
-          <textPath href="#la-bottom-arc" startOffset="50%" textAnchor="middle">CERTIFIED</textPath>
+        <text fontFamily="Georgia,serif" fontSize="12.5" fontWeight="700" letterSpacing="1.4" fill="#08752b">
+          <textPath href="#la-bottom-arc" startOffset="50%" textAnchor="middle" textLength="104" lengthAdjust="spacingAndGlyphs">CERTIFIED</textPath>
         </text>
         <g fill="url(#la-gold)" stroke="#9d6b0c" strokeWidth=".35">
           {LEAVES.map((leaf, i) => <ellipse key={i} cx={leaf.x} cy={leaf.y} rx="5.4" ry="2.4" transform={`rotate(${leaf.rotation} ${leaf.x} ${leaf.y})`} />)}
