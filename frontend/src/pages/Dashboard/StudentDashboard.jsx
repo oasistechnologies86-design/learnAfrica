@@ -67,63 +67,52 @@ export const BADGE_DESIGN_WIDTH = 700;
 export const BADGE_DESIGN_HEIGHT = 495; // 1.414:1 landscape ratio
 
 export function BadgeDocument({ badge, displayName, badgeId, issuedDate, id = 'badge-content' }) {
-  const Icon = iconMap[badge.iconName] || Award;
   const [c1, c2] = badge.gradient || ['#0B3D2E', '#10B981'];
   const issued = issuedDate || new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   return (
     <div
       id={id}
-      className="relative overflow-hidden rounded-2xl w-[700px] h-[495px]
-                 print:rounded-none print:w-full print:h-auto print:aspect-[1.414/1]"
+      className="relative flex h-[495px] w-[700px] flex-col overflow-hidden rounded-2xl px-12 py-8 text-white print:rounded-none print:w-full print:h-auto print:aspect-[1.414/1]"
       style={{ background: `linear-gradient(135deg, ${c1} 0%, ${c2} 100%)` }}
     >
       <style dangerouslySetInnerHTML={{ __html: `@media print { @page { size: A4 landscape; margin: 8mm; } html, body { margin:0 !important; padding:0 !important; -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; } }` }} />
-      {/* Gold inner frame + soft corner rings — premium, low-contrast decoration
-          that never sits behind text. */}
-      <div className="absolute inset-3 rounded-xl border border-amber-300/60 pointer-events-none" />
-      <div className="absolute w-64 h-64 rounded-full border border-white/10 -top-16 -right-16" />
-      <div className="absolute w-44 h-44 rounded-full border border-white/10 -bottom-10 -left-10" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-3 rounded-xl border border-amber-300/60" />
+      <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full border border-white/10" />
+      <div aria-hidden="true" className="pointer-events-none absolute -bottom-10 -left-10 h-44 w-44 rounded-full border border-white/10" />
 
-      <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-12 py-8">
-        <p className="text-3xs font-extrabold tracking-[0.35em] text-amber-300 uppercase mb-4">LearnAfrica</p>
+      <header className="relative z-10 flex shrink-0 items-center justify-between border-b border-white/20 pb-3">
+        <p className="text-xs font-extrabold uppercase tracking-[0.28em] text-amber-200">LearnAfrica</p>
+        <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-emerald-50/75">Official achievement award</p>
+      </header>
 
-        {/* Use the same official LearnAfrica seal as the certificate so the
-            preview, downloaded badge and printed badge share one identity. */}
-        <div className="mb-3 flex items-center justify-center">
-          <CertificateSeal size={112} />
+      <main className="relative z-10 flex min-h-0 flex-1 items-center justify-center gap-8 py-3">
+        <div className="flex shrink-0 items-center justify-center">
+          <CertificateSeal size={78} />
         </div>
+        <div className="min-w-0 flex-1 text-left">
+          <p className="mb-2 text-[9px] font-bold uppercase tracking-[0.24em] text-amber-200">Achievement unlocked</p>
+          <h2 className="max-w-full break-words font-serif text-3xl font-bold leading-tight text-white">{badge.title}</h2>
+          <p className="mt-3 max-w-[350px] text-sm leading-relaxed text-emerald-50/90">{badge.description}</p>
+          <div className="mt-4 h-0.5 w-16 rounded-full bg-amber-300/80" />
+        </div>
+      </main>
 
-        <p className="text-3xs font-bold tracking-[0.28em] text-amber-200 uppercase mb-2">Achievement Unlocked</p>
-        <h2 className="max-w-[34rem] text-3xl font-black leading-tight text-white mb-2">{badge.title}</h2>
-        <p className="max-w-md text-sm leading-snug text-emerald-50/90 mb-4">{badge.description}</p>
-
-        <div className="h-0.5 w-16 rounded-full bg-amber-300/80 mb-5" />
-
-        <p className="text-3xs font-bold tracking-[0.22em] text-amber-200 uppercase mb-1.5">Awarded to</p>
-        <p className="max-w-[30rem] text-xl font-bold leading-tight text-white mb-3">{displayName}</p>
-
-        <p className="text-3xs tracking-[0.22em] text-emerald-50/70 uppercase">
-          Issued by LearnAfrica &bull; {issued}
-        </p>
+      <footer className="relative z-10 flex shrink-0 items-end justify-between gap-6 border-t border-white/20 pt-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-amber-200">Awarded to</p>
+          <p className="mt-1 max-w-[390px] break-words text-xl font-bold leading-tight text-white">{displayName}</p>
+          <p className="mt-2 text-[9px] uppercase tracking-[0.16em] text-emerald-50/70">Issued by LearnAfrica · {issued}</p>
+          {badgeId && <p className="mt-1 font-mono text-[8px] text-emerald-50/70">Credential ID: {badgeId}</p>}
+        </div>
         {badgeId && (
-          <div className="mt-2 flex items-center gap-2.5">
-            <a
-              href={verifyUrl(badgeId)}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Open the verification page"
-              className="shrink-0 rounded bg-white p-1"
-            >
-              <QRCodeSVG value={verifyUrl(badgeId)} size={80} level="Q" marginSize={2} bgColor="#ffffff" fgColor="#0B3D2E" />
+          <div className="flex shrink-0 flex-col items-center gap-1 rounded-lg bg-white p-1.5">
+            <a href={verifyUrl(badgeId)} target="_blank" rel="noopener noreferrer" title="Open the verification page">
+              <QRCodeSVG value={verifyUrl(badgeId)} size={64} level="Q" marginSize={2} bgColor="#ffffff" fgColor="#0B3D2E" />
             </a>
-            <p className="text-left font-mono text-3xs leading-tight tracking-[0.14em] text-emerald-50/60">
-              ID: {badgeId}
-              <br />
-              Verify at {siteHost()}/verify-credential
-            </p>
+            <span className="text-[7px] font-bold uppercase tracking-[0.12em] text-emerald-900">Scan to verify</span>
           </div>
         )}
-      </div>
+      </footer>
     </div>
   );
 }
