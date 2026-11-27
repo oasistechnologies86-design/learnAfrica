@@ -51,6 +51,25 @@ with app.app_context():
         "VALUES ('tx1','receipt-1','purchase','stu1','Student One','student@example.com',100,'GHS','success','test')")
     db.commit()
 
+# Simulate a legacy soft-deleted row from before email archiving existed.
+with app.app_context():
+    db = get_db()
+    db.execute(
+        "INSERT INTO users (id,name,email,password_hash,role,is_active,deleted_at) "
+        "VALUES ('legacy-deleted','Legacy Deleted','legacy@example.com',?,'student',0,'2026-10-01 12:00:00')",
+        (generate_password_hash('Pass12345!'),)
+    )
+    db.commit()
+with app.app_context():
+    init_db(app)
+    db = get_db()
+    legacy = db.execute(
+        "SELECT email,deleted_email FROM users WHERE id='legacy-deleted'"
+    ).fetchone()
+check('migration archives emails for previously deleted accounts',
+      bool(legacy and legacy['deleted_email'] == 'legacy@example.com'
+           and str(legacy['email']).endswith('@deleted.learnafrica.invalid')))
+
 client = app.test_client()
 
 
@@ -166,6 +185,12 @@ check('admin deletion archives email and uses a unique tombstone', bool(
 check('clear requests do not alter retention metadata', bool(
     stu2 and not stu2['deletion_cleared_at'] and ins1 and not ins1['deletion_cleared_at']))
 check('deleted account remains retained in database', bool(retained_stu2))
+read_only_edit = client.put(
+    '/api/admin/users/stu2',
+    json={'email': 'changed@example.com'},
+    headers=auth(admin_token)
+)
+check('archived account identity cannot be edited', read_only_edit.status_code == 409)
 
 # Re-register using the same email. A new user id is created and linked to the
 # previous deleted record, without moving any historical transactions.
