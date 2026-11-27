@@ -20,6 +20,7 @@ import { courseThumbnail } from '@/lib/courseThumbnail';
 import { siteHost, verifyUrl } from '@/lib/siteUrl';
 import { drawCapturedDocument, downloadPdf, printPdf } from '@/lib/pdf';
 import { QRCodeSVG } from 'qrcode.react';
+import { CertificateSeal } from '@/components/certificate/CertificateSeal';
 
 const ProgressCard = lazy(() => import('@/components/dashboard/ProgressCard'));
 
@@ -86,11 +87,10 @@ export function BadgeDocument({ badge, displayName, badgeId, issuedDate, id = 'b
       <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-12 py-8">
         <p className="text-3xs font-extrabold tracking-[0.35em] text-amber-300 uppercase mb-4">LearnAfrica</p>
 
-        {/* Medal: gold ring, deep-green field, white icon — always high contrast. */}
-        <div className="relative mb-5 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-amber-300 to-amber-500 p-[3px]">
-          <div className="flex h-full w-full items-center justify-center rounded-full bg-[#0B3D2E] ring-2 ring-amber-200/70">
-            <Icon className="h-11 w-11 text-amber-300" strokeWidth={1.6} />
-          </div>
+        {/* Use the same official LearnAfrica seal as the certificate so the
+            preview, downloaded badge and printed badge share one identity. */}
+        <div className="mb-3 flex items-center justify-center">
+          <CertificateSeal size={112} />
         </div>
 
         <p className="text-3xs font-bold tracking-[0.28em] text-amber-200 uppercase mb-2">Achievement Unlocked</p>
