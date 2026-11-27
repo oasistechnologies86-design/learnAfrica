@@ -57,7 +57,7 @@ export function CertificateDocument({ data, displayName, id = 'certificate-conte
       <div aria-hidden="true" data-cert-corner className="absolute bottom-4 left-4 z-0 h-7 w-7 border-b-[3px] border-l-[3px] border-primary/60 pointer-events-none" />
       <div aria-hidden="true" data-cert-corner className="absolute bottom-4 right-4 z-0 h-7 w-7 border-b-[3px] border-r-[3px] border-primary/60 pointer-events-none" />
 
-      <div data-cert-main className="absolute inset-x-0 top-0 bottom-[116px] z-10 flex flex-col items-center px-16 pt-7 pb-3 text-center">
+      <div data-cert-main className="absolute inset-x-0 top-0 bottom-[148px] z-10 flex flex-col items-center px-16 pt-7 pb-3 text-center">
         <p className="mb-2 text-xs font-bold uppercase tracking-[0.3em] text-primary">LearnAfrica</p>
         <h1 className="font-serif text-4xl font-bold uppercase tracking-[0.1em] text-slate-900">
           Certificate of Completion
