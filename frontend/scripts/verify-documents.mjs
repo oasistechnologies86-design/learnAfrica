@@ -230,8 +230,12 @@ try {
         } : null,
         layout: name === 'certificate' ? {
           mainFits: !!main && main.scrollHeight <= main.clientHeight + 1,
+          mainScroll: main?.scrollHeight ?? null,
+          mainClient: main?.clientHeight ?? null,
           mainBeforeFooter: !!mainRect && !!footerRect && mainRect.bottom <= footerRect.top + 0.5,
           sealVisible: !!sealRect && sealRect.width >= 160 && sealRect.height >= 190,
+          sealBottom: sealRect ? Math.round(sealRect.bottom - r.top) : null,
+          footerTop: footerRect ? Math.round(footerRect.top - r.top) : null,
           sealBeforeFooter: !!sealRect && !!footerRect && sealRect.bottom <= footerRect.top + 0.5,
           footerClearOfCorners: !!footerRect && cornerRects.length === 4 && cornerRects.every((corner) => !intersects(footerRect, corner)),
           nameInsideMain: (() => {
