@@ -1058,7 +1058,7 @@ def create_app() -> Flask:
             # this address. The original user row and all related records stay
             # intact; only the lineage metadata is updated after new-user insert.
             prior_deleted = db.execute(
-                'SELECT id FROM users WHERE LOWER(TRIM(COALESCE(deleted_email,\'\')))=? '
+                'SELECT id,deleted_email FROM users WHERE LOWER(TRIM(COALESCE(deleted_email,email)))=? '
                 'AND deleted_at IS NOT NULL AND re_registered_to_user_id IS NULL '
                 'ORDER BY deleted_at DESC LIMIT 1',
                 (email,)
@@ -1148,6 +1148,16 @@ def create_app() -> Flask:
                 d.get('instructor_field') or d.get('specialisation') or d.get('specialization')
                 or d.get('title') or d.get('instructor_title') or ''
             )
+            # Defensive fallback for a legacy deleted row whose startup email
+            # archival migration could not complete. Archive it immediately
+            # before inserting the new identity, still inside this transaction.
+            if prior_deleted and not prior_deleted['deleted_email']:
+                db.execute(
+                    "UPDATE users SET deleted_email=email,"
+                    "email='deleted+' || id || '@deleted.learnafrica.invalid' "
+                    "WHERE id=? AND deleted_at IS NOT NULL AND deleted_email IS NULL",
+                    (prior_deleted['id'],)
+                )
             try:
                 db.execute('INSERT INTO users (id,name,email,password_hash,role,phone,bio,location,website,'
                            'instructor_title,instructor_field,instructor_status)'
