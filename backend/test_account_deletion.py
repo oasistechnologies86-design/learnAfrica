@@ -116,6 +116,18 @@ response = client.put('/api/admin/instructor-applications/ins1/review',
                       json={'action': 'approve'}, headers=auth(admin_token))
 check('admin cannot approve a deleted applicant', response.status_code == 409, response.status_code)
 
+# Keep a separate active learner token for permission checks after deleted users'
+# sessions have correctly been revoked.
+with app.app_context():
+    db = get_db()
+    db.execute(
+        "INSERT INTO users (id,name,email,password_hash,role,is_active,token_version) "
+        "VALUES ('stu3','Student Three','student3@example.com',?,'student',1,0)",
+        (generate_password_hash('Pass12345!'),)
+    )
+    db.commit()
+student3_token = token('student3@example.com')
+
 # Admin deletion is also soft-delete; history is permanent and email can be reused.
 admin_delete = client.delete('/api/admin/users/stu2', headers=auth(admin_token))
 check('admin deletion is a soft-delete', admin_delete.status_code == 200, admin_delete.status_code)
@@ -123,7 +135,18 @@ listed = client.get('/api/admin/deleted-accounts?q=student2&role=student', heade
 accounts = (listed.get_json() or {}).get('accounts', [])
 check('admin can search and filter deleted accounts', listed.status_code == 200 and len(accounts) == 1)
 check('deleted account email is preserved in history', bool(accounts and accounts[0].get('email') == 'student2@example.com'))
-check('non-admin cannot view deleted accounts', client.get('/api/admin/deleted-accounts', headers=auth(student2_token)).status_code == 403)
+filtered = client.get(
+    '/api/admin/deleted-accounts?role=student&reason=admin_action&date_from=2026-01-01&date_to=2026-12-31&sort=oldest&page=1&per_page=1',
+    headers=auth(admin_token)
+)
+filtered_data = filtered.get_json() or {}
+check('deletion date, reason, sort and pagination filters work',
+      filtered.status_code == 200 and len(filtered_data.get('accounts', [])) == 1
+      and filtered_data.get('page') == 1 and filtered_data.get('per_page') == 1
+      and filtered_data.get('count') == 1)
+invalid_dates = client.get('/api/admin/deleted-accounts?date_from=not-a-date', headers=auth(admin_token))
+check('invalid date filters are rejected safely', invalid_dates.status_code == 400)
+check('non-admin cannot view deleted accounts', client.get('/api/admin/deleted-accounts', headers=auth(student3_token)).status_code == 403)
 history = client.get('/api/admin/deleted-accounts/stu2/history', headers=auth(admin_token))
 check('deletion history is available', history.status_code == 200 and bool((history.get_json() or {}).get('events')))
 
@@ -174,7 +197,7 @@ check('re-registered history shows both account identities',
       reregistered.status_code == 200 and len((reregistered.get_json() or {}).get('accounts', [])) == 1
       and (reregistered.get_json() or {}).get('accounts', [])[0].get('new_account_id') == new_id)
 check('re-registered history remains admin-only',
-      client.get('/api/admin/re-registered-accounts', headers=auth(student2_token)).status_code == 403)
+      client.get('/api/admin/re-registered-accounts', headers=auth(student3_token)).status_code == 403)
 check('new account can log in with its new password',
       client.post('/api/auth/login', json={'email': 'student2@example.com', 'password': 'NewPass12345!'}).status_code == 200)
 
