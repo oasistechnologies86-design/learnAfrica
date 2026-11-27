@@ -1613,6 +1613,7 @@ export default function AdminPage() {
                         <p className="text-xs text-muted-foreground break-all">{account.new_account_email || account.email}</p>
                         <p className="text-xs text-muted-foreground break-all">New account ID: {account.new_account_id}</p>
                         <p className="text-xs text-muted-foreground">Registered again: {account.re_registered_at ? new Date(account.re_registered_at).toLocaleString() : 'Date unavailable'}</p>
+                        <p className="text-xs text-muted-foreground">New account created: {account.new_account_created_at ? new Date(account.new_account_created_at).toLocaleString() : 'Date unavailable'}</p>
                       </div>
                     )}
                     <button className="pt-1 text-xs font-semibold text-primary hover:underline" onClick={() => deletedHistory[account.id] ? setDeletedHistory(prev => ({...prev,[account.id]:null})) : loadDeletedHistory(account.id)}>{deletedHistory[account.id] ? 'Hide history' : 'View account history'}</button>
