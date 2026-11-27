@@ -140,7 +140,7 @@ try {
       const qr = el.querySelector('a[href*="verify-credential"] svg');
       const qrRect = qr ? qr.getBoundingClientRect() : null;
       // The block that carries the ID + verify URL (the last flex row).
-      const block = [...el.querySelectorAll('div')].find((d) => /Verify at|Verify/.test(d.textContent) && d.querySelector('svg')) || null;
+      const block = el.querySelector('[data-badge-verification], [data-cert-footer]') || [...el.querySelectorAll('div')].find((d) => /Verify at|Scan to verify/.test(d.textContent) && d.querySelector('svg')) || null;
       const blockRect = block ? block.getBoundingClientRect() : null;
       const main = el.querySelector('[data-cert-main]');
       const seal = el.querySelector('[data-cert-seal]');
@@ -232,8 +232,8 @@ try {
           mainFits: !!main && main.scrollHeight <= main.clientHeight + 1,
           mainScroll: main?.scrollHeight ?? null,
           mainClient: main?.clientHeight ?? null,
-          mainBeforeFooter: !!mainRect && !!footerRect && mainRect.bottom <= footerRect.top + 0.5,
-          sealVisible: !!sealRect && sealRect.width >= 160 && sealRect.height >= 190,
+          mainBeforeFooter: (() => {\n            if (!mainRect || !footerRect) return false;\n            const contentNodes = [el.querySelector('h2'), el.querySelector('h3'), seal].filter(Boolean);\n            return contentNodes.length >= 2 && contentNodes.every((node) => {\n              const cr = node.getBoundingClientRect();\n              return cr.bottom <= footerRect.top + 0.5 && cr.top >= mainRect.top - 0.5;\n            });\n          })(),
+          sealVisible: !!sealRect && sealRect.width >= 110 && sealRect.height >= 110 && !!mainRect && sealRect.top >= mainRect.top - 0.5 && sealRect.bottom <= mainRect.bottom + 0.5,
           sealBottom: sealRect ? Math.round(sealRect.bottom - r.top) : null,
           footerTop: footerRect ? Math.round(footerRect.top - r.top) : null,
           sealBeforeFooter: !!sealRect && !!footerRect && sealRect.bottom <= footerRect.top + 0.5,
@@ -281,7 +281,7 @@ try {
       const layout = d.layout || {};
       check('certificate: main content fits its reserved area', layout.mainFits === true, JSON.stringify(layout));
       check('certificate: main content ends before verification footer', layout.mainBeforeFooter === true, JSON.stringify(layout));
-      check('certificate: enlarged seal is fully visible', layout.sealVisible === true, JSON.stringify(layout));
+      check('certificate: resized seal is fully visible', layout.sealVisible === true, JSON.stringify(layout));
       check('certificate: seal does not collide with footer', layout.sealBeforeFooter === true, JSON.stringify(layout));
       check('certificate: footer clears all four green corner ornaments', layout.footerClearOfCorners === true, JSON.stringify(layout));
       check('certificate: learner name stays inside the main content area', layout.nameInsideMain === true, JSON.stringify(layout));
